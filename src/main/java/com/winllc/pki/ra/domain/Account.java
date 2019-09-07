@@ -1,11 +1,19 @@
 package com.winllc.pki.ra.domain;
 
-import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+import java.util.HashSet;
+import java.util.Set;
 
-public class Account {
+@Entity
+public class Account extends BaseEntity {
     private String keyIdentifier;
     private String macKey;
-    private List<String> emails;
+    @OneToMany
+    private Set<PocEntry> pocs;
+    @ManyToMany
+    private Set<Domain> canIssueDomains;
 
     public String getKeyIdentifier() {
         return keyIdentifier;
@@ -23,11 +31,24 @@ public class Account {
         this.macKey = macKey;
     }
 
-    public List<String> getEmails() {
-        return emails;
+    public Set<PocEntry> getPocs() {
+        if(pocs == null) pocs = new HashSet<>();
+        return pocs;
     }
 
-    public void setEmails(List<String> emails) {
-        this.emails = emails;
+    public void setPocs(Set<PocEntry> pocs) {
+        this.pocs = pocs;
+    }
+
+    public Set<Domain> getCanIssueDomains() {
+        return canIssueDomains;
+    }
+
+    public void setCanIssueDomains(Set<Domain> canIssueDomains) {
+        this.canIssueDomains = canIssueDomains;
+    }
+
+    public void addPoc(PocEntry pocEntry){
+        getPocs().add(pocEntry);
     }
 }

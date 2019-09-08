@@ -41,52 +41,58 @@ public class AcmeServerServiceImpl implements AcmeServerService {
     }
 
     public List<DirectoryDataSettings> getAllDirectorySettings() {
+        List<DirectoryDataSettings> list = this.connection.getAllEntities(DIRECTORY_DATA_BASE, DirectoryDataSettings.class);
         //todo
-        return null;
+        return list;
     }
 
     public void deleteDirectorySettings(String name) {
         //todo
+        this.connection.deleteEntity(DIRECTORY_DATA_BASE, name);
     }
 
     @Override
     public void saveCertificateAuthoritySettings(CertificateAuthoritySettings directoryDataSettings) {
-
+        this.connection.saveEntity(directoryDataSettings, CERT_AUTHORITY_BASE);
     }
 
     @Override
     public CertificateAuthoritySettings getCertificateAuthoritySettingsByName(String name) {
-        return null;
+        CertificateAuthoritySettings settings = this.connection.getEntityByName(CERT_AUTHORITY_BASE, name, CertificateAuthoritySettings.class);
+        return settings;
     }
 
     @Override
     public List<CertificateAuthoritySettings> getAllCertificateAuthoritySettings() {
+        //todo
         return null;
     }
 
     @Override
     public void deleteCertificateAuthoritySettings(String name) {
-
+        //todo
     }
 
     @Override
     public void saveExternalAccountProviderSettings(ExternalAccountProviderSettings directoryDataSettings) {
-
+        this.connection.saveEntity(directoryDataSettings, EXTERNAL_ACCOUNT_PROVIDER_BASE);
     }
 
     @Override
     public ExternalAccountProviderSettings getExternalAccountProviderSettingsByName(String name) {
-        return null;
+        ExternalAccountProviderSettings settings = this.connection.getEntityByName(EXTERNAL_ACCOUNT_PROVIDER_BASE, name, ExternalAccountProviderSettings.class);
+        return settings;
     }
 
     @Override
     public List<ExternalAccountProviderSettings> getAllExternalAccountProviderSettings() {
+        //todo
         return null;
     }
 
     @Override
     public void deleteExternalAccountProviderSettings(String name) {
-
+        //todo
     }
 
 

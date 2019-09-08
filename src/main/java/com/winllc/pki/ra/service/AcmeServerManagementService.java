@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,59 +41,91 @@ public class AcmeServerManagementService {
         services.put(serverService.getName(), serverService);
     }
 
-    @PostMapping("/save")
+    @PostMapping("/saveAcmeServerConnection")
     public void save(@RequestBody AcmeServerConnectionInfo connectionInfo){
         connectionInfo = connectionInfoRepository.save(connectionInfo);
         load(connectionInfo);
     }
 
-    @PostMapping("/saveDirectorySettings/{connectionName}")
+    @GetMapping("/getAcmeServerConnectionInfoByName/{name}")
+    public AcmeServerConnectionInfo getAcmeServerConnectionInfoByName(@PathVariable String name){
+        return connectionInfoRepository.findByName(name);
+    }
+
+    @GetMapping("/getAllAcmeServerConnectionInfo")
+    public List<AcmeServerConnectionInfo> getAllAcmeServerConnectionInfo(){
+        return connectionInfoRepository.findAll();
+    }
+
+    @PostMapping("{connectionName}/saveDirectorySettings")
     public void saveDirectorySettings(@PathVariable String connectionName, @RequestBody DirectoryDataSettings directoryDataSettings) {
         AcmeServerService acmeServerService = services.get(connectionName);
         acmeServerService.saveDirectorySettings(directoryDataSettings);
     }
 
-    public DirectoryDataSettings getDirectorySettingsByName(String name) {
-        return null;
+    @GetMapping("{connectionName}/getDirectorySettingsByName/{name}")
+    public DirectoryDataSettings getDirectorySettingsByName(@PathVariable String connectionName, @PathVariable String name) {
+        AcmeServerService acmeServerService = services.get(connectionName);
+        return acmeServerService.getDirectorySettingsByName(name);
     }
 
-    public List<DirectoryDataSettings> getAllDirectorySettings() {
-        return null;
+    @GetMapping("{connectionName}/getAllDirectorySettings")
+    public List<DirectoryDataSettings> getAllDirectorySettings(@PathVariable String connectionName) {
+        AcmeServerService acmeServerService = services.get(connectionName);
+        return acmeServerService.getAllDirectorySettings();
     }
 
-    public void deleteDirectorySettings(String name) {
-
+    @DeleteMapping("{connectionName}/deleteDirectorySettings/{name}")
+    public void deleteDirectorySettings(@PathVariable String connectionName, @PathVariable String name) {
+        AcmeServerService acmeServerService = services.get(connectionName);
+        acmeServerService.deleteDirectorySettings(name);
     }
 
-    public void saveCertificateAuthoritySettings(CertificateAuthoritySettings directoryDataSettings) {
-
+    @PostMapping("{connectionName}/saveCertificateAuthoritySettings")
+    public void saveCertificateAuthoritySettings(@PathVariable String connectionName, @RequestBody CertificateAuthoritySettings certificateAuthoritySettings) {
+        AcmeServerService acmeServerService = services.get(connectionName);
+        acmeServerService.saveCertificateAuthoritySettings(certificateAuthoritySettings);
     }
 
-    public CertificateAuthoritySettings getCertificateAuthoritySettingsByName(String name) {
-        return null;
+    @GetMapping("{connectionName}/getCertificateAuthoritySettingsByName/{name}")
+    public CertificateAuthoritySettings getCertificateAuthoritySettingsByName(@PathVariable String connectionName, @PathVariable String name) {
+        AcmeServerService acmeServerService = services.get(connectionName);
+        return acmeServerService.getCertificateAuthoritySettingsByName(name);
     }
 
-    public List<CertificateAuthoritySettings> getAllCertificateAuthoritySettings() {
-        return null;
+    @GetMapping("{connectionName}/getAllCertificateAuthoritySettings")
+    public List<CertificateAuthoritySettings> getAllCertificateAuthoritySettings(@PathVariable String connectionName) {
+        AcmeServerService acmeServerService = services.get(connectionName);
+        return acmeServerService.getAllCertificateAuthoritySettings();
     }
 
-    public void deleteCertificateAuthoritySettings(String name) {
-
+    @DeleteMapping("{connectionName}/deleteCertificateAuthoritySettings/{name}")
+    public void deleteCertificateAuthoritySettings(@PathVariable String connectionName, @PathVariable String name) {
+        AcmeServerService acmeServerService = services.get(connectionName);
+        acmeServerService.deleteCertificateAuthoritySettings(name);
     }
 
-    public void saveExternalAccountProviderSettings(ExternalAccountProviderSettings directoryDataSettings) {
-
+    @PostMapping("{connectionName}/saveExternalAccountProviderSettings")
+    public void saveExternalAccountProviderSettings(@PathVariable String connectionName, @RequestBody ExternalAccountProviderSettings externalAccountProviderSettings) {
+        AcmeServerService acmeServerService = services.get(connectionName);
+        acmeServerService.saveExternalAccountProviderSettings(externalAccountProviderSettings);
     }
 
-    public ExternalAccountProviderSettings getExternalAccountProviderSettingsByName(String name) {
-        return null;
+    @GetMapping("{connectionName}/getExternalAccountProviderSettingsByName/{name}")
+    public ExternalAccountProviderSettings getExternalAccountProviderSettingsByName(@PathVariable String connectionName, @PathVariable String name) {
+        AcmeServerService acmeServerService = services.get(connectionName);
+        return acmeServerService.getExternalAccountProviderSettingsByName(name);
     }
 
-    public List<ExternalAccountProviderSettings> getAllExternalAccountProviderSettings() {
-        return null;
+    @GetMapping("{connectionName}/getAllExternalAccountProviderSettings")
+    public List<ExternalAccountProviderSettings> getAllExternalAccountProviderSettings(@PathVariable String connectionName) {
+        AcmeServerService acmeServerService = services.get(connectionName);
+        return acmeServerService.getAllExternalAccountProviderSettings();
     }
 
-    public void deleteExternalAccountProviderSettings(String name) {
-
+    @DeleteMapping("{connectionName}/deleteExternalAccountProviderSettings/{name}")
+    public void deleteExternalAccountProviderSettings(@PathVariable String connectionName, @PathVariable String name) {
+        AcmeServerService acmeServerService = services.get(connectionName);
+        acmeServerService.deleteExternalAccountProviderSettings(name);
     }
 }

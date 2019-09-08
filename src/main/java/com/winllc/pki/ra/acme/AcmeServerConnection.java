@@ -14,6 +14,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 public class AcmeServerConnection {
@@ -65,14 +66,27 @@ public class AcmeServerConnection {
         return null;
     }
 
+
     public <T> List<T> getAllEntities(String base, Class<T> clazz){
         //todo
+        String url = connectionInfo.getUrl()+"/"+base+"/"+FIND_ALL;
+        String result = runGet(url);
 
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            List<T> val = objectMapper.readValue(result, ArrayList.class);
+            return val;
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         return null;
+
     }
 
     public void deleteEntity(String base, String name){
         //todo
+        String url = connectionInfo.getUrl()+"/"+base+"/"+DELETE+"/"+name;
+        String result = runDelete(url);
 
     }
 
@@ -135,6 +149,11 @@ public class AcmeServerConnection {
             httpGet.completed();
         }
 
+        return null;
+    }
+
+    private String runDelete(String url){
+        //todo
         return null;
     }
 }

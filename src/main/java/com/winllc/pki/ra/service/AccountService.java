@@ -98,10 +98,10 @@ public class AccountService {
                 if(testObj.getSignature().toString().contentEquals(jwsObjectParsed.getSignature().toString())){
                     System.out.println("Account request verified!");
 
-                    account.setMacKey(jwsObjectParsed.getSignature().toString());
-                    account.setKeyIdentifier(jwsObjectParsed.getHeader().getKeyID());
+                    //account.setMacKey(jwsObjectParsed.getSignature().toString());
+                    //account.setKeyIdentifier(jwsObjectParsed.getHeader().getKeyID());
 
-                    accountRepository.save(account);
+                    //accountRepository.save(account);
 
                     return ResponseEntity.status(200)
                             .build();

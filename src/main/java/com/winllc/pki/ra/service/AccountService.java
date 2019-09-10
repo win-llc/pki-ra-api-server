@@ -7,9 +7,11 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.util.Base64URL;
+import com.winllc.acme.common.CAValidationRule;
 import com.winllc.pki.ra.beans.AccountRequestForm;
 import com.winllc.pki.ra.beans.AccountUpdateForm;
 import com.winllc.pki.ra.domain.Account;
+import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.util.AppUtil;
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +21,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 @RestController
 @RequestMapping("/account")
@@ -71,6 +75,28 @@ public class AccountService {
         Account account = accountRepository.findByKeyIdentifierEquals(kid);
 
         return ResponseEntity.ok(account);
+    }
+
+
+    @GetMapping("/getAccountValidationRules/{kid}")
+    public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid){
+        //todo
+        Account account = accountRepository.findByKeyIdentifierEquals(kid);
+
+        List<CAValidationRule> validationRules = new ArrayList<>();
+
+        for(Domain domain : account.getCanIssueDomains()){
+            CAValidationRule validationRule = new CAValidationRule();
+            validationRule.setAllowHostnameIssuance(true);
+            validationRule.setAllowIssuance(true);
+            validationRule.setBaseDomainName(domain.getBase());
+            validationRule.setIdentifierType("dns");
+            validationRule.setRequireHttpChallenge(true);
+
+            validationRules.add(validationRule);
+        }
+
+        return ResponseEntity.ok(validationRules);
     }
 
     @PostMapping("/verify")

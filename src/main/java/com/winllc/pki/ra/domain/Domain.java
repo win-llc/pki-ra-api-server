@@ -2,6 +2,7 @@ package com.winllc.pki.ra.domain;
 
 import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -20,6 +21,7 @@ public class Domain extends BaseEntity {
     }
 
     public Set<Account> getCanIssueAccounts() {
+        if(canIssueAccounts == null) canIssueAccounts = new HashSet<>();
         return canIssueAccounts;
     }
 

@@ -41,6 +41,7 @@ public class Account extends BaseEntity {
     }
 
     public Set<Domain> getCanIssueDomains() {
+        if(canIssueDomains == null) canIssueDomains = new HashSet<>();
         return canIssueDomains;
     }
 

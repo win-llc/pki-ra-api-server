@@ -19,6 +19,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/acmeServerManagement")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AcmeServerManagementService {
 
     @Autowired

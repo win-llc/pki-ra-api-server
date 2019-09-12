@@ -64,13 +64,14 @@ public class AcmeServerServiceImpl implements AcmeServerService {
 
     @Override
     public List<CertificateAuthoritySettings> getAllCertificateAuthoritySettings() {
-        //todo
-        return null;
+        List<CertificateAuthoritySettings> list = this.connection.getAllEntities(CERT_AUTHORITY_BASE, CertificateAuthoritySettings.class);
+        return list;
     }
 
     @Override
     public void deleteCertificateAuthoritySettings(String name) {
         //todo
+        this.connection.deleteEntity(CERT_AUTHORITY_BASE, name);
     }
 
     @Override
@@ -86,13 +87,14 @@ public class AcmeServerServiceImpl implements AcmeServerService {
 
     @Override
     public List<ExternalAccountProviderSettings> getAllExternalAccountProviderSettings() {
-        //todo
-        return null;
+        List<ExternalAccountProviderSettings> list = this.connection.getAllEntities(EXTERNAL_ACCOUNT_PROVIDER_BASE, ExternalAccountProviderSettings.class);
+        return list;
     }
 
     @Override
     public void deleteExternalAccountProviderSettings(String name) {
         //todo
+        this.connection.deleteEntity(EXTERNAL_ACCOUNT_PROVIDER_BASE, name);
     }
 
 

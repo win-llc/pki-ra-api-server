@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.acme.common.Settings;
 import com.winllc.pki.ra.domain.AcmeServerConnectionInfo;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -14,15 +15,16 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AcmeServerConnection {
 
     private static final String SAVE = "save";
-    private static final String FIND_BY_NAME = "findByName";
+    private static final String FIND_BY_NAME = "findSettingsByName";
     private static final String DELETE = "delete";
-    private static final String FIND_ALL = "findAll";
+    private static final String FIND_ALL = "findAllSettings";
 
     private AcmeServerConnectionInfo connectionInfo;
 
@@ -139,9 +141,8 @@ public class AcmeServerConnection {
                 if(response.getStatusLine().getStatusCode() == 200){
                     //todo
                 }
-                try (InputStream instream = entity.getContent()) {
-                    //TODO do something useful, return true or false
-                }
+
+                return IOUtils.toString(entity.getContent(), StandardCharsets.UTF_8.name());
             }
         }catch (Exception e){
             e.printStackTrace();

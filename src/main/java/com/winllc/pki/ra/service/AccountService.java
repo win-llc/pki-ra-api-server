@@ -13,6 +13,7 @@ import com.winllc.pki.ra.beans.AccountUpdateForm;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.repository.AccountRepository;
+import com.winllc.pki.ra.repository.DomainRepository;
 import com.winllc.pki.ra.util.AppUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,6 +36,8 @@ public class AccountService {
 
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private DomainRepository domainRepository;
 
     static {
         System.out.println("System MAC key: "+macKey);
@@ -46,6 +49,16 @@ public class AccountService {
         testAccount.setKeyIdentifier("kidtest");
         testAccount.setMacKey(macKey);
 
+        Domain domain = new Domain();
+        domain.setBase("winllc.com");
+
+        testAccount = accountRepository.save(testAccount);
+
+        domain.getCanIssueAccounts().add(testAccount);
+
+        domain = domainRepository.save(domain);
+
+        testAccount.getCanIssueDomains().add(domain);
         accountRepository.save(testAccount);
     }
 
@@ -78,7 +91,7 @@ public class AccountService {
     }
 
 
-    @GetMapping("/getAccountValidationRules/{kid}")
+    @PostMapping("/validationRules/{kid}")
     public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid){
         //todo
         Account account = accountRepository.findByKeyIdentifierEquals(kid);

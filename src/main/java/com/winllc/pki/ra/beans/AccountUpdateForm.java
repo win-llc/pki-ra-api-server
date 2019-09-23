@@ -12,7 +12,16 @@ public class AccountUpdateForm implements ValidForm {
 
     private static final String VALID_EMAIL_REGEX = "^(.+)@(.+)$";
 
+    private Long id;
     private List<String> pocEmails;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public List<String> getPocEmails() {
         return pocEmails;

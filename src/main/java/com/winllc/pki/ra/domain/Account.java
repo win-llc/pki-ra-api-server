@@ -1,5 +1,7 @@
 package com.winllc.pki.ra.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
@@ -10,8 +12,10 @@ import java.util.Set;
 public class Account extends BaseEntity {
     private String keyIdentifier;
     private String macKey;
+    @JsonIgnore
     @OneToMany
     private Set<PocEntry> pocs;
+    @JsonIgnore
     @ManyToMany
     private Set<Domain> canIssueDomains;
 

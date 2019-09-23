@@ -1,5 +1,7 @@
 package com.winllc.pki.ra.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
 import java.util.HashSet;
@@ -9,6 +11,7 @@ import java.util.Set;
 public class Domain extends BaseEntity {
 
     private String base;
+    @JsonIgnore
     @ManyToMany
     private Set<Account> canIssueAccounts;
 

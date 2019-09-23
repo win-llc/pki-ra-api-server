@@ -12,8 +12,10 @@ import com.winllc.pki.ra.beans.AccountRequestForm;
 import com.winllc.pki.ra.beans.AccountUpdateForm;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
+import com.winllc.pki.ra.domain.PocEntry;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
+import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.util.AppUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,9 +24,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/account")
@@ -38,6 +39,8 @@ public class AccountService {
     private AccountRepository accountRepository;
     @Autowired
     private DomainRepository domainRepository;
+    @Autowired
+    private PocEntryRepository pocEntryRepository;
 
     static {
         System.out.println("System MAC key: "+macKey);
@@ -64,22 +67,61 @@ public class AccountService {
 
     @PostMapping("/create")
     public ResponseEntity<?> createNewAccount(@RequestBody AccountRequestForm form){
-        String macKey = AppUtil.generate256BitKey();
-        String keyIdentifier = "TODO";
+        String macKey = AppUtil.generate256BitString();
+        String keyIdentifier = AppUtil.generate20BitString();
+
+        Account account = new Account();
+        account.setKeyIdentifier(keyIdentifier);
+        account.setMacKey(macKey);
+
+        account = accountRepository.save(account);
+
+        log.info("Created account with kid: "+account.getKeyIdentifier());
+        log.info("Mac Key: "+Base64.getEncoder().encodeToString(account.getMacKey().getBytes()));
 
         //TODO return both to account holder for entry into ACME client
 
         return ResponseEntity.status(201).build();
     }
 
+    @PostMapping("/request")
+    public ResponseEntity<?> createAccountRequest(@RequestBody AccountRequestForm form){
+
+        //todo
+
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/update")
-    public ResponseEntity<?> updateAccount(AccountUpdateForm form){
+    public ResponseEntity<?> updateAccount(@RequestBody AccountUpdateForm form) throws Exception {
         //TODO
         if(form.isValid()){
+            Optional<Account> optionalAccount = accountRepository.findById(form.getId());
+            if(optionalAccount.isPresent()){
+                Account account = optionalAccount.get();
+
+                Map<String, PocEntry> existingPocMap = account.getPocs().stream()
+                        .collect(Collectors.toMap(p -> p.getEmail(), p -> p));
+
+                for(String email : form.getPocEmails()){
+                    //todo
+                }
+
+                accountRepository.save(account);
+            }else{
+                throw new Exception("Could not find account with ID: "+form.getId());
+            }
 
         }
 
         return ResponseEntity.status(200).build();
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<?> getAll(){
+        List<Account> accounts = accountRepository.findAll();
+
+        return ResponseEntity.ok(accounts);
     }
 
     @GetMapping("/findByKeyIdentifier/{kid}")
@@ -110,6 +152,23 @@ public class AccountService {
         }
 
         return ResponseEntity.ok(validationRules);
+    }
+
+    @GetMapping("/getAccountPocs/{kid}")
+    public ResponseEntity<?> getAccountPocs(@PathVariable String kid){
+
+        Account account = accountRepository.findByKeyIdentifierEquals(kid);
+        List<PocEntry> pocEntries = pocEntryRepository.findAllByAccount(account);
+
+        return ResponseEntity.ok(pocEntries);
+    }
+
+    @GetMapping("/getCanIssueDomains/{kid}")
+    public ResponseEntity<?> getCanIssueDomains(@PathVariable String kid){
+        Account account = accountRepository.findByKeyIdentifierEquals(kid);
+        List<Domain> domainList = domainRepository.findAllByCanIssueAccountsContains(account);
+
+        return ResponseEntity.ok(domainList);
     }
 
     @PostMapping("/verify")

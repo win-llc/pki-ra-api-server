@@ -8,6 +8,7 @@ import com.winllc.pki.ra.acme.AcmeServerService;
 import com.winllc.pki.ra.acme.AcmeServerServiceImpl;
 import com.winllc.pki.ra.domain.AcmeServerConnectionInfo;
 import com.winllc.pki.ra.repository.AcmeServerConnectionInfoRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,6 +62,19 @@ public class AcmeServerManagementService {
     @PostMapping("{connectionName}/saveDirectorySettings")
     public void saveDirectorySettings(@PathVariable String connectionName, @RequestBody DirectoryDataSettings directoryDataSettings) {
         AcmeServerService acmeServerService = services.get(connectionName);
+
+        DirectoryDataSettings existingSettings = acmeServerService.getDirectorySettingsByName(directoryDataSettings.getName());
+        if(existingSettings != null) {
+            //Check if Terms of Service have been updated
+            if ((StringUtils.isNotBlank(existingSettings.getMetaTermsOfService()) && StringUtils.isNotBlank(directoryDataSettings.getMetaTermsOfService())) &&
+                    (!existingSettings.getMetaTermsOfService().equalsIgnoreCase(directoryDataSettings.getMetaTermsOfService()))){
+                directoryDataSettings.updateTermsOfService(directoryDataSettings.getMetaTermsOfService());
+            }else{
+                //If new, set terms of service updated if terms of service included
+                directoryDataSettings.updateTermsOfService(existingSettings.getMetaTermsOfService());
+            }
+        }
+
         acmeServerService.saveDirectorySettings(directoryDataSettings);
     }
 

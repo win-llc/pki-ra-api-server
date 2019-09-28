@@ -25,6 +25,10 @@ public class DomainLinkToAccountRequest extends BaseEntity {
         this.status = status;
     }
 
+    public void setStatusRequested(){
+        setStatus("requested");
+    }
+
     public Long getRequestedDomainId() {
         return requestedDomainId;
     }

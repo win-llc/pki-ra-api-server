@@ -25,11 +25,9 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.swing.text.html.Option;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.math.BigInteger;
@@ -54,13 +52,17 @@ public class InternalCertAuthority {
     private List<X509Certificate> revokedCerts = new ArrayList<>();
 
 
-    public boolean revokeCertificate(X509Certificate certificate, int reason) {
+    @PostMapping("/revokeCertificate")
+    public boolean revokeCertificate(String serial, int reason) {
         //if(listContainsCert(issuedCerts, certificate) && !listContainsCert(revokedCerts, certificate)){
-            revokedCerts.add(certificate);
+        Optional<X509Certificate> optionalX509Certificate = getX509CertBySerial(serial);
+        if(optionalX509Certificate.isPresent()){
+            X509Certificate cert = optionalX509Certificate.get();
+            revokedCerts.add(cert);
             return true;
-        //}
-        //TODO
-        //return false;
+        }
+
+        return false;
     }
 
     @PostMapping("/issueCertificate")
@@ -79,6 +81,7 @@ public class InternalCertAuthority {
         return null;
     }
 
+    @GetMapping("/trustChain")
     public Certificate[] getTrustChain() {
         try {
             KeyStore keyStore = loadKeystore(caKeystoreLocation, caKeystorePassword);
@@ -91,11 +94,46 @@ public class InternalCertAuthority {
         return new Certificate[0];
     }
 
-    public boolean isCertificateRevoked(X509Certificate certificate) {
-        //TODO
+    @GetMapping("/getCertificateBySerial/{serial}")
+    public String getCertificateBySerial(@PathVariable String serial){
+
+        Optional<X509Certificate> optionalCert = getX509CertBySerial(serial);
+
+        if(optionalCert.isPresent()){
+            try {
+                return CertUtil.convertToPem(optionalCert.get());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        return null;
+    }
+
+    @GetMapping("/isCertificateRevoked/{serial}")
+    public boolean isCertificateRevoked(@PathVariable String serial) {
+
+        for(X509Certificate cert : revokedCerts){
+            if(cert.getSerialNumber() == BigInteger.valueOf(Long.valueOf(serial))){
+                return true;
+            }
+        }
+
         return false;
     }
 
+    private Optional<X509Certificate> getX509CertBySerial(String serial){
+        for(X509Certificate cert : issuedCerts){
+            if(cert.getSerialNumber() == BigInteger.valueOf(Long.valueOf(serial))){
+                try {
+                    return Optional.of(cert);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }
+        return Optional.empty();
+    }
 
     private X509Certificate signCSR(PKCS10CertificationRequest csr, int validity, KeyStore keystore, String alias, char[] password) throws Exception {
         try {

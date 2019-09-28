@@ -6,6 +6,8 @@ import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainLinkToAccountRequestRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +17,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/domain")
 public class DomainService {
+
+    private static final Logger log = LogManager.getLogger(DomainService.class);
 
     @Autowired
     private DomainRepository domainRepository;
@@ -44,9 +48,22 @@ public class DomainService {
         throw new Exception("Could not find by ID: "+id);
     }
 
-    @PostMapping("/save")
-    public void saveDomain(Domain domain){
+    @PostMapping("/create")
+    public void createDomain(@RequestBody Domain domain){
         domainRepository.save(domain);
+    }
+
+    @PostMapping("/update")
+    public void updateDomain(@RequestBody Domain domain){
+        try {
+            Domain domainById = getDomainById(domain.getId());
+            if(domainById != null){
+                domainById.setBase(domain.getBase());
+                domainRepository.save(domain);
+            }
+        } catch (Exception e) {
+            log.error("Could not find domain: "+domain.getId(), e);
+        }
     }
 
     @DeleteMapping("/delete/{id}")
@@ -58,9 +75,10 @@ public class DomainService {
     Domain requests
      */
 
-    public void createDomainRequest(DomainLinkToAccountRequest request){
+    @PostMapping("/createDomainRequest")
+    public void createDomainRequest(@RequestBody DomainLinkToAccountRequest request){
         //TODO mark a domain request to be associated to an account as approved or denied
-        request.setStatus("requested");
+        request.setStatusRequested();
     }
 
     public void domainRequestDecision(Long id, String status) throws Exception {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,6 +13,9 @@ import java.util.Set;
 public class Account extends BaseEntity {
     private String keyIdentifier;
     private String macKey;
+
+    @OneToOne
+    private PocEntry accountOwner;
     @JsonIgnore
     @OneToMany
     private Set<PocEntry> pocs;
@@ -33,6 +37,14 @@ public class Account extends BaseEntity {
 
     public void setMacKey(String macKey) {
         this.macKey = macKey;
+    }
+
+    public PocEntry getAccountOwner() {
+        return accountOwner;
+    }
+
+    public void setAccountOwner(PocEntry accountOwner) {
+        this.accountOwner = accountOwner;
     }
 
     public Set<PocEntry> getPocs() {

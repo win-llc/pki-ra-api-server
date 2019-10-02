@@ -2,6 +2,8 @@ package com.winllc.pki.ra.ca;
 
 
 import com.winllc.acme.common.util.CertUtil;
+import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
+import com.winllc.pki.ra.service.CertAuthorityConnectionService;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.*;
@@ -39,9 +41,7 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.*;
 
-@RestController
-@RequestMapping("/ca/internal")
-public class InternalCertAuthority {
+public class InternalCertAuthority implements CertAuthority {
 
     private String name;
     private String caKeystorePassword = "password";
@@ -51,8 +51,10 @@ public class InternalCertAuthority {
     private List<X509Certificate> issuedCerts = new ArrayList<>();
     private List<X509Certificate> revokedCerts = new ArrayList<>();
 
+    public InternalCertAuthority(CertAuthorityConnectionInfo connectionInfo){
 
-    @PostMapping("/revokeCertificate")
+    }
+
     public boolean revokeCertificate(String serial, int reason) {
         //if(listContainsCert(issuedCerts, certificate) && !listContainsCert(revokedCerts, certificate)){
         Optional<X509Certificate> optionalX509Certificate = getX509CertBySerial(serial);
@@ -65,15 +67,13 @@ public class InternalCertAuthority {
         return false;
     }
 
-    @PostMapping("/issueCertificate")
-    public String issueCertificate(@RequestParam String pkcs10) {
+    public X509Certificate issueCertificate(String pkcs10) {
 
         try {
             PKCS10CertificationRequest certificationRequest = CertUtil.csrBase64ToPKC10Object(pkcs10);
             KeyStore ks = loadKeystore(caKeystoreLocation, caKeystorePassword);
             X509Certificate certificate = signCSR(certificationRequest, 30, ks, caKeystoreAlias, caKeystorePassword.toCharArray());
-            String pem = CertUtil.convertToPem(certificate);
-            return pem;
+            return certificate;
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -81,7 +81,6 @@ public class InternalCertAuthority {
         return null;
     }
 
-    @GetMapping("/trustChain")
     public Certificate[] getTrustChain() {
         try {
             KeyStore keyStore = loadKeystore(caKeystoreLocation, caKeystorePassword);
@@ -94,14 +93,13 @@ public class InternalCertAuthority {
         return new Certificate[0];
     }
 
-    @GetMapping("/getCertificateBySerial/{serial}")
-    public String getCertificateBySerial(@PathVariable String serial){
+    public X509Certificate getCertificateBySerial(String serial){
 
         Optional<X509Certificate> optionalCert = getX509CertBySerial(serial);
 
         if(optionalCert.isPresent()){
             try {
-                return CertUtil.convertToPem(optionalCert.get());
+                return optionalCert.get();
             }catch (Exception e){
                 e.printStackTrace();
             }
@@ -110,8 +108,7 @@ public class InternalCertAuthority {
         return null;
     }
 
-    @GetMapping("/isCertificateRevoked/{serial}")
-    public boolean isCertificateRevoked(@PathVariable String serial) {
+    public boolean isCertificateRevoked(String serial) {
 
         for(X509Certificate cert : revokedCerts){
             if(cert.getSerialNumber() == BigInteger.valueOf(Long.valueOf(serial))){

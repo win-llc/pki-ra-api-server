@@ -10,6 +10,7 @@ import com.nimbusds.jose.util.Base64URL;
 import com.winllc.acme.common.CAValidationRule;
 import com.winllc.pki.ra.beans.AccountRequestForm;
 import com.winllc.pki.ra.beans.AccountUpdateForm;
+import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.PocEntry;
@@ -24,6 +25,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -103,8 +107,20 @@ public class AccountService {
                 Map<String, PocEntry> existingPocMap = account.getPocs().stream()
                         .collect(Collectors.toMap(p -> p.getEmail(), p -> p));
 
-                for(String email : form.getPocEmails()){
-                    //todo
+                for(PocFormEntry email : form.getPocEmails()){
+
+                    //Only create entry if POC email does not exist
+                    if(existingPocMap.get(email.getEmail()) == null) {
+
+                        PocEntry pocEntry = new PocEntry();
+                        pocEntry.setEnabled(true);
+                        pocEntry.setEmail(email.getEmail());
+                        pocEntry.setAddedOn(Timestamp.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
+                        pocEntry.setAccount(account);
+                        pocEntry = pocEntryRepository.save(pocEntry);
+
+                        account.getPocs().add(pocEntry);
+                    }
                 }
 
                 accountRepository.save(account);
@@ -130,6 +146,18 @@ public class AccountService {
         Account account = accountRepository.findByKeyIdentifierEquals(kid);
 
         return ResponseEntity.ok(account);
+    }
+
+    @GetMapping("/byId/{id}")
+    public ResponseEntity<?> findById(@PathVariable long id){
+
+        Optional<Account> accountOptional = accountRepository.findById(id);
+
+        if(accountOptional.isPresent()){
+            return ResponseEntity.ok(accountOptional.get());
+        }else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
 
@@ -166,7 +194,9 @@ public class AccountService {
     @GetMapping("/getCanIssueDomains/{kid}")
     public ResponseEntity<?> getCanIssueDomains(@PathVariable String kid){
         Account account = accountRepository.findByKeyIdentifierEquals(kid);
-        List<Domain> domainList = domainRepository.findAllByCanIssueAccountsContains(account);
+        List<String> domainList = domainRepository.findAllByCanIssueAccountsContains(account)
+                .stream().map(Domain::getBase)
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(domainList);
     }

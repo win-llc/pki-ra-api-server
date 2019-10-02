@@ -13,7 +13,7 @@ public class AccountUpdateForm implements ValidForm {
     private static final String VALID_EMAIL_REGEX = "^(.+)@(.+)$";
 
     private Long id;
-    private List<String> pocEmails;
+    private List<PocFormEntry> pocEmails;
 
     public Long getId() {
         return id;
@@ -23,11 +23,11 @@ public class AccountUpdateForm implements ValidForm {
         this.id = id;
     }
 
-    public List<String> getPocEmails() {
+    public List<PocFormEntry> getPocEmails() {
         return pocEmails;
     }
 
-    public void setPocEmails(List<String> pocEmails) {
+    public void setPocEmails(List<PocFormEntry> pocEmails) {
         this.pocEmails = pocEmails;
     }
 
@@ -36,7 +36,7 @@ public class AccountUpdateForm implements ValidForm {
         if(!CollectionUtils.isEmpty(pocEmails)){
             Pattern pattern = Pattern.compile(VALID_EMAIL_REGEX);
             valid = pocEmails.stream()
-                    .allMatch(p -> pattern.matcher(p).matches());
+                    .allMatch(p -> pattern.matcher(p.getEmail()).matches());
         }else{
             valid = false;
         }

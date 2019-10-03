@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.CertificateStatus;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.InternalCertAuthority;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.PostConstruct;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -30,6 +32,51 @@ public class CertAuthorityConnectionService {
 
     @Autowired
     private CertAuthorityConnectionInfoRepository repository;
+
+    @PostMapping("/info/create")
+    public ResponseEntity<?> createConnectionInfo(CertAuthorityConnectionInfo connectionInfo){
+        //todo validate
+        connectionInfo = repository.save(connectionInfo);
+
+        return ResponseEntity.ok(connectionInfo);
+    }
+
+    @PostMapping("/info/update")
+    public ResponseEntity<?> updateConnectionInfo(CertAuthorityConnectionInfo connectionInfo){
+        //todo validate
+        Optional<CertAuthorityConnectionInfo> optionalInfo = repository.findById(connectionInfo.getId());
+        if(optionalInfo.isPresent()){
+            CertAuthorityConnectionInfo info = optionalInfo.get();
+            info.setType(connectionInfo.getType());
+            //todo the rest
+        }
+
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/info/byName/{name}")
+    public ResponseEntity<?> getConnectionInfoByName(@PathVariable String name){
+        //todo
+        CertAuthorityConnectionInfo info = repository.findByName(name);
+
+        return ResponseEntity.ok(info);
+    }
+
+    @GetMapping("/info/all")
+    public ResponseEntity<?> getAllConnectionInfo(){
+        List<CertAuthorityConnectionInfo> list = repository.findAll();
+
+        return ResponseEntity.ok(list);
+    }
+
+    @DeleteMapping("/info/delete/{id}")
+    public ResponseEntity<?> deleteInfo(@PathVariable long id){
+        repository.deleteById(id);
+
+        return ResponseEntity.ok().build();
+    }
+
+
 
     @PostMapping("/issueCertificate/{connectionName}")
     public ResponseEntity<?> issueCertificate(@PathVariable String connectionName, @RequestParam String pkcs10){
@@ -65,6 +112,20 @@ public class CertAuthorityConnectionService {
         }else{
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @PostMapping("/certStatus/{connectionName}")
+    public ResponseEntity<?> getCertificateStatus(@PathVariable String connectionName, @RequestParam String serial){
+        CertificateStatus status = new CertificateStatus();
+
+        Optional<CertAuthority> certAuthorityOptional = buildCertAuthority(connectionName);
+        if(certAuthorityOptional.isPresent()) {
+            CertAuthority ca = certAuthorityOptional.get();
+            //todo
+            return ResponseEntity.ok(status);
+        }
+
+        return ResponseEntity.notFound().build();
     }
 
 

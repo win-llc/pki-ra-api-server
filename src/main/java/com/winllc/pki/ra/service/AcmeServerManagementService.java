@@ -35,6 +35,10 @@ public class AcmeServerManagementService {
         for(AcmeServerConnectionInfo info : connectionInfoRepository.findAll()){
             load(info);
         }
+
+        //todo remove this
+        AcmeServerConnectionInfo info = new AcmeServerConnectionInfo("winllc", "http://localhost:8181");
+        load(info);
     }
 
     private void load(AcmeServerConnectionInfo connectionInfo){

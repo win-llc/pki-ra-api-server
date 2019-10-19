@@ -62,7 +62,7 @@ public class AcmeServerConnection {
         try {
             T val = objectMapper.readValue(result, clazz);
             return val;
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -78,7 +78,7 @@ public class AcmeServerConnection {
         try {
             List<T> val = objectMapper.readValue(result, ArrayList.class);
             return val;
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;

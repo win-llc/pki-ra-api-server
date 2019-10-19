@@ -8,8 +8,12 @@ import com.winllc.pki.ra.acme.AcmeServerService;
 import com.winllc.pki.ra.acme.AcmeServerServiceImpl;
 import com.winllc.pki.ra.domain.AcmeServerConnectionInfo;
 import com.winllc.pki.ra.repository.AcmeServerConnectionInfoRepository;
+import com.winllc.pki.ra.security.RAUser;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
@@ -22,6 +26,8 @@ import java.util.Map;
 @RequestMapping("/acmeServerManagement")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AcmeServerManagementService {
+
+    private static final Logger log = LogManager.getLogger(AcmeServerManagementService.class);
 
     @Autowired
     private AcmeServerConnectionInfoRepository connectionInfoRepository;
@@ -59,7 +65,7 @@ public class AcmeServerManagementService {
     }
 
     @GetMapping("/getAllAcmeServerConnectionInfo")
-    public List<AcmeServerConnectionInfo> getAllAcmeServerConnectionInfo(){
+    public List<AcmeServerConnectionInfo> getAllAcmeServerConnectionInfo(@AuthenticationPrincipal RAUser raUser){
         return connectionInfoRepository.findAll();
     }
 
@@ -89,7 +95,8 @@ public class AcmeServerManagementService {
     }
 
     @GetMapping("{connectionName}/getAllDirectorySettings")
-    public List<DirectoryDataSettings> getAllDirectorySettings(@PathVariable String connectionName) {
+    public List<DirectoryDataSettings> getAllDirectorySettings(@PathVariable String connectionName, @AuthenticationPrincipal RAUser raUser) {
+        log.info("RAUser: "+raUser.getUsername());
         AcmeServerService acmeServerService = services.get(connectionName);
         return acmeServerService.getAllDirectorySettings();
     }

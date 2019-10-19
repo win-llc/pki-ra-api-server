@@ -14,14 +14,18 @@ import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.PocEntry;
+import com.winllc.pki.ra.domain.User;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
 import com.winllc.pki.ra.repository.PocEntryRepository;
+import com.winllc.pki.ra.repository.UserRepository;
+import com.winllc.pki.ra.security.RAUser;
 import com.winllc.pki.ra.util.AppUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
@@ -45,6 +49,8 @@ public class AccountService {
     private DomainRepository domainRepository;
     @Autowired
     private PocEntryRepository pocEntryRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     static {
         System.out.println("System MAC key: "+macKey);
@@ -67,7 +73,14 @@ public class AccountService {
 
         testAccount.getCanIssueDomains().add(domain);
         accountRepository.save(testAccount);
+
+        User user = new User();
+        user.setIdentifier(UUID.randomUUID());
+        user.setUsername("test");
+
+        userRepository.save(user);
     }
+
 
     @PostMapping("/create")
     public ResponseEntity<?> createNewAccount(@RequestBody AccountRequestForm form){
@@ -134,7 +147,8 @@ public class AccountService {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<?> getAll(){
+    public ResponseEntity<?> getAll(@AuthenticationPrincipal RAUser raUser){
+        log.info("RAUser: "+raUser.getUsername());
         List<Account> accounts = accountRepository.findAll();
 
         return ResponseEntity.ok(accounts);

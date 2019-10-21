@@ -33,7 +33,7 @@ public class CertAuthorityConnectionService {
     @Autowired
     private CertAuthorityConnectionInfoRepository repository;
 
-    @PostMapping("/info/create")
+    @PostMapping("/api/info/create")
     public ResponseEntity<?> createConnectionInfo(CertAuthorityConnectionInfo connectionInfo){
         //todo validate
         connectionInfo = repository.save(connectionInfo);
@@ -41,7 +41,7 @@ public class CertAuthorityConnectionService {
         return ResponseEntity.ok(connectionInfo);
     }
 
-    @PostMapping("/info/update")
+    @PostMapping("/api/info/update")
     public ResponseEntity<?> updateConnectionInfo(CertAuthorityConnectionInfo connectionInfo){
         //todo validate
         Optional<CertAuthorityConnectionInfo> optionalInfo = repository.findById(connectionInfo.getId());
@@ -54,7 +54,7 @@ public class CertAuthorityConnectionService {
         return ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/info/byName/{name}")
+    @GetMapping("/api/info/byName/{name}")
     public ResponseEntity<?> getConnectionInfoByName(@PathVariable String name){
         //todo
         CertAuthorityConnectionInfo info = repository.findByName(name);
@@ -62,14 +62,14 @@ public class CertAuthorityConnectionService {
         return ResponseEntity.ok(info);
     }
 
-    @GetMapping("/info/all")
+    @GetMapping("/api/info/all")
     public ResponseEntity<?> getAllConnectionInfo(){
         List<CertAuthorityConnectionInfo> list = repository.findAll();
 
         return ResponseEntity.ok(list);
     }
 
-    @DeleteMapping("/info/delete/{id}")
+    @DeleteMapping("/api/info/delete/{id}")
     public ResponseEntity<?> deleteInfo(@PathVariable long id){
         repository.deleteById(id);
 

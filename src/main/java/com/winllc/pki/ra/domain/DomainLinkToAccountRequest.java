@@ -29,6 +29,14 @@ public class DomainLinkToAccountRequest extends BaseEntity {
         setStatus("requested");
     }
 
+    public void setStatusRejected(){
+        setStatus("rejected");
+    }
+
+    public void setStatusApproved(){
+        setStatus("approved");
+    }
+
     public Long getRequestedDomainId() {
         return requestedDomainId;
     }

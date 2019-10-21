@@ -9,7 +9,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 public class AudienceValidator implements OAuth2TokenValidator<Jwt> {
 
     private OAuth2Error error =
-            new OAuth2Error("invalid_token", "The required audience 'library-service' is missing", null);
+            new OAuth2Error("invalid_token", "The required audience 'pki-ra-client' is missing", null);
 
     public OAuth2TokenValidatorResult validate(Jwt jwt) {
         if (jwt.getAudience().contains("pki-ra-client")) {

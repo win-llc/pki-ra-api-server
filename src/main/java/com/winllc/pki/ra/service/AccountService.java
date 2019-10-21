@@ -8,7 +8,7 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.util.Base64URL;
 import com.winllc.acme.common.CAValidationRule;
-import com.winllc.pki.ra.beans.AccountRequestForm;
+import com.winllc.pki.ra.domain.AccountRequest;
 import com.winllc.pki.ra.beans.AccountUpdateForm;
 import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.domain.Account;
@@ -29,6 +29,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -36,7 +37,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/account")
+@RequestMapping("/api/account")
 public class AccountService {
 
     private static final Logger log = LogManager.getLogger(AccountService.class);
@@ -77,13 +78,25 @@ public class AccountService {
         User user = new User();
         user.setIdentifier(UUID.randomUUID());
         user.setUsername("test");
+        user.setEmail("test@test.com");
 
         userRepository.save(user);
     }
 
 
     @PostMapping("/create")
-    public ResponseEntity<?> createNewAccount(@RequestBody AccountRequestForm form){
+    public ResponseEntity<?> createNewAccount(@RequestBody AccountRequest form){
+        //TODO return both to account holder for entry into ACME client
+
+        Account account = buildNew();
+        account.setProjectName(form.getProjectName());
+
+        accountRepository.save(account);
+
+        return ResponseEntity.status(201).build();
+    }
+
+    public Account buildNew(){
         String macKey = AppUtil.generate256BitString();
         String keyIdentifier = AppUtil.generate20BitString();
 
@@ -94,22 +107,25 @@ public class AccountService {
         account = accountRepository.save(account);
 
         log.info("Created account with kid: "+account.getKeyIdentifier());
-        log.info("Mac Key: "+Base64.getEncoder().encodeToString(account.getMacKey().getBytes()));
-
-        //TODO return both to account holder for entry into ACME client
-
-        return ResponseEntity.status(201).build();
+        log.info("Mac Key: "+ Base64.getEncoder().encodeToString(account.getMacKey().getBytes()));
+        return account;
     }
 
-    @PostMapping("/request")
-    public ResponseEntity<?> createAccountRequest(@RequestBody AccountRequestForm form){
+    @GetMapping("/myAccounts")
+    public ResponseEntity<?> getAccountsForCurrentUser(@AuthenticationPrincipal RAUser raUser){
+        Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
+        if(optionalUser.isPresent()){
+            User currentUser = optionalUser.get();
 
-        //todo
-
-        return ResponseEntity.ok().build();
+            List<Account> accounts = accountRepository.findAllByAccountUsersContains(currentUser);
+            return ResponseEntity.ok(accounts);
+        }else{
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("/update")
+    @Transactional
     public ResponseEntity<?> updateAccount(@RequestBody AccountUpdateForm form) throws Exception {
         //TODO
         if(form.isValid()){
@@ -175,27 +191,6 @@ public class AccountService {
     }
 
 
-    @PostMapping("/validationRules/{kid}")
-    public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid){
-        //todo
-        Account account = accountRepository.findByKeyIdentifierEquals(kid);
-
-        List<CAValidationRule> validationRules = new ArrayList<>();
-
-        for(Domain domain : account.getCanIssueDomains()){
-            CAValidationRule validationRule = new CAValidationRule();
-            validationRule.setAllowHostnameIssuance(true);
-            validationRule.setAllowIssuance(true);
-            validationRule.setBaseDomainName(domain.getBase());
-            validationRule.setIdentifierType("dns");
-            validationRule.setRequireHttpChallenge(true);
-
-            validationRules.add(validationRule);
-        }
-
-        return ResponseEntity.ok(validationRules);
-    }
-
     @GetMapping("/getAccountPocs/{kid}")
     public ResponseEntity<?> getAccountPocs(@PathVariable String kid){
 
@@ -215,52 +210,11 @@ public class AccountService {
         return ResponseEntity.ok(domainList);
     }
 
-    @PostMapping("/verify")
-    public ResponseEntity<?> verifyExternalAccountBinding(@RequestParam String macKey, @RequestParam String keyIdentifier,
-                                                          @RequestParam String jwsObject, @RequestParam String accountObject){
-        Base64URL macKeyBase64 = new Base64URL(macKey);
-
-        System.out.println("MAC Key: "+ macKeyBase64.toString());
-        System.out.println("Key Identifier: "+keyIdentifier);
-
-        try {
-            Account account = accountRepository.findByKeyIdentifierEquals(keyIdentifier);
-
-            JWSObject jwsObjectParsed = JWSObject.parse(jwsObject);
-            JWSObject accountJWSParsed = JWSObject.parse(accountObject);
-
-            try {
-                JWSSigner signer = new MACSigner(account.getMacKey());
-
-                JWSObject testObj = new JWSObject(jwsObjectParsed.getHeader(), jwsObjectParsed.getPayload());
-                testObj.sign(signer);
-
-                System.out.println("Test signed obj: "+testObj.getSignature().toJSONString());
-
-                if(testObj.getSignature().toString().contentEquals(jwsObjectParsed.getSignature().toString())){
-                    System.out.println("Account request verified!");
-
-                    //account.setMacKey(jwsObjectParsed.getSignature().toString());
-                    //account.setKeyIdentifier(jwsObjectParsed.getHeader().getKeyID());
-
-                    //accountRepository.save(account);
-
-                    return ResponseEntity.status(200)
-                            .build();
-                }
-            } catch (KeyLengthException e) {
-                e.printStackTrace();
-            }
-
-
-        } catch (Exception e) {
-            log.error("Could not verify request", e);
-        }
-
-        //TODO verify account
-        return ResponseEntity.status(403)
-                .build();
+    public ResponseEntity<?> addUserToAccount(){
+        //todo
+        return null;
     }
+
 
 
     private boolean verifyBinding(Account systemAccount, JWSObject accountObject, JWSObject verifyObject){

@@ -1,17 +1,14 @@
 package com.winllc.pki.ra.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
+import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 public class User extends AbstractPersistable<Long> {
@@ -24,9 +21,15 @@ public class User extends AbstractPersistable<Long> {
     @Size(min = 1, max = 100)
     @Email
     private String email;
-
     @ElementCollection
+    @JsonIgnore
     private List<String> roles = new ArrayList<>();
+    @JsonIgnore
+    @OneToMany
+    private Set<AccountRequest> accountRequests;
+    @JsonIgnore
+    @ManyToMany
+    private Set<Account> accounts;
 
     public User() {
     }
@@ -78,6 +81,22 @@ public class User extends AbstractPersistable<Long> {
 
     public void setRoles(List<String> roles) {
         this.roles = roles;
+    }
+
+    public Set<AccountRequest> getAccountRequests() {
+        return accountRequests;
+    }
+
+    public void setAccountRequests(Set<AccountRequest> accountRequests) {
+        this.accountRequests = accountRequests;
+    }
+
+    public Set<Account> getAccounts() {
+        return accounts;
+    }
+
+    public void setAccounts(Set<Account> accounts) {
+        this.accounts = accounts;
     }
 
     @Override

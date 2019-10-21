@@ -1,0 +1,92 @@
+package com.winllc.pki.ra.service;
+
+import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.KeyLengthException;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.util.Base64URL;
+import com.winllc.acme.common.CAValidationRule;
+import com.winllc.pki.ra.domain.Account;
+import com.winllc.pki.ra.domain.Domain;
+import com.winllc.pki.ra.repository.AccountRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController
+@RequestMapping("/validation")
+public class ValidationService {
+
+    private static final Logger log = LogManager.getLogger(ValidationService.class);
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @PostMapping("/rules/{kid}")
+    public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid){
+        //todo
+        Account account = accountRepository.findByKeyIdentifierEquals(kid);
+
+        List<CAValidationRule> validationRules = new ArrayList<>();
+
+        for(Domain domain : account.getCanIssueDomains()){
+            CAValidationRule validationRule = new CAValidationRule();
+            validationRule.setAllowHostnameIssuance(true);
+            validationRule.setAllowIssuance(true);
+            validationRule.setBaseDomainName(domain.getBase());
+            validationRule.setIdentifierType("dns");
+            validationRule.setRequireHttpChallenge(true);
+
+            validationRules.add(validationRule);
+        }
+
+        return ResponseEntity.ok(validationRules);
+    }
+
+    @PostMapping("/account/verify")
+    public ResponseEntity<?> verifyExternalAccountBinding(@RequestParam String macKey, @RequestParam String keyIdentifier,
+                                                          @RequestParam String jwsObject, @RequestParam String accountObject){
+        Base64URL macKeyBase64 = new Base64URL(macKey);
+
+        log.info("MAC Key: "+ macKeyBase64.toString());
+        log.info("Key Identifier: "+keyIdentifier);
+
+        try {
+            Account account = accountRepository.findByKeyIdentifierEquals(keyIdentifier);
+
+            JWSObject jwsObjectParsed = JWSObject.parse(jwsObject);
+            JWSObject accountJWSParsed = JWSObject.parse(accountObject);
+
+            try {
+                JWSSigner signer = new MACSigner(account.getMacKey());
+
+                JWSObject testObj = new JWSObject(jwsObjectParsed.getHeader(), jwsObjectParsed.getPayload());
+                testObj.sign(signer);
+
+                log.info("Test signed obj: "+testObj.getSignature().toJSONString());
+
+                if(testObj.getSignature().toString().contentEquals(jwsObjectParsed.getSignature().toString())){
+                    log.info("Account request verified!");
+
+                    return ResponseEntity.status(200)
+                            .build();
+                }
+            } catch (KeyLengthException e) {
+                log.error("Invalid key length", e);
+            }
+
+
+        } catch (Exception e) {
+            log.error("Could not verify request", e);
+        }
+
+        //TODO verify account
+        return ResponseEntity.status(403)
+                .build();
+    }
+}

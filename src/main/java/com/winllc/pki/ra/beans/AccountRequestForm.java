@@ -1,15 +1,23 @@
 package com.winllc.pki.ra.beans;
 
 public class AccountRequestForm {
-    //TODO
 
-    private String pocEmail;
+    private String accountOwnerEmail;
+    private String projectName;
 
-    public String getPocEmail() {
-        return pocEmail;
+    public String getAccountOwnerEmail() {
+        return accountOwnerEmail;
     }
 
-    public void setPocEmail(String pocEmail) {
-        this.pocEmail = pocEmail;
+    public void setAccountOwnerEmail(String accountOwnerEmail) {
+        this.accountOwnerEmail = accountOwnerEmail;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 }

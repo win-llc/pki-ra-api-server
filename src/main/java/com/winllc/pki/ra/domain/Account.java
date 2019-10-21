@@ -13,12 +13,16 @@ import java.util.Set;
 public class Account extends BaseEntity {
     private String keyIdentifier;
     private String macKey;
+    private String projectName;
 
     @OneToOne
-    private PocEntry accountOwner;
+    private User accountOwner;
     @JsonIgnore
     @OneToMany
     private Set<PocEntry> pocs;
+    @JsonIgnore
+    @ManyToMany
+    private Set<User> accountUsers;
     @JsonIgnore
     @ManyToMany
     private Set<Domain> canIssueDomains;
@@ -39,12 +43,29 @@ public class Account extends BaseEntity {
         this.macKey = macKey;
     }
 
-    public PocEntry getAccountOwner() {
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
+    }
+
+    public User getAccountOwner() {
         return accountOwner;
     }
 
-    public void setAccountOwner(PocEntry accountOwner) {
+    public void setAccountOwner(User accountOwner) {
         this.accountOwner = accountOwner;
+    }
+
+    public Set<User> getAccountUsers() {
+        if(accountUsers == null) accountUsers = new HashSet<>();
+        return accountUsers;
+    }
+
+    public void setAccountUsers(Set<User> accountUsers) {
+        this.accountUsers = accountUsers;
     }
 
     public Set<PocEntry> getPocs() {

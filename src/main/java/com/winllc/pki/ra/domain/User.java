@@ -106,8 +106,7 @@ public class User extends AbstractPersistable<Long> {
         if (!super.equals(o)) return false;
         User user = (User) o;
         return identifier.equals(user.identifier)
-                && email.equals(user.email)
-                && Objects.equals(roles, user.roles);
+                && email.equals(user.email);
     }
 
     @Override

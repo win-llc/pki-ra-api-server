@@ -15,8 +15,9 @@ public interface UserRepository extends CrudRepository<User, UUID> {
     @EntityGraph(attributePaths = "roles")
     Optional<User> findOneByEmail(String email);
     Optional<User> findOneByUsername(String username);
-
     Optional<User> findOneByIdentifier(UUID identifier);
+
+    List<User> findAllByAccountsContains(Account account);
 
     void deleteUserByIdentifier(UUID identifier);
 }

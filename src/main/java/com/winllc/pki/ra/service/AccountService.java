@@ -8,9 +8,8 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.util.Base64URL;
 import com.winllc.acme.common.CAValidationRule;
+import com.winllc.pki.ra.beans.*;
 import com.winllc.pki.ra.domain.AccountRequest;
-import com.winllc.pki.ra.beans.AccountUpdateForm;
-import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.PocEntry;
@@ -118,7 +117,14 @@ public class AccountService {
             User currentUser = optionalUser.get();
 
             List<Account> accounts = accountRepository.findAllByAccountUsersContains(currentUser);
-            return ResponseEntity.ok(accounts);
+
+            List<AccountInfo> accountInfoList = new ArrayList<>();
+            for(Account account : accounts){
+                AccountInfo info = buildAccountInfo(account);
+                accountInfoList.add(info);
+            }
+
+            return ResponseEntity.ok(accountInfoList);
         }else{
             return ResponseEntity.notFound().build();
         }
@@ -188,6 +194,40 @@ public class AccountService {
         }else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/info/byId/{id}")
+    public ResponseEntity<?> findInfoById(@PathVariable long id){
+        Optional<Account> accountOptional = accountRepository.findById(id);
+
+        if(accountOptional.isPresent()){
+            Account account = accountOptional.get();
+
+            AccountInfo accountInfo = buildAccountInfo(account);
+
+            return ResponseEntity.ok(accountInfo);
+        }else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    private AccountInfo buildAccountInfo(Account account){
+        List<Domain> canIssueDomains = domainRepository.findAllByCanIssueAccountsContains(account);
+        List<User> accountUsers = userRepository.findAllByAccountsContains(account);
+
+        List<DomainInfo> domainInfoList = canIssueDomains.stream()
+                .map(DomainInfo::new)
+                .collect(Collectors.toList());
+
+        List<UserInfo> userInfoList = accountUsers.stream()
+                .map(UserInfo::new)
+                .collect(Collectors.toList());
+
+        AccountInfo accountInfo = new AccountInfo(account);
+        accountInfo.setCanIssueDomains(domainInfoList);
+        accountInfo.setPocs(userInfoList);
+
+        return accountInfo;
     }
 
 

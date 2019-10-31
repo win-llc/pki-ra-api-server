@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Entity;
 import javax.persistence.ManyToMany;
@@ -8,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-public class Domain extends BaseEntity {
+public class Domain extends AbstractPersistable<Long> {
 
     private String base;
     @JsonIgnore

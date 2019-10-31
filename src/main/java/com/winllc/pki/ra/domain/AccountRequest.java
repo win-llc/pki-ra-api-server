@@ -47,7 +47,7 @@ public class AccountRequest extends AbstractPersistable<Long> {
     }
 
     public void approve(){
-        setState("approved");
+        setState("approve");
     }
 
     public void reject(){

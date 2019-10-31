@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface DomainLinkToAccountRequestRepository extends CrudRepository<DomainLinkToAccountRequest, Long> {
     List<DomainLinkToAccountRequest> findAll();
+    List<DomainLinkToAccountRequest> findAllByStatusEquals(String status);
 }

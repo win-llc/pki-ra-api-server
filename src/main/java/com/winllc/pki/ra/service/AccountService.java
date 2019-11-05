@@ -190,7 +190,9 @@ public class AccountService {
         Optional<Account> accountOptional = accountRepository.findById(id);
 
         if(accountOptional.isPresent()){
-            return ResponseEntity.ok(accountOptional.get());
+            AccountInfo info = buildAccountInfo(accountOptional.get());
+
+            return ResponseEntity.ok(info);
         }else {
             return ResponseEntity.notFound().build();
         }

@@ -242,15 +242,6 @@ public class AccountService {
         return ResponseEntity.ok(pocEntries);
     }
 
-    @GetMapping("/getCanIssueDomains/{kid}")
-    public ResponseEntity<?> getCanIssueDomains(@PathVariable String kid){
-        Account account = accountRepository.findByKeyIdentifierEquals(kid);
-        List<String> domainList = domainRepository.findAllByCanIssueAccountsContains(account)
-                .stream().map(Domain::getBase)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(domainList);
-    }
 
     public ResponseEntity<?> addUserToAccount(){
         //todo

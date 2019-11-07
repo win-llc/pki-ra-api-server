@@ -6,6 +6,7 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
 public interface CertAuthority {
+    String getName();
     X509Certificate issueCertificate(String csr);
     boolean revokeCertificate(String serial, int reason);
     Certificate[] getTrustChain();

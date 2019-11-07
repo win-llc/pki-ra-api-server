@@ -52,7 +52,7 @@ public class InternalCertAuthority implements CertAuthority {
     private List<X509Certificate> revokedCerts = new ArrayList<>();
 
     public InternalCertAuthority(CertAuthorityConnectionInfo connectionInfo){
-
+        this.name = connectionInfo.getName();
     }
 
     public boolean revokeCertificate(String serial, int reason) {
@@ -65,6 +65,11 @@ public class InternalCertAuthority implements CertAuthority {
         }
 
         return false;
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     public X509Certificate issueCertificate(String pkcs10) {
@@ -121,7 +126,9 @@ public class InternalCertAuthority implements CertAuthority {
 
     private Optional<X509Certificate> getX509CertBySerial(String serial){
         for(X509Certificate cert : issuedCerts){
-            if(cert.getSerialNumber() == BigInteger.valueOf(Long.valueOf(serial))){
+            BigInteger certSerial = cert.getSerialNumber();
+            BigInteger reqSerial = BigInteger.valueOf(Long.valueOf(serial));
+            if(certSerial.equals(reqSerial)){
                 try {
                     return Optional.of(cert);
                 }catch (Exception e){

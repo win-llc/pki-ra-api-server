@@ -9,6 +9,7 @@ import com.winllc.acme.common.CAValidationRule;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.repository.AccountRepository;
+import com.winllc.pki.ra.repository.DomainRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/validation")
@@ -26,6 +28,8 @@ public class ValidationService {
 
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private DomainRepository domainRepository;
 
     @PostMapping("/rules/{kid}")
     public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid){
@@ -88,5 +92,15 @@ public class ValidationService {
         //TODO verify account
         return ResponseEntity.status(403)
                 .build();
+    }
+
+    @GetMapping("/account/getCanIssueDomains/{kid}")
+    public ResponseEntity<?> getCanIssueDomains(@PathVariable String kid){
+        Account account = accountRepository.findByKeyIdentifierEquals(kid);
+        List<String> domainList = domainRepository.findAllByCanIssueAccountsContains(account)
+                .stream().map(Domain::getBase)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(domainList);
     }
 }

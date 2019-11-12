@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
@@ -140,6 +141,23 @@ public class CertAuthorityConnectionService {
         }
 
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/trustChain/{connectionName}")
+    public ResponseEntity<?> getTrustChain(@PathVariable String connectionName){
+        CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
+
+        Certificate[] trustChain = certAuthority.getTrustChain();
+
+        StringBuilder stringBuilder = new StringBuilder();
+        for(Certificate cert : trustChain){
+            try {
+                stringBuilder.append(CertUtil.convertToPem(cert)).append("\n");
+            } catch (CertificateEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        return ResponseEntity.ok(stringBuilder.toString());
     }
 
 

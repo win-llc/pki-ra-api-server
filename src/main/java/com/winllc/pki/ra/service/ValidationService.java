@@ -35,10 +35,11 @@ public class ValidationService {
     public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid){
         //todo
         Account account = accountRepository.findByKeyIdentifierEquals(kid);
+        List<Domain> allByCanIssueAccountsContains = domainRepository.findAllByCanIssueAccountsContains(account);
 
         List<CAValidationRule> validationRules = new ArrayList<>();
 
-        for(Domain domain : account.getCanIssueDomains()){
+        for(Domain domain : allByCanIssueAccountsContains){
             CAValidationRule validationRule = new CAValidationRule();
             validationRule.setAllowHostnameIssuance(true);
             validationRule.setAllowIssuance(true);

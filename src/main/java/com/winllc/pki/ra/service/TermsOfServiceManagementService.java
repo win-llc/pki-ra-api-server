@@ -2,6 +2,7 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.DirectoryDataSettings;
 import com.winllc.pki.ra.domain.TermsOfService;
+import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.repository.TermsOfServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -58,7 +59,7 @@ public class TermsOfServiceManagementService {
     }
 
     @PostMapping("/save/{connectionName}")
-    public ResponseEntity<?> save(@PathVariable("connectionName") String acmeServerConnectionName, @RequestBody TermsOfService tos){
+    public ResponseEntity<?> save(@PathVariable("connectionName") String acmeServerConnectionName, @RequestBody TermsOfService tos) throws AcmeConnectionException {
         DirectoryDataSettings settings = acmeServerManagementService.getDirectorySettingsByName(acmeServerConnectionName, tos.getForDirectoryName());
 
         TermsOfService newTos = TermsOfService.buildNew(tos.getText(), tos.getForDirectoryName());
@@ -69,7 +70,7 @@ public class TermsOfServiceManagementService {
     }
 
     @PostMapping("/update/{connectionName}")
-    public ResponseEntity<?> update(@PathVariable("connectionName") String acmeServerConnectionName, @RequestBody TermsOfService tos){
+    public ResponseEntity<?> update(@PathVariable("connectionName") String acmeServerConnectionName, @RequestBody TermsOfService tos) throws AcmeConnectionException {
         DirectoryDataSettings settings = acmeServerManagementService.getDirectorySettingsByName(acmeServerConnectionName, tos.getForDirectoryName());
 
         Optional<TermsOfService> latestVersionOptional = repository.findByVersionId(tos.getVersionId());
@@ -83,7 +84,7 @@ public class TermsOfServiceManagementService {
         }
     }
 
-    private TermsOfService createAndUpdateAcmeServer(TermsOfService tos, DirectoryDataSettings settings, String acmeServerConnectionName){
+    private TermsOfService createAndUpdateAcmeServer(TermsOfService tos, DirectoryDataSettings settings, String acmeServerConnectionName) throws AcmeConnectionException {
         TermsOfService newTos = TermsOfService.buildNew(tos.getText(), tos.getForDirectoryName());
         newTos = repository.save(newTos);
 

@@ -9,6 +9,7 @@ public interface CertAuthority {
     String getName();
     X509Certificate issueCertificate(String csr);
     boolean revokeCertificate(String serial, int reason);
+    String getCertificateStatus(String serial);
     Certificate[] getTrustChain();
     X509Certificate getCertificateBySerial(String serial);
 }

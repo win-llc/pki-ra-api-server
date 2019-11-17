@@ -33,7 +33,6 @@ public class ValidationService {
 
     @PostMapping("/rules/{kid}")
     public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid){
-        //todo
         Account account = accountRepository.findByKeyIdentifierEquals(kid);
         List<Domain> allByCanIssueAccountsContains = domainRepository.findAllByCanIssueAccountsContains(account);
 

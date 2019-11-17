@@ -68,6 +68,20 @@ public class InternalCertAuthority implements CertAuthority {
     }
 
     @Override
+    public String getCertificateStatus(String serial) {
+        X509Certificate certificateBySerial = getCertificateBySerial(serial);
+        if(certificateBySerial != null){
+            if(isCertificateRevoked(serial)){
+                return "revoked";
+            }else{
+                return "valid";
+            }
+        }
+
+        return "unknown";
+    }
+
+    @Override
     public String getName() {
         return name;
     }

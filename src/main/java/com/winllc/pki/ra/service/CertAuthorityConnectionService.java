@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.CertificateStatus;
+import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.InternalCertAuthority;
@@ -130,14 +130,26 @@ public class CertAuthorityConnectionService {
         }
     }
 
-    @PostMapping("/certStatus/{connectionName}")
+    @GetMapping("/certDetails/{connectionName}")
     public ResponseEntity<?> getCertificateStatus(@PathVariable String connectionName, @RequestParam String serial){
-        CertificateStatus status = new CertificateStatus();
 
         CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
         if(certAuthority != null) {
-            //todo
-            return ResponseEntity.ok(status);
+            CertificateDetails details = new CertificateDetails();
+            X509Certificate cert = certAuthority.getCertificateBySerial(serial);
+            if(cert != null){
+                String status = certAuthority.getCertificateStatus(serial);
+                try {
+                    details.setCertificateBase64(CertUtil.convertToPem(cert));
+                    details.setStatus(status);
+                    details.setSerial(serial);
+
+                    return ResponseEntity.ok(details);
+                } catch (CertificateEncodingException e) {
+                    e.printStackTrace();
+                    return ResponseEntity.status(500).build();
+                }
+            }
         }
 
         return ResponseEntity.notFound().build();

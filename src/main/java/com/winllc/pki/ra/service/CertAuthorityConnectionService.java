@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import javax.swing.text.html.Option;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
@@ -102,7 +103,7 @@ public class CertAuthorityConnectionService {
 
         CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
         if(certAuthority != null){
-            X509Certificate cert = certAuthority.issueCertificate(pkcs10);
+            X509Certificate cert = certAuthority.issueCertificate(pkcs10, null);
             try {
                 return ResponseEntity.ok(CertUtil.convertToPem(cert));
             } catch (CertificateEncodingException e) {
@@ -172,6 +173,15 @@ public class CertAuthorityConnectionService {
         return ResponseEntity.ok(stringBuilder.toString());
     }
 
+    public Optional<CertAuthority> getCertAuthorityByName(String name){
+        CertAuthority ca = loadedCertAuthorities.get(name);
+
+        if(ca != null){
+            return Optional.of(ca);
+        }else{
+            return Optional.empty();
+        }
+    }
 
     private Optional<CertAuthority> buildCertAuthority(String connectionName){
         CertAuthority certAuthority = null;

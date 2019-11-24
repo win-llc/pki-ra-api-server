@@ -1,6 +1,9 @@
 package com.winllc.pki.ra.ca;
 
 
+import com.winllc.acme.common.CertSearchParams;
+import com.winllc.acme.common.CertificateDetails;
+import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.service.CertAuthorityConnectionService;
@@ -28,6 +31,7 @@ import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.springframework.web.bind.annotation.*;
+import sun.security.x509.SubjectAlternativeNameExtension;
 
 import javax.swing.text.html.Option;
 import java.io.ByteArrayOutputStream;
@@ -82,11 +86,19 @@ public class InternalCertAuthority implements CertAuthority {
     }
 
     @Override
+    public List<CertificateDetails> search(CertSearchParams params) {
+        //todo
+        String query = params.buildQuery(CertSearchParams.DbConverter.build());
+
+        return null;
+    }
+
+    @Override
     public String getName() {
         return name;
     }
 
-    public X509Certificate issueCertificate(String pkcs10) {
+    public X509Certificate issueCertificate(String pkcs10, SubjectAltNames sans) {
 
         try {
             PKCS10CertificationRequest certificationRequest = CertUtil.csrBase64ToPKC10Object(pkcs10);

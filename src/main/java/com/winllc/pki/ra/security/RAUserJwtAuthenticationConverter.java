@@ -30,8 +30,11 @@ public class RAUserJwtAuthenticationConverter
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
         Collection<GrantedAuthority> authorities = extractAuthorities(jwt);
+
+        String username = jwt.getClaimAsString("preferred_username");
+
         return Optional.ofNullable(
-                raUserDetailsService.loadUserByUsername(jwt.getClaimAsString("preferred_username")))
+                raUserDetailsService.loadUserByUsername(username))
                 .map(u -> new UsernamePasswordAuthenticationToken(u, "n/a", authorities))
                 .orElseThrow(() -> new BadCredentialsException("No user found"));
     }

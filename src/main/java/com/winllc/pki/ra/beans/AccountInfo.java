@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.beans;
 
+import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.BaseEntity;
 
@@ -10,6 +11,7 @@ public class AccountInfo extends InfoObject {
 
     private String keyIdentifier;
     private String macKey;
+    private String macKeyBase64;
     private String projectName;
 
     private UserInfo accountOwner;
@@ -20,6 +22,7 @@ public class AccountInfo extends InfoObject {
         super(entity);
         this.keyIdentifier = entity.getKeyIdentifier();
         this.macKey = entity.getMacKey();
+        this.macKeyBase64 = Base64.encode(this.macKey).toString();
         this.projectName = entity.getProjectName();
     }
 
@@ -37,6 +40,14 @@ public class AccountInfo extends InfoObject {
 
     public void setMacKey(String macKey) {
         this.macKey = macKey;
+    }
+
+    public String getMacKeyBase64() {
+        return macKeyBase64;
+    }
+
+    public void setMacKeyBase64(String macKeyBase64) {
+        this.macKeyBase64 = macKeyBase64;
     }
 
     public String getProjectName() {

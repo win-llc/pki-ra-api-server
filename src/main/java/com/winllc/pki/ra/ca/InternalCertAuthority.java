@@ -1,11 +1,10 @@
 package com.winllc.pki.ra.ca;
 
 
-import com.winllc.acme.common.CertSearchParams;
-import com.winllc.acme.common.CertificateDetails;
-import com.winllc.acme.common.SubjectAltNames;
+import com.winllc.acme.common.*;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
+import com.winllc.pki.ra.domain.IssuedCertificate;
 import com.winllc.pki.ra.service.CertAuthorityConnectionService;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -33,6 +32,9 @@ import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.springframework.web.bind.annotation.*;
 import sun.security.x509.SubjectAlternativeNameExtension;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Query;
 import javax.swing.text.html.Option;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -42,8 +44,11 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.sql.Timestamp;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class InternalCertAuthority implements CertAuthority {
 
@@ -51,6 +56,8 @@ public class InternalCertAuthority implements CertAuthority {
     private String caKeystorePassword = "password";
     private String caKeystoreLocation = "C:\\Users\\jrmints\\IdeaProjects\\ACME Server\\src\\main\\resources\\internal-ca\\intermediate_ca.pfx";
     private String caKeystoreAlias = "alias";
+
+    private EntityManagerFactory entityManager;
 
     private List<X509Certificate> issuedCerts = new ArrayList<>();
     private List<X509Certificate> revokedCerts = new ArrayList<>();
@@ -86,11 +93,19 @@ public class InternalCertAuthority implements CertAuthority {
     }
 
     @Override
-    public List<CertificateDetails> search(CertSearchParams params) {
+    public List<CertificateDetails> search(CertSearchParam param) {
         //todo
-        String query = params.buildQuery(CertSearchParams.DbConverter.build());
+        String query = param.buildQuery(SqlCertSearchConverter.build());
 
-        return null;
+        query = "select * from issued_certificate where "+query;
+
+        EntityManager em = entityManager.createEntityManager();
+        Query nativeQuery = em.createNativeQuery(query, IssuedCertificate.class);
+        List<IssuedCertificate> resultList = nativeQuery.getResultList();
+
+        return resultList.stream()
+                .map(r -> r.convertToCertDetails())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -104,6 +119,13 @@ public class InternalCertAuthority implements CertAuthority {
             PKCS10CertificationRequest certificationRequest = CertUtil.csrBase64ToPKC10Object(pkcs10);
             KeyStore ks = loadKeystore(caKeystoreLocation, caKeystorePassword);
             X509Certificate certificate = signCSR(certificationRequest, 30, ks, caKeystoreAlias, caKeystorePassword.toCharArray());
+
+            IssuedCertificate issuedCertificate = x509ToIssuedCertificate(certificate, "VALID");
+            EntityManager em = entityManager.createEntityManager();
+            em.getTransaction().begin();
+            em.persist(issuedCertificate);
+            em.getTransaction().commit();
+
             return certificate;
         }catch (Exception e){
             e.printStackTrace();
@@ -269,5 +291,20 @@ public class InternalCertAuthority implements CertAuthority {
         ks.load(fis, password.toCharArray());
         IOUtils.closeQuietly(fis);
         return ks;
+    }
+
+    private IssuedCertificate x509ToIssuedCertificate(X509Certificate x509Certificate, String status) throws CertificateEncodingException {
+        IssuedCertificate issuedCertificate = new IssuedCertificate();
+        issuedCertificate.setSubjectDn(x509Certificate.getSubjectDN().getName());
+        issuedCertificate.setIssuerDn(x509Certificate.getIssuerDN().getName());
+        issuedCertificate.setIssuedOn(Timestamp.from(x509Certificate.getNotBefore().toInstant()));
+        issuedCertificate.setExpiresOn(Timestamp.from(x509Certificate.getNotAfter().toInstant()));
+        issuedCertificate.setIssuedCertificate(CertUtil.convertToPem(x509Certificate));
+        issuedCertificate.setStatus(status);
+        return issuedCertificate;
+    }
+
+    public void setEntityManager(EntityManagerFactory entityManager) {
+        this.entityManager = entityManager;
     }
 }

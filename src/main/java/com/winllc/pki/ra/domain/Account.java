@@ -19,7 +19,7 @@ public class Account extends AbstractPersistable<Long> {
     @OneToOne
     private User accountOwner;
     @JsonIgnore
-    @OneToMany
+    @OneToMany(mappedBy = "account")
     private Set<PocEntry> pocs;
     @JsonIgnore
     @ManyToMany

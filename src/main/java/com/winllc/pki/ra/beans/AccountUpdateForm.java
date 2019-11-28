@@ -38,7 +38,7 @@ public class AccountUpdateForm implements ValidForm {
             valid = pocEmails.stream()
                     .allMatch(p -> pattern.matcher(p.getEmail()).matches());
         }else{
-            valid = false;
+            valid = true;
         }
         return valid;
     }

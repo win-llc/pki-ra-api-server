@@ -1,5 +1,7 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.CertSearchParam;
+import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.ca.CertAuthority;
@@ -11,18 +13,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.swing.text.html.Option;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/ca")
 public class CertAuthorityConnectionService {
+
+    @Autowired
+    private EntityManagerFactory entityManagerFactory;
 
     private Map<String, CertAuthority> loadedCertAuthorities = new HashMap<>();
 
@@ -46,6 +50,11 @@ public class CertAuthorityConnectionService {
         Optional<CertAuthority> optionalCertAuthority = buildCertAuthority(name);
         if(optionalCertAuthority.isPresent()){
             CertAuthority ca = optionalCertAuthority.get();
+
+            if(ca instanceof InternalCertAuthority){
+                ((InternalCertAuthority) ca).setEntityManager(entityManagerFactory);
+            }
+
             loadedCertAuthorities.put(ca.getName(), ca);
         }
     }
@@ -173,6 +182,33 @@ public class CertAuthorityConnectionService {
         return ResponseEntity.ok(stringBuilder.toString());
     }
 
+
+    @PostMapping("/search/{connectionName}")
+    public ResponseEntity<?> search(@PathVariable String connectionName, @RequestBody CertSearchParam certSearchParam){
+        CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
+
+        /*
+        CertSearchParam param = new CertSearchParam(CertSearchParams.CertSearchParamRelation.AND);
+
+        CertSearchParam sub1 = new CertSearchParam(CertSearchParams.CertField.SUBJECT, "te", CertSearchParams.CertSearchParamRelation.CONTAINS);
+        CertSearchParam sub2 = new CertSearchParam(CertSearchParams.CertField.SUBJECT, "st", CertSearchParams.CertSearchParamRelation.CONTAINS);
+
+        param.addSearchParam(sub1);
+        param.addSearchParam(sub2);
+
+        CertSearchParam param2 = new CertSearchParam(CertSearchParams.CertSearchParamRelation.OR);
+        param2.addSearchParam(param);
+        param2.addSearchParam(sub1);
+
+        List<CertificateDetails> temp1 = certAuthority.search(param2);
+
+        List<CertificateDetails> temp2 = certAuthority.search(sub1);
+        */
+        //todo clean this up
+
+        return ResponseEntity.ok(certAuthority.search(certSearchParam));
+    }
+
     public Optional<CertAuthority> getCertAuthorityByName(String name){
         CertAuthority ca = loadedCertAuthorities.get(name);
 
@@ -181,6 +217,10 @@ public class CertAuthorityConnectionService {
         }else{
             return Optional.empty();
         }
+    }
+
+    public List<CertAuthority> getAllCertAuthorities(){
+        return new ArrayList<>(loadedCertAuthorities.values());
     }
 
     private Optional<CertAuthority> buildCertAuthority(String connectionName){

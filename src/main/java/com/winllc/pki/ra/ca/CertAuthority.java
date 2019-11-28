@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.ca;
 
+import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.SubjectAltNames;
@@ -15,7 +16,7 @@ public interface CertAuthority {
     X509Certificate issueCertificate(String csr, SubjectAltNames sans);
     boolean revokeCertificate(String serial, int reason);
     String getCertificateStatus(String serial);
-    List<CertificateDetails> search(CertSearchParams params);
+    List<CertificateDetails> search(CertSearchParam params);
     Certificate[] getTrustChain();
     X509Certificate getCertificateBySerial(String serial);
 }

@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
@@ -115,8 +116,14 @@ public class AccountService {
         Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
         if(optionalUser.isPresent()){
             User currentUser = optionalUser.get();
+            List<PocEntry> pocEntries = pocEntryRepository.findAllByEmailEquals(currentUser.getEmail());
 
-            List<Account> accounts = accountRepository.findAllByAccountUsersContains(currentUser);
+            List<Account> accounts;
+            if(!CollectionUtils.isEmpty(pocEntries)) {
+                accounts = accountRepository.findAllByAccountUsersContainsOrPocsContaining(currentUser, pocEntries);
+            }else{
+                accounts = accountRepository.findAllByAccountUsersContains(currentUser);
+            }
 
             List<AccountInfo> accountInfoList = new ArrayList<>();
             for(Account account : accounts){
@@ -139,8 +146,13 @@ public class AccountService {
             if(optionalAccount.isPresent()){
                 Account account = optionalAccount.get();
 
-                Map<String, PocEntry> existingPocMap = account.getPocs().stream()
+                Map<String, PocEntry> existingPocMap = pocEntryRepository.findAllByAccount(account).stream()
                         .collect(Collectors.toMap(p -> p.getEmail(), p -> p));
+
+                List<String> emailsToRemove = existingPocMap.values()
+                        .stream().filter(p -> !form.getPocEmails().contains(new PocFormEntry(p.getEmail())))
+                        .map(e -> e.getEmail())
+                        .collect(Collectors.toList());
 
                 for(PocFormEntry email : form.getPocEmails()){
 
@@ -157,6 +169,9 @@ public class AccountService {
                         account.getPocs().add(pocEntry);
                     }
                 }
+
+                account.getPocs().removeIf(p -> emailsToRemove.contains(p.getEmail()));
+                pocEntryRepository.deleteAllByEmailInAndAccountEquals(emailsToRemove, account);
 
                 accountRepository.save(account);
             }else{

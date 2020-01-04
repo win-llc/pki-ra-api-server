@@ -12,10 +12,13 @@ import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.provider.HibernateUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,18 +41,29 @@ public class ValidationService {
 
         List<CAValidationRule> validationRules = new ArrayList<>();
 
+        //TODO fix this
         for(Domain domain : allByCanIssueAccountsContains){
             CAValidationRule validationRule = new CAValidationRule();
             validationRule.setAllowHostnameIssuance(true);
             validationRule.setAllowIssuance(true);
             validationRule.setBaseDomainName(domain.getBase());
             validationRule.setIdentifierType("dns");
-            validationRule.setRequireHttpChallenge(true);
+            validationRule.setRequireHttpChallenge(account.isAcmeRequireHttpValidation());
 
             validationRules.add(validationRule);
         }
 
         return ResponseEntity.ok(validationRules);
+    }
+
+    @GetMapping("/account/preAuthzIdentifiers/{kid}")
+    @Transactional
+    public ResponseEntity<?> getAccountPreAuthorizedIdentifiers(@PathVariable String kid){
+        Account account = accountRepository.findByKeyIdentifierEquals(kid);
+
+        Hibernate.initialize(account.getPreAuthorizationIdentifiers());
+
+        return ResponseEntity.ok(account.getPreAuthorizationIdentifiers());
     }
 
     @PostMapping("/account/verify")

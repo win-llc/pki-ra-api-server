@@ -73,12 +73,13 @@ public class AccountService {
         domain = domainRepository.save(domain);
 
         testAccount.getCanIssueDomains().add(domain);
-        accountRepository.save(testAccount);
+        testAccount = accountRepository.save(testAccount);
 
         User user = new User();
         user.setIdentifier(UUID.randomUUID());
         user.setUsername("test");
         user.setEmail("test@test.com");
+        user.getAccounts().add(testAccount);
 
         userRepository.save(user);
     }
@@ -120,7 +121,7 @@ public class AccountService {
 
             List<Account> accounts;
             if(!CollectionUtils.isEmpty(pocEntries)) {
-                accounts = accountRepository.findAllByAccountUsersContainsOrPocsContaining(currentUser, pocEntries);
+                accounts = accountRepository.findAllByAccountUsersContainsOrPocsIn(currentUser, pocEntries);
             }else{
                 accounts = accountRepository.findAllByAccountUsersContains(currentUser);
             }
@@ -145,6 +146,7 @@ public class AccountService {
             Optional<Account> optionalAccount = accountRepository.findById(form.getId());
             if(optionalAccount.isPresent()){
                 Account account = optionalAccount.get();
+                account.setAcmeRequireHttpValidation(form.isAcmeRequireHttpValidation());
 
                 Map<String, PocEntry> existingPocMap = pocEntryRepository.findAllByAccount(account).stream()
                         .collect(Collectors.toMap(p -> p.getEmail(), p -> p));
@@ -174,13 +176,13 @@ public class AccountService {
                 pocEntryRepository.deleteAllByEmailInAndAccountEquals(emailsToRemove, account);
 
                 accountRepository.save(account);
+                return ResponseEntity.status(200).build();
             }else{
                 throw new Exception("Could not find account with ID: "+form.getId());
             }
-
         }
 
-        return ResponseEntity.status(200).build();
+        return ResponseEntity.status(500).build();
     }
 
     @GetMapping("/all")

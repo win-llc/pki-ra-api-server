@@ -13,6 +13,7 @@ public class AccountInfo extends InfoObject {
     private String macKey;
     private String macKeyBase64;
     private String projectName;
+    private boolean acmeRequireHttpValidation;
 
     private UserInfo accountOwner;
     private List<UserInfo> pocs;
@@ -24,6 +25,7 @@ public class AccountInfo extends InfoObject {
         this.macKey = entity.getMacKey();
         this.macKeyBase64 = Base64.encode(this.macKey).toString();
         this.projectName = entity.getProjectName();
+        this.acmeRequireHttpValidation = entity.isAcmeRequireHttpValidation();
     }
 
     public String getKeyIdentifier() {
@@ -80,5 +82,13 @@ public class AccountInfo extends InfoObject {
 
     public void setCanIssueDomains(List<DomainInfo> canIssueDomains) {
         this.canIssueDomains = canIssueDomains;
+    }
+
+    public boolean isAcmeRequireHttpValidation() {
+        return acmeRequireHttpValidation;
+    }
+
+    public void setAcmeRequireHttpValidation(boolean acmeRequireHttpValidation) {
+        this.acmeRequireHttpValidation = acmeRequireHttpValidation;
     }
 }

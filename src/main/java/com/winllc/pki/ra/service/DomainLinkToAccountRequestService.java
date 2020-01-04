@@ -79,6 +79,7 @@ public class DomainLinkToAccountRequestService {
             Account account = optionalAccount.get();
 
             //Ensure user exists in the account
+
             List<User> accountUsers = userRepository.findAllByAccountsContains(account);
             if(accountUsers.contains(requester)){
                 Set<Long> avaialableDomains = requestedDomains.stream()

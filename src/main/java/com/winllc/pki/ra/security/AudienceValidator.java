@@ -12,7 +12,7 @@ public class AudienceValidator implements OAuth2TokenValidator<Jwt> {
             new OAuth2Error("invalid_token", "The required audience 'pki-ra-client' is missing", null);
 
     public OAuth2TokenValidatorResult validate(Jwt jwt) {
-        if (jwt.getAudience().contains("pki-ra-client")) {
+        if (jwt.getAudience().contains("pki-ra-client-public")) {
             return OAuth2TokenValidatorResult.success();
         } else {
             return OAuth2TokenValidatorResult.failure(error);

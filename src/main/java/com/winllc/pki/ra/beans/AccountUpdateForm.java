@@ -14,6 +14,7 @@ public class AccountUpdateForm implements ValidForm {
 
     private Long id;
     private List<PocFormEntry> pocEmails;
+    private boolean acmeRequireHttpValidation;
 
     public Long getId() {
         return id;
@@ -29,6 +30,14 @@ public class AccountUpdateForm implements ValidForm {
 
     public void setPocEmails(List<PocFormEntry> pocEmails) {
         this.pocEmails = pocEmails;
+    }
+
+    public boolean isAcmeRequireHttpValidation() {
+        return acmeRequireHttpValidation;
+    }
+
+    public void setAcmeRequireHttpValidation(boolean acmeRequireHttpValidation) {
+        this.acmeRequireHttpValidation = acmeRequireHttpValidation;
     }
 
     public boolean isValid(){

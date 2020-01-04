@@ -92,6 +92,7 @@ public class User extends AbstractPersistable<Long> {
     }
 
     public Set<Account> getAccounts() {
+        if(accounts == null) accounts = new HashSet<>();
         return accounts;
     }
 

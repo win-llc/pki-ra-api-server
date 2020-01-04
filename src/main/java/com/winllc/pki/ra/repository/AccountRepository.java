@@ -14,5 +14,5 @@ public interface AccountRepository extends CrudRepository<Account, Long> {
     List<Account> findAll();
     Account findByKeyIdentifierEquals(String kid);
     List<Account> findAllByAccountUsersContains(User user);
-    List<Account> findAllByAccountUsersContainsOrPocsContaining(User user, List<PocEntry> pocEntries);
+    List<Account> findAllByAccountUsersContainsOrPocsIn(User user, List<PocEntry> pocEntries);
 }

@@ -3,10 +3,7 @@ package com.winllc.pki.ra.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Entity;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,6 +12,7 @@ public class Account extends AbstractPersistable<Long> {
     private String keyIdentifier;
     private String macKey;
     private String projectName;
+    private boolean acmeRequireHttpValidation = false;
 
     @OneToOne
     private User accountOwner;
@@ -27,6 +25,9 @@ public class Account extends AbstractPersistable<Long> {
     @JsonIgnore
     @ManyToMany
     private Set<Domain> canIssueDomains;
+    @ElementCollection
+    @JsonIgnore
+    private Set<String> preAuthorizationIdentifiers;
 
     public String getKeyIdentifier() {
         return keyIdentifier;
@@ -50,6 +51,14 @@ public class Account extends AbstractPersistable<Long> {
 
     public void setProjectName(String projectName) {
         this.projectName = projectName;
+    }
+
+    public boolean isAcmeRequireHttpValidation() {
+        return acmeRequireHttpValidation;
+    }
+
+    public void setAcmeRequireHttpValidation(boolean acmeRequireHttpValidation) {
+        this.acmeRequireHttpValidation = acmeRequireHttpValidation;
     }
 
     public User getAccountOwner() {
@@ -85,6 +94,14 @@ public class Account extends AbstractPersistable<Long> {
 
     public void setCanIssueDomains(Set<Domain> canIssueDomains) {
         this.canIssueDomains = canIssueDomains;
+    }
+
+    public Set<String> getPreAuthorizationIdentifiers() {
+        return preAuthorizationIdentifiers;
+    }
+
+    public void setPreAuthorizationIdentifiers(Set<String> preAuthorizationIdentifiers) {
+        this.preAuthorizationIdentifiers = preAuthorizationIdentifiers;
     }
 
     public void addPoc(PocEntry pocEntry){

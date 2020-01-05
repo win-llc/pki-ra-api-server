@@ -48,7 +48,7 @@ public class AccountRequestService {
 
     @PostMapping("/submit")
     public ResponseEntity<?> createAccountRequest(@RequestBody AccountRequestForm form, @AuthenticationPrincipal RAUser raUser){
-        Optional<User> userOptional = userRepository.findOneByEmail(form.getAccountOwnerEmail());
+        Optional<User> userOptional = userRepository.findOneByUsername(form.getAccountOwnerEmail());
         if(userOptional.isPresent()){
             User user = userOptional.get();
 
@@ -78,7 +78,6 @@ public class AccountRequestService {
 
                 User accountOwner = accountRequest.getAccountOwner();
 
-                account.setAccountOwner(accountOwner);
                 account.getAccountUsers().add(accountOwner);
                 account = accountRepository.save(account);
 

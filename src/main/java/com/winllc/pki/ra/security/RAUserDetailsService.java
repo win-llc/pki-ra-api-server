@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class RAUserDetailsService implements UserDetailsService {
@@ -33,6 +34,7 @@ public class RAUserDetailsService implements UserDetailsService {
             log.debug(username+" did not exist, save to DB");
             User temp = new User();
             temp.setUsername(username);
+            temp.setIdentifier(UUID.randomUUID());
 
             user = userRepository.save(temp);
         }

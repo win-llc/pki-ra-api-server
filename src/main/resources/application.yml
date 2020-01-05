@@ -23,7 +23,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://192.168.1.124:8080/auth/realms/dev
+          issuer-uri: https://keycloak.winllc.com:8443/auth/realms/dev
 rest:
   security:
     cors:

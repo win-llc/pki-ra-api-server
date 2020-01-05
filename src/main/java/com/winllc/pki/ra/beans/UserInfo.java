@@ -1,16 +1,22 @@
 package com.winllc.pki.ra.beans;
 
+import com.winllc.pki.ra.domain.PocEntry;
 import com.winllc.pki.ra.domain.User;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
+import java.util.Objects;
+
 public class UserInfo extends InfoObject {
     private String username;
-    private String email;
 
     public UserInfo(User entity) {
         super(entity);
         this.username = entity.getUsername();
-        this.email = entity.getEmail();
+    }
+
+    public UserInfo(PocEntry pocEntry){
+        super(pocEntry);
+        this.username = pocEntry.getEmail();
     }
 
     public String getUsername() {
@@ -21,11 +27,17 @@ public class UserInfo extends InfoObject {
         this.username = username;
     }
 
-    public String getEmail() {
-        return email;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserInfo userInfo = (UserInfo) o;
+        return Objects.equals(username, userInfo.username);
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    @Override
+    public int hashCode() {
+        return Objects.hash(username);
     }
 }

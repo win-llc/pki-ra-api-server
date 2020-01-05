@@ -18,9 +18,6 @@ public class User extends AbstractPersistable<Long> {
     @NotNull
     @Size(min = 1, max = 100)
     private String username;
-    @Size(min = 1, max = 100)
-    @Email
-    private String email;
     @ElementCollection
     @JsonIgnore
     private List<String> roles = new ArrayList<>();
@@ -38,16 +35,14 @@ public class User extends AbstractPersistable<Long> {
         this(
                 user.getIdentifier(),
                 user.getUsername(),
-                user.getEmail(),
                 user.getRoles());
     }
 
     @PersistenceConstructor
     public User(
-            UUID identifier, String username, String email, List<String> roles) {
+            UUID identifier, String username, List<String> roles) {
         this.identifier = identifier;
         this.username = username;
-        this.email = email;
         this.roles = roles;
     }
 
@@ -65,14 +60,6 @@ public class User extends AbstractPersistable<Long> {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public List<String> getRoles() {
@@ -102,16 +89,17 @@ public class User extends AbstractPersistable<Long> {
 
     @Override
     public boolean equals(Object o) {
+
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         User user = (User) o;
-        return identifier.equals(user.identifier)
-                && email.equals(user.email);
+        return identifier.equals(user.identifier) &&
+                username.equals(user.username);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), identifier, email, roles);
+        return Objects.hash(super.hashCode(), identifier, roles);
     }
 }

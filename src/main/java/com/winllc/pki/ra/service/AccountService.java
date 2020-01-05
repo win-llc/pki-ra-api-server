@@ -77,8 +77,7 @@ public class AccountService {
 
         User user = new User();
         user.setIdentifier(UUID.randomUUID());
-        user.setUsername("test");
-        user.setEmail("test@test.com");
+        user.setUsername("test@test.com");
         user.getAccounts().add(testAccount);
 
         userRepository.save(user);
@@ -117,7 +116,7 @@ public class AccountService {
         Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
         if(optionalUser.isPresent()){
             User currentUser = optionalUser.get();
-            List<PocEntry> pocEntries = pocEntryRepository.findAllByEmailEquals(currentUser.getEmail());
+            List<PocEntry> pocEntries = pocEntryRepository.findAllByEmailEquals(currentUser.getUsername());
 
             List<Account> accounts;
             if(!CollectionUtils.isEmpty(pocEntries)) {
@@ -141,7 +140,7 @@ public class AccountService {
     @PostMapping("/update")
     @Transactional
     public ResponseEntity<?> updateAccount(@RequestBody AccountUpdateForm form) throws Exception {
-        //TODO
+
         if(form.isValid()){
             Optional<Account> optionalAccount = accountRepository.findById(form.getId());
             if(optionalAccount.isPresent()){
@@ -196,9 +195,14 @@ public class AccountService {
     @GetMapping("/findByKeyIdentifier/{kid}")
     public ResponseEntity<?> findByKeyIdentifier(@PathVariable String kid){
 
-        Account account = accountRepository.findByKeyIdentifierEquals(kid);
+        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
-        return ResponseEntity.ok(account);
+        if(optionalAccount.isPresent()){
+            Account account = optionalAccount.get();
+            return ResponseEntity.ok(buildAccountInfo(account));
+        }else{
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/byId/{id}")
@@ -233,6 +237,7 @@ public class AccountService {
     private AccountInfo buildAccountInfo(Account account){
         List<Domain> canIssueDomains = domainRepository.findAllByCanIssueAccountsContains(account);
         List<User> accountUsers = userRepository.findAllByAccountsContains(account);
+        List<PocEntry> pocEntries = pocEntryRepository.findAllByAccount(account);
 
         List<DomainInfo> domainInfoList = canIssueDomains.stream()
                 .map(DomainInfo::new)
@@ -242,9 +247,17 @@ public class AccountService {
                 .map(UserInfo::new)
                 .collect(Collectors.toList());
 
+        List<UserInfo> userInfoFromPocs = pocEntries.stream()
+                .map(UserInfo::new)
+                .collect(Collectors.toList());
+
+        Set<UserInfo> userSet = new HashSet<>();
+        userSet.addAll(userInfoList);
+        userSet.addAll(userInfoFromPocs);
+
         AccountInfo accountInfo = new AccountInfo(account);
         accountInfo.setCanIssueDomains(domainInfoList);
-        accountInfo.setPocs(userInfoList);
+        accountInfo.setPocs(new ArrayList<>(userSet));
 
         return accountInfo;
     }
@@ -253,10 +266,15 @@ public class AccountService {
     @GetMapping("/getAccountPocs/{kid}")
     public ResponseEntity<?> getAccountPocs(@PathVariable String kid){
 
-        Account account = accountRepository.findByKeyIdentifierEquals(kid);
-        List<PocEntry> pocEntries = pocEntryRepository.findAllByAccount(account);
+        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
-        return ResponseEntity.ok(pocEntries);
+        if(optionalAccount.isPresent()){
+            List<PocEntry> pocEntries = pocEntryRepository.findAllByAccount(optionalAccount.get());
+
+            return ResponseEntity.ok(pocEntries);
+        }else{
+            return ResponseEntity.notFound().build();
+        }
     }
 
 

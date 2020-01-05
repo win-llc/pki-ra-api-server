@@ -31,7 +31,7 @@ public class RAUserJwtAuthenticationConverter
     public AbstractAuthenticationToken convert(Jwt jwt) {
         Collection<GrantedAuthority> authorities = extractAuthorities(jwt);
 
-        String username = jwt.getClaimAsString("preferred_username");
+        String username = jwt.getClaimAsString("email");
 
         return Optional.ofNullable(
                 raUserDetailsService.loadUserByUsername(username))

@@ -53,8 +53,8 @@ import java.util.stream.Collectors;
 public class InternalCertAuthority implements CertAuthority {
 
     private String name;
-    private String caKeystorePassword = "password";
-    private String caKeystoreLocation = "C:\\Users\\jrmints\\IdeaProjects\\ACME Server\\src\\main\\resources\\internal-ca\\intermediate_ca.pfx";
+    private String caKeystorePassword = "P@ssW0rd";
+    private String caKeystoreLocation = "C:\\Users\\jrmints\\IdeaProjects\\PKI Registration Authority\\src\\main\\resources\\ca-internal\\win-llc-intermediate-2.pfx";
     private String caKeystoreAlias = "alias";
 
     private EntityManagerFactory entityManager;
@@ -118,7 +118,7 @@ public class InternalCertAuthority implements CertAuthority {
         try {
             PKCS10CertificationRequest certificationRequest = CertUtil.csrBase64ToPKC10Object(pkcs10);
             KeyStore ks = loadKeystore(caKeystoreLocation, caKeystorePassword);
-            X509Certificate certificate = signCSR(certificationRequest, 30, ks, caKeystoreAlias, caKeystorePassword.toCharArray());
+            X509Certificate certificate = signCSR(certificationRequest, sans, 30, ks, caKeystoreAlias, caKeystorePassword.toCharArray());
 
             IssuedCertificate issuedCertificate = x509ToIssuedCertificate(certificate, "VALID");
             EntityManager em = entityManager.createEntityManager();
@@ -187,7 +187,8 @@ public class InternalCertAuthority implements CertAuthority {
         return Optional.empty();
     }
 
-    private X509Certificate signCSR(PKCS10CertificationRequest csr, int validity, KeyStore keystore, String alias, char[] password) throws Exception {
+    private X509Certificate signCSR(PKCS10CertificationRequest csr, SubjectAltNames subjectAltNames, int validity,
+                                    KeyStore keystore, String alias, char[] password) throws Exception {
         try {
             Security.addProvider(new BouncyCastleProvider());
 
@@ -236,17 +237,16 @@ public class InternalCertAuthority implements CertAuthority {
                 certgen.addExtension(X509Extension.extendedKeyUsage, false, eku);
             }
 
-            /*
-            List<GeneralName> generalNameList = new ArrayList<>();
-            for (Identifier identifier : orderData.getObject().getIdentifiers()) {
-                GeneralName altName = new GeneralName(GeneralName.dNSName, identifier.getValue());
-                generalNameList.add(altName);
+            if(subjectAltNames != null) {
+                List<GeneralName> generalNameList = new ArrayList<>();
+                for (String dns : subjectAltNames.getValuesForType(SubjectAltNames.SubjAltNameType.DNS)) {
+                    GeneralName altName = new GeneralName(GeneralName.dNSName, dns);
+                    generalNameList.add(altName);
+                }
+
+                GeneralNames subjectAltName = new GeneralNames(generalNameList.toArray(new GeneralName[0]));
+                certgen.addExtension(X509Extensions.SubjectAlternativeName, false, subjectAltName);
             }
-
-            GeneralNames subjectAltName = new GeneralNames(generalNameList.toArray(new GeneralName[0]));
-            certgen.addExtension(X509Extensions.SubjectAlternativeName, false, subjectAltName);
-
-             */
 
             AsymmetricKeyParameter foo = PrivateKeyFactory.createKey(cakey.getEncoded());
             ContentSigner signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(foo);

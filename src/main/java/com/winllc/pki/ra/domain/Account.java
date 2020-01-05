@@ -14,8 +14,6 @@ public class Account extends AbstractPersistable<Long> {
     private String projectName;
     private boolean acmeRequireHttpValidation = false;
 
-    @OneToOne
-    private User accountOwner;
     @JsonIgnore
     @OneToMany(mappedBy = "account")
     private Set<PocEntry> pocs;
@@ -61,13 +59,6 @@ public class Account extends AbstractPersistable<Long> {
         this.acmeRequireHttpValidation = acmeRequireHttpValidation;
     }
 
-    public User getAccountOwner() {
-        return accountOwner;
-    }
-
-    public void setAccountOwner(User accountOwner) {
-        this.accountOwner = accountOwner;
-    }
 
     public Set<User> getAccountUsers() {
         if(accountUsers == null) accountUsers = new HashSet<>();

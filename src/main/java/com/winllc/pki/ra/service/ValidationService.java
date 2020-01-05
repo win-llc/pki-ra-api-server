@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -36,34 +37,45 @@ public class ValidationService {
 
     @PostMapping("/rules/{kid}")
     public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid){
-        Account account = accountRepository.findByKeyIdentifierEquals(kid);
-        List<Domain> allByCanIssueAccountsContains = domainRepository.findAllByCanIssueAccountsContains(account);
+        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
-        List<CAValidationRule> validationRules = new ArrayList<>();
+        if(optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            List<Domain> allByCanIssueAccountsContains = domainRepository.findAllByCanIssueAccountsContains(account);
 
-        //TODO fix this
-        for(Domain domain : allByCanIssueAccountsContains){
-            CAValidationRule validationRule = new CAValidationRule();
-            validationRule.setAllowHostnameIssuance(true);
-            validationRule.setAllowIssuance(true);
-            validationRule.setBaseDomainName(domain.getBase());
-            validationRule.setIdentifierType("dns");
-            validationRule.setRequireHttpChallenge(account.isAcmeRequireHttpValidation());
+            List<CAValidationRule> validationRules = new ArrayList<>();
 
-            validationRules.add(validationRule);
+            //TODO fix this
+            for (Domain domain : allByCanIssueAccountsContains) {
+                CAValidationRule validationRule = new CAValidationRule();
+                validationRule.setAllowHostnameIssuance(true);
+                validationRule.setAllowIssuance(true);
+                validationRule.setBaseDomainName(domain.getBase());
+                validationRule.setIdentifierType("dns");
+                validationRule.setRequireHttpChallenge(account.isAcmeRequireHttpValidation());
+
+                validationRules.add(validationRule);
+            }
+
+            return ResponseEntity.ok(validationRules);
+        }else{
+            return ResponseEntity.notFound().build();
         }
-
-        return ResponseEntity.ok(validationRules);
     }
 
     @GetMapping("/account/preAuthzIdentifiers/{kid}")
     @Transactional
     public ResponseEntity<?> getAccountPreAuthorizedIdentifiers(@PathVariable String kid){
-        Account account = accountRepository.findByKeyIdentifierEquals(kid);
+        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
-        Hibernate.initialize(account.getPreAuthorizationIdentifiers());
+        if(optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            Hibernate.initialize(account.getPreAuthorizationIdentifiers());
 
-        return ResponseEntity.ok(account.getPreAuthorizationIdentifiers());
+            return ResponseEntity.ok(account.getPreAuthorizationIdentifiers());
+        }else{
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("/account/verify")
@@ -75,29 +87,34 @@ public class ValidationService {
         log.info("Key Identifier: "+keyIdentifier);
 
         try {
-            Account account = accountRepository.findByKeyIdentifierEquals(keyIdentifier);
+            Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(keyIdentifier);
 
-            JWSObject jwsObjectParsed = JWSObject.parse(jwsObject);
-            JWSObject accountJWSParsed = JWSObject.parse(accountObject);
+            if(optionalAccount.isPresent()) {
+                Account account = optionalAccount.get();
+                JWSObject jwsObjectParsed = JWSObject.parse(jwsObject);
+                JWSObject accountJWSParsed = JWSObject.parse(accountObject);
 
-            try {
-                JWSSigner signer = new MACSigner(account.getMacKey());
+                try {
+                    JWSSigner signer = new MACSigner(account.getMacKey());
 
-                JWSObject testObj = new JWSObject(jwsObjectParsed.getHeader(), jwsObjectParsed.getPayload());
-                testObj.sign(signer);
+                    JWSObject testObj = new JWSObject(jwsObjectParsed.getHeader(), jwsObjectParsed.getPayload());
+                    testObj.sign(signer);
 
-                log.info("Test signed obj: "+testObj.getSignature().toJSONString());
+                    log.info("Test signed obj: " + testObj.getSignature().toJSONString());
 
-                if(testObj.getSignature().toString().contentEquals(jwsObjectParsed.getSignature().toString())){
-                    log.info("Account request verified!");
+                    if (testObj.getSignature().toString().contentEquals(jwsObjectParsed.getSignature().toString())) {
+                        log.info("Account request verified!");
 
-                    return ResponseEntity.status(200)
-                            .build();
+                        return ResponseEntity.status(200)
+                                .build();
+                    }
+                } catch (KeyLengthException e) {
+                    log.error("Invalid key length", e);
                 }
-            } catch (KeyLengthException e) {
-                log.error("Invalid key length", e);
-            }
 
+            }else{
+                return ResponseEntity.notFound().build();
+            }
 
         } catch (Exception e) {
             log.error("Could not verify request", e);
@@ -110,11 +127,16 @@ public class ValidationService {
 
     @GetMapping("/account/getCanIssueDomains/{kid}")
     public ResponseEntity<?> getCanIssueDomains(@PathVariable String kid){
-        Account account = accountRepository.findByKeyIdentifierEquals(kid);
-        List<String> domainList = domainRepository.findAllByCanIssueAccountsContains(account)
-                .stream().map(Domain::getBase)
-                .collect(Collectors.toList());
+        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
+        if(optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            List<String> domainList = domainRepository.findAllByCanIssueAccountsContains(account)
+                    .stream().map(Domain::getBase)
+                    .collect(Collectors.toList());
 
-        return ResponseEntity.ok(domainList);
+            return ResponseEntity.ok(domainList);
+        }else{
+            return ResponseEntity.notFound().build();
+        }
     }
 }

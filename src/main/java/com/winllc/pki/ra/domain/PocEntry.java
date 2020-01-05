@@ -1,12 +1,14 @@
 package com.winllc.pki.ra.domain;
 
+import org.springframework.data.jpa.domain.AbstractPersistable;
+
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Entity
-public class PocEntry extends BaseEntity {
+public class PocEntry extends AbstractPersistable<Long> {
 
     private String email;
     private boolean enabled;

@@ -1,13 +1,12 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.CertSearchParam;
-import com.winllc.acme.common.CertSearchParams;
-import com.winllc.acme.common.CertificateDetails;
+import com.winllc.acme.common.*;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.InternalCertAuthority;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.repository.CertAuthorityConnectionInfoRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -107,12 +106,21 @@ public class CertAuthorityConnectionService {
 
 
     @PostMapping("/issueCertificate/{connectionName}")
-    public ResponseEntity<?> issueCertificate(@PathVariable String connectionName, @RequestParam String pkcs10){
+    public ResponseEntity<?> issueCertificate(@PathVariable String connectionName,
+                                              @RequestParam String pkcs10, @RequestParam(required = false) String dnsNames){
         //todo issue through here, not /ca/internal
 
         CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
         if(certAuthority != null){
-            X509Certificate cert = certAuthority.issueCertificate(pkcs10, null);
+            SubjectAltNames subjectAltNames = null;
+            if(StringUtils.isNotBlank(dnsNames)){
+                subjectAltNames = new SubjectAltNames();
+                for(String dnsName : dnsNames.split(",")){
+                    subjectAltNames.addValue(SubjectAltNames.SubjAltNameType.DNS, dnsName);
+                }
+            }
+
+            X509Certificate cert = certAuthority.issueCertificate(pkcs10, subjectAltNames);
             try {
                 return ResponseEntity.ok(CertUtil.convertToPem(cert));
             } catch (CertificateEncodingException e) {

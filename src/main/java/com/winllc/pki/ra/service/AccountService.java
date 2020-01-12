@@ -59,9 +59,11 @@ public class AccountService {
 
     @PostConstruct
     private void postConstruct(){
+        //todo remove this, for testing
         Account testAccount = new Account();
         testAccount.setKeyIdentifier("kidtest");
         testAccount.setMacKey(macKey);
+        testAccount.setProjectName("Test Project");
 
         Domain domain = new Domain();
         domain.setBase("winllc.com");
@@ -77,10 +79,13 @@ public class AccountService {
 
         User user = new User();
         user.setIdentifier(UUID.randomUUID());
-        user.setUsername("test@test.com");
+        user.setUsername("dave@test.com");
         user.getAccounts().add(testAccount);
 
-        userRepository.save(user);
+        user = userRepository.save(user);
+        testAccount.getAccountUsers().add(user);
+
+        accountRepository.save(testAccount);
     }
 
 

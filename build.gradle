@@ -16,6 +16,7 @@ repositories {
 
 dependencies {
     compile project(":acme-common")
+    compile fileTree(dir:'..\\dogtagpki\\target\\', include:'*.jar')
 
     implementation('org.springframework.boot:spring-boot-starter-actuator')
     implementation('org.springframework.boot:spring-boot-starter-data-jpa')
@@ -25,7 +26,16 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-hateoas')
     implementation('org.springframework.boot:spring-boot-configuration-processor')
     runtimeOnly('org.springframework.boot:spring-boot-devtools')
-    
+
+    // https://mvnrepository.com/artifact/org.keycloak/keycloak-admin-client
+    compile group: 'org.keycloak', name: 'keycloak-admin-client', version: '8.0.1'
+
+    // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-client
+    compile group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.6.2.Final'
+    // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-jackson2-provider
+    compile group: 'org.jboss.resteasy', name: 'resteasy-jackson2-provider', version: '3.6.2.Final'
+
+
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
     //compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.0.pr2'
 

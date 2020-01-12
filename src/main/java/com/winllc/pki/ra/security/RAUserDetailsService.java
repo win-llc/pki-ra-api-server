@@ -26,7 +26,7 @@ public class RAUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        Optional<User> userOptional =userRepository.findOneByUsername(username);
+        Optional<User> userOptional = userRepository.findOneByUsername(username);
         User user;
         if(userOptional.isPresent()){
             user = userOptional.get();

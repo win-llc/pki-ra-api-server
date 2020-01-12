@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
+import java.net.URI;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -96,9 +97,11 @@ public class AccountService {
         Account account = buildNew();
         account.setProjectName(form.getProjectName());
 
-        accountRepository.save(account);
+        account = accountRepository.save(account);
 
-        return ResponseEntity.status(201).build();
+        return ResponseEntity.status(201)
+                .header("id", String.valueOf(account.getId()))
+                .build();
     }
 
     public Account buildNew(){
@@ -130,8 +133,10 @@ public class AccountService {
                 accounts = accountRepository.findAllByAccountUsersContains(currentUser);
             }
 
+            Set<Account> filtered = new HashSet<>(accounts);
+
             List<AccountInfo> accountInfoList = new ArrayList<>();
-            for(Account account : accounts){
+            for(Account account : filtered){
                 AccountInfo info = buildAccountInfo(account);
                 accountInfoList.add(info);
             }
@@ -274,9 +279,10 @@ public class AccountService {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
         if(optionalAccount.isPresent()){
-            List<PocEntry> pocEntries = pocEntryRepository.findAllByAccount(optionalAccount.get());
+            Account account = optionalAccount.get();
+            AccountInfo accountInfo = buildAccountInfo(account);
 
-            return ResponseEntity.ok(pocEntries);
+            return ResponseEntity.ok(accountInfo.getPocs());
         }else{
             return ResponseEntity.notFound().build();
         }

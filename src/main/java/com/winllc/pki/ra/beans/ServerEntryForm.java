@@ -1,10 +1,13 @@
 package com.winllc.pki.ra.beans;
 
+import java.util.List;
+
 public class ServerEntryForm {
 
     private Long id;
     private String fqdn;
     private Long accountId;
+    private List<String> alternateDnsValues;
 
     public Long getId() {
         return id;
@@ -28,5 +31,13 @@ public class ServerEntryForm {
 
     public void setAccountId(Long accountId) {
         this.accountId = accountId;
+    }
+
+    public List<String> getAlternateDnsValues() {
+        return alternateDnsValues;
+    }
+
+    public void setAlternateDnsValues(List<String> alternateDnsValues) {
+        this.alternateDnsValues = alternateDnsValues;
     }
 }

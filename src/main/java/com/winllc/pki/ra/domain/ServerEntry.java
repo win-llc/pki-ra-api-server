@@ -3,14 +3,19 @@ package com.winllc.pki.ra.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
+import java.util.List;
 
 @Entity
 public class ServerEntry extends AbstractPersistable<Long> {
 
     private String hostname;
     private String fqdn;
+    @JsonIgnore
+    @ElementCollection
+    private List<String> alternateDnsValues;
     @JsonIgnore
     @ManyToOne
     private Domain domainParent;
@@ -57,6 +62,14 @@ public class ServerEntry extends AbstractPersistable<Long> {
 
     public void setOpenidClientId(String openidClientId) {
         this.openidClientId = openidClientId;
+    }
+
+    public List<String> getAlternateDnsValues() {
+        return alternateDnsValues;
+    }
+
+    public void setAlternateDnsValues(List<String> alternateDnsValues) {
+        this.alternateDnsValues = alternateDnsValues;
     }
 
     @Override

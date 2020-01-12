@@ -5,6 +5,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -97,5 +98,21 @@ public class Account extends AbstractPersistable<Long> {
 
     public void addPoc(PocEntry pocEntry){
         getPocs().add(pocEntry);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        Account account = (Account) o;
+        return Objects.equals(keyIdentifier, account.keyIdentifier) &&
+                Objects.equals(macKey, account.macKey) &&
+                Objects.equals(projectName, account.projectName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), keyIdentifier, macKey, projectName);
     }
 }

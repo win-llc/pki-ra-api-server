@@ -14,6 +14,7 @@ import org.keycloak.admin.client.resource.ClientResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.core.Response;
@@ -24,15 +25,21 @@ public class KeycloakService {
 
     private static final Logger log = LogManager.getLogger(KeycloakService.class);
 
-    private String serverBaseUrl = "https://keycloak.winllc.com:8443";
-    private String serverUrlAuth = serverBaseUrl+"/auth";
-    private String realm = "dev";
-    private String clientId = "win-pki-ra-client";
-    private String clientSecret = "4f6e55f4-1d4c-4f84-8564-0e2fd4194eea";
-    private String customClientScope = "pki-app";
-
-    private String username = "dave";
-    private String password = "pass";
+    @Value("${keycloak.admin-interface.server-base-url}")
+    private String serverBaseUrl;
+    //private String serverUrlAuth = serverBaseUrl+"/auth";
+    @Value("${keycloak.admin-interface.realm}")
+    private String realm;
+    @Value("${keycloak.admin-interface.client-id}")
+    private String clientId;
+    @Value("${keycloak.admin-interface.client-secret}")
+    private String clientSecret;
+    @Value("${keycloak.admin-interface.custom-client-scope}")
+    private String customClientScope;
+    @Value("${keycloak.admin-interface.client-username}")
+    private String username;
+    @Value("${keycloak.admin-interface.client-password}")
+    private String password;
 
     @Autowired
     private ServerEntryRepository serverEntryRepository;
@@ -238,7 +245,7 @@ public class KeycloakService {
     public OIDCClientDetails getClient(ServerEntry serverEntry){
         //todo
 
-        String oidcProviderMetadataURL = serverUrlAuth+"/realms/"+realm+"/.well-known/openid-configuration";
+        String oidcProviderMetadataURL = serverBaseUrl+"/realms/"+realm+"/.well-known/openid-configuration";
 
         OIDCClientDetails clientDetails = new OIDCClientDetails();
         clientDetails.setOidcProviderMetadataUrlValue(oidcProviderMetadataURL);
@@ -275,7 +282,7 @@ public class KeycloakService {
                 .clientId(clientId)
                 .username(username)
                 .password(password)
-                .serverUrl(serverUrlAuth)
+                .serverUrl(serverBaseUrl)
                 .clientSecret(clientSecret)
                 .resteasyClient(new ResteasyClientBuilder().connectionPoolSize(10).register(new CustomJacksonProvider()).build())
                 .build();

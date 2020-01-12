@@ -2,6 +2,7 @@ package com.winllc.pki.ra.service;
 
 import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.beans.*;
+import com.winllc.pki.ra.beans.validator.ServerEntryFormValidator;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.ServerEntry;
@@ -14,12 +15,14 @@ import com.winllc.pki.ra.security.RAUser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -84,17 +87,38 @@ public class ServerEntryService {
     public ResponseEntity<?> updateServerEntry(@RequestBody ServerEntryForm form){
         //todo
 
+        Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(form.getId());
+        if(optionalServerEntry.isPresent()){
+            ServerEntry serverEntry = optionalServerEntry.get();
+
+            boolean isValid = new ServerEntryFormValidator().validate(form);
+            if(isValid){
+                serverEntry.setAlternateDnsValues(form.getAlternateDnsValues());
+
+                serverEntryRepository.save(serverEntry);
+            }else{
+                log.error("Invalid Server Entry form");
+                return ResponseEntity.badRequest().build();
+            }
+
+        }else{
+            return ResponseEntity.badRequest().build();
+        }
+
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/byId/{id}")
+    @Transactional
     public ResponseEntity<?> getServerEntry(@PathVariable Long id){
         Optional<ServerEntry> entryOptional = serverEntryRepository.findById(id);
 
         if(entryOptional.isPresent()){
             ServerEntry entry = entryOptional.get();
+            Hibernate.initialize(entry.getAlternateDnsValues());
+            ServerEntryInfo serverEntryInfo = new ServerEntryInfo(entry);
 
-            return ResponseEntity.ok(entry);
+            return ResponseEntity.ok(serverEntryInfo);
         }else{
             return ResponseEntity.notFound().build();
         }
@@ -109,6 +133,7 @@ public class ServerEntryService {
     }
 
     @GetMapping("/allForUser")
+    @Transactional
     public ResponseEntity<?> getAllServerEntriesForUser(@AuthenticationPrincipal RAUser raUser){
 
         Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
@@ -118,9 +143,14 @@ public class ServerEntryService {
 
             List<Account> allByAccountUsersContains = accountRepository.findAllByAccountUsersContains(user);
 
-            List<ServerEntry> entries = new ArrayList<>();
+            List<ServerEntryInfo> entries = new ArrayList<>();
             for(Account account : allByAccountUsersContains) {
-                List<ServerEntry> temp = serverEntryRepository.findAllByAccountId(account.getId());
+                List<ServerEntryInfo> temp = serverEntryRepository.findAllByAccountId(account.getId())
+                        .stream().map(i -> {
+                            Hibernate.initialize(i.getAlternateDnsValues());
+                            return new ServerEntryInfo(i);
+                        })
+                        .collect(Collectors.toList());
                 entries.addAll(temp);
             }
 

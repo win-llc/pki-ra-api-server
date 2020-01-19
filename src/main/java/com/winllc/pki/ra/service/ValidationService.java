@@ -5,6 +5,7 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.util.Base64URL;
+import com.winllc.acme.common.AccountValidationResponse;
 import com.winllc.acme.common.CAValidationRule;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
@@ -34,6 +35,8 @@ public class ValidationService {
     private AccountRepository accountRepository;
     @Autowired
     private DomainRepository domainRepository;
+    @Autowired
+    private AccountRestrictionService accountRestrictionService;
 
     @PostMapping("/rules/{kid}")
     public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid){
@@ -57,7 +60,13 @@ public class ValidationService {
                 validationRules.add(validationRule);
             }
 
-            return ResponseEntity.ok(validationRules);
+            AccountValidationResponse response = new AccountValidationResponse();
+            response.setCaValidationRules(validationRules);
+
+            boolean accountValid = accountRestrictionService.checkIfAccountValid(account);
+            response.setAccountIsValid(accountValid);
+
+            return ResponseEntity.ok(response);
         }else{
             return ResponseEntity.notFound().build();
         }

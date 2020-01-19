@@ -10,6 +10,8 @@ import com.winllc.pki.ra.repository.AccountRequestRepository;
 import com.winllc.pki.ra.repository.UserRepository;
 import com.winllc.pki.ra.security.RAUser;
 import com.winllc.pki.ra.util.AppUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +25,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/account/request")
 public class AccountRequestService {
+
+    private static final Logger log = LogManager.getLogger(AccountRequestService.class);
 
     @Autowired
     private AccountRequestRepository accountRequestRepository;

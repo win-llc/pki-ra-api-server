@@ -14,6 +14,7 @@ public class Account extends AbstractPersistable<Long> {
     private String macKey;
     private String projectName;
     private boolean acmeRequireHttpValidation = false;
+    private boolean enabled = true;
 
     @JsonIgnore
     @OneToMany(mappedBy = "account")
@@ -27,6 +28,9 @@ public class Account extends AbstractPersistable<Long> {
     @ElementCollection
     @JsonIgnore
     private Set<String> preAuthorizationIdentifiers;
+    @JsonIgnore
+    @OneToMany(mappedBy = "account")
+    private Set<AccountRestriction> accountRestrictions;
 
     public String getKeyIdentifier() {
         return keyIdentifier;
@@ -50,6 +54,14 @@ public class Account extends AbstractPersistable<Long> {
 
     public void setProjectName(String projectName) {
         this.projectName = projectName;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public boolean isAcmeRequireHttpValidation() {
@@ -94,6 +106,14 @@ public class Account extends AbstractPersistable<Long> {
 
     public void setPreAuthorizationIdentifiers(Set<String> preAuthorizationIdentifiers) {
         this.preAuthorizationIdentifiers = preAuthorizationIdentifiers;
+    }
+
+    public Set<AccountRestriction> getAccountRestrictions() {
+        return accountRestrictions;
+    }
+
+    public void setAccountRestrictions(Set<AccountRestriction> accountRestrictions) {
+        this.accountRestrictions = accountRestrictions;
     }
 
     public void addPoc(PocEntry pocEntry){

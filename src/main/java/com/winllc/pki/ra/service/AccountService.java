@@ -9,15 +9,8 @@ import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.util.Base64URL;
 import com.winllc.acme.common.CAValidationRule;
 import com.winllc.pki.ra.beans.*;
-import com.winllc.pki.ra.domain.AccountRequest;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.PocEntry;
-import com.winllc.pki.ra.domain.User;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.DomainRepository;
-import com.winllc.pki.ra.repository.PocEntryRepository;
-import com.winllc.pki.ra.repository.UserRepository;
+import com.winllc.pki.ra.domain.*;
+import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.security.RAUser;
 import com.winllc.pki.ra.util.AppUtil;
 import org.apache.logging.log4j.LogManager;
@@ -53,6 +46,8 @@ public class AccountService {
     private PocEntryRepository pocEntryRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private AccountRestrictionRepository accountRestrictionRepository;
 
     static {
         System.out.println("System MAC key: "+macKey);
@@ -244,6 +239,22 @@ public class AccountService {
         }
     }
 
+    @GetMapping("/getAccountPocs/{kid}")
+    public ResponseEntity<?> getAccountPocs(@PathVariable String kid){
+
+        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
+
+        if(optionalAccount.isPresent()){
+            Account account = optionalAccount.get();
+            AccountInfo accountInfo = buildAccountInfo(account);
+
+            return ResponseEntity.ok(accountInfo.getPocs());
+        }else{
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
     private AccountInfo buildAccountInfo(Account account){
         List<Domain> canIssueDomains = domainRepository.findAllByCanIssueAccountsContains(account);
         List<User> accountUsers = userRepository.findAllByAccountsContains(account);
@@ -273,28 +284,13 @@ public class AccountService {
     }
 
 
-    @GetMapping("/getAccountPocs/{kid}")
-    public ResponseEntity<?> getAccountPocs(@PathVariable String kid){
-
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
-
-        if(optionalAccount.isPresent()){
-            Account account = optionalAccount.get();
-            AccountInfo accountInfo = buildAccountInfo(account);
-
-            return ResponseEntity.ok(accountInfo.getPocs());
-        }else{
-            return ResponseEntity.notFound().build();
-        }
+    private List<AccountRestriction> getAllNotCompletedAccountRestrictions(Account account){
+        return accountRestrictionRepository.findAllByAccountAndCompleted(account, false);
     }
 
-
-    public ResponseEntity<?> addUserToAccount(){
-        //todo
-        return null;
+    private List<AccountRestriction> getAllNotCompletedAndOverdueAccountRestrictions(Account account){
+        return accountRestrictionRepository.findAllByAccountAndDueByBeforeAndCompletedEquals(account, Timestamp.valueOf(LocalDateTime.now()), false);
     }
-
-
 
     private boolean verifyBinding(Account systemAccount, JWSObject accountObject, JWSObject verifyObject){
         JWK accountPublicKey = accountObject.getHeader().getJWK().toPublicJWK();

@@ -1,33 +1,25 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.info;
 
+import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.domain.ServerEntry;
 
 import java.util.List;
 
-public class ServerEntryInfo {
+public class ServerEntryInfo extends InfoObject<ServerEntry> {
 
-    private Long id;
     private String fqdn;
     private AccountInfo accountInfo;
     private List<String> alternateDnsValues;
     private String openidClientId;
+    private String openidClientRedirectUrl;
 
     public ServerEntryInfo(ServerEntry serverEntry){
-        this.id = serverEntry.getId();
+        super(serverEntry);
         this.fqdn = serverEntry.getFqdn();
         this.alternateDnsValues = serverEntry.getAlternateDnsValues();
         this.setAccountInfo(new AccountInfo(serverEntry.getAccount()));
         this.openidClientId = serverEntry.getOpenidClientId();
-    }
-
-    private ServerEntryInfo(){}
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
+        this.openidClientRedirectUrl = serverEntry.getOpenidClientRedirectUrl();
     }
 
     public String getFqdn() {
@@ -60,5 +52,13 @@ public class ServerEntryInfo {
 
     public void setOpenidClientId(String openidClientId) {
         this.openidClientId = openidClientId;
+    }
+
+    public String getOpenidClientRedirectUrl() {
+        return openidClientRedirectUrl;
+    }
+
+    public void setOpenidClientRedirectUrl(String openidClientRedirectUrl) {
+        this.openidClientRedirectUrl = openidClientRedirectUrl;
     }
 }

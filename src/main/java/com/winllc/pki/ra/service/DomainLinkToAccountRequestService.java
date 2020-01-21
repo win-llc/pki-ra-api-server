@@ -1,7 +1,9 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.beans.DomainLinkRequestDecision;
-import com.winllc.pki.ra.beans.DomainLinkToAccountRequestForm;
+import com.winllc.pki.ra.beans.*;
+import com.winllc.pki.ra.beans.info.AccountInfo;
+import com.winllc.pki.ra.beans.info.DomainInfo;
+import com.winllc.pki.ra.beans.info.DomainLinkToAccountRequestInfo;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.DomainLinkToAccountRequest;
@@ -19,7 +21,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
-import javax.websocket.server.PathParam;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -43,7 +44,11 @@ public class DomainLinkToAccountRequestService {
     public ResponseEntity<?> getAllRequests(){
         List<DomainLinkToAccountRequest> requests = requestRepository.findAll();
 
-        return ResponseEntity.ok(requests);
+        List<DomainLinkToAccountRequestInfo> infoList = requests.stream()
+                .map(d -> buildInfo(d))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(infoList);
     }
 
     @Transactional
@@ -51,7 +56,11 @@ public class DomainLinkToAccountRequestService {
     public ResponseEntity<?> getUnapprovedRequests(){
         List<DomainLinkToAccountRequest> requests = requestRepository.findAllByStatusEquals("new");
 
-        return ResponseEntity.ok(requests);
+        List<DomainLinkToAccountRequestInfo> infoList = requests.stream()
+                .map(d -> buildInfo(d))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(infoList);
     }
 
     @GetMapping("/byId/{id}")
@@ -90,7 +99,7 @@ public class DomainLinkToAccountRequestService {
 
                 request = requestRepository.save(request);
                 log.info("Created domain link request: "+request);
-                return ResponseEntity.ok().build();
+                return ResponseEntity.ok(request.getId());
             }else{
                 log.error("Requester not associated with account");
                 return ResponseEntity.status(401).build();
@@ -138,11 +147,29 @@ public class DomainLinkToAccountRequestService {
 
             log.debug("Request updated: " + request);
 
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(request);
 
         }else{
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    private DomainLinkToAccountRequestInfo buildInfo(DomainLinkToAccountRequest request){
+        DomainLinkToAccountRequestInfo info = new DomainLinkToAccountRequestInfo(request);
+        Optional<Account> optionalAccount = accountRepository.findById(request.getAccountId());
+        List<Domain> domains = domainRepository.findAllByIdIn(request.getRequestedDomainIds());
+
+        if(optionalAccount.isPresent()){
+            AccountInfo accountInfo = new AccountInfo(optionalAccount.get());
+            info.setAccountInfo(accountInfo);
+        }
+
+        List<DomainInfo> domainInfoList = domains.stream()
+                .map(DomainInfo::new)
+                .collect(Collectors.toList());
+
+        info.setDomainInfoList(domainInfoList);
+        return info;
     }
 
 }

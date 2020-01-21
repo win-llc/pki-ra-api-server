@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -8,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-public class DomainLinkToAccountRequest extends BaseEntity {
+public class DomainLinkToAccountRequest extends AbstractPersistable<Long> {
 
     private Long accountId;
     @ElementCollection

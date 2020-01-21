@@ -7,6 +7,8 @@ import com.winllc.pki.ra.ca.InternalCertAuthority;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.repository.CertAuthorityConnectionInfoRepository;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,8 @@ import java.util.*;
 @RestController
 @RequestMapping("/ca")
 public class CertAuthorityConnectionService {
+
+    private static final Logger log = LogManager.getLogger(CertAuthorityConnectionService.class);
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;
@@ -65,7 +69,7 @@ public class CertAuthorityConnectionService {
 
         loadCertAuthority(connectionInfo.getName());
 
-        return ResponseEntity.ok(connectionInfo);
+        return ResponseEntity.ok(connectionInfo.getId());
     }
 
     @PostMapping("/api/info/update")
@@ -76,6 +80,9 @@ public class CertAuthorityConnectionService {
             CertAuthorityConnectionInfo info = optionalInfo.get();
             info.setType(connectionInfo.getType());
             //todo the rest
+
+            info = repository.save(info);
+            return ResponseEntity.ok(info);
         }
 
         return ResponseEntity.notFound().build();
@@ -83,10 +90,20 @@ public class CertAuthorityConnectionService {
 
     @GetMapping("/api/info/byName/{name}")
     public ResponseEntity<?> getConnectionInfoByName(@PathVariable String name){
-        //todo
         CertAuthorityConnectionInfo info = repository.findByName(name);
 
         return ResponseEntity.ok(info);
+    }
+
+    @GetMapping("/api/info/byId/{id}")
+    public ResponseEntity<?> getConnectionInfoById(@PathVariable Long id){
+        Optional<CertAuthorityConnectionInfo> infoOptional = repository.findById(id);
+
+        if(infoOptional.isPresent()){
+            return ResponseEntity.ok(infoOptional.get());
+        }
+
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/api/info/all")

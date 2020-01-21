@@ -83,8 +83,8 @@ public class CertificateRequestService {
             if(optionalUser.isPresent()) {
                 User user = optionalUser.get();
                 certificateRequest.setRequestedBy(user);
-                requestRepository.save(certificateRequest);
-                return ResponseEntity.ok().build();
+                certificateRequest = requestRepository.save(certificateRequest);
+                return ResponseEntity.ok(certificateRequest.getId());
             }else{
                 return ResponseEntity.notFound().build();
             }

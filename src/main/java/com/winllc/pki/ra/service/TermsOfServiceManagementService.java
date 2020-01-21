@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,32 +60,43 @@ public class TermsOfServiceManagementService {
     }
 
     @PostMapping("/save/{connectionName}")
-    public ResponseEntity<?> save(@PathVariable("connectionName") String acmeServerConnectionName, @RequestBody TermsOfService tos) throws AcmeConnectionException {
+    public ResponseEntity<?> save(@PathVariable("connectionName") String acmeServerConnectionName,
+                                  @RequestBody TermsOfService tos) throws AcmeConnectionException, IOException {
         DirectoryDataSettings settings = acmeServerManagementService.getDirectorySettingsByName(acmeServerConnectionName, tos.getForDirectoryName());
 
         TermsOfService newTos = TermsOfService.buildNew(tos.getText(), tos.getForDirectoryName());
 
-        createAndUpdateAcmeServer(newTos, settings, acmeServerConnectionName);
+        newTos = createAndUpdateAcmeServer(newTos, settings, acmeServerConnectionName);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(newTos.getId());
     }
 
     @PostMapping("/update/{connectionName}")
-    public ResponseEntity<?> update(@PathVariable("connectionName") String acmeServerConnectionName, @RequestBody TermsOfService tos) throws AcmeConnectionException {
+    public ResponseEntity<?> update(@PathVariable("connectionName") String acmeServerConnectionName,
+                                    @RequestBody TermsOfService tos) throws AcmeConnectionException, IOException {
         DirectoryDataSettings settings = acmeServerManagementService.getDirectorySettingsByName(acmeServerConnectionName, tos.getForDirectoryName());
 
         Optional<TermsOfService> latestVersionOptional = repository.findByVersionId(tos.getVersionId());
 
         if(latestVersionOptional.isPresent()){
-            createAndUpdateAcmeServer(tos, settings, acmeServerConnectionName);
+            tos = createAndUpdateAcmeServer(tos, settings, acmeServerConnectionName);
 
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(tos);
         }else{
             return ResponseEntity.badRequest().build();
         }
     }
 
-    private TermsOfService createAndUpdateAcmeServer(TermsOfService tos, DirectoryDataSettings settings, String acmeServerConnectionName) throws AcmeConnectionException {
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id){
+
+        repository.deleteById(id);
+
+        return ResponseEntity.ok().build();
+    }
+
+    private TermsOfService createAndUpdateAcmeServer(TermsOfService tos, DirectoryDataSettings settings,
+                                                     String acmeServerConnectionName) throws AcmeConnectionException, IOException {
         TermsOfService newTos = TermsOfService.buildNew(tos.getText(), tos.getForDirectoryName());
         newTos = repository.save(newTos);
 

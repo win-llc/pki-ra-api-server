@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.winllc.acme.common.CertificateDetails;
+import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -9,7 +10,7 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "IssuedCertificate")
-public class IssuedCertificate extends BaseEntity {
+public class IssuedCertificate extends AbstractPersistable<Long> {
 
     private String certAuthorityName;
     private String issuerDn;

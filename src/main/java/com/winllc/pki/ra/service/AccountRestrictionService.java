@@ -67,7 +67,7 @@ public class AccountRestrictionService {
 
         log.info("Account restriction added ID: "+accountRestriction.getId());
 
-        return ResponseEntity.status(201).build();
+        return ResponseEntity.ok(accountRestriction.getId());
     }
 
     @PostMapping("/update")
@@ -83,9 +83,9 @@ public class AccountRestrictionService {
             existing.setDueBy(fromForm.getDueBy());
             existing.setCompleted(form.isCompleted());
 
-            accountRestrictionRepository.save(existing);
+            existing = accountRestrictionRepository.save(existing);
 
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(existing);
         }else{
             return ResponseEntity.noContent().build();
         }

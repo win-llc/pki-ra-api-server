@@ -24,14 +24,11 @@ public class CertAuthorityTypeService {
     private void init(){
         CertAuthorityType type = new CertAuthorityType();
         type.setName("winllc");
-        type.setId(1l);
-
         repository.save(type);
 
-        type.setId(2l);
-        type.setName("internal");
-
-        repository.save(type);
+        CertAuthorityType type2 = new CertAuthorityType();
+        type2.setName("internal");
+        repository.save(type2);
     }
 
     @Transactional

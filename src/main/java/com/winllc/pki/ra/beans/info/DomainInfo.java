@@ -1,8 +1,9 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.info;
 
+import com.winllc.pki.ra.beans.info.InfoObject;
 import com.winllc.pki.ra.domain.Domain;
 
-public class DomainInfo extends InfoObject {
+public class DomainInfo extends InfoObject<Domain> {
 
     private String base;
 

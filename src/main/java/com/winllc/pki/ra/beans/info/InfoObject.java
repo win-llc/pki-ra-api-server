@@ -1,15 +1,16 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.info;
 
-import com.winllc.pki.ra.domain.BaseEntity;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-public class InfoObject {
+public abstract class InfoObject<T extends AbstractPersistable<Long>> {
 
     private Long id;
 
-    protected InfoObject(AbstractPersistable<Long> entity){
+    protected InfoObject(T entity){
         this.id = entity.getId();
     }
+
+    protected InfoObject(){}
 
     public Long getId() {
         return id;

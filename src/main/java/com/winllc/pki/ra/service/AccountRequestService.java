@@ -61,7 +61,7 @@ public class AccountRequestService {
             accountRequest.setProjectName(form.getProjectName());
 
             accountRequest = accountRequestRepository.save(accountRequest);
-            return ResponseEntity.ok(accountRequest);
+            return ResponseEntity.ok(accountRequest.getId());
         }else{
             return ResponseEntity.badRequest().build();
         }
@@ -111,5 +111,13 @@ public class AccountRequestService {
         }else{
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id){
+
+        accountRequestRepository.deleteById(id);
+
+        return ResponseEntity.ok().build();
     }
 }

@@ -1,9 +1,11 @@
 package com.winllc.pki.ra.domain;
 
+import org.springframework.data.jpa.domain.AbstractPersistable;
+
 import javax.persistence.Entity;
 
 @Entity
-public class CertAuthorityConnectionInfo extends BaseEntity {
+public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
 
     private String name;
     private String type;

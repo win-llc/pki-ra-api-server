@@ -33,47 +33,56 @@ public class DomainService {
     private DomainRepository domainRepository;
 
     @GetMapping("/all")
-    public List<Domain> getAllAvailableDomains(){
-        //TODO
-        return domainRepository.findAll();
+    public ResponseEntity<?> getAllAvailableDomains(){
+        List<Domain> all = domainRepository.findAll();
+
+        return ResponseEntity.ok(all);
     }
 
     @GetMapping("/searchByBase/{search}")
-    public List<Domain> searchDomainByBaseDomain(@PathVariable String search){
-        return domainRepository.findAllByBaseContains(search);
+    public ResponseEntity<?> searchDomainByBaseDomain(@PathVariable String search){
+        return ResponseEntity.ok(domainRepository.findAllByBaseContains(search));
     }
 
     @GetMapping("/byId/{id}")
-    public Domain getDomainById(@PathVariable Long id) throws Exception {
+    public ResponseEntity<?> getDomainById(@PathVariable Long id) throws Exception {
         Optional<Domain> optionalDomain = domainRepository.findById(id);
         if(optionalDomain.isPresent()){
-            return optionalDomain.get();
+            return ResponseEntity.ok(optionalDomain.get());
         }
 
         throw new Exception("Could not find by ID: "+id);
     }
 
     @PostMapping("/create")
-    public void createDomain(@RequestBody Domain domain){
-        domainRepository.save(domain);
+    public ResponseEntity<?> createDomain(@RequestBody Domain domain){
+        domain = domainRepository.save(domain);
+
+        return ResponseEntity.ok(domain.getId());
     }
 
     @PostMapping("/update")
-    public void updateDomain(@RequestBody Domain domain){
+    public ResponseEntity<?> updateDomain(@RequestBody Domain domain){
         try {
-            Domain domainById = getDomainById(domain.getId());
-            if(domainById != null){
-                domainById.setBase(domain.getBase());
-                domainRepository.save(domain);
+            Optional<Domain> optionalDomain = domainRepository.findById(domain.getId());
+            if(optionalDomain.isPresent()){
+                Domain existing = optionalDomain.get();
+                existing.setBase(domain.getBase());
+                existing = domainRepository.save(existing);
+                return ResponseEntity.ok(existing);
+            }else{
+                return ResponseEntity.noContent().build();
             }
         } catch (Exception e) {
             log.error("Could not find domain: "+domain.getId(), e);
         }
+        return ResponseEntity.status(500).build();
     }
 
     @DeleteMapping("/delete/{id}")
-    public void deleteDomain(@PathVariable Long id){
+    public ResponseEntity<?> deleteDomain(@PathVariable Long id){
         domainRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 
 

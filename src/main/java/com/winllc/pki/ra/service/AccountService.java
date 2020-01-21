@@ -2,13 +2,11 @@ package com.winllc.pki.ra.service;
 
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.KeyLengthException;
-import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.util.Base64URL;
-import com.winllc.acme.common.CAValidationRule;
 import com.winllc.pki.ra.beans.*;
+import com.winllc.pki.ra.beans.info.AccountInfo;
+import com.winllc.pki.ra.beans.info.DomainInfo;
+import com.winllc.pki.ra.beans.info.UserInfo;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.security.RAUser;
@@ -23,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
-import java.net.URI;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -94,9 +91,7 @@ public class AccountService {
 
         account = accountRepository.save(account);
 
-        return ResponseEntity.status(201)
-                .header("id", String.valueOf(account.getId()))
-                .build();
+        return ResponseEntity.ok(String.valueOf(account.getId()));
     }
 
     public Account buildNew(){
@@ -179,8 +174,8 @@ public class AccountService {
                 account.getPocs().removeIf(p -> emailsToRemove.contains(p.getEmail()));
                 pocEntryRepository.deleteAllByEmailInAndAccountEquals(emailsToRemove, account);
 
-                accountRepository.save(account);
-                return ResponseEntity.status(200).build();
+                account = accountRepository.save(account);
+                return ResponseEntity.ok(account);
             }else{
                 throw new Exception("Could not find account with ID: "+form.getId());
             }
@@ -252,6 +247,14 @@ public class AccountService {
         }else{
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id){
+
+        accountRepository.deleteById(id);
+
+        return ResponseEntity.ok().build();
     }
 
 

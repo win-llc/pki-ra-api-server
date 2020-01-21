@@ -1,13 +1,11 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.info;
 
 import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.BaseEntity;
 
 import java.util.List;
-import java.util.Set;
 
-public class AccountInfo extends InfoObject {
+public class AccountInfo extends InfoObject<Account> {
 
     private String keyIdentifier;
     private String macKey;

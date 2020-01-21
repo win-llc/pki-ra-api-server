@@ -2,6 +2,7 @@ package com.winllc.pki.ra.service;
 
 import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.beans.*;
+import com.winllc.pki.ra.beans.info.ServerEntryInfo;
 import com.winllc.pki.ra.beans.validator.ServerEntryFormValidator;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
@@ -19,7 +20,6 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/serverEntry")
@@ -73,7 +72,7 @@ public class ServerEntryService {
 
                 log.info("Created a Server Entry: "+entry);
 
-                return ResponseEntity.ok(entry);
+                return ResponseEntity.ok(entry.getId());
             }else{
                 return ResponseEntity.status(403).build();
             }
@@ -94,8 +93,11 @@ public class ServerEntryService {
             boolean isValid = new ServerEntryFormValidator().validate(form);
             if(isValid){
                 serverEntry.setAlternateDnsValues(form.getAlternateDnsValues());
+                serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
 
-                serverEntryRepository.save(serverEntry);
+                serverEntry = serverEntryRepository.save(serverEntry);
+
+                return ResponseEntity.ok(serverEntry);
             }else{
                 log.error("Invalid Server Entry form");
                 return ResponseEntity.badRequest().build();
@@ -104,8 +106,6 @@ public class ServerEntryService {
         }else{
             return ResponseEntity.badRequest().build();
         }
-
-        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/byId/{id}")
@@ -167,6 +167,7 @@ public class ServerEntryService {
         Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(form.getId());
         if(serverEntryOptional.isPresent()){
             ServerEntry serverEntry = serverEntryOptional.get();
+            serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
 
             try {
                 boolean created = keycloakService.createClient(serverEntry);
@@ -256,7 +257,8 @@ public class ServerEntryService {
         dockerDeploymentFile.setAcmeClientDetails(acmeClientDetails);
         dockerDeploymentFile.setOidcClientDetails(oidcClientDetails);
         //todo make dynamic
-        dockerDeploymentFile.setProxyAddressValue("http://192.168.1.13:8282/test");
+        //dockerDeploymentFile.setProxyAddressValue("http://192.168.1.13:8282/test");
+        dockerDeploymentFile.setProxyAddressValue(serverEntry.getOpenidClientRedirectUrl());
         dockerDeploymentFile.setServerNameValue(serverEntry.getFqdn());
         return dockerDeploymentFile;
     }

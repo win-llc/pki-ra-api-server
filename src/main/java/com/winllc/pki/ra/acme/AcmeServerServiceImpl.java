@@ -1,10 +1,12 @@
 package com.winllc.pki.ra.acme;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.acme.common.CertificateAuthoritySettings;
 import com.winllc.acme.common.DirectoryDataSettings;
 import com.winllc.acme.common.ExternalAccountProviderSettings;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 
+import java.io.IOException;
 import java.util.List;
 
 public class AcmeServerServiceImpl implements AcmeServerService {
@@ -27,12 +29,21 @@ public class AcmeServerServiceImpl implements AcmeServerService {
     Directory settings CRUD
      */
 
-    public void saveDirectorySettings(DirectoryDataSettings directoryDataSettings) throws AcmeConnectionException {
-        this.connection.saveEntity(directoryDataSettings, DIRECTORY_DATA_BASE);
+    public DirectoryDataSettings saveDirectorySettings(DirectoryDataSettings directoryDataSettings) throws AcmeConnectionException, IOException {
+        String response = this.connection.saveEntity(directoryDataSettings, DIRECTORY_DATA_BASE);
+        ObjectMapper objectMapper = new ObjectMapper();
+        DirectoryDataSettings settings = objectMapper.readValue(response, DirectoryDataSettings.class);
+        return settings;
     }
 
     public DirectoryDataSettings getDirectorySettingsByName(String name) throws AcmeConnectionException {
         DirectoryDataSettings settings = this.connection.getEntityByName(DIRECTORY_DATA_BASE, name, DirectoryDataSettings.class);
+        return settings;
+    }
+
+    @Override
+    public DirectoryDataSettings getDirectorySettingsById(String id) throws AcmeConnectionException {
+        DirectoryDataSettings settings = this.connection.getEntityById(DIRECTORY_DATA_BASE, id, DirectoryDataSettings.class);
         return settings;
     }
 
@@ -46,13 +57,22 @@ public class AcmeServerServiceImpl implements AcmeServerService {
     }
 
     @Override
-    public void saveCertificateAuthoritySettings(CertificateAuthoritySettings directoryDataSettings) throws AcmeConnectionException {
-        this.connection.saveEntity(directoryDataSettings, CERT_AUTHORITY_BASE);
+    public CertificateAuthoritySettings saveCertificateAuthoritySettings(CertificateAuthoritySettings directoryDataSettings) throws AcmeConnectionException, IOException {
+        String response = this.connection.saveEntity(directoryDataSettings, CERT_AUTHORITY_BASE);
+        ObjectMapper objectMapper = new ObjectMapper();
+        CertificateAuthoritySettings settings = objectMapper.readValue(response, CertificateAuthoritySettings.class);
+        return settings;
     }
 
     @Override
     public CertificateAuthoritySettings getCertificateAuthoritySettingsByName(String name) throws AcmeConnectionException {
         CertificateAuthoritySettings settings = this.connection.getEntityByName(CERT_AUTHORITY_BASE, name, CertificateAuthoritySettings.class);
+        return settings;
+    }
+
+    @Override
+    public CertificateAuthoritySettings getCertificateAuthoritySettingsById(String id) throws AcmeConnectionException {
+        CertificateAuthoritySettings settings = this.connection.getEntityById(CERT_AUTHORITY_BASE, id, CertificateAuthoritySettings.class);
         return settings;
     }
 
@@ -68,13 +88,22 @@ public class AcmeServerServiceImpl implements AcmeServerService {
     }
 
     @Override
-    public void saveExternalAccountProviderSettings(ExternalAccountProviderSettings directoryDataSettings) throws AcmeConnectionException {
-        this.connection.saveEntity(directoryDataSettings, EXTERNAL_ACCOUNT_PROVIDER_BASE);
+    public ExternalAccountProviderSettings saveExternalAccountProviderSettings(ExternalAccountProviderSettings directoryDataSettings) throws AcmeConnectionException, IOException {
+        String response = this.connection.saveEntity(directoryDataSettings, EXTERNAL_ACCOUNT_PROVIDER_BASE);
+        ObjectMapper objectMapper = new ObjectMapper();
+        ExternalAccountProviderSettings settings = objectMapper.readValue(response, ExternalAccountProviderSettings.class);
+        return settings;
     }
 
     @Override
     public ExternalAccountProviderSettings getExternalAccountProviderSettingsByName(String name) throws AcmeConnectionException {
         ExternalAccountProviderSettings settings = this.connection.getEntityByName(EXTERNAL_ACCOUNT_PROVIDER_BASE, name, ExternalAccountProviderSettings.class);
+        return settings;
+    }
+
+    @Override
+    public ExternalAccountProviderSettings getExternalAccountProviderSettingsById(String id) throws AcmeConnectionException {
+        ExternalAccountProviderSettings settings = this.connection.getEntityById(EXTERNAL_ACCOUNT_PROVIDER_BASE, id, ExternalAccountProviderSettings.class);
         return settings;
     }
 

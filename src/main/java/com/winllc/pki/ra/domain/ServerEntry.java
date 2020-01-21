@@ -23,6 +23,7 @@ public class ServerEntry extends AbstractPersistable<Long> {
     @ManyToOne
     private Account account;
     private String openidClientId;
+    private String openidClientRedirectUrl;
 
     public String getHostname() {
         return hostname;
@@ -70,6 +71,14 @@ public class ServerEntry extends AbstractPersistable<Long> {
 
     public void setAlternateDnsValues(List<String> alternateDnsValues) {
         this.alternateDnsValues = alternateDnsValues;
+    }
+
+    public String getOpenidClientRedirectUrl() {
+        return openidClientRedirectUrl;
+    }
+
+    public void setOpenidClientRedirectUrl(String openidClientRedirectUrl) {
+        this.openidClientRedirectUrl = openidClientRedirectUrl;
     }
 
     @Override

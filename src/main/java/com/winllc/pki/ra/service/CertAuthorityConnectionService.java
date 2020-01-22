@@ -2,6 +2,7 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.*;
 import com.winllc.acme.common.util.CertUtil;
+import com.winllc.pki.ra.beans.validator.CertAuthorityConnectionInfoValidator;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.InternalCertAuthority;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
@@ -29,7 +30,11 @@ public class CertAuthorityConnectionService {
     private static final Logger log = LogManager.getLogger(CertAuthorityConnectionService.class);
 
     @Autowired
+    private CertAuthorityConnectionInfoRepository repository;
+    @Autowired
     private EntityManagerFactory entityManagerFactory;
+    @Autowired
+    private CertAuthorityConnectionInfoValidator validator;
 
     private Map<String, CertAuthority> loadedCertAuthorities = new HashMap<>();
 
@@ -45,8 +50,6 @@ public class CertAuthorityConnectionService {
         loadCertAuthority(info.getName());
     }
 
-    @Autowired
-    private CertAuthorityConnectionInfoRepository repository;
 
     //Build CA object for use
     private void loadCertAuthority(String name){
@@ -63,13 +66,20 @@ public class CertAuthorityConnectionService {
     }
 
     @PostMapping("/api/info/create")
-    public ResponseEntity<?> createConnectionInfo(CertAuthorityConnectionInfo connectionInfo){
+    public ResponseEntity<?> createConnectionInfo(@RequestBody CertAuthorityConnectionInfo connectionInfo){
         //todo validate
-        connectionInfo = repository.save(connectionInfo);
 
-        loadCertAuthority(connectionInfo.getName());
+        boolean valid = validator.validate(connectionInfo, false);
 
-        return ResponseEntity.ok(connectionInfo.getId());
+        if(valid) {
+            connectionInfo = repository.save(connectionInfo);
+
+            loadCertAuthority(connectionInfo.getName());
+
+            return ResponseEntity.ok(connectionInfo.getId());
+        }else{
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping("/api/info/update")
@@ -90,9 +100,13 @@ public class CertAuthorityConnectionService {
 
     @GetMapping("/api/info/byName/{name}")
     public ResponseEntity<?> getConnectionInfoByName(@PathVariable String name){
-        CertAuthorityConnectionInfo info = repository.findByName(name);
+        Optional<CertAuthorityConnectionInfo> infoOptional = repository.findByName(name);
 
-        return ResponseEntity.ok(info);
+        if(infoOptional.isPresent()){
+            return ResponseEntity.ok(infoOptional.get());
+        }else{
+            return ResponseEntity.noContent().build();
+        }
     }
 
     @GetMapping("/api/info/byId/{id}")
@@ -114,7 +128,7 @@ public class CertAuthorityConnectionService {
     }
 
     @DeleteMapping("/api/info/delete/{id}")
-    public ResponseEntity<?> deleteInfo(@PathVariable long id){
+    public ResponseEntity<?> deleteInfo(@PathVariable Long id){
         repository.deleteById(id);
 
         return ResponseEntity.ok().build();
@@ -250,15 +264,18 @@ public class CertAuthorityConnectionService {
 
     private Optional<CertAuthority> buildCertAuthority(String connectionName){
         CertAuthority certAuthority = null;
-        CertAuthorityConnectionInfo info = repository.findByName(connectionName);
-        if(info.getType().contentEquals("internal")){
-            certAuthority = new InternalCertAuthority(info);
-        }
+        Optional<CertAuthorityConnectionInfo> infoOptional = repository.findByName(connectionName);
 
-        if(certAuthority != null){
-            return Optional.of(certAuthority);
-        }else{
-            return Optional.empty();
+        if(infoOptional.isPresent()) {
+            CertAuthorityConnectionInfo info = infoOptional.get();
+            if (info.getType().contentEquals("internal")) {
+                certAuthority = new InternalCertAuthority(info);
+            }
+
+            if (certAuthority != null) {
+                return Optional.of(certAuthority);
+            }
         }
+        return Optional.empty();
     }
 }

@@ -111,7 +111,7 @@ public class KeycloakService {
 }
      */
 
-    public boolean createClient(ServerEntry serverEntry) throws Exception {
+    public ServerEntry createClient(ServerEntry serverEntry) throws Exception {
         Keycloak keycloak = buildClient();
 
         String url = "https://"+serverEntry.getFqdn();
@@ -200,18 +200,18 @@ public class KeycloakService {
                 serverEntry = optionalServerEntry.get();
                 serverEntry.setOpenidClientId(createdClientId);
 
-                serverEntryRepository.save(serverEntry);
+                serverEntry = serverEntryRepository.save(serverEntry);
+                return serverEntry;
             }else{
                 log.error("Could not find Server Entry");
             }
 
-            return true;
         }else{
             if(status == 409){
                 throw new Exception("Client already exists");
             }
-            return false;
         }
+        return null;
     }
 
     public boolean deleteClient(ServerEntry serverEntry){

@@ -10,8 +10,10 @@ import java.util.Set;
 
 @Entity
 public class Account extends AbstractPersistable<Long> {
+    @Column(unique = true)
     private String keyIdentifier;
     private String macKey;
+    @Column(unique = true)
     private String projectName;
     private boolean acmeRequireHttpValidation = false;
     private boolean enabled = true;

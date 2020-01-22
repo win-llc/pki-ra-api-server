@@ -6,7 +6,7 @@ import org.springframework.util.CollectionUtils;
 
 public class ServerEntryFormValidator implements FormValidator<ServerEntryForm> {
 
-    public boolean validate(ServerEntryForm form){
+    public boolean validate(ServerEntryForm form, boolean editMode){
         if(!CollectionUtils.isEmpty(form.getAlternateDnsValues())){
             for(String fqdn : form.getAlternateDnsValues()){
                 boolean valid = isValidServerName(fqdn);

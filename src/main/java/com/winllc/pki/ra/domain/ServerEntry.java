@@ -3,6 +3,7 @@ package com.winllc.pki.ra.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
@@ -12,6 +13,7 @@ import java.util.List;
 public class ServerEntry extends AbstractPersistable<Long> {
 
     private String hostname;
+    @Column(unique = true)
     private String fqdn;
     @JsonIgnore
     @ElementCollection

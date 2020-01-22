@@ -90,7 +90,7 @@ public class ServerEntryService {
         if(optionalServerEntry.isPresent()){
             ServerEntry serverEntry = optionalServerEntry.get();
 
-            boolean isValid = new ServerEntryFormValidator().validate(form);
+            boolean isValid = new ServerEntryFormValidator().validate(form, true);
             if(isValid){
                 serverEntry.setAlternateDnsValues(form.getAlternateDnsValues());
                 serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
@@ -167,12 +167,15 @@ public class ServerEntryService {
         Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(form.getId());
         if(serverEntryOptional.isPresent()){
             ServerEntry serverEntry = serverEntryOptional.get();
-            serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
 
             try {
-                boolean created = keycloakService.createClient(serverEntry);
-                if(created){
-                    return ResponseEntity.ok("Enabled");
+                serverEntry = keycloakService.createClient(serverEntry);
+
+                if(serverEntry != null){
+                    serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
+                    serverEntry = serverEntryRepository.save(serverEntry);
+
+                    return ResponseEntity.ok(serverEntry);
                 }else{
                     return ResponseEntity.badRequest().build();
                 }

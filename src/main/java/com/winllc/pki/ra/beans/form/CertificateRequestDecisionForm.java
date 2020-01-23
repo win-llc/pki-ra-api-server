@@ -1,6 +1,8 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.form;
 
-public class CertificateRequestDecisionForm {
+import com.winllc.pki.ra.domain.CertificateRequest;
+
+public class CertificateRequestDecisionForm extends ValidForm<CertificateRequest> {
 
     private Long requestId;
     private String status;
@@ -19,5 +21,10 @@ public class CertificateRequestDecisionForm {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    @Override
+    protected boolean isValid() {
+        return false;
     }
 }

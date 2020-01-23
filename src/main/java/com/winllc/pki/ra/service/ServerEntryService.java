@@ -2,6 +2,7 @@ package com.winllc.pki.ra.service;
 
 import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.beans.*;
+import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
 import com.winllc.pki.ra.beans.validator.ServerEntryFormValidator;
 import com.winllc.pki.ra.domain.Account;
@@ -83,6 +84,7 @@ public class ServerEntryService {
     }
 
     @PostMapping("/update")
+    @Transactional
     public ResponseEntity<?> updateServerEntry(@RequestBody ServerEntryForm form){
         //todo
 
@@ -97,7 +99,7 @@ public class ServerEntryService {
 
                 serverEntry = serverEntryRepository.save(serverEntry);
 
-                return ResponseEntity.ok(serverEntry);
+                return ResponseEntity.ok(entryToInfo(serverEntry));
             }else{
                 log.error("Invalid Server Entry form");
                 return ResponseEntity.badRequest().build();
@@ -115,10 +117,8 @@ public class ServerEntryService {
 
         if(entryOptional.isPresent()){
             ServerEntry entry = entryOptional.get();
-            Hibernate.initialize(entry.getAlternateDnsValues());
-            ServerEntryInfo serverEntryInfo = new ServerEntryInfo(entry);
 
-            return ResponseEntity.ok(serverEntryInfo);
+            return ResponseEntity.ok(entryToInfo(entry));
         }else{
             return ResponseEntity.notFound().build();
         }
@@ -147,8 +147,7 @@ public class ServerEntryService {
             for(Account account : allByAccountUsersContains) {
                 List<ServerEntryInfo> temp = serverEntryRepository.findAllByAccountId(account.getId())
                         .stream().map(i -> {
-                            Hibernate.initialize(i.getAlternateDnsValues());
-                            return new ServerEntryInfo(i);
+                            return entryToInfo(i);
                         })
                         .collect(Collectors.toList());
                 entries.addAll(temp);
@@ -161,6 +160,7 @@ public class ServerEntryService {
     }
 
     @PostMapping("/enableForOIDConnect")
+    @Transactional
     public ResponseEntity<?> enableForOIDConnect(@RequestBody ServerEntryForm form){
         //todo
 
@@ -173,9 +173,10 @@ public class ServerEntryService {
 
                 if(serverEntry != null){
                     serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
+                    Hibernate.initialize(serverEntry.getAlternateDnsValues());
                     serverEntry = serverEntryRepository.save(serverEntry);
 
-                    return ResponseEntity.ok(serverEntry);
+                    return ResponseEntity.ok(entryToInfo(serverEntry));
                 }else{
                     return ResponseEntity.badRequest().build();
                 }
@@ -189,6 +190,7 @@ public class ServerEntryService {
     }
 
     @PostMapping("/disableForOIDConnect")
+    @Transactional
     public ResponseEntity<?> disableForOIDConnect(@RequestBody ServerEntryForm form){
         //todo
 
@@ -196,9 +198,9 @@ public class ServerEntryService {
 
         if(optionalServerEntry.isPresent()){
             ServerEntry serverEntry = optionalServerEntry.get();
-            boolean deleted = keycloakService.deleteClient(serverEntry);
-            if(deleted){
-                return ResponseEntity.ok().build();
+            serverEntry = keycloakService.deleteClient(serverEntry);
+            if(serverEntry != null){
+                return ResponseEntity.ok(entryToInfo(serverEntry));
             }else {
                 log.error("Did not delete the OIDC client");
                 return ResponseEntity.status(500).build();
@@ -245,6 +247,12 @@ public class ServerEntryService {
         }else{
             return ResponseEntity.noContent().build();
         }
+    }
+
+    private ServerEntryInfo entryToInfo(ServerEntry entry){
+        Hibernate.initialize(entry.getAlternateDnsValues());
+        ServerEntryInfo serverEntryInfo = new ServerEntryInfo(entry);
+        return serverEntryInfo;
     }
 
     private ServerEntryDockerDeploymentFile buildDeploymentFile(ServerEntry serverEntry, Account account){

@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.beans.AccountRestrictionForm;
+import com.winllc.pki.ra.beans.form.AccountRestrictionForm;
 import com.winllc.pki.ra.constants.AccountRestrictionAction;
 import com.winllc.pki.ra.constants.AccountRestrictionType;
 import com.winllc.pki.ra.domain.Account;
@@ -11,16 +11,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.datetime.DateFormatter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 

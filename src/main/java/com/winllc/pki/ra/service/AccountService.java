@@ -4,6 +4,7 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.jwk.JWK;
 import com.winllc.pki.ra.beans.*;
+import com.winllc.pki.ra.beans.form.AccountUpdateForm;
 import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.pki.ra.beans.info.UserInfo;

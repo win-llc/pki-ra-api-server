@@ -1,10 +1,9 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.form;
 
 import com.winllc.pki.ra.domain.AccountRestriction;
 
-public class AccountRestrictionForm {
+public class AccountRestrictionForm extends ValidForm<AccountRestriction> {
 
-    private Long id;
     private Long accountId;
     private String type;
     private String action;
@@ -14,20 +13,12 @@ public class AccountRestrictionForm {
     public AccountRestrictionForm(){}
 
     public AccountRestrictionForm(AccountRestriction restriction){
-        this.id = restriction.getId();
+        super(restriction);
         this.accountId = restriction.getAccount().getId();
         this.type = restriction.getType().name();
         this.action = restriction.getAction().name();
         this.dueBy = restriction.getDueBy().toString();
         this.completed = restriction.isCompleted();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public Long getAccountId() {
@@ -68,5 +59,11 @@ public class AccountRestrictionForm {
 
     public void setCompleted(boolean completed) {
         this.completed = completed;
+    }
+
+    @Override
+    protected boolean isValid() {
+        //todo
+        return true;
     }
 }

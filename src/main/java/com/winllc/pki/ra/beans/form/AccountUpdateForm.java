@@ -1,28 +1,18 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.form;
 
-import org.h2.util.StringUtils;
+import com.winllc.pki.ra.beans.PocFormEntry;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AccountUpdateForm implements ValidForm {
+public class AccountUpdateForm extends ValidForm {
     //TODO
 
     private static final String VALID_EMAIL_REGEX = "^(.+)@(.+)$";
 
-    private Long id;
     private List<PocFormEntry> pocEmails;
     private boolean acmeRequireHttpValidation;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public List<PocFormEntry> getPocEmails() {
         return pocEmails;

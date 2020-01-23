@@ -1,6 +1,8 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.form;
 
-public class AccountRequestForm {
+import com.winllc.pki.ra.domain.AccountRequest;
+
+public class AccountRequestForm extends ValidForm<AccountRequest> {
 
     private String accountOwnerEmail;
     private String projectName;
@@ -19,5 +21,11 @@ public class AccountRequestForm {
 
     public void setProjectName(String projectName) {
         this.projectName = projectName;
+    }
+
+    @Override
+    protected boolean isValid() {
+        //todo
+        return true;
     }
 }

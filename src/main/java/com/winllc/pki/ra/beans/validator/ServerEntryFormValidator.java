@@ -1,7 +1,6 @@
 package com.winllc.pki.ra.beans.validator;
 
-import com.winllc.pki.ra.beans.ServerEntryForm;
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import org.springframework.util.CollectionUtils;
 
 public class ServerEntryFormValidator implements FormValidator<ServerEntryForm> {

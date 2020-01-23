@@ -1,12 +1,11 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.form;
 
 import com.winllc.pki.ra.domain.ServerEntry;
 
 import java.util.List;
 
-public class ServerEntryForm {
+public class ServerEntryForm extends ValidForm<ServerEntry> {
 
-    private Long id;
     private String fqdn;
     private Long accountId;
     private List<String> alternateDnsValues;
@@ -14,20 +13,18 @@ public class ServerEntryForm {
 
     public ServerEntryForm(){}
 
+    @Override
+    protected boolean isValid() {
+        //todo
+        return true;
+    }
+
     public ServerEntryForm(ServerEntry entry){
-        this.id = entry.getId();
+        super(entry);
         this.fqdn = entry.getFqdn();
         this.accountId = entry.getAccount().getId();
         this.alternateDnsValues = entry.getAlternateDnsValues();
         this.openidClientRedirectUrl = entry.getOpenidClientRedirectUrl();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getFqdn() {

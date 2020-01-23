@@ -1,6 +1,8 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.form;
 
-public class AccountRequestUpdateForm {
+import com.winllc.pki.ra.domain.AccountRequest;
+
+public class AccountRequestUpdateForm extends ValidForm<AccountRequest> {
 
     private Long accountRequestId;
     private String state;
@@ -19,5 +21,11 @@ public class AccountRequestUpdateForm {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    @Override
+    protected boolean isValid() {
+        //todo
+        return true;
     }
 }

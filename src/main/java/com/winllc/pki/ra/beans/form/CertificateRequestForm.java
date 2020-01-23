@@ -1,14 +1,16 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.form;
 
 import com.winllc.acme.common.SubjectAltName;
+import com.winllc.pki.ra.domain.CertificateRequest;
 
 import java.util.List;
 
-public class CertificateRequestForm {
+public class CertificateRequestForm extends ValidForm<CertificateRequest> {
 
     private String csr;
     private String name;
     private String certAuthorityName;
+    private Long accountId;
     private List<SubjectAltName> requestedDnsNames;
 
     public String getCsr() {
@@ -41,5 +43,19 @@ public class CertificateRequestForm {
 
     public void setCertAuthorityName(String certAuthorityName) {
         this.certAuthorityName = certAuthorityName;
+    }
+
+    public Long getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
+    }
+
+    @Override
+    protected boolean isValid() {
+        //todo
+        return true;
     }
 }

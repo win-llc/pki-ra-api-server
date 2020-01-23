@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.beans.AccountRequestForm;
-import com.winllc.pki.ra.beans.AccountRequestUpdateForm;
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
+import com.winllc.pki.ra.beans.form.AccountRequestUpdateForm;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AccountRequest;
 import com.winllc.pki.ra.domain.User;
@@ -9,7 +9,6 @@ import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AccountRequestRepository;
 import com.winllc.pki.ra.repository.UserRepository;
 import com.winllc.pki.ra.security.RAUser;
-import com.winllc.pki.ra.util.AppUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 

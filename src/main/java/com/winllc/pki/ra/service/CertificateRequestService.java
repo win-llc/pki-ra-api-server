@@ -2,8 +2,9 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.util.CertUtil;
-import com.winllc.pki.ra.beans.CertificateRequestDecisionForm;
-import com.winllc.pki.ra.beans.CertificateRequestForm;
+import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
+import com.winllc.pki.ra.beans.form.CertificateRequestForm;
+import com.winllc.pki.ra.beans.info.CertificateRequestInfo;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.domain.CertificateRequest;
 import com.winllc.pki.ra.domain.User;
@@ -14,11 +15,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import sun.security.x509.SubjectAlternativeNameExtension;
 
 import javax.transaction.Transactional;
 import java.security.cert.X509Certificate;
@@ -62,7 +61,7 @@ public class CertificateRequestService {
         Optional<CertificateRequest> byId = requestRepository.findById(id);
 
         if(byId.isPresent()){
-            return ResponseEntity.ok(byId.get());
+            return ResponseEntity.ok(new CertificateRequestInfo(byId.get()));
         }else{
             return ResponseEntity.notFound().build();
         }

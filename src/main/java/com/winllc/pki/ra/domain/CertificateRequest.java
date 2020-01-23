@@ -25,6 +25,8 @@ public class CertificateRequest extends AbstractPersistable<Long> {
     private User adminReviewer;
     @ElementCollection
     private List<String> requestedDnsNames;
+    @ManyToOne
+    private Account account;
 
     public static CertificateRequest build(){
         CertificateRequest request = new CertificateRequest();
@@ -103,5 +105,13 @@ public class CertificateRequest extends AbstractPersistable<Long> {
 
     public void setRequestedDnsNames(List<String> requestedDnsNames) {
         this.requestedDnsNames = requestedDnsNames;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
     }
 }

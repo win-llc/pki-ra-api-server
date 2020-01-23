@@ -1,8 +1,10 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.form;
+
+import com.winllc.pki.ra.domain.DomainLinkToAccountRequest;
 
 import java.util.List;
 
-public class DomainLinkToAccountRequestForm {
+public class DomainLinkToAccountRequestForm extends ValidForm<DomainLinkToAccountRequest> {
 
     private Long accountId;
     private List<Long> requestedDomainIds;
@@ -21,5 +23,11 @@ public class DomainLinkToAccountRequestForm {
 
     public void setRequestedDomainIds(List<Long> requestedDomainIds) {
         this.requestedDomainIds = requestedDomainIds;
+    }
+
+    @Override
+    protected boolean isValid() {
+        //todo
+        return true;
     }
 }

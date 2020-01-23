@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.*;
+import com.winllc.pki.ra.beans.form.DomainLinkToAccountRequestForm;
 import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.pki.ra.beans.info.DomainLinkToAccountRequestInfo;

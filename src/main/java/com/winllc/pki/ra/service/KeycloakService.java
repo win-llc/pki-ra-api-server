@@ -214,7 +214,7 @@ public class KeycloakService {
         return null;
     }
 
-    public boolean deleteClient(ServerEntry serverEntry){
+    public ServerEntry deleteClient(ServerEntry serverEntry){
 
         Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(serverEntry.getId());
 
@@ -232,13 +232,13 @@ public class KeycloakService {
 
             //if successful, reset openid client on server entry
             serverEntry.setOpenidClientId(null);
-            serverEntryRepository.save(serverEntry);
+            serverEntry = serverEntryRepository.save(serverEntry);
 
             //todo verify success
-            return true;
+            return serverEntry;
         }else{
             log.error("Could not find server entry, should not be possible");
-            return false;
+            return null;
         }
     }
 

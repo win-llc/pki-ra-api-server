@@ -10,6 +10,16 @@ import java.util.List;
 
 public class DogTagCertAuthority implements CertAuthority {
     @Override
+    public CertAuthorityConnectionType getType() {
+        return CertAuthorityConnectionType.DOGTAG;
+    }
+
+    @Override
+    public List<String> getRequiredConnectionProperties() {
+        return null;
+    }
+
+    @Override
     public String getName() {
         return null;
     }

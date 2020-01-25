@@ -5,7 +5,6 @@ import com.winllc.acme.common.*;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.domain.IssuedCertificate;
-import com.winllc.pki.ra.service.CertAuthorityConnectionService;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.*;
@@ -29,13 +28,10 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
-import org.springframework.web.bind.annotation.*;
-import sun.security.x509.SubjectAlternativeNameExtension;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
-import javax.swing.text.html.Option;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.math.BigInteger;
@@ -106,6 +102,16 @@ public class InternalCertAuthority implements CertAuthority {
         return resultList.stream()
                 .map(r -> r.convertToCertDetails())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public CertAuthorityConnectionType getType() {
+        return CertAuthorityConnectionType.INTERNAL;
+    }
+
+    @Override
+    public List<String> getRequiredConnectionProperties() {
+        return null;
     }
 
     @Override

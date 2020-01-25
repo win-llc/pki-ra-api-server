@@ -4,6 +4,7 @@ import com.winllc.acme.common.*;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.validator.CertAuthorityConnectionInfoValidator;
 import com.winllc.pki.ra.ca.CertAuthority;
+import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
 import com.winllc.pki.ra.ca.InternalCertAuthority;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.repository.CertAuthorityConnectionInfoRepository;
@@ -22,6 +23,8 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/ca")
@@ -134,6 +137,14 @@ public class CertAuthorityConnectionService {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/api/info/getTypes")
+    public ResponseEntity<?> getTypes(){
+        List<String> certAuthorityTypes = Stream.of(CertAuthorityConnectionType.values())
+                .map(v -> v.name())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(certAuthorityTypes);
+    }
 
 
     @PostMapping("/issueCertificate/{connectionName}")

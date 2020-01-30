@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.acme;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.winllc.acme.common.AcmeCertAuthorityType;
 import com.winllc.acme.common.CertificateAuthoritySettings;
 import com.winllc.acme.common.DirectoryDataSettings;
 import com.winllc.acme.common.ExternalAccountProviderSettings;
@@ -54,6 +55,12 @@ public class AcmeServerServiceImpl implements AcmeServerService {
 
     public void deleteDirectorySettings(String name) throws AcmeConnectionException {
         this.connection.deleteEntity(DIRECTORY_DATA_BASE, name);
+    }
+
+    @Override
+    public List<AcmeCertAuthorityType> getAcmeCertAuthorityTypes() throws AcmeConnectionException {
+        List<AcmeCertAuthorityType> list = this.connection.getAllEntitiesCustom(CERT_AUTHORITY_BASE+"/acmeCertAuthorityTypes", AcmeCertAuthorityType.class);
+        return list;
     }
 
     @Override

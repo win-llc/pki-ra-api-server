@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.acme;
 
+import com.winllc.acme.common.AcmeCertAuthorityType;
 import com.winllc.acme.common.CertificateAuthoritySettings;
 import com.winllc.acme.common.DirectoryDataSettings;
 import com.winllc.acme.common.ExternalAccountProviderSettings;
@@ -16,6 +17,7 @@ public interface AcmeServerService {
     List<DirectoryDataSettings> getAllDirectorySettings() throws AcmeConnectionException;
     void deleteDirectorySettings(String name) throws AcmeConnectionException;
 
+    List<AcmeCertAuthorityType> getAcmeCertAuthorityTypes() throws AcmeConnectionException;
     CertificateAuthoritySettings saveCertificateAuthoritySettings(CertificateAuthoritySettings directoryDataSettings) throws AcmeConnectionException, IOException;
     CertificateAuthoritySettings getCertificateAuthoritySettingsByName(String name) throws AcmeConnectionException;
     CertificateAuthoritySettings getCertificateAuthoritySettingsById(String id) throws AcmeConnectionException;

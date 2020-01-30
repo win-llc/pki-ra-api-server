@@ -91,9 +91,8 @@ public class AcmeServerConnection {
         }
     }
 
-
-    public <T> List<T> getAllEntities(String base, Class<T> clazz) throws AcmeConnectionException{
-        String url = connectionInfo.getUrl()+"/"+base+"/"+FIND_ALL;
+    public <T> List<T> getAllEntitiesCustom(String path, Class<T> clazz) throws AcmeConnectionException {
+        String url = connectionInfo.getUrl()+"/"+path;
         String result = runGet(url);
 
         if(result != null) {
@@ -108,6 +107,11 @@ public class AcmeServerConnection {
         }else{
             throw new AcmeConnectionException("GET response was empty");
         }
+    }
+
+    public <T> List<T> getAllEntities(String base, Class<T> clazz) throws AcmeConnectionException{
+        String path = base+"/"+FIND_ALL;
+        return getAllEntitiesCustom(path, clazz);
     }
 
     public boolean deleteEntity(String base, String name) throws AcmeConnectionException {

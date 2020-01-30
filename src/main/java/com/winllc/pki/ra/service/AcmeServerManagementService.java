@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.AcmeCertAuthorityType;
 import com.winllc.acme.common.CertificateAuthoritySettings;
 import com.winllc.acme.common.DirectoryDataSettings;
 import com.winllc.acme.common.ExternalAccountProviderSettings;
@@ -52,6 +53,7 @@ public class AcmeServerManagementService {
         AcmeServerServiceImpl serverService = new AcmeServerServiceImpl(connection);
         services.put(serverService.getName(), serverService);
     }
+
 
     @PostMapping("/saveAcmeServerConnection")
     public ResponseEntity<?> save(@RequestBody AcmeServerConnectionInfo connectionInfo){
@@ -139,6 +141,13 @@ public class AcmeServerManagementService {
         AcmeServerService acmeServerService = services.get(connectionName);
         acmeServerService.deleteDirectorySettings(name);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("{connectionName}/getAcmeCertificateAuthorityTypes")
+    public ResponseEntity<?> getAcmeCertificateAuthorityTypes(@PathVariable String connectionName) throws AcmeConnectionException {
+        AcmeServerService acmeServerService = services.get(connectionName);
+        List<AcmeCertAuthorityType> allCertificateAuthorityTypes = acmeServerService.getAcmeCertAuthorityTypes();
+        return ResponseEntity.ok(allCertificateAuthorityTypes);
     }
 
     @PostMapping("{connectionName}/saveCertificateAuthoritySettings")

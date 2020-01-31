@@ -48,9 +48,12 @@ public class CertAuthorityConnectionService {
         info.setType("internal");
         info.setName("internal");
 
-        info = repository.save(info);
+        //info = repository.save(info);
 
-        loadCertAuthority(info.getName());
+        //loadCertAuthority(info.getName());
+        for(String connectionInfoName : repository.findAllNames()){
+            loadCertAuthority(connectionInfoName);
+        }
     }
 
 

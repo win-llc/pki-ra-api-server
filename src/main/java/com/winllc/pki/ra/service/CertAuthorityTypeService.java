@@ -20,7 +20,7 @@ public class CertAuthorityTypeService {
     @Autowired
     private CertAuthorityTypeRepository repository;
 
-    @PostConstruct
+    //@PostConstruct
     private void init(){
         CertAuthorityType type = new CertAuthorityType();
         type.setName("winllc");

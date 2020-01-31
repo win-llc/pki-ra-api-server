@@ -51,7 +51,7 @@ public class AccountService {
         System.out.println("System MAC key: "+macKey);
     }
 
-    @PostConstruct
+    //@PostConstruct
     private void postConstruct(){
         //todo remove this, for testing
         Account testAccount = new Account();

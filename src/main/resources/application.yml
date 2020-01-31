@@ -9,13 +9,17 @@ management:
       show-details: always
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
-    driver-class-name: org.h2.Driver
-    username: sa
+    #url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
+    url: jdbc:mysql://localhost/winpkira
+    #driver-class-name: org.h2.Driver
+    driver-class-name: com.mysql.jdbc.Driver
+    username: root
     password: password
   jpa:
     open-in-view: false
-    database-platform: org.hibernate.dialect.H2Dialect
+    #database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
   jackson:
     date-format: com.fasterxml.jackson.databind.util.StdDateFormat
     default-property-inclusion: non_null

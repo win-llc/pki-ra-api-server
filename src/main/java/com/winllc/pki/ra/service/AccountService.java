@@ -176,7 +176,7 @@ public class AccountService {
                 pocEntryRepository.deleteAllByEmailInAndAccountEquals(emailsToRemove, account);
 
                 account = accountRepository.save(account);
-                return ResponseEntity.ok(account);
+                return ResponseEntity.ok(new AccountInfo(account));
             }else{
                 throw new Exception("Could not find account with ID: "+form.getId());
             }

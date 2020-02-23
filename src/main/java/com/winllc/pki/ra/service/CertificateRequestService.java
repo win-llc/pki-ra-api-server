@@ -1,12 +1,12 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.RACertificateRequest;
+import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.CertificateRequestForm;
 import com.winllc.pki.ra.beans.info.CertificateRequestInfo;
-import com.winllc.pki.ra.ca.CertAuthority;
+import com.winllc.pki.ra.beans.validator.CertRequestFormValidator;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AuditRecord;
@@ -49,6 +49,8 @@ public class CertificateRequestService {
     private AuditRecordRepository auditRecordRepository;
     @Autowired
     private CertAuthorityConnectionService certAuthorityConnectionService;
+    @Autowired
+    private CertRequestFormValidator formValidator;
 
     @GetMapping("/all")
     public ResponseEntity<?> getAll() {
@@ -79,7 +81,8 @@ public class CertificateRequestService {
 
     @PostMapping("/submit")
     public ResponseEntity<?> submitRequest(@RequestBody CertificateRequestForm form, @AuthenticationPrincipal RAUser raUser) {
-        if (validateRequestForm(form)) {
+        boolean valid = formValidator.validate(form, false);
+        if (valid) {
             CertificateRequest certificateRequest = CertificateRequest.build();
             certificateRequest.setCsr(form.getCsr());
             certificateRequest.setCertAuthorityName(form.getCertAuthorityName());
@@ -169,13 +172,13 @@ public class CertificateRequestService {
         SubjectAltNames sans = new SubjectAltNames();
         sans.addValues(SubjectAltNames.SubjAltNameType.DNS, request.getRequestedDnsNames());
 
-        RACertificateRequest raCertificateRequest = new RACertificateRequest(request.getAccount().getKeyIdentifier(),
-                request.getCsr(), request.getRequestedDnsNames().stream().collect(Collectors.joining(",")), request.getCertAuthorityName());
+        RACertificateIssueRequest raCertificateIssueRequest = new RACertificateIssueRequest(request.getAccount().getKeyIdentifier(),
+                request.getCsr(), String.join(",", request.getRequestedDnsNames()), request.getCertAuthorityName());
 
-        X509Certificate issuedCertificate = certAuthorityConnectionService.issueCertificate(raCertificateRequest);
+        X509Certificate issuedCertificate = certAuthorityConnectionService.processIssueCertificate(raCertificateIssueRequest);
 
         AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
-        record.setAccountKid(raCertificateRequest.getAccountKid());
+        record.setAccountKid(raCertificateIssueRequest.getAccountKid());
         record.setSource("manual");
         auditRecordRepository.save(record);
 
@@ -185,15 +188,4 @@ public class CertificateRequestService {
         request.setStatus("issued");
     }
 
-    private boolean validateRequestForm(CertificateRequestForm form) {
-        boolean valid = false;
-        try {
-            CertUtil.csrBase64ToPKC10Object(form.getCsr());
-            valid = true;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return valid;
-    }
 }

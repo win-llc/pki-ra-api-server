@@ -1,4 +1,8 @@
 debug: true
+app-keystore:
+  location: C:\\Users\\jrmints\\IdeaProjects\\PKI Registration Authority\\src\\main\\resources\\app.jks
+  password: password
+  type: JKS
 management:
   endpoints:
     web:

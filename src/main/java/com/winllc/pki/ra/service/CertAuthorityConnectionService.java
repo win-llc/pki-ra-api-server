@@ -1,33 +1,40 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.*;
+import com.winllc.acme.common.ra.RACertificateIssueRequest;
+import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
+import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.pki.ra.beans.validator.CertAuthorityConnectionInfoValidator;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
+import com.winllc.pki.ra.ca.DogTagCertAuthority;
 import com.winllc.pki.ra.ca.InternalCertAuthority;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.AuditRecord;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
+import com.winllc.pki.ra.domain.CertAuthorityConnectionProperty;
+import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.repository.AuditRecordRepository;
 import com.winllc.pki.ra.repository.CertAuthorityConnectionInfoRepository;
+import com.winllc.pki.ra.repository.CertAuthorityConnectionPropertyRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.swing.text.html.Option;
+import javax.transaction.Transactional;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,24 +47,21 @@ public class CertAuthorityConnectionService {
     @Autowired
     private CertAuthorityConnectionInfoRepository repository;
     @Autowired
+    private CertAuthorityConnectionPropertyRepository propertyRepository;
+    @Autowired
     private EntityManagerFactory entityManagerFactory;
     @Autowired
     private CertAuthorityConnectionInfoValidator validator;
     @Autowired
     private AuditRecordRepository auditRecordRepository;
+    @Autowired
+    private ApplicationKeystore applicationKeystore;
 
     private Map<String, CertAuthority> loadedCertAuthorities = new HashMap<>();
 
-    //todo remove this
+
     @PostConstruct
     private void init() {
-        CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
-        info.setType("internal");
-        info.setName("internal");
-
-        //info = repository.save(info);
-
-        //loadCertAuthority(info.getName());
         for (String connectionInfoName : repository.findAllNames()) {
             loadCertAuthority(connectionInfoName);
         }
@@ -79,15 +83,35 @@ public class CertAuthorityConnectionService {
     }
 
     @PostMapping("/api/info/create")
-    public ResponseEntity<?> createConnectionInfo(@RequestBody CertAuthorityConnectionInfo connectionInfo) {
-        //todo validate
-
+    public ResponseEntity<?> createConnectionInfo(@RequestBody CertAuthorityConnectionInfoForm connectionInfo) {
         boolean valid = validator.validate(connectionInfo, false);
 
         if (valid) {
-            connectionInfo = repository.save(connectionInfo);
+            CertAuthorityConnectionInfo caConnection = new CertAuthorityConnectionInfo();
+            caConnection.setName(connectionInfo.getName());
+            caConnection.setType(CertAuthorityConnectionType.valueOf(connectionInfo.getType()));
+            caConnection = repository.save(caConnection);
 
-            loadCertAuthority(connectionInfo.getName());
+            loadCertAuthority(caConnection.getName());
+
+            CertAuthority ca = loadedCertAuthorities.get(caConnection.getName());
+
+            //Create the required settings for the connection, will be filled in on edit screen
+            Set<CertAuthorityConnectionProperty> props = new HashSet<>();
+            for(String requiredProp : ca.getRequiredConnectionProperties()){
+                CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
+                prop.setName(requiredProp);
+                prop.setValue("");
+                prop.setCertAuthorityConnectionInfo(caConnection);
+                prop = propertyRepository.save(prop);
+                props.add(prop);
+            }
+
+            caConnection.setProperties(props);
+            caConnection = repository.save(caConnection);
+
+            //reload cert authority
+            loadCertAuthority(caConnection.getName());
 
             return ResponseEntity.ok(connectionInfo.getId());
         } else {
@@ -95,42 +119,67 @@ public class CertAuthorityConnectionService {
         }
     }
 
+    @Transactional
     @PostMapping("/api/info/update")
-    public ResponseEntity<?> updateConnectionInfo(CertAuthorityConnectionInfo connectionInfo) {
+    public ResponseEntity<?> updateConnectionInfo(@RequestBody CertAuthorityConnectionInfoForm form) {
         //todo validate
-        Optional<CertAuthorityConnectionInfo> optionalInfo = repository.findById(connectionInfo.getId());
-        if (optionalInfo.isPresent()) {
-            CertAuthorityConnectionInfo info = optionalInfo.get();
-            info.setType(connectionInfo.getType());
-            //todo the rest
 
-            info = repository.save(info);
-            return ResponseEntity.ok(info);
+        boolean valid = validator.validate(form, true);
+
+        if(valid) {
+            Optional<CertAuthorityConnectionInfo> optionalInfo = repository.findById(form.getId());
+            if (optionalInfo.isPresent()) {
+                final CertAuthorityConnectionInfo info = optionalInfo.get();
+
+                Set<CertAuthorityConnectionProperty> props = new HashSet<>();
+                if(!CollectionUtils.isEmpty(form.getProperties())){
+                    for(CertAuthorityConnectionProperty prop : form.getProperties()){
+                        prop.setCertAuthorityConnectionInfo(info);
+                        prop = propertyRepository.save(prop);
+                        props.add(prop);
+                    }
+                }
+                info.setProperties(props);
+
+                CertAuthorityConnectionInfo info2 = repository.save(info);
+                return ResponseEntity.ok(buildForm(info2));
+            }
+        }else{
+            return ResponseEntity.badRequest().build();
         }
 
         return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/api/info/byName/{name}")
+    @Transactional
     public ResponseEntity<?> getConnectionInfoByName(@PathVariable String name) {
         Optional<CertAuthorityConnectionInfo> infoOptional = repository.findByName(name);
 
         if (infoOptional.isPresent()) {
-            return ResponseEntity.ok(infoOptional.get());
+            return ResponseEntity.ok(buildForm(infoOptional.get()));
         } else {
             return ResponseEntity.noContent().build();
         }
     }
 
     @GetMapping("/api/info/byId/{id}")
+    @Transactional
     public ResponseEntity<?> getConnectionInfoById(@PathVariable Long id) {
         Optional<CertAuthorityConnectionInfo> infoOptional = repository.findById(id);
 
         if (infoOptional.isPresent()) {
-            return ResponseEntity.ok(infoOptional.get());
+            return ResponseEntity.ok(buildForm(infoOptional.get()));
         }
 
         return ResponseEntity.noContent().build();
+    }
+
+    private CertAuthorityConnectionInfoForm buildForm(CertAuthorityConnectionInfo info){
+        Hibernate.initialize(info.getProperties());
+        CertAuthority ca = loadedCertAuthorities.get(info.getName());
+        CertAuthorityConnectionInfoForm form = new CertAuthorityConnectionInfoForm(info, ca);
+        return form;
     }
 
     @GetMapping("/api/info/all")
@@ -157,16 +206,13 @@ public class CertAuthorityConnectionService {
     }
 
 
-    @PostMapping("/issueCertificate/{connectionName}")
-    public ResponseEntity<?> issueCertificate(@PathVariable String connectionName,
-                                              @RequestBody RACertificateRequest raCertificateRequest) throws Exception {
-        //todo use the other issueCertificate method
-
-        X509Certificate cert = issueCertificate(raCertificateRequest);
+    @PostMapping("/issueCertificate")
+    public ResponseEntity<?> issueCertificate(@RequestBody RACertificateIssueRequest raCertificateIssueRequest) throws Exception {
+        X509Certificate cert = processIssueCertificate(raCertificateIssueRequest);
 
         //todo consolidate this somewhere else
         AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
-        record.setAccountKid(raCertificateRequest.getAccountKid());
+        record.setAccountKid(raCertificateIssueRequest.getAccountKid());
         record.setSource("acme");
         auditRecordRepository.save(record);
 
@@ -178,7 +224,7 @@ public class CertAuthorityConnectionService {
         }
     }
 
-    public X509Certificate issueCertificate(RACertificateRequest certificateRequest) throws Exception {
+    public X509Certificate processIssueCertificate(RACertificateIssueRequest certificateRequest) throws Exception {
 
         CertAuthority certAuthority = loadedCertAuthorities.get(certificateRequest.getCertAuthorityName());
 
@@ -199,12 +245,11 @@ public class CertAuthorityConnectionService {
         }
     }
 
-    @PostMapping("/revokeCertificate/{connectionName}")
-    public ResponseEntity<?> revokeCertificate(@PathVariable String connectionName,
-                                               @RequestParam String serial, @RequestParam int reason) {
-        CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
+    @PostMapping("/revokeCertificate")
+    public ResponseEntity<?> revokeCertificate(@RequestBody RACertificateRevokeRequest revokeRequest) {
+        CertAuthority certAuthority = loadedCertAuthorities.get(revokeRequest.getCertAuthorityName());
         if (certAuthority != null) {
-            boolean revoked = certAuthority.revokeCertificate(serial, reason);
+            boolean revoked = certAuthority.revokeCertificate(revokeRequest.getSerial(), revokeRequest.getReason());
             if (revoked) {
                 //todo consolidate this somewhere else
                 AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_REVOKED);
@@ -220,7 +265,7 @@ public class CertAuthorityConnectionService {
     }
 
     @GetMapping("/certDetails/{connectionName}")
-    public ResponseEntity<?> getCertificateStatus(@PathVariable String connectionName, @RequestParam String serial) {
+    public ResponseEntity<?> getCertificateStatus(@PathVariable String connectionName, @RequestParam String serial) throws Exception {
 
         CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
         if (certAuthority != null) {
@@ -308,13 +353,17 @@ public class CertAuthorityConnectionService {
 
         if (infoOptional.isPresent()) {
             CertAuthorityConnectionInfo info = infoOptional.get();
-            if (info.getType().contentEquals("internal")) {
-                certAuthority = new InternalCertAuthority(info);
+
+            switch (info.getType()){
+                case INTERNAL:
+                    certAuthority = new InternalCertAuthority(info);
+                    break;
+                case DOGTAG:
+                    certAuthority = new DogTagCertAuthority(info, applicationKeystore);
+                    break;
             }
 
-            if (certAuthority != null) {
-                return Optional.of(certAuthority);
-            }
+            return Optional.of(certAuthority);
         }
         return Optional.empty();
     }

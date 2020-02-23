@@ -1,29 +1,61 @@
-package com.winllc.pki.ra.domain;
+package com.winllc.pki.ra.beans.form;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
+import com.winllc.pki.ra.domain.CertAuthorityConnectionProperty;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
 import javax.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Entity
-public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
+public class CertAuthorityConnectionInfoForm {
 
-    @Column(unique = true)
+    private Long id;
     private String name;
-    private CertAuthorityConnectionType type;
+    private String type;
     private String baseUrl;
     private String issuePath;
     private String revokePath;
     private String searchPath;
-    @JsonIgnore
-    @OneToMany(mappedBy = "certAuthorityConnectionInfo")
     private Set<CertAuthorityConnectionProperty> properties;
+
+    private CertAuthorityConnectionInfoForm() {
+    }
+
+    public CertAuthorityConnectionInfoForm(CertAuthorityConnectionInfo info, CertAuthority ca) {
+        this.id = info.getId();
+        this.name = info.getName();
+        this.type = info.getType().name();
+        this.properties = info.getProperties();
+        addRequiredPropertyPlaceholders(ca);
+    }
+
+    private void addRequiredPropertyPlaceholders(CertAuthority ca){
+        if(properties == null) properties = new HashSet<>();
+        for(String requiredProp : ca.getRequiredConnectionProperties()){
+            boolean containsProp = this.properties.stream()
+                    .anyMatch(p -> p.getName().equals(requiredProp));
+            if(!containsProp){
+                CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
+                prop.setName(requiredProp);
+                prop.setValue("");
+                this.properties.add(prop);
+            }
+        }
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;
@@ -33,11 +65,11 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
         this.name = name;
     }
 
-    public CertAuthorityConnectionType getType() {
+    public String getType() {
         return type;
     }
 
-    public void setType(CertAuthorityConnectionType type) {
+    public void setType(String type) {
         this.type = type;
     }
 

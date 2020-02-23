@@ -46,7 +46,17 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class InternalCertAuthority implements CertAuthority {
+public class InternalCertAuthority extends AbstractCertAuthority {
+
+    private static final List<String> requiredProperties;
+    private static final Map<String, String> defaultProperties;
+
+    static{
+        requiredProperties = new ArrayList<>();
+        requiredProperties.add("BASE_URL");
+
+        defaultProperties = new HashMap<>();
+    }
 
     private String name;
     private String caKeystorePassword = "P@ssW0rd";
@@ -59,7 +69,7 @@ public class InternalCertAuthority implements CertAuthority {
     private List<X509Certificate> revokedCerts = new ArrayList<>();
 
     public InternalCertAuthority(CertAuthorityConnectionInfo connectionInfo){
-        this.name = connectionInfo.getName();
+        super(connectionInfo);
     }
 
     public boolean revokeCertificate(String serial, int reason) {
@@ -105,18 +115,13 @@ public class InternalCertAuthority implements CertAuthority {
     }
 
     @Override
-    public CertAuthorityConnectionType getType() {
-        return CertAuthorityConnectionType.INTERNAL;
-    }
-
-    @Override
     public List<String> getRequiredConnectionProperties() {
-        return null;
+        return requiredProperties;
     }
 
     @Override
-    public String getName() {
-        return name;
+    public Map<String, String> getDefaultProperties() {
+        return defaultProperties;
     }
 
     public X509Certificate issueCertificate(String pkcs10, SubjectAltNames sans) {

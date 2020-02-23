@@ -15,6 +15,7 @@ public class CertAuthorityType extends AbstractPersistable<Long> {
     private String name;
     @ElementCollection
     private List<String> requiredSettings;
+    
 
 
     public String getName() {

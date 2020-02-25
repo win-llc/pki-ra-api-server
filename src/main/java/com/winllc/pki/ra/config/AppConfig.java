@@ -9,6 +9,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -23,6 +24,7 @@ import java.util.Collections;
 @ComponentScan("com.winllc.pki.ra")
 @EntityScan("com.winllc.pki.ra.domain")
 @EnableJpaRepositories(basePackages = "com.winllc.pki.ra.repository")
+@EnableTransactionManagement
 public class AppConfig {
 
     public static void main(String[] args){

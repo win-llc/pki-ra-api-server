@@ -11,13 +11,9 @@ import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
 import com.winllc.pki.ra.ca.DogTagCertAuthority;
 import com.winllc.pki.ra.ca.InternalCertAuthority;
 import com.winllc.pki.ra.constants.AuditRecordType;
-import com.winllc.pki.ra.domain.AuditRecord;
-import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
-import com.winllc.pki.ra.domain.CertAuthorityConnectionProperty;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.keystore.ApplicationKeystore;
-import com.winllc.pki.ra.repository.AuditRecordRepository;
-import com.winllc.pki.ra.repository.CertAuthorityConnectionInfoRepository;
-import com.winllc.pki.ra.repository.CertAuthorityConnectionPropertyRepository;
+import com.winllc.pki.ra.repository.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,6 +29,8 @@ import javax.transaction.Transactional;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -40,6 +38,7 @@ import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/ca")
+@Transactional
 public class CertAuthorityConnectionService {
 
     private static final Logger log = LogManager.getLogger(CertAuthorityConnectionService.class);
@@ -56,6 +55,10 @@ public class CertAuthorityConnectionService {
     private AuditRecordRepository auditRecordRepository;
     @Autowired
     private ApplicationKeystore applicationKeystore;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private CertificateRequestRepository certificateRequestRepository;
 
     private Map<String, CertAuthority> loadedCertAuthorities = new HashMap<>();
 
@@ -208,18 +211,33 @@ public class CertAuthorityConnectionService {
 
     @PostMapping("/issueCertificate")
     public ResponseEntity<?> issueCertificate(@RequestBody RACertificateIssueRequest raCertificateIssueRequest) throws Exception {
-        X509Certificate cert = processIssueCertificate(raCertificateIssueRequest);
 
-        //todo consolidate this somewhere else
-        AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
-        record.setAccountKid(raCertificateIssueRequest.getAccountKid());
-        record.setSource("acme");
-        auditRecordRepository.save(record);
+        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(raCertificateIssueRequest.getAccountKid());
+        if(optionalAccount.isPresent()) {
+            X509Certificate cert = processIssueCertificate(raCertificateIssueRequest);
+            String pemCert = CertUtil.convertToPem(cert);
 
-        try {
-            return ResponseEntity.ok(CertUtil.convertToPem(cert));
-        } catch (CertificateEncodingException e) {
-            log.error("Could not convert to PEM", e);
+            Account account = optionalAccount.get();
+
+            //add as certificate request
+            CertificateRequest certificateRequest = new CertificateRequest();
+            certificateRequest.setAccount(account);
+            certificateRequest.setCsr(raCertificateIssueRequest.getCsr());
+            certificateRequest.setCertAuthorityName(raCertificateIssueRequest.getCertAuthorityName());
+            certificateRequest.setStatus("issued");
+            certificateRequest.setSubmittedOn(Timestamp.valueOf(LocalDateTime.now()));
+            certificateRequest.setIssuedCertificate(pemCert);
+            certificateRequestRepository.save(certificateRequest);
+
+            //todo consolidate this somewhere else
+            AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
+            record.setAccountKid(raCertificateIssueRequest.getAccountKid());
+            record.setSource("acme");
+            auditRecordRepository.save(record);
+
+            return ResponseEntity.ok(pemCert);
+        }else{
+            log.error("Could not find account with: "+raCertificateIssueRequest.getAccountKid());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -246,10 +264,27 @@ public class CertAuthorityConnectionService {
     }
 
     @PostMapping("/revokeCertificate")
-    public ResponseEntity<?> revokeCertificate(@RequestBody RACertificateRevokeRequest revokeRequest) {
+    public ResponseEntity<?> revokeCertificate(@RequestBody RACertificateRevokeRequest revokeRequest) throws Exception {
         CertAuthority certAuthority = loadedCertAuthorities.get(revokeRequest.getCertAuthorityName());
         if (certAuthority != null) {
-            boolean revoked = certAuthority.revokeCertificate(revokeRequest.getSerial(), revokeRequest.getReason());
+            String serial = revokeRequest.getSerial();
+            //Get serial from certificate request
+            if(StringUtils.isBlank(serial)){
+                if(revokeRequest.getRequestId() != null){
+                    Optional<CertificateRequest> optionalCertificateRequest = certificateRequestRepository.findById(Long.valueOf(revokeRequest.getRequestId()));
+                    if(optionalCertificateRequest.isPresent()){
+                        CertificateRequest certificateRequest = optionalCertificateRequest.get();
+                        if(StringUtils.isNotBlank(certificateRequest.getIssuedCertificate())){
+                            X509Certificate x509Certificate = CertUtil.base64ToCert(certificateRequest.getIssuedCertificate());
+                            serial = x509Certificate.getSerialNumber().toString();
+                        }
+                    }
+                }
+            }
+
+            if(StringUtils.isBlank(serial)) throw new Exception("Request ID and Serial can't both be null");
+
+            boolean revoked = certAuthority.revokeCertificate(serial, revokeRequest.getReason());
             if (revoked) {
                 //todo consolidate this somewhere else
                 AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_REVOKED);
@@ -260,7 +295,7 @@ public class CertAuthorityConnectionService {
                 return ResponseEntity.badRequest().build();
             }
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -347,23 +382,28 @@ public class CertAuthorityConnectionService {
         return new ArrayList<>(loadedCertAuthorities.values());
     }
 
-    private Optional<CertAuthority> buildCertAuthority(String connectionName) {
+    @Transactional
+    public Optional<CertAuthority> buildCertAuthority(String connectionName) {
         CertAuthority certAuthority = null;
         Optional<CertAuthorityConnectionInfo> infoOptional = repository.findByName(connectionName);
 
         if (infoOptional.isPresent()) {
             CertAuthorityConnectionInfo info = infoOptional.get();
 
-            switch (info.getType()){
-                case INTERNAL:
-                    certAuthority = new InternalCertAuthority(info);
-                    break;
-                case DOGTAG:
-                    certAuthority = new DogTagCertAuthority(info, applicationKeystore);
-                    break;
+            try {
+                Hibernate.initialize(info.getProperties());
+                switch (info.getType()) {
+                    case INTERNAL:
+                        certAuthority = new InternalCertAuthority(info);
+                        break;
+                    case DOGTAG:
+                        certAuthority = new DogTagCertAuthority(info, applicationKeystore);
+                        break;
+                }
+                return Optional.of(certAuthority);
+            }catch (Exception e){
+                log.error(e);
             }
-
-            return Optional.of(certAuthority);
         }
         return Optional.empty();
     }

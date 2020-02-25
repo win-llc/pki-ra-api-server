@@ -15,7 +15,7 @@ public interface CertAuthority {
     Map<String, String> getDefaultProperties();
     String getName();
     X509Certificate issueCertificate(String csr, SubjectAltNames sans) throws Exception;
-    boolean revokeCertificate(String serial, int reason);
+    boolean revokeCertificate(String serial, int reason) throws Exception;
     String getCertificateStatus(String serial);
     List<CertificateDetails> search(CertSearchParam params);
     Certificate[] getTrustChain();

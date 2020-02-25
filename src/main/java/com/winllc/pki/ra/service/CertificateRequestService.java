@@ -79,6 +79,20 @@ public class CertificateRequestService {
         }
     }
 
+    @GetMapping("/byIdFull/{id}")
+    @Transactional
+    public ResponseEntity<?> byIdFull(@PathVariable Long id) {
+        Optional<CertificateRequest> byId = requestRepository.findById(id);
+
+        if (byId.isPresent()) {
+            CertificateRequest certificateRequest = byId.get();
+            Hibernate.initialize(certificateRequest.getRequestedDnsNames());
+            return ResponseEntity.ok(certificateRequest);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping("/submit")
     public ResponseEntity<?> submitRequest(@RequestBody CertificateRequestForm form, @AuthenticationPrincipal RAUser raUser) {
         boolean valid = formValidator.validate(form, false);

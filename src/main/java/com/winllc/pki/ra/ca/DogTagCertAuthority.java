@@ -9,6 +9,7 @@ import com.netscape.certsrv.profile.ProfileAttribute;
 import com.netscape.certsrv.profile.ProfileInput;
 import com.netscape.certsrv.property.Descriptor;
 import com.netscape.certsrv.request.RequestId;
+import com.winllc.acme.common.CertSearchConverter;
 import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.SubjectAltNames;
@@ -23,10 +24,12 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.mozilla.jss.netscape.security.x509.RevocationReason;
 
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +45,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
     private static final List<String> requiredProperties;
     private static final Map<String, String> defaultProperties;
 
-    String baseUrl = "https://dogtag.winllc.com:8443";
+    private String baseUrl = "https://dogtag.winllc.com:8443";
 
     static{
         requiredProperties = new ArrayList<>();
@@ -51,9 +54,14 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         defaultProperties = new HashMap<>();
     }
 
-    public DogTagCertAuthority(CertAuthorityConnectionInfo info, ApplicationKeystore applicationKeystore) {
+    public DogTagCertAuthority(CertAuthorityConnectionInfo info, ApplicationKeystore applicationKeystore) throws Exception {
         super(info);
         this.applicationKeystore = applicationKeystore;
+        try {
+            this.baseUrl = info.getPropertyByName("BASE_URL").get().getValue();
+        }catch (Exception e){
+            throw e;
+        }
     }
 
     @Override
@@ -141,13 +149,32 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
 
 
     @Override
-    public boolean revokeCertificate(String serial, int reason) {
+    public boolean revokeCertificate(String serial, int reason) throws Exception {
+        String revokePath = "/ca/rest/agent/certs/";
         CertRevokeRequest request = new CertRevokeRequest();
         request.setReason(RevocationReason.fromInt(reason));
 
-        //.setReason(RevocationReason.CERTIFICATE_HOLD);
+        X509Certificate certificateBySerial = getCertificateBySerial(serial);
 
-        return false;
+        request.setEncoded(CertUtil.convertToPem(certificateBySerial));
+        request.setInvalidityDate(Date.from(Instant.now()));
+
+        Function<String, CertRequestInfo> process = s -> {
+            try {
+                return CertRequestInfo.valueOf(s);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        };
+
+        CertRequestInfo requestInfo = processDogtagPostOperation(baseUrl + revokePath + serial + "/revoke", request, process, 200);
+
+        if(requestInfo.getOperationResult().equalsIgnoreCase("success")){
+            return true;
+        }else {
+            return false;
+        }
     }
 
     @Override
@@ -158,12 +185,19 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
     @Override
     public List<CertificateDetails> search(CertSearchParam params) {
         String searchPath = "/ca/rest/certs/search";
+
+        CertSearchRequest certSearchRequest = new CertSearchRequest();
+
+
+        //params.buildQuery()
+
         //todo
         return null;
     }
 
     @Override
     public Certificate[] getTrustChain() {
+        //todo
         return new Certificate[0];
     }
 
@@ -191,17 +225,51 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         return processDogtagOperation(httpGet, processFunction, 200);
     }
 
-    private <T> T processDogtagPostOperation(String url, CertEnrollmentRequest request, Function<String, T> processFunction, int expectedStatus) throws Exception {
+    private <T> T processDogtagPostOperation(String url, Object request, Function<String, T> processFunction, int expectedStatus) throws Exception {
+        String postXml = "";
+        if(request instanceof CertEnrollmentRequest){
+            postXml = ((CertEnrollmentRequest) request).toXML();
+        }else{
+            postXml = request.toString();
+        }
+
         HttpPost approvePost = new HttpPost(url);
         approvePost.setHeader("Accept", "application/xml");
         approvePost.setHeader("Content-type", "application/xml");
-        approvePost.setEntity(new StringEntity(request.toXML()));
+        approvePost.setEntity(new StringEntity(postXml));
         return processDogtagOperation(approvePost, processFunction, expectedStatus);
     }
 
     private <T> T processDogtagOperation(HttpRequestBase httpRequest, Function<String, T> processFunction, int expectedStatus) throws Exception {
         return HttpCommandUtil.processCustomWithClientAuth(httpRequest, expectedStatus, processFunction,
                 applicationKeystore.getKeyStore(), applicationKeystore.getKeystorePassword());
+    }
+
+    private class DogtagSearchConverter implements CertSearchConverter<CertSearchRequest> {
+        //todo
+        @Override
+        public CertSearchRequest convert(CertSearchParam param) {
+
+            CertSearchRequest searchRequest = new CertSearchRequest();
+
+            switch (param.getField()){
+                case SERIAL:
+                    //searchRequest.setSerialTo();
+                    break;
+            }
+
+            return null;
+        }
+
+        @Override
+        public CertSearchRequest convertAnd(CertSearchParam param) {
+            return null;
+        }
+
+        @Override
+        public CertSearchRequest convertOr(CertSearchParam param) {
+            return null;
+        }
     }
 
 }

@@ -7,8 +7,10 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Entity
@@ -22,7 +24,7 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
     private String revokePath;
     private String searchPath;
     @JsonIgnore
-    @OneToMany(mappedBy = "certAuthorityConnectionInfo")
+    @OneToMany(mappedBy = "certAuthorityConnectionInfo", fetch = FetchType.EAGER)
     private Set<CertAuthorityConnectionProperty> properties;
 
     public String getName() {
@@ -79,5 +81,14 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
 
     public void setProperties(Set<CertAuthorityConnectionProperty> properties) {
         this.properties = properties;
+    }
+
+    public Optional<CertAuthorityConnectionProperty> getPropertyByName(String name){
+        if(getProperties() != null){
+            return getProperties().stream()
+                .filter(p -> p.getName().equalsIgnoreCase(name))
+                .findFirst();
+        }
+        return Optional.empty();
     }
 }

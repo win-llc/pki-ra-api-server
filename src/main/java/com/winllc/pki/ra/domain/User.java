@@ -87,6 +87,7 @@ public class User extends AbstractPersistable<Long> {
         this.accounts = accounts;
     }
 
+
     @Override
     public boolean equals(Object o) {
 

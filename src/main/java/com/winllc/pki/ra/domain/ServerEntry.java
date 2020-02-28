@@ -10,7 +10,7 @@ import javax.persistence.ManyToOne;
 import java.util.List;
 
 @Entity
-public class ServerEntry extends AbstractPersistable<Long> {
+public class ServerEntry extends AbstractPersistable<Long> implements AccountOwnedEntity {
 
     private String hostname;
     @Column(unique = true)

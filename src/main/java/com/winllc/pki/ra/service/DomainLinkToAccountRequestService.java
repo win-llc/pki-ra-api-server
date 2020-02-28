@@ -22,6 +22,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
+import javax.validation.Valid;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -76,7 +77,7 @@ public class DomainLinkToAccountRequestService {
     }
 
     @PostMapping("/linkAccount/create")
-    public ResponseEntity<?> createDomainRequest(@RequestBody DomainLinkToAccountRequestForm form, @AuthenticationPrincipal RAUser raUser){
+    public ResponseEntity<?> createDomainRequest(@Valid @RequestBody DomainLinkToAccountRequestForm form, @AuthenticationPrincipal RAUser raUser){
         DomainLinkToAccountRequest request = DomainLinkToAccountRequest.buildNew();
 
         form.getRequestedDomainIds().removeIf(Objects::isNull);
@@ -113,7 +114,7 @@ public class DomainLinkToAccountRequestService {
 
     @Transactional
     @PostMapping("/linkAccount/update")
-    public ResponseEntity<?> domainRequestDecision(@RequestBody DomainLinkRequestDecision decision) {
+    public ResponseEntity<?> domainRequestDecision(@Valid @RequestBody DomainLinkRequestDecision decision) {
         Optional<DomainLinkToAccountRequest> optionalDomainLinkToAccountRequest = requestRepository.findById(decision.getRequestId());
         if(optionalDomainLinkToAccountRequest.isPresent()){
             DomainLinkToAccountRequest request = optionalDomainLinkToAccountRequest.get();

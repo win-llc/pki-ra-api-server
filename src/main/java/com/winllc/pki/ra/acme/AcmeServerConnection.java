@@ -182,7 +182,8 @@ public class AcmeServerConnection {
         HttpDelete httpDelete = new HttpDelete(url);
 
         try {
-            return HttpCommandUtil.processCustom(httpDelete, 200, result -> {return true;});
+            HttpCommandUtil.processCustom(httpDelete, 200, result -> {return true;});
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
             throw new AcmeConnectionException(e);

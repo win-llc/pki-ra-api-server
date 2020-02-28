@@ -1,4 +1,4 @@
-debug: true
+debug: false
 app-keystore:
   location: C:\\Users\\jrmints\\IdeaProjects\\PKI Registration Authority\\src\\main\\resources\\app.jks
   password: password
@@ -50,6 +50,8 @@ server:
   port: 8080
   servlet:
     context-path: /
+  #address: 192.168.1.13
+  base-url: http://192.168.1.13:8080
 keycloak:
   admin-interface:
     server-base-url: 'https://keycloak.winllc.com:8443/auth'

@@ -26,6 +26,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
+import javax.validation.Valid;
 import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -94,7 +95,7 @@ public class CertificateRequestService {
     }
 
     @PostMapping("/submit")
-    public ResponseEntity<?> submitRequest(@RequestBody CertificateRequestForm form, @AuthenticationPrincipal RAUser raUser) {
+    public ResponseEntity<?> submitRequest(@Valid @RequestBody CertificateRequestForm form, @AuthenticationPrincipal RAUser raUser) {
         boolean valid = formValidator.validate(form, false);
         if (valid) {
             CertificateRequest certificateRequest = CertificateRequest.build();
@@ -138,7 +139,7 @@ public class CertificateRequestService {
 
     @PostMapping("/decision")
     @Transactional
-    public ResponseEntity<?> reviewRequest(@RequestBody CertificateRequestDecisionForm form) {
+    public ResponseEntity<?> reviewRequest(@Valid @RequestBody CertificateRequestDecisionForm form) {
         Optional<CertificateRequest> optionalCertificateRequest = requestRepository.findById(form.getRequestId());
         if (optionalCertificateRequest.isPresent()) {
             CertificateRequest request = optionalCertificateRequest.get();

@@ -5,6 +5,7 @@ import com.winllc.pki.ra.constants.AccountRestrictionAction;
 import com.winllc.pki.ra.constants.AccountRestrictionType;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AccountRestriction;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AccountRestrictionRepository;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -57,7 +59,7 @@ public class AccountRestrictionService {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> create(@RequestBody AccountRestrictionForm form) throws Exception {
+    public ResponseEntity<?> create(@Valid @RequestBody AccountRestrictionForm form) throws Exception {
         AccountRestriction accountRestriction = formToRestriction(form);
 
         accountRestriction = accountRestrictionRepository.save(accountRestriction);
@@ -68,7 +70,7 @@ public class AccountRestrictionService {
     }
 
     @PostMapping("/update")
-    public ResponseEntity<?> update(@RequestBody AccountRestrictionForm form) throws Exception {
+    public ResponseEntity<?> update(@Valid @RequestBody AccountRestrictionForm form) throws Exception {
 
         Optional<AccountRestriction> optionalAccountRestriction = accountRestrictionRepository.findById(form.getId());
 
@@ -84,7 +86,7 @@ public class AccountRestrictionService {
 
             return ResponseEntity.ok(existing);
         }else{
-            return ResponseEntity.noContent().build();
+            throw new RAObjectNotFoundException(form);
         }
     }
 

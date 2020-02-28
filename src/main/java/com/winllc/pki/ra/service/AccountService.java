@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
+import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -47,44 +48,9 @@ public class AccountService {
     @Autowired
     private AccountRestrictionRepository accountRestrictionRepository;
 
-    static {
-        System.out.println("System MAC key: "+macKey);
-    }
-
-    //@PostConstruct
-    private void postConstruct(){
-        //todo remove this, for testing
-        Account testAccount = new Account();
-        testAccount.setKeyIdentifier("kidtest");
-        testAccount.setMacKey(macKey);
-        testAccount.setProjectName("Test Project");
-
-        Domain domain = new Domain();
-        domain.setBase("winllc.com");
-
-        testAccount = accountRepository.save(testAccount);
-
-        domain.getCanIssueAccounts().add(testAccount);
-
-        domain = domainRepository.save(domain);
-
-        testAccount.getCanIssueDomains().add(domain);
-        testAccount = accountRepository.save(testAccount);
-
-        User user = new User();
-        user.setIdentifier(UUID.randomUUID());
-        user.setUsername("dave@test.com");
-        user.getAccounts().add(testAccount);
-
-        user = userRepository.save(user);
-        testAccount.getAccountUsers().add(user);
-
-        accountRepository.save(testAccount);
-    }
-
 
     @PostMapping("/create")
-    public ResponseEntity<?> createNewAccount(@RequestBody AccountRequest form){
+    public ResponseEntity<?> createNewAccount(@Valid @RequestBody AccountRequest form){
         //TODO return both to account holder for entry into ACME client
 
         Account account = buildNew();
@@ -140,7 +106,7 @@ public class AccountService {
 
     @PostMapping("/update")
     @Transactional
-    public ResponseEntity<?> updateAccount(@RequestBody AccountUpdateForm form) throws Exception {
+    public ResponseEntity<?> updateAccount(@Valid @RequestBody AccountUpdateForm form) throws Exception {
 
         if(form.isValid()){
             Optional<Account> optionalAccount = accountRepository.findById(form.getId());

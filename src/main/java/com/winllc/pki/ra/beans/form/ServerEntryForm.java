@@ -2,10 +2,13 @@ package com.winllc.pki.ra.beans.form;
 
 import com.winllc.pki.ra.domain.ServerEntry;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 public class ServerEntryForm extends ValidForm<ServerEntry> {
 
+    @NotEmpty
     private String fqdn;
     private Long accountId;
     private List<String> alternateDnsValues;
@@ -14,9 +17,8 @@ public class ServerEntryForm extends ValidForm<ServerEntry> {
     public ServerEntryForm(){}
 
     @Override
-    protected boolean isValid() {
-        //todo
-        return true;
+    protected void processIsValid() {
+
     }
 
     public ServerEntryForm(ServerEntry entry){

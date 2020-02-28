@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManagerFactory;
 import javax.transaction.Transactional;
+import javax.validation.Valid;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
@@ -86,7 +87,7 @@ public class CertAuthorityConnectionService {
     }
 
     @PostMapping("/api/info/create")
-    public ResponseEntity<?> createConnectionInfo(@RequestBody CertAuthorityConnectionInfoForm connectionInfo) {
+    public ResponseEntity<?> createConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm connectionInfo) {
         boolean valid = validator.validate(connectionInfo, false);
 
         if (valid) {
@@ -124,7 +125,7 @@ public class CertAuthorityConnectionService {
 
     @Transactional
     @PostMapping("/api/info/update")
-    public ResponseEntity<?> updateConnectionInfo(@RequestBody CertAuthorityConnectionInfoForm form) {
+    public ResponseEntity<?> updateConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm form) {
         //todo validate
 
         boolean valid = validator.validate(form, true);
@@ -210,7 +211,7 @@ public class CertAuthorityConnectionService {
 
 
     @PostMapping("/issueCertificate")
-    public ResponseEntity<?> issueCertificate(@RequestBody RACertificateIssueRequest raCertificateIssueRequest) throws Exception {
+    public ResponseEntity<?> issueCertificate(@Valid @RequestBody RACertificateIssueRequest raCertificateIssueRequest) throws Exception {
 
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(raCertificateIssueRequest.getAccountKid());
         if(optionalAccount.isPresent()) {
@@ -264,7 +265,7 @@ public class CertAuthorityConnectionService {
     }
 
     @PostMapping("/revokeCertificate")
-    public ResponseEntity<?> revokeCertificate(@RequestBody RACertificateRevokeRequest revokeRequest) throws Exception {
+    public ResponseEntity<?> revokeCertificate(@Valid @RequestBody RACertificateRevokeRequest revokeRequest) throws Exception {
         CertAuthority certAuthority = loadedCertAuthorities.get(revokeRequest.getCertAuthorityName());
         if (certAuthority != null) {
             String serial = revokeRequest.getSerial();

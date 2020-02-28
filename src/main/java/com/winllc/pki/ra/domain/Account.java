@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
-public class Account extends AbstractPersistable<Long> {
+public class Account extends AbstractPersistable<Long> implements AccountOwnedEntity {
     @Column(unique = true)
     private String keyIdentifier;
     private String macKey;
@@ -33,6 +33,9 @@ public class Account extends AbstractPersistable<Long> {
     @JsonIgnore
     @OneToMany(mappedBy = "account")
     private Set<AccountRestriction> accountRestrictions;
+    @JsonIgnore
+    @OneToMany(mappedBy = "account")
+    private Set<CertificateRequest> certificateRequests;
 
     public String getKeyIdentifier() {
         return keyIdentifier;
@@ -122,6 +125,14 @@ public class Account extends AbstractPersistable<Long> {
         getPocs().add(pocEntry);
     }
 
+    public Set<CertificateRequest> getCertificateRequests() {
+        return certificateRequests;
+    }
+
+    public void setCertificateRequests(Set<CertificateRequest> certificateRequests) {
+        this.certificateRequests = certificateRequests;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -136,5 +147,11 @@ public class Account extends AbstractPersistable<Long> {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), keyIdentifier, macKey, projectName);
+    }
+
+    @Override
+    @JsonIgnore
+    public Account getAccount() {
+        return this;
     }
 }

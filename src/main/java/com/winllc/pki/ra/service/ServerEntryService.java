@@ -9,6 +9,7 @@ import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.domain.User;
+import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
@@ -24,6 +25,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +49,7 @@ public class ServerEntryService {
     private UserRepository userRepository;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createServerEntry(@RequestBody ServerEntryForm form){
+    public ResponseEntity<?> createServerEntry(@Valid @RequestBody ServerEntryForm form){
 
         Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
 
@@ -85,8 +87,10 @@ public class ServerEntryService {
 
     @PostMapping("/update")
     @Transactional
-    public ResponseEntity<?> updateServerEntry(@RequestBody ServerEntryForm form){
-        //todo
+    public ResponseEntity<?> updateServerEntry(@Valid @RequestBody ServerEntryForm form){
+        //todo update attributes in directory
+
+        log.info("Is account linked: "+form.isAccountLinkedForm());
 
         Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(form.getId());
         if(optionalServerEntry.isPresent()){
@@ -191,7 +195,7 @@ public class ServerEntryService {
 
     @PostMapping("/disableForOIDConnect")
     @Transactional
-    public ResponseEntity<?> disableForOIDConnect(@RequestBody ServerEntryForm form){
+    public ResponseEntity<?> disableForOIDConnect(@RequestBody ServerEntryForm form) throws RAException {
         //todo
 
         Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(form.getId());
@@ -230,7 +234,7 @@ public class ServerEntryService {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteServerEntry(@PathVariable Long id){
+    public ResponseEntity<?> deleteServerEntry(@PathVariable Long id) throws RAException {
 
         Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
         if(serverEntryOptional.isPresent()){

@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-public class CertificateRequest extends AbstractPersistable<Long> {
+public class CertificateRequest extends AbstractPersistable<Long> implements AccountOwnedEntity {
 
     @Column(length = 2000)
     private String csr;

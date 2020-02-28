@@ -17,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -55,14 +56,14 @@ public class DomainService {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createDomain(@RequestBody Domain domain){
+    public ResponseEntity<?> createDomain(@Valid @RequestBody Domain domain){
         domain = domainRepository.save(domain);
 
         return ResponseEntity.ok(domain.getId());
     }
 
     @PostMapping("/update")
-    public ResponseEntity<?> updateDomain(@RequestBody Domain domain){
+    public ResponseEntity<?> updateDomain(@Valid @RequestBody Domain domain){
         try {
             Optional<Domain> optionalDomain = domainRepository.findById(domain.getId());
             if(optionalDomain.isPresent()){

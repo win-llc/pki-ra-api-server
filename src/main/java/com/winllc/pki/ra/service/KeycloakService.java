@@ -2,6 +2,7 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.OIDCClientDetails;
 import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
 import com.winllc.pki.ra.repository.ServerSettingsRepository;
 import com.winllc.pki.ra.util.CustomJacksonProvider;
@@ -14,12 +15,15 @@ import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.ClientResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.core.Response;
+import java.security.Key;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class KeycloakService {
@@ -43,9 +47,9 @@ public class KeycloakService {
     private String password;
 
     @Autowired
-    private ServerEntryRepository serverEntryRepository;
+    private Keycloak keycloak;
     @Autowired
-    private ServerSettingsRepository serverSettingsRepository;
+    private ServerEntryRepository serverEntryRepository;
 
     /*
     {
@@ -115,8 +119,6 @@ public class KeycloakService {
      */
 
     public ServerEntry createClient(ServerEntry serverEntry) throws Exception {
-        Keycloak keycloak = buildClient();
-
         String url = "https://"+serverEntry.getFqdn();
 
         ClientRepresentation client = new ClientRepresentation();
@@ -189,11 +191,8 @@ public class KeycloakService {
 
         int status = response.getStatus();
 
-        if(!keycloak.isClosed()){
-            keycloak.close();
-        }
-        //todo update
         if(status == 201){
+            //Get the location of the crated client
             String location = response.getHeaderString("Location");
             String createdClientId = location.substring(location.lastIndexOf("/") + 1);
 
@@ -206,55 +205,44 @@ public class KeycloakService {
                 serverEntry = serverEntryRepository.save(serverEntry);
                 return serverEntry;
             }else{
-                log.error("Could not find Server Entry");
+                throw new RAException("Could not find Server Entry");
             }
-
         }else{
             if(status == 409){
-                throw new Exception("Client already exists");
+                throw new RAException("Client already exists: "+serverEntry.getFqdn());
             }
+            throw new RAException("Client not created: "+ response.getStatus() + ", body: "+response.getEntity());
         }
-        return null;
     }
 
-    public ServerEntry deleteClient(ServerEntry serverEntry){
-
+    public ServerEntry deleteClient(ServerEntry serverEntry) throws RAException {
+        log.info("Going to delete Keycloak Client: "+serverEntry);
         Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(serverEntry.getId());
 
         if(optionalServerEntry.isPresent()) {
             serverEntry = optionalServerEntry.get();
-            Keycloak keycloak = buildClient();
 
             keycloak.realm(realm)
                     .clients().get(serverEntry.getOpenidClientId())
                     .remove();
 
-            if (!keycloak.isClosed()) {
-                keycloak.close();
-            }
-
             //if successful, reset openid client on server entry
             serverEntry.setOpenidClientId(null);
             serverEntry = serverEntryRepository.save(serverEntry);
 
-            //todo verify success
             return serverEntry;
         }else{
-            log.error("Could not find server entry, should not be possible");
-            return null;
+            throw new RAException("Could not find server entry, should not be possible");
         }
     }
 
     public OIDCClientDetails getClient(ServerEntry serverEntry){
-        //todo
-
+        log.info("Getting client for: "+serverEntry.getFqdn());
         String oidcProviderMetadataURL = serverBaseUrl+"/realms/"+realm+"/.well-known/openid-configuration";
 
         OIDCClientDetails clientDetails = new OIDCClientDetails();
         clientDetails.setOidcProviderMetadataUrlValue(oidcProviderMetadataURL);
         clientDetails.setOidcRedirectUriValue("https://"+serverEntry.getFqdn()+"/*");
-
-        Keycloak keycloak = buildClient();
 
         ClientResource clientResource = keycloak.realm(realm)
                 .clients().get(serverEntry.getOpenidClientId());
@@ -262,34 +250,20 @@ public class KeycloakService {
         ClientRepresentation clientRepresentation = clientResource.toRepresentation();
         clientDetails.setOidcClientIdValue(clientRepresentation.getClientId());
 
-        //https://keycloak.winllc.com:8443/auth/admin/realms/dev/clients/2463cca8-028a-473b-b342-e22c5eabd109/installation/providers/keycloak-oidc-keycloak-json
-
         CredentialRepresentation secret = clientResource.getSecret();
         clientDetails.setOidcSecretValue(secret.getValue());
-
-        //String installationProvider = clientResource.getInstallationProvider("keycloak-oidc-keycloak-json");
-
-        if(!keycloak.isClosed()){
-            keycloak.close();
-        }
 
         return clientDetails;
     }
 
-    private Keycloak buildClient(){
-
-        //Keycloak keycloak = Keycloak.getInstance(serverUrlAuth, realm, username, password, clientId, clientSecret);
-
-        Keycloak keycloak = KeycloakBuilder.builder()
-                .realm(realm)
-                .clientId(clientId)
-                .username(username)
-                .password(password)
-                .serverUrl(serverBaseUrl)
-                .clientSecret(clientSecret)
-                .resteasyClient(new ResteasyClientBuilder().connectionPoolSize(10).register(new CustomJacksonProvider()).build())
-                .build();
-
-        return keycloak;
+    public List<String> searchUsers(String username){
+        //todo https://www.keycloak.org/docs-api/5.0/rest-api/index.html#_users_resource
+        List<UserRepresentation> search = keycloak.realm(realm)
+                .users().search(username);
+        return search.stream()
+                .map(u -> u.getEmail())
+                .collect(Collectors.toList());
     }
+
+
 }

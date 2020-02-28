@@ -5,23 +5,26 @@ import com.winllc.pki.ra.domain.TermsOfService;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.repository.TermsOfServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/tos")
 public class TermsOfServiceManagementService {
 
     @Autowired
     private TermsOfServiceRepository repository;
     @Autowired
     private AcmeServerManagementService acmeServerManagementService;
+    @Value("${server.base-url}")
+    private String serverBaseUrl;
 
-    @GetMapping("/all")
+    @GetMapping("/api/tos/all")
     public ResponseEntity<?> getAll(){
 
         List<TermsOfService> termsList = repository.findAll();
@@ -29,7 +32,7 @@ public class TermsOfServiceManagementService {
         return ResponseEntity.ok(termsList);
     }
 
-    @GetMapping("/getAllForDirectory/{directory}")
+    @GetMapping("/api/tos/getAllForDirectory/{directory}")
     public ResponseEntity<?> getAllForDirectory(@PathVariable String directory){
 
         List<TermsOfService> termsList = repository.findAllByForDirectoryName(directory);
@@ -37,7 +40,7 @@ public class TermsOfServiceManagementService {
         return ResponseEntity.ok(termsList);
     }
 
-    @GetMapping("/getById/{id}")
+    @GetMapping("/api/tos/getById/{id}")
     public ResponseEntity<?> getById(@PathVariable long id){
 
         Optional<TermsOfService> optionalTermsOfService = repository.findById(id);
@@ -49,7 +52,7 @@ public class TermsOfServiceManagementService {
         }
     }
 
-    @GetMapping("/version/{versionId}")
+    @GetMapping("/api/tos/version/{versionId}")
     public ResponseEntity<?> getByVersionId(@PathVariable String versionId){
         Optional<TermsOfService> optionalTermsOfService = repository.findByVersionId(versionId);
         if(optionalTermsOfService.isPresent()){
@@ -59,9 +62,19 @@ public class TermsOfServiceManagementService {
         }
     }
 
-    @PostMapping("/save/{connectionName}")
+    @GetMapping("/tos/version/{versionId}/view")
+    public ResponseEntity<?> getForView(@PathVariable String versionId){
+        Optional<TermsOfService> optionalTermsOfService = repository.findByVersionId(versionId);
+        if(optionalTermsOfService.isPresent()){
+            return ResponseEntity.ok(optionalTermsOfService.get().getText());
+        }else{
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/api/tos/save/{connectionName}")
     public ResponseEntity<?> save(@PathVariable("connectionName") String acmeServerConnectionName,
-                                  @RequestBody TermsOfService tos) throws AcmeConnectionException, IOException {
+                                  @Valid @RequestBody TermsOfService tos) throws AcmeConnectionException, IOException {
         DirectoryDataSettings settings = acmeServerManagementService.getDirectorySettingsByName(acmeServerConnectionName, tos.getForDirectoryName());
 
         TermsOfService newTos = TermsOfService.buildNew(tos.getText(), tos.getForDirectoryName());
@@ -71,9 +84,9 @@ public class TermsOfServiceManagementService {
         return ResponseEntity.ok(newTos.getId());
     }
 
-    @PostMapping("/update/{connectionName}")
+    @PostMapping("/api/tos/update/{connectionName}")
     public ResponseEntity<?> update(@PathVariable("connectionName") String acmeServerConnectionName,
-                                    @RequestBody TermsOfService tos) throws AcmeConnectionException, IOException {
+                                    @Valid @RequestBody TermsOfService tos) throws AcmeConnectionException, IOException {
         DirectoryDataSettings settings = acmeServerManagementService.getDirectorySettingsByName(acmeServerConnectionName, tos.getForDirectoryName());
 
         Optional<TermsOfService> latestVersionOptional = repository.findByVersionId(tos.getVersionId());
@@ -87,7 +100,7 @@ public class TermsOfServiceManagementService {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/api/tos/delete/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id){
 
         repository.deleteById(id);
@@ -101,7 +114,7 @@ public class TermsOfServiceManagementService {
         newTos = repository.save(newTos);
 
         //todo proper url
-        String tosUrl = "localhost/tos/version/"+newTos.getVersionId();
+        String tosUrl = serverBaseUrl+"/tos/version/"+newTos.getVersionId()+"/view";
 
         settings.updateTermsOfService(tosUrl);
 

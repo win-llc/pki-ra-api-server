@@ -5,12 +5,13 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import java.sql.Timestamp;
 
 @Entity
 @Table(name = "IssuedCertificate")
-public class IssuedCertificate extends AbstractPersistable<Long> {
+public class IssuedCertificate extends AbstractPersistable<Long> implements AccountOwnedEntity {
 
     private String certAuthorityName;
     private String issuerDn;
@@ -22,6 +23,9 @@ public class IssuedCertificate extends AbstractPersistable<Long> {
     private Timestamp expiresOn;
     private String status;
     private String serial;
+
+    @ManyToOne
+    private Account account;
 
     public CertificateDetails convertToCertDetails(){
         CertificateDetails details = new CertificateDetails();
@@ -102,5 +106,14 @@ public class IssuedCertificate extends AbstractPersistable<Long> {
 
     public void setSerial(String serial) {
         this.serial = serial;
+    }
+
+    @Override
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
     }
 }

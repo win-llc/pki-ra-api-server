@@ -30,7 +30,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  */
 
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private final OAuth2ResourceServerProperties oAuth2ResourceServerProperties;

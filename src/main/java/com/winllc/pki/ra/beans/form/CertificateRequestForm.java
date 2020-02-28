@@ -3,6 +3,8 @@ package com.winllc.pki.ra.beans.form;
 import com.winllc.acme.common.SubjectAltName;
 import com.winllc.pki.ra.domain.CertificateRequest;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 public class CertificateRequestForm extends ValidForm<CertificateRequest> {
@@ -10,6 +12,7 @@ public class CertificateRequestForm extends ValidForm<CertificateRequest> {
     private String csr;
     private String name;
     private String certAuthorityName;
+    @NotNull
     private Long accountId;
     private List<SubjectAltName> requestedDnsNames;
 
@@ -53,9 +56,9 @@ public class CertificateRequestForm extends ValidForm<CertificateRequest> {
         this.accountId = accountId;
     }
 
+
     @Override
-    protected boolean isValid() {
+    protected void processIsValid() {
         //todo
-        return true;
     }
 }

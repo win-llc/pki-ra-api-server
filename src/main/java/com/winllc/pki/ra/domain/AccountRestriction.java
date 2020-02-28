@@ -10,7 +10,7 @@ import javax.persistence.ManyToOne;
 import java.sql.Timestamp;
 
 @Entity
-public class AccountRestriction extends AbstractPersistable<Long> {
+public class AccountRestriction extends AbstractPersistable<Long> implements AccountOwnedEntity {
 
     private AccountRestrictionType type;
     private AccountRestrictionAction action;

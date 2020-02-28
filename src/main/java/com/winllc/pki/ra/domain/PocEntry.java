@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Entity
-public class PocEntry extends AbstractPersistable<Long> {
+public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedEntity {
 
     private String email;
     private boolean enabled;

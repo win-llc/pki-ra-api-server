@@ -83,7 +83,7 @@ public class ValidationService {
 
             return ResponseEntity.ok(account.getPreAuthorizationIdentifiers());
         }else{
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -145,7 +145,7 @@ public class ValidationService {
 
             return ResponseEntity.ok(domainList);
         }else{
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().build();
         }
     }
 }

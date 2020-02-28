@@ -1,10 +1,16 @@
 package com.winllc.pki.ra.beans.form;
 
+import com.winllc.pki.ra.constants.CertificateRequestAction;
 import com.winllc.pki.ra.domain.CertificateRequest;
+
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 public class CertificateRequestDecisionForm extends ValidForm<CertificateRequest> {
 
+    @NotNull
     private Long requestId;
+    @NotEmpty(message = "Status must not be empty")
     private String status;
 
     public Long getRequestId() {
@@ -24,7 +30,11 @@ public class CertificateRequestDecisionForm extends ValidForm<CertificateRequest
     }
 
     @Override
-    protected boolean isValid() {
-        return false;
+    protected void processIsValid() {
+        try {
+            CertificateRequestAction.valueOf(status);
+        }catch (Exception e){
+            errors.put("status", "Invalid status");
+        }
     }
 }

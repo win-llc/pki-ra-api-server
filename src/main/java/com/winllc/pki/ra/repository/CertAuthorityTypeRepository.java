@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CertAuthorityTypeRepository extends CrudRepository<CertAuthorityType, Long> {
+public interface CertAuthorityTypeRepository extends BaseRepository<CertAuthorityType> {
 
-    List<CertAuthorityType> findAll();
 }

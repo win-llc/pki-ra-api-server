@@ -13,13 +13,9 @@ public class AccountRestrictionForm extends ValidForm<AccountRestriction> {
 
     private DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
-    @NotNull
     private Long accountId;
-    @NotEmpty
     private String type;
-    @NotEmpty
     private String action;
-    @NotEmpty
     private String dueBy;
     private boolean completed;
 

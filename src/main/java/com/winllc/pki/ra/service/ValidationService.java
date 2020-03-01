@@ -9,6 +9,8 @@ import com.winllc.acme.common.AccountValidationResponse;
 import com.winllc.acme.common.CAValidationRule;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
+import com.winllc.pki.ra.exception.RAException;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
 import org.apache.logging.log4j.LogManager;
@@ -39,10 +41,10 @@ public class ValidationService {
     private AccountRestrictionService accountRestrictionService;
 
     @PostMapping("/rules/{kid}")
-    public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid){
+    public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid) throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
-        if(optionalAccount.isPresent()) {
+        if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
             List<Domain> allByCanIssueAccountsContains = domainRepository.findAllByCanIssueAccountsContains(account);
 
@@ -60,92 +62,85 @@ public class ValidationService {
                 validationRules.add(validationRule);
             }
 
-            AccountValidationResponse response = new AccountValidationResponse();
+            AccountValidationResponse response = new AccountValidationResponse(account.getKeyIdentifier());
             response.setCaValidationRules(validationRules);
 
             boolean accountValid = accountRestrictionService.checkIfAccountValid(account);
             response.setAccountIsValid(accountValid);
 
             return ResponseEntity.ok(response);
-        }else{
-            return ResponseEntity.notFound().build();
+        } else {
+            throw new RAObjectNotFoundException(Account.class, kid);
         }
     }
 
     @GetMapping("/account/preAuthzIdentifiers/{kid}")
     @Transactional
-    public ResponseEntity<?> getAccountPreAuthorizedIdentifiers(@PathVariable String kid){
+    public ResponseEntity<?> getAccountPreAuthorizedIdentifiers(@PathVariable String kid) throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
-        if(optionalAccount.isPresent()) {
+        if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
             Hibernate.initialize(account.getPreAuthorizationIdentifiers());
 
             return ResponseEntity.ok(account.getPreAuthorizationIdentifiers());
-        }else{
-            return ResponseEntity.badRequest().build();
+        } else {
+            throw new RAObjectNotFoundException(Account.class, kid);
         }
     }
 
     @PostMapping("/account/verify")
     public ResponseEntity<?> verifyExternalAccountBinding(@RequestParam String macKey, @RequestParam String keyIdentifier,
-                                                          @RequestParam String jwsObject, @RequestParam String accountObject){
+                                                          @RequestParam String jwsObject, @RequestParam String accountObject) throws RAException {
         Base64URL macKeyBase64 = new Base64URL(macKey);
 
-        log.info("MAC Key: "+ macKeyBase64.toString());
-        log.info("Key Identifier: "+keyIdentifier);
+        log.info("MAC Key: " + macKeyBase64.toString());
+        log.info("Key Identifier: " + keyIdentifier);
 
-        try {
-            Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(keyIdentifier);
+        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(keyIdentifier);
 
-            if(optionalAccount.isPresent()) {
-                Account account = optionalAccount.get();
+        if (optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            try {
                 JWSObject jwsObjectParsed = JWSObject.parse(jwsObject);
                 JWSObject accountJWSParsed = JWSObject.parse(accountObject);
+                JWSSigner signer = new MACSigner(account.getMacKey());
 
-                try {
-                    JWSSigner signer = new MACSigner(account.getMacKey());
+                JWSObject testObj = new JWSObject(jwsObjectParsed.getHeader(), jwsObjectParsed.getPayload());
+                testObj.sign(signer);
 
-                    JWSObject testObj = new JWSObject(jwsObjectParsed.getHeader(), jwsObjectParsed.getPayload());
-                    testObj.sign(signer);
+                log.info("Test signed obj: " + testObj.getSignature().toJSONString());
 
-                    log.info("Test signed obj: " + testObj.getSignature().toJSONString());
+                if (testObj.getSignature().toString().contentEquals(jwsObjectParsed.getSignature().toString())) {
+                    log.info("Account request verified!");
 
-                    if (testObj.getSignature().toString().contentEquals(jwsObjectParsed.getSignature().toString())) {
-                        log.info("Account request verified!");
-
-                        return ResponseEntity.status(200)
-                                .build();
-                    }
-                } catch (KeyLengthException e) {
-                    log.error("Invalid key length", e);
+                    return ResponseEntity.status(200)
+                            .build();
+                } else {
+                    throw new RAException("Could not verify EAB, signatures did not match");
                 }
-
-            }else{
-                return ResponseEntity.notFound().build();
+            } catch (Exception e) {
+                log.error("Invalid key length", e);
+                throw new RAException("Could not verify External Account Binding for KID: " + keyIdentifier);
             }
 
-        } catch (Exception e) {
-            log.error("Could not verify request", e);
+        } else {
+            throw new RAObjectNotFoundException(Account.class, keyIdentifier);
         }
-
-        //TODO verify account
-        return ResponseEntity.status(403)
-                .build();
     }
 
     @GetMapping("/account/getCanIssueDomains/{kid}")
-    public ResponseEntity<?> getCanIssueDomains(@PathVariable String kid){
+    public ResponseEntity<?> getCanIssueDomains(@PathVariable String kid) throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
-        if(optionalAccount.isPresent()) {
+        if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
             List<String> domainList = domainRepository.findAllByCanIssueAccountsContains(account)
                     .stream().map(Domain::getBase)
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(domainList);
-        }else{
-            return ResponseEntity.badRequest().build();
+        } else {
+            throw new RAObjectNotFoundException(Account.class, kid);
         }
     }
 }

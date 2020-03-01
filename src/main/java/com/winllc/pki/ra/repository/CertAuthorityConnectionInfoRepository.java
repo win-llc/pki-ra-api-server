@@ -10,8 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CertAuthorityConnectionInfoRepository extends CrudRepository<CertAuthorityConnectionInfo, Long> {
-    List<CertAuthorityConnectionInfo> findAll();
+public interface CertAuthorityConnectionInfoRepository extends BaseRepository<CertAuthorityConnectionInfo> {
     @Query("select name from CertAuthorityConnectionInfo")
     List<String> findAllNames();
     Optional<CertAuthorityConnectionInfo> findByName(String name);

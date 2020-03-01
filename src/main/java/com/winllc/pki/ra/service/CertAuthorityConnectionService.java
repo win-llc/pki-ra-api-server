@@ -1,17 +1,21 @@
 package com.winllc.pki.ra.service;
 
+import com.netscape.cms.servlet.csadmin.Cert;
 import com.winllc.acme.common.*;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.pki.ra.beans.validator.CertAuthorityConnectionInfoValidator;
+import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
 import com.winllc.pki.ra.ca.DogTagCertAuthority;
 import com.winllc.pki.ra.ca.InternalCertAuthority;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.*;
+import com.winllc.pki.ra.exception.RAException;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.repository.*;
 import org.apache.commons.lang3.StringUtils;
@@ -27,8 +31,10 @@ import javax.annotation.PostConstruct;
 import javax.persistence.EntityManagerFactory;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -61,7 +67,7 @@ public class CertAuthorityConnectionService {
     @Autowired
     private CertificateRequestRepository certificateRequestRepository;
 
-    private Map<String, CertAuthority> loadedCertAuthorities = new HashMap<>();
+    private static Map<String, CertAuthority> loadedCertAuthorities = new ConcurrentHashMap<>();
 
 
     @PostConstruct
@@ -70,7 +76,6 @@ public class CertAuthorityConnectionService {
             loadCertAuthority(connectionInfoName);
         }
     }
-
 
     //Build CA object for use
     private void loadCertAuthority(String name) {
@@ -88,9 +93,9 @@ public class CertAuthorityConnectionService {
 
     @PostMapping("/api/info/create")
     public ResponseEntity<?> createConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm connectionInfo) {
-        boolean valid = validator.validate(connectionInfo, false);
+        ValidationResponse validationResponse = validator.validate(connectionInfo, false);
 
-        if (valid) {
+        if (validationResponse.isValid()) {
             CertAuthorityConnectionInfo caConnection = new CertAuthorityConnectionInfo();
             caConnection.setName(connectionInfo.getName());
             caConnection.setType(CertAuthorityConnectionType.valueOf(connectionInfo.getType()));
@@ -125,12 +130,12 @@ public class CertAuthorityConnectionService {
 
     @Transactional
     @PostMapping("/api/info/update")
-    public ResponseEntity<?> updateConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm form) {
+    public ResponseEntity<?> updateConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm form) throws RAException {
         //todo validate
 
-        boolean valid = validator.validate(form, true);
+        ValidationResponse validationResponse = validator.validate(form, true);
 
-        if(valid) {
+        if(validationResponse.isValid()) {
             Optional<CertAuthorityConnectionInfo> optionalInfo = repository.findById(form.getId());
             if (optionalInfo.isPresent()) {
                 final CertAuthorityConnectionInfo info = optionalInfo.get();
@@ -147,12 +152,12 @@ public class CertAuthorityConnectionService {
 
                 CertAuthorityConnectionInfo info2 = repository.save(info);
                 return ResponseEntity.ok(buildForm(info2));
+            }else{
+                throw new RAObjectNotFoundException(CertAuthorityConnectionInfo.class, form.getId());
             }
         }else{
-            return ResponseEntity.badRequest().build();
+            throw new RAException("Cert Authority Info form invalid");
         }
-
-        return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/api/info/byName/{name}")
@@ -238,8 +243,7 @@ public class CertAuthorityConnectionService {
 
             return ResponseEntity.ok(pemCert);
         }else{
-            log.error("Could not find account with: "+raCertificateIssueRequest.getAccountKid());
-            return ResponseEntity.badRequest().build();
+            throw new RAObjectNotFoundException(Account.class, raCertificateIssueRequest.getAccountKid());
         }
     }
 
@@ -260,7 +264,7 @@ public class CertAuthorityConnectionService {
         if (cert != null) {
             return cert;
         } else {
-            throw new Exception("Could not issue certificate");
+            throw new RAException("Could not issue certificate");
         }
     }
 
@@ -271,16 +275,7 @@ public class CertAuthorityConnectionService {
             String serial = revokeRequest.getSerial();
             //Get serial from certificate request
             if(StringUtils.isBlank(serial)){
-                if(revokeRequest.getRequestId() != null){
-                    Optional<CertificateRequest> optionalCertificateRequest = certificateRequestRepository.findById(Long.valueOf(revokeRequest.getRequestId()));
-                    if(optionalCertificateRequest.isPresent()){
-                        CertificateRequest certificateRequest = optionalCertificateRequest.get();
-                        if(StringUtils.isNotBlank(certificateRequest.getIssuedCertificate())){
-                            X509Certificate x509Certificate = CertUtil.base64ToCert(certificateRequest.getIssuedCertificate());
-                            serial = x509Certificate.getSerialNumber().toString();
-                        }
-                    }
-                }
+                serial = getSerialFromRequest(revokeRequest);
             }
 
             if(StringUtils.isBlank(serial)) throw new Exception("Request ID and Serial can't both be null");
@@ -293,10 +288,25 @@ public class CertAuthorityConnectionService {
                 auditRecordRepository.save(record);
                 return ResponseEntity.ok().build();
             } else {
-                return ResponseEntity.badRequest().build();
+                throw new RAException("Could not revoke cert on Cert Authority");
             }
         } else {
-            return ResponseEntity.badRequest().build();
+            throw new RAObjectNotFoundException(CertAuthority.class, revokeRequest.getCertAuthorityName());
+        }
+    }
+
+    private String getSerialFromRequest(RACertificateRevokeRequest revokeRequest) throws RAException, CertificateException, IOException {
+        Optional<CertificateRequest> optionalCertificateRequest = certificateRequestRepository.findById(revokeRequest.getRequestId());
+        if(optionalCertificateRequest.isPresent()){
+            CertificateRequest certificateRequest = optionalCertificateRequest.get();
+            if(StringUtils.isNotBlank(certificateRequest.getIssuedCertificate())){
+                X509Certificate x509Certificate = CertUtil.base64ToCert(certificateRequest.getIssuedCertificate());
+                return x509Certificate.getSerialNumber().toString();
+            }else{
+                throw new RAException("No certificate in request, most likely not issued yet");
+            }
+        }else{
+            throw new RAObjectNotFoundException(CertificateRequest.class, revokeRequest.getRequestId());
         }
     }
 
@@ -309,20 +319,17 @@ public class CertAuthorityConnectionService {
             X509Certificate cert = certAuthority.getCertificateBySerial(serial);
             if (cert != null) {
                 String status = certAuthority.getCertificateStatus(serial);
-                try {
-                    details.setCertificateBase64(CertUtil.convertToPem(cert));
-                    details.setStatus(status);
-                    details.setSerial(serial);
+                details.setCertificateBase64(CertUtil.convertToPem(cert));
+                details.setStatus(status);
+                details.setSerial(serial);
 
-                    return ResponseEntity.ok(details);
-                } catch (CertificateEncodingException e) {
-                    e.printStackTrace();
-                    return ResponseEntity.status(500).build();
-                }
+                return ResponseEntity.ok(details);
+            }else{
+                throw new RAException("Could not find certificate with serial: "+serial);
             }
+        }else{
+            throw new RAObjectNotFoundException(CertAuthority.class, connectionName);
         }
-
-        return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/trustChain/{connectionName}")

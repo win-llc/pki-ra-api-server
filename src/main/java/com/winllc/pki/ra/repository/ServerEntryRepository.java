@@ -10,9 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ServerEntryRepository extends CrudRepository<ServerEntry, Long> {
+public interface ServerEntryRepository extends BaseRepository<ServerEntry> {
 
-    List<ServerEntry> findAll();
     List<ServerEntry> findAllByFqdn(String fqdn);
     List<ServerEntry> findAllByAccount(Account account);
     List<ServerEntry> findAllByAccountId(Long id);

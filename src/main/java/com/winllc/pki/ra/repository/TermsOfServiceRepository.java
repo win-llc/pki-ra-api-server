@@ -8,9 +8,8 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface TermsOfServiceRepository extends CrudRepository<TermsOfService, Long> {
+public interface TermsOfServiceRepository extends BaseRepository<TermsOfService> {
 
-    List<TermsOfService> findAll();
     List<TermsOfService> findAllByForDirectoryName(String directoryName);
     Optional<TermsOfService> findByVersionId(String versionId);
 }

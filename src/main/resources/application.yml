@@ -65,3 +65,15 @@ web-ui:
   server-base: http://localhost:3000
   uri-templates:
     account-created: /account/edit/{0}
+permissions:
+  available:
+    - super_admin
+    - add_domain
+    - update_domain
+    - delete_domain
+    - add_account
+    - update_account
+    - delete_account
+    - add_account_restriction
+    - update_account_restriction
+    - delete_account_restriction

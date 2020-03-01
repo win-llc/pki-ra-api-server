@@ -6,7 +6,6 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
 
-public interface DomainLinkToAccountRequestRepository extends CrudRepository<DomainLinkToAccountRequest, Long> {
-    List<DomainLinkToAccountRequest> findAll();
+public interface DomainLinkToAccountRequestRepository extends BaseRepository<DomainLinkToAccountRequest> {
     List<DomainLinkToAccountRequest> findAllByStatusEquals(String status);
 }

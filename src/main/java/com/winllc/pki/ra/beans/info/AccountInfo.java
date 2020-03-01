@@ -17,11 +17,13 @@ public class AccountInfo extends InfoObject<Account> {
     private List<UserInfo> pocs;
     private List<DomainInfo> canIssueDomains;
 
-    public AccountInfo(Account entity) {
+    public AccountInfo(Account entity, boolean loadKeys) {
         super(entity);
-        this.keyIdentifier = entity.getKeyIdentifier();
-        this.macKey = entity.getMacKey();
-        this.macKeyBase64 = Base64.encode(this.macKey).toString();
+        if(loadKeys) {
+            this.keyIdentifier = entity.getKeyIdentifier();
+            this.macKey = entity.getMacKey();
+            this.macKeyBase64 = Base64.encode(this.macKey).toString();
+        }
         this.projectName = entity.getProjectName();
         this.acmeRequireHttpValidation = entity.isAcmeRequireHttpValidation();
     }

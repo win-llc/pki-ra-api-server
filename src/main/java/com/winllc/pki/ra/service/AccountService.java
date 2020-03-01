@@ -142,7 +142,7 @@ public class AccountService {
                 pocEntryRepository.deleteAllByEmailInAndAccountEquals(emailsToRemove, account);
 
                 account = accountRepository.save(account);
-                return ResponseEntity.ok(new AccountInfo(account));
+                return ResponseEntity.ok(new AccountInfo(account, true));
             }else{
                 throw new Exception("Could not find account with ID: "+form.getId());
             }
@@ -231,7 +231,7 @@ public class AccountService {
         List<PocEntry> pocEntries = pocEntryRepository.findAllByAccount(account);
 
         List<DomainInfo> domainInfoList = canIssueDomains.stream()
-                .map(DomainInfo::new)
+                .map(d -> new DomainInfo(d, false))
                 .collect(Collectors.toList());
 
         List<UserInfo> userInfoList = accountUsers.stream()
@@ -246,7 +246,7 @@ public class AccountService {
         userSet.addAll(userInfoList);
         userSet.addAll(userInfoFromPocs);
 
-        AccountInfo accountInfo = new AccountInfo(account);
+        AccountInfo accountInfo = new AccountInfo(account, true);
         accountInfo.setCanIssueDomains(domainInfoList);
         accountInfo.setPocs(new ArrayList<>(userSet));
 

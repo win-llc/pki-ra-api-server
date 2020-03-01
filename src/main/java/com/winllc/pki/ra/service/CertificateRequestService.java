@@ -7,6 +7,7 @@ import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.CertificateRequestForm;
 import com.winllc.pki.ra.beans.info.CertificateRequestInfo;
 import com.winllc.pki.ra.beans.validator.CertRequestFormValidator;
+import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AuditRecord;
@@ -96,8 +97,8 @@ public class CertificateRequestService {
 
     @PostMapping("/submit")
     public ResponseEntity<?> submitRequest(@Valid @RequestBody CertificateRequestForm form, @AuthenticationPrincipal RAUser raUser) {
-        boolean valid = formValidator.validate(form, false);
-        if (valid) {
+        ValidationResponse validationResponse = formValidator.validate(form, false);
+        if (validationResponse.isValid()) {
             CertificateRequest certificateRequest = CertificateRequest.build();
             certificateRequest.setCsr(form.getCsr());
             certificateRequest.setCertAuthorityName(form.getCertAuthorityName());

@@ -15,20 +15,18 @@ public class CertAuthorityConnectionInfoValidator implements FormValidator<CertA
     private CertAuthorityConnectionInfoRepository repository;
 
     @Override
-    public boolean validate(CertAuthorityConnectionInfoForm form, boolean editMode) {
+    public ValidationResponse validate(CertAuthorityConnectionInfoForm form, boolean editMode) {
         //todo
+        ValidationResponse validationResponse = new ValidationResponse();
         Optional<CertAuthorityConnectionInfo> connectionInfoOptional = repository.findByName(form.getName());
 
         if(connectionInfoOptional.isPresent()){
             CertAuthorityConnectionInfo connectionInfo = connectionInfoOptional.get();
             //if object exists and not edit mode, not a valid operation
-            if(!editMode){
-                return false;
-            }
 
             //connectionInfo
         }
 
-        return true;
+        return validationResponse;
     }
 }

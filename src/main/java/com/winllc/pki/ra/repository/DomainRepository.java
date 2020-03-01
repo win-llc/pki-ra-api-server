@@ -8,8 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public interface DomainRepository extends CrudRepository<Domain, Long> {
-    List<Domain> findAll();
+public interface DomainRepository extends BaseRepository<Domain> {
     List<Domain> findAllByBaseContains(String search);
     List<Domain> findAllByCanIssueAccountsContains(Account account);
     List<Domain> findAllByIdIn(Collection<Long> ids);

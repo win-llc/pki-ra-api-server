@@ -9,8 +9,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface IssuedCertificateRepository extends CrudRepository<IssuedCertificate, Long> {
-
-    List<IssuedCertificate> findAll();
+public interface IssuedCertificateRepository extends BaseRepository<IssuedCertificate> {
 
 }

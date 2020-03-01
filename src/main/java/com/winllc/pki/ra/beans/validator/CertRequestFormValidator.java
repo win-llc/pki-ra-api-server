@@ -7,15 +7,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class CertRequestFormValidator implements FormValidator<CertificateRequestForm> {
     @Override
-    public boolean validate(CertificateRequestForm form, boolean editMode) {
-        boolean valid = false;
+    public ValidationResponse validate(CertificateRequestForm form, boolean editMode) {
+        ValidationResponse validationResponse = new ValidationResponse();
         try {
             CertUtil.csrBase64ToPKC10Object(form.getCsr());
-            valid = true;
         } catch (Exception e) {
-            e.printStackTrace();
+            validationResponse.addError("csr", e.getMessage());
         }
 
-        return valid;
+        return validationResponse;
     }
 }

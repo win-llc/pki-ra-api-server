@@ -20,7 +20,7 @@ public class RAUser extends User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return AuthorityUtils.createAuthorityList(
-                getRoles().stream().map(r -> "ROLE_" + r).toArray(String[]::new));
+                getRoles().stream().map(r -> r).toArray(String[]::new));
     }
 
     @Override

@@ -10,9 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AccountRepository extends CrudRepository<Account, Long> {
+public interface AccountRepository extends BaseRepository<Account> {
 
-    List<Account> findAll();
     Optional<Account> findByKeyIdentifierEquals(String kid);
     List<Account> findAllByAccountUsersContains(User user);
     List<Account> findAllByAccountUsersContainsOrPocsIn(User user, List<PocEntry> pocEntries);

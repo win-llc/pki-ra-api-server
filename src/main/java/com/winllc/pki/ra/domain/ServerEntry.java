@@ -3,11 +3,10 @@ package com.winllc.pki.ra.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 public class ServerEntry extends AbstractPersistable<Long> implements AccountOwnedEntity {
@@ -24,6 +23,9 @@ public class ServerEntry extends AbstractPersistable<Long> implements AccountOwn
     @JsonIgnore
     @ManyToOne
     private Account account;
+    @JsonIgnore
+    @ManyToMany
+    private Set<AttributePolicyGroup> policyGroups;
     private String openidClientId;
     private String openidClientRedirectUrl;
 
@@ -81,6 +83,15 @@ public class ServerEntry extends AbstractPersistable<Long> implements AccountOwn
 
     public void setOpenidClientRedirectUrl(String openidClientRedirectUrl) {
         this.openidClientRedirectUrl = openidClientRedirectUrl;
+    }
+
+    public Set<AttributePolicyGroup> getPolicyGroups() {
+        if(policyGroups == null) policyGroups = new HashSet<>();
+        return policyGroups;
+    }
+
+    public void setPolicyGroups(Set<AttributePolicyGroup> policyGroups) {
+        this.policyGroups = policyGroups;
     }
 
     @Override

@@ -79,7 +79,7 @@ public class AcmeServerManagementService {
     }
 
     @GetMapping("/getAllAcmeServerConnectionInfo")
-    public ResponseEntity<?> getAllAcmeServerConnectionInfo(@AuthenticationPrincipal RAUser raUser){
+    public ResponseEntity<?> getAllAcmeServerConnectionInfo(){
         return ResponseEntity.ok(connectionInfoRepository.findAll());
     }
 
@@ -129,8 +129,7 @@ public class AcmeServerManagementService {
     }
 
     @GetMapping("{connectionName}/getAllDirectorySettings")
-    public ResponseEntity<?> getAllDirectorySettings(@PathVariable String connectionName, @AuthenticationPrincipal RAUser raUser) throws AcmeConnectionException {
-        log.info("RAUser: "+raUser.getUsername());
+    public ResponseEntity<?> getAllDirectorySettings(@PathVariable String connectionName) throws AcmeConnectionException {
         AcmeServerService acmeServerService = services.get(connectionName);
         List<DirectoryDataSettings> allDirectorySettings = acmeServerService.getAllDirectorySettings();
         return ResponseEntity.ok(allDirectorySettings);

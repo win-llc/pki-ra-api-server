@@ -1,9 +1,12 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.beans.form.DomainForm;
+import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.DomainLinkToAccountRequest;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.User;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainLinkToAccountRequestRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
@@ -11,6 +14,7 @@ import com.winllc.pki.ra.repository.UserRepository;
 import com.winllc.pki.ra.security.RAUser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -46,38 +50,38 @@ public class DomainService {
     }
 
     @GetMapping("/byId/{id}")
+    @Transactional
     public ResponseEntity<?> getDomainById(@PathVariable Long id) throws Exception {
         Optional<Domain> optionalDomain = domainRepository.findById(id);
         if(optionalDomain.isPresent()){
-            return ResponseEntity.ok(optionalDomain.get());
+            Domain domain = optionalDomain.get();
+            Hibernate.initialize(domain.getCanIssueAccounts());
+            return ResponseEntity.ok(new DomainInfo(domain, true));
+        }else{
+            throw new RAObjectNotFoundException(Domain.class, id);
         }
-
-        throw new Exception("Could not find by ID: "+id);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createDomain(@Valid @RequestBody Domain domain){
+    public ResponseEntity<?> createDomain(@Valid @RequestBody DomainForm form){
+        Domain domain = new Domain();
+        domain.setBase(form.getBase());
         domain = domainRepository.save(domain);
 
         return ResponseEntity.ok(domain.getId());
     }
 
     @PostMapping("/update")
-    public ResponseEntity<?> updateDomain(@Valid @RequestBody Domain domain){
-        try {
-            Optional<Domain> optionalDomain = domainRepository.findById(domain.getId());
-            if(optionalDomain.isPresent()){
-                Domain existing = optionalDomain.get();
-                existing.setBase(domain.getBase());
-                existing = domainRepository.save(existing);
-                return ResponseEntity.ok(existing);
-            }else{
-                return ResponseEntity.noContent().build();
-            }
-        } catch (Exception e) {
-            log.error("Could not find domain: "+domain.getId(), e);
+    public ResponseEntity<?> updateDomain(@Valid @RequestBody DomainForm form) throws RAObjectNotFoundException{
+        Optional<Domain> optionalDomain = domainRepository.findById(form.getId());
+        if(optionalDomain.isPresent()){
+            Domain existing = optionalDomain.get();
+            existing.setBase(form.getBase());
+            existing = domainRepository.save(existing);
+            return ResponseEntity.ok(existing);
+        }else{
+            throw new RAObjectNotFoundException(form);
         }
-        return ResponseEntity.status(500).build();
     }
 
     @DeleteMapping("/delete/{id}")

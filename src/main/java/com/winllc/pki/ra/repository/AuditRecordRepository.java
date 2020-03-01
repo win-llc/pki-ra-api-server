@@ -9,7 +9,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 @Repository
-public interface AuditRecordRepository extends CrudRepository<AuditRecord, Long> {
+public interface AuditRecordRepository extends BaseRepository<AuditRecord> {
     Integer countAllByTypeEquals(AuditRecordType type);
     Integer countAllByTypeEqualsAndTimestampAfterAndTimestampBefore(AuditRecordType type, Timestamp after, Timestamp before);
     List<AuditRecord> findAllByTypeEquals(AuditRecordType type);

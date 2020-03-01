@@ -12,9 +12,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface CertificateRequestRepository extends CrudRepository<CertificateRequest, Long> {
+public interface CertificateRequestRepository extends BaseRepository<CertificateRequest> {
 
-    List<CertificateRequest> findAll();
     List<CertificateRequest> findAllByStatusEquals(String status);
     List<CertificateRequest> findAllByRequestedByEquals(User user);
 }

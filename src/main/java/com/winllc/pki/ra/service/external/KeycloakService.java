@@ -1,17 +1,12 @@
-package com.winllc.pki.ra.service;
+package com.winllc.pki.ra.service.external;
 
 import com.winllc.pki.ra.beans.OIDCClientDetails;
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
-import com.winllc.pki.ra.repository.ServerSettingsRepository;
-import com.winllc.pki.ra.util.CustomJacksonProvider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.ClientResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -21,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.core.Response;
-import java.security.Key;
 import java.util.*;
 import java.util.stream.Collectors;
 

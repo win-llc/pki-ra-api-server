@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ServerSettingsRepository extends CrudRepository<ServerSettings, Long> {
+public interface ServerSettingsRepository extends BaseRepository<ServerSettings> {
 
-    List<ServerSettings> findAll();
     Optional<ServerSettings> findDistinctByPropertyEquals(String property);
 }

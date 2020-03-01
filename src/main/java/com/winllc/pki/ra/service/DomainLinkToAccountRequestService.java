@@ -162,12 +162,12 @@ public class DomainLinkToAccountRequestService {
         List<Domain> domains = domainRepository.findAllByIdIn(request.getRequestedDomainIds());
 
         if(optionalAccount.isPresent()){
-            AccountInfo accountInfo = new AccountInfo(optionalAccount.get());
+            AccountInfo accountInfo = new AccountInfo(optionalAccount.get(), false);
             info.setAccountInfo(accountInfo);
         }
 
         List<DomainInfo> domainInfoList = domains.stream()
-                .map(DomainInfo::new)
+                .map(d -> new DomainInfo(d, true))
                 .collect(Collectors.toList());
 
         info.setDomainInfoList(domainInfoList);

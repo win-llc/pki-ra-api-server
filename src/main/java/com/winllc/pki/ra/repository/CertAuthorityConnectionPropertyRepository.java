@@ -10,6 +10,6 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CertAuthorityConnectionPropertyRepository extends CrudRepository<CertAuthorityConnectionProperty, Long> {
+public interface CertAuthorityConnectionPropertyRepository extends BaseRepository<CertAuthorityConnectionProperty> {
 
 }

@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface AcmeServerConnectionInfoRepository extends CrudRepository<AcmeServerConnectionInfo, Long> {
-    List<AcmeServerConnectionInfo> findAll();
+public interface AcmeServerConnectionInfoRepository extends BaseRepository<AcmeServerConnectionInfo> {
     AcmeServerConnectionInfo findByName(String name);
 }

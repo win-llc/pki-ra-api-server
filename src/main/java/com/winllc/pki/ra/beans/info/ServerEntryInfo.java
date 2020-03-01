@@ -17,7 +17,7 @@ public class ServerEntryInfo extends InfoObject<ServerEntry> {
         super(serverEntry);
         this.fqdn = serverEntry.getFqdn();
         this.alternateDnsValues = serverEntry.getAlternateDnsValues();
-        this.setAccountInfo(new AccountInfo(serverEntry.getAccount()));
+        this.setAccountInfo(new AccountInfo(serverEntry.getAccount(), false));
         this.openidClientId = serverEntry.getOpenidClientId();
         this.openidClientRedirectUrl = serverEntry.getOpenidClientRedirectUrl();
     }

@@ -13,9 +13,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class CertAuthorityConnectionInfoForm {
+public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConnectionInfo> {
 
-    private Long id;
     private String name;
     private String type;
     private String baseUrl;
@@ -27,8 +26,13 @@ public class CertAuthorityConnectionInfoForm {
     private CertAuthorityConnectionInfoForm() {
     }
 
+    @Override
+    protected void processIsValid() {
+
+    }
+
     public CertAuthorityConnectionInfoForm(CertAuthorityConnectionInfo info, CertAuthority ca) {
-        this.id = info.getId();
+        super(info);
         this.name = info.getName();
         this.type = info.getType().name();
         this.properties = info.getProperties();
@@ -47,14 +51,6 @@ public class CertAuthorityConnectionInfoForm {
                 this.properties.add(prop);
             }
         }
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {

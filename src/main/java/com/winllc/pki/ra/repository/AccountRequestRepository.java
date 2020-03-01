@@ -10,9 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AccountRequestRepository extends CrudRepository<AccountRequest, Long> {
+public interface AccountRequestRepository extends BaseRepository<AccountRequest> {
 
-    List<AccountRequest> findAll();
     List<AccountRequest> findAllByStateEquals(String state);
 
 }

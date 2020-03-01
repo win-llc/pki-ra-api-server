@@ -13,7 +13,7 @@ public class CertificateRequestInfo extends InfoObject<CertificateRequest> {
         this.csr = certificateRequest.getCsr();
 
         if(certificateRequest.getAccount() != null){
-            this.accountInfo = new AccountInfo(certificateRequest.getAccount());
+            this.accountInfo = new AccountInfo(certificateRequest.getAccount(), false);
         }
     }
 

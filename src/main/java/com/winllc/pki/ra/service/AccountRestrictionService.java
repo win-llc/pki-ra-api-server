@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -47,14 +48,14 @@ public class AccountRestrictionService {
     }
 
     @GetMapping("/byId/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id){
+    public ResponseEntity<?> getById(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<AccountRestriction> optionalAccountRestriction = accountRestrictionRepository.findById(id);
         if(optionalAccountRestriction.isPresent()){
             AccountRestriction restriction = optionalAccountRestriction.get();
 
             return ResponseEntity.ok(new AccountRestrictionForm(restriction));
         }else{
-            return ResponseEntity.noContent().build();
+            throw new RAObjectNotFoundException(AccountRestriction.class, id);
         }
     }
 
@@ -69,6 +70,7 @@ public class AccountRestrictionService {
         return ResponseEntity.ok(accountRestriction.getId());
     }
 
+    @PreAuthorize("hasPermission(#form, 'update_account_restriction')")
     @PostMapping("/update")
     public ResponseEntity<?> update(@Valid @RequestBody AccountRestrictionForm form) throws Exception {
 
@@ -122,7 +124,7 @@ public class AccountRestrictionService {
         return true;
     }
 
-    private AccountRestriction formToRestriction(AccountRestrictionForm form) throws Exception {
+    private AccountRestriction formToRestriction(AccountRestrictionForm form) throws RAObjectNotFoundException {
         AccountRestriction restriction = new AccountRestriction();
         Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
         if(optionalAccount.isPresent()){
@@ -145,7 +147,7 @@ public class AccountRestrictionService {
             return restriction;
 
         }else{
-            throw new Exception("Could not find account");
+            throw new RAObjectNotFoundException(form);
         }
     }
 }

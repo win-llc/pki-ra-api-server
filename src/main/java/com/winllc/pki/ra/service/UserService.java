@@ -2,7 +2,7 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.repository.UserRepository;
 import com.winllc.pki.ra.security.RAUser;
-import org.keycloak.admin.client.Keycloak;
+import com.winllc.pki.ra.service.external.KeycloakService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

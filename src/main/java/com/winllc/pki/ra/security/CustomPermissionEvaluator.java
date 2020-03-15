@@ -23,8 +23,6 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
     @Autowired
     private CertificateRequestRepository certificateRequestRepository;
     @Autowired
-    private IssuedCertificateRepository issuedCertificateRepository;
-    @Autowired
     private PocEntryRepository pocEntryRepository;
     @Autowired
     private ServerEntryRepository serverEntryRepository;
@@ -37,6 +35,10 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         Object principal = authentication.getPrincipal();
         if(principal instanceof RAUser) {
             RAUser raUser = (RAUser) principal;
+
+            //Super admin gets automatic access
+            if(isSuperAdmin(raUser)) return true;
+
             List<String> permissions = raUser.getPermissions();
             String permissionString = (String) permission;
 
@@ -66,11 +68,6 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
                         if(form.getFormObjectType().equals(CertificateRequest.class)){
                             Optional<CertificateRequest> certificateRequestOptional = certificateRequestRepository.findById(form.getId());
                             certificateRequestOptional.ifPresent(c -> accountAtomic.set(c.getAccount()));
-                        }
-
-                        if(form.getFormObjectType().equals(IssuedCertificate.class)){
-                            Optional<IssuedCertificate> issuedCertificateOptional = issuedCertificateRepository.findById(form.getId());
-                            issuedCertificateOptional.ifPresent(i -> accountAtomic.set(i.getAccount()));
                         }
 
                         if(form.getFormObjectType().equals(PocEntry.class)){
@@ -114,6 +111,11 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
 
     private boolean isEditDeleteOperation(String permission){
         return permission.startsWith("update") || permission.startsWith("delete");
+    }
+
+    private boolean isSuperAdmin(RAUser raUser){
+        List<String> permissions = raUser.getPermissions();
+        return permissions.contains("super_admin");
     }
 
 }

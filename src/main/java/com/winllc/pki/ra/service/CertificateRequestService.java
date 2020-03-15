@@ -9,14 +9,10 @@ import com.winllc.pki.ra.beans.info.CertificateRequestInfo;
 import com.winllc.pki.ra.beans.validator.CertRequestFormValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.constants.AuditRecordType;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AuditRecord;
-import com.winllc.pki.ra.domain.CertificateRequest;
-import com.winllc.pki.ra.domain.User;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.AuditRecordRepository;
-import com.winllc.pki.ra.repository.CertificateRequestRepository;
-import com.winllc.pki.ra.repository.UserRepository;
+import com.winllc.pki.ra.domain.*;
+import com.winllc.pki.ra.exception.RAException;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.security.RAUser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,6 +48,8 @@ public class CertificateRequestService {
     @Autowired
     private CertAuthorityConnectionService certAuthorityConnectionService;
     @Autowired
+    private ServerEntryRepository serverEntryRepository;
+    @Autowired
     private CertRequestFormValidator formValidator;
 
     @GetMapping("/all")
@@ -71,19 +69,19 @@ public class CertificateRequestService {
     }
 
     @GetMapping("/byId/{id}")
-    public ResponseEntity<?> byId(@PathVariable Long id) {
+    public ResponseEntity<?> byId(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<CertificateRequest> byId = requestRepository.findById(id);
 
         if (byId.isPresent()) {
             return ResponseEntity.ok(new CertificateRequestInfo(byId.get()));
         } else {
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(CertificateRequest.class, id);
         }
     }
 
     @GetMapping("/byIdFull/{id}")
     @Transactional
-    public ResponseEntity<?> byIdFull(@PathVariable Long id) {
+    public ResponseEntity<?> byIdFull(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<CertificateRequest> byId = requestRepository.findById(id);
 
         if (byId.isPresent()) {
@@ -91,7 +89,7 @@ public class CertificateRequestService {
             Hibernate.initialize(certificateRequest.getRequestedDnsNames());
             return ResponseEntity.ok(certificateRequest);
         } else {
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(CertificateRequest.class, id);
         }
     }
 
@@ -126,7 +124,7 @@ public class CertificateRequestService {
 
     @GetMapping("/decision/{id}")
     @Transactional
-    public ResponseEntity<?> reviewRequestGet(@PathVariable Long id) {
+    public ResponseEntity<?> reviewRequestGet(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<CertificateRequest> optionalCertificateRequest = requestRepository.findById(id);
 
         if (optionalCertificateRequest.isPresent()) {
@@ -134,13 +132,13 @@ public class CertificateRequestService {
             Hibernate.initialize(certificateRequest.getRequestedDnsNames());
             return ResponseEntity.ok(certificateRequest);
         } else {
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(CertificateRequest.class, id);
         }
     }
 
     @PostMapping("/decision")
     @Transactional
-    public ResponseEntity<?> reviewRequest(@Valid @RequestBody CertificateRequestDecisionForm form) {
+    public ResponseEntity<?> reviewRequest(@Valid @RequestBody CertificateRequestDecisionForm form) throws RAException {
         Optional<CertificateRequest> optionalCertificateRequest = requestRepository.findById(form.getRequestId());
         if (optionalCertificateRequest.isPresent()) {
             CertificateRequest request = optionalCertificateRequest.get();
@@ -151,7 +149,7 @@ public class CertificateRequestService {
                     processApprovedCertRequest(request);
                 } catch (Exception e) {
                     log.error("Could not process approve CSR", e);
-                    return ResponseEntity.status(500).build();
+                    throw new RAException("Could not process approve CSR", e);
                 }
             } else {
                 request.setStatus(form.getStatus());
@@ -160,13 +158,13 @@ public class CertificateRequestService {
             requestRepository.save(request);
             return ResponseEntity.ok().build();
         } else {
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(form);
         }
     }
 
     @GetMapping("/myRequests")
     @Transactional
-    public ResponseEntity<?> myRequests(@AuthenticationPrincipal RAUser raUser) {
+    public ResponseEntity<?> myRequests(@AuthenticationPrincipal RAUser raUser) throws RAObjectNotFoundException {
         Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
         if (optionalUser.isPresent()) {
             User currentUser = optionalUser.get();
@@ -177,7 +175,7 @@ public class CertificateRequestService {
 
             return ResponseEntity.ok(requests);
         } else {
-            return ResponseEntity.status(403).build();
+            throw new RAObjectNotFoundException(User.class, raUser.getUsername());
         }
     }
 
@@ -192,6 +190,17 @@ public class CertificateRequestService {
                 request.getCsr(), String.join(",", request.getRequestedDnsNames()), request.getCertAuthorityName());
 
         X509Certificate issuedCertificate = certAuthorityConnectionService.processIssueCertificate(raCertificateIssueRequest);
+
+        //check if any server entries with same subject exist, if so, associate this request
+        //todo
+        String certificateDn = issuedCertificate.getSubjectDN().getName();
+        String issuedFqdn = certificateDn.substring(0, certificateDn.indexOf(",")).replace("cn=", "").replace("CN=", "");
+        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findDistinctByFqdnEquals(issuedFqdn);
+        if(serverEntryOptional.isPresent()){
+            ServerEntry serverEntry = serverEntryOptional.get();
+            serverEntry.getCertificateRequests().add(request);
+            serverEntryRepository.save(serverEntry);
+        }
 
         AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
         record.setAccountKid(raCertificateIssueRequest.getAccountKid());

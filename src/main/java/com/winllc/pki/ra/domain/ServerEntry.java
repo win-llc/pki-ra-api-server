@@ -26,6 +26,9 @@ public class ServerEntry extends AbstractPersistable<Long> implements AccountOwn
     @JsonIgnore
     @ManyToMany
     private Set<AttributePolicyGroup> policyGroups;
+    @JsonIgnore
+    @OneToMany(mappedBy = "serverEntry")
+    private Set<CertificateRequest> certificateRequests;
     private String openidClientId;
     private String openidClientRedirectUrl;
 
@@ -92,6 +95,15 @@ public class ServerEntry extends AbstractPersistable<Long> implements AccountOwn
 
     public void setPolicyGroups(Set<AttributePolicyGroup> policyGroups) {
         this.policyGroups = policyGroups;
+    }
+
+    public Set<CertificateRequest> getCertificateRequests() {
+        if(certificateRequests == null) certificateRequests = new HashSet<>();
+        return certificateRequests;
+    }
+
+    public void setCertificateRequests(Set<CertificateRequest> certificateRequests) {
+        this.certificateRequests = certificateRequests;
     }
 
     @Override

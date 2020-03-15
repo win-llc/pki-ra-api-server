@@ -27,6 +27,8 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
     private List<String> requestedDnsNames;
     @ManyToOne
     private Account account;
+    @ManyToOne
+    private ServerEntry serverEntry;
 
     public static CertificateRequest build(){
         CertificateRequest request = new CertificateRequest();
@@ -113,5 +115,13 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
 
     public void setAccount(Account account) {
         this.account = account;
+    }
+
+    public ServerEntry getServerEntry() {
+        return serverEntry;
+    }
+
+    public void setServerEntry(ServerEntry serverEntry) {
+        this.serverEntry = serverEntry;
     }
 }

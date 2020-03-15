@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Entity;
@@ -12,7 +13,16 @@ public class AttributePolicy extends AbstractPersistable<Long> {
     private String attributeValue;
     private boolean multiValued;
     @ManyToOne
+    @JsonIgnore
     private AttributePolicyGroup attributePolicyGroup;
+
+    public boolean isVariableValue(){
+        return attributeValue != null && attributeValue.startsWith("{") && attributeValue.endsWith("}");
+    }
+
+    public String getVariableValueField(){
+        return attributeValue.replace("{","").replace("}","");
+    }
 
     public String getAttributeName() {
         return attributeName;

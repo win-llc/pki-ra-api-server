@@ -21,8 +21,7 @@ public class UserService {
 
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile(@AuthenticationPrincipal RAUser raUser){
-        //todo
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(raUser);
     }
 
     @PostMapping("/search/{search}")

@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface ServerEntryRepository extends BaseRepository<ServerEntry> {
 
-    List<ServerEntry> findAllByFqdn(String fqdn);
+    Optional<ServerEntry> findDistinctByFqdnEquals(String fqdn);
     List<ServerEntry> findAllByAccount(Account account);
     List<ServerEntry> findAllByAccountId(Long id);
     Optional<ServerEntry> findDistinctByFqdnEqualsAndAccount(String fqdn, Account account);

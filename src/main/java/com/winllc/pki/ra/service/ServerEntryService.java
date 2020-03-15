@@ -265,7 +265,7 @@ public class ServerEntryService {
         acmeClientDetails.setAcmeEabHmacKeyValue(Base64.encode(account.getMacKey()).toString());
         acmeClientDetails.setAcmeKidValue(account.getKeyIdentifier());
         //todo make dynamic
-        acmeClientDetails.setAcmeServerValue("http://192.168.1.13:8181/acme/directory");
+        acmeClientDetails.setAcmeServerValue("http://192.168.1.202:8181/acme/directory");
 
         OIDCClientDetails oidcClientDetails = keycloakService.getClient(serverEntry);
 

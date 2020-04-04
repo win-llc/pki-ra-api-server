@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +31,10 @@ public class AcmeServerManagementService {
 
     private static final Logger log = LogManager.getLogger(AcmeServerManagementService.class);
 
+    @Value("${win-ra.acme-server-url}")
+    private String winraAcmeServerUrl;
+    @Value("${win-ra.acme-server-name}")
+    private String winraAcmeServerName;
     @Autowired
     private AcmeServerConnectionInfoRepository connectionInfoRepository;
 
@@ -44,7 +49,7 @@ public class AcmeServerManagementService {
         }
 
         //todo remove this
-        AcmeServerConnectionInfo info = new AcmeServerConnectionInfo("winllc", "http://localhost:8181");
+        AcmeServerConnectionInfo info = new AcmeServerConnectionInfo(winraAcmeServerName, winraAcmeServerUrl);
         load(info);
     }
 

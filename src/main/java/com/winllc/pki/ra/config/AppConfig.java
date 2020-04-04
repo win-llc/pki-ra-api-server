@@ -49,6 +49,17 @@ public class AppConfig {
     @Value("${keycloak.admin-interface.client-password}")
     private String password;
 
+    static {
+        javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
+                new javax.net.ssl.HostnameVerifier(){
+
+                    public boolean verify(String hostname,
+                                          javax.net.ssl.SSLSession sslSession) {
+                        return true;
+                    }
+                });
+    }
+
     public static void main(String[] args){
         SpringApplication.run(AppConfig.class, args);
     }

@@ -1,8 +1,11 @@
 debug: false
 app-keystore:
-  location: C:\\Users\\jrmints\\IdeaProjects\\PKI Registration Authority\\src\\main\\resources\\app.jks
-  password: password
-  type: JKS
+  location: C:\\Users\\jrmints\\IdeaProjects\\PKI Registration Authority\\src\\main\\resources\\dogtag-ca-admin-with-chain.pfx
+  password: P@ssW0rd
+  type: PKCS12
+win-ra:
+  acme-server-url: http://localhost:8181
+  acme-server-name: winllc
 management:
   endpoints:
     web:
@@ -14,11 +17,11 @@ management:
 spring:
   datasource:
     #url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
-    url: jdbc:mysql://localhost/winpkira
+    url: jdbc:mysql://database.winllc-dev.com/winpkira
     #driver-class-name: org.h2.Driver
     driver-class-name: com.mysql.jdbc.Driver
-    username: root
-    password: password
+    username: appuser
+    password: P@ssW0rd
   jpa:
     open-in-view: false
     #database-platform: org.hibernate.dialect.H2Dialect
@@ -31,7 +34,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://keycloak.winllc.com:8443/auth/realms/dev
+          issuer-uri: https://keycloak.winllc-dev.com:8443/auth/realms/dev
 rest:
   security:
     cors:
@@ -54,7 +57,7 @@ server:
   base-url: http://192.168.1.202:8080
 keycloak:
   admin-interface:
-    server-base-url: 'https://keycloak.winllc.com:8443/auth'
+    server-base-url: 'https://keycloak.winllc-dev.com:8443/auth'
     realm: dev
     client-id: win-pki-ra-client
     client-secret: 4f6e55f4-1d4c-4f84-8564-0e2fd4194eea

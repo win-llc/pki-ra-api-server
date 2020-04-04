@@ -221,7 +221,7 @@ public class CertAuthorityConnectionService {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(raCertificateIssueRequest.getAccountKid());
         if(optionalAccount.isPresent()) {
             X509Certificate cert = processIssueCertificate(raCertificateIssueRequest);
-            String pemCert = CertUtil.convertToPem(cert);
+            String pemCert = CertUtil.formatCrtFileContents(cert);
 
             Account account = optionalAccount.get();
 
@@ -319,7 +319,7 @@ public class CertAuthorityConnectionService {
             X509Certificate cert = certAuthority.getCertificateBySerial(serial);
             if (cert != null) {
                 String status = certAuthority.getCertificateStatus(serial);
-                details.setCertificateBase64(CertUtil.convertToPem(cert));
+                details.setCertificateBase64(CertUtil.formatCrtFileContents(cert));
                 details.setStatus(status);
                 details.setSerial(serial);
 
@@ -341,7 +341,7 @@ public class CertAuthorityConnectionService {
         StringBuilder stringBuilder = new StringBuilder();
         for (Certificate cert : trustChain) {
             try {
-                stringBuilder.append(CertUtil.convertToPem(cert)).append("\n");
+                stringBuilder.append(CertUtil.formatCrtFileContents(cert)).append("\n");
             } catch (CertificateEncodingException e) {
                 e.printStackTrace();
             }

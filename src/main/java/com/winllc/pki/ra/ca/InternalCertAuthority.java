@@ -310,7 +310,7 @@ public class InternalCertAuthority extends AbstractCertAuthority {
         issuedCertificate.setIssuerDn(x509Certificate.getIssuerDN().getName());
         issuedCertificate.setIssuedOn(Timestamp.from(x509Certificate.getNotBefore().toInstant()));
         issuedCertificate.setExpiresOn(Timestamp.from(x509Certificate.getNotAfter().toInstant()));
-        issuedCertificate.setIssuedCertificate(CertUtil.convertToPem(x509Certificate));
+        issuedCertificate.setIssuedCertificate(CertUtil.formatCrtFileContents(x509Certificate));
         issuedCertificate.setStatus(status);
         return issuedCertificate;
     }

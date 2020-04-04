@@ -207,7 +207,7 @@ public class CertificateRequestService {
         record.setSource("manual");
         auditRecordRepository.save(record);
 
-        String certPem = CertUtil.convertToPem(issuedCertificate);
+        String certPem = CertUtil.formatCrtFileContents(issuedCertificate);
         request.setIssuedCertificate(certPem);
         request.setReviewedOn(Timestamp.valueOf(LocalDateTime.now()));
         request.setStatus("issued");

@@ -2,29 +2,27 @@ package com.winllc.pki.ra.service;
 
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
-import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.KeyLengthException;
-import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.util.Base64URL;
-import com.winllc.acme.common.CAValidationRule;
-import com.winllc.pki.ra.beans.AccountRequestForm;
-import com.winllc.pki.ra.beans.AccountUpdateForm;
-import com.winllc.pki.ra.beans.PocFormEntry;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.PocEntry;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.DomainRepository;
-import com.winllc.pki.ra.repository.PocEntryRepository;
+import com.winllc.pki.ra.beans.*;
+import com.winllc.pki.ra.beans.form.AccountUpdateForm;
+import com.winllc.pki.ra.beans.info.AccountInfo;
+import com.winllc.pki.ra.beans.info.DomainInfo;
+import com.winllc.pki.ra.beans.info.UserInfo;
+import com.winllc.pki.ra.domain.*;
+import com.winllc.pki.ra.repository.*;
+import com.winllc.pki.ra.security.RAUser;
 import com.winllc.pki.ra.util.AppUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import javax.transaction.Transactional;
+import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -32,7 +30,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/account")
+@RequestMapping("/api/account")
 public class AccountService {
 
     private static final Logger log = LogManager.getLogger(AccountService.class);
@@ -45,32 +43,25 @@ public class AccountService {
     private DomainRepository domainRepository;
     @Autowired
     private PocEntryRepository pocEntryRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private AccountRestrictionRepository accountRestrictionRepository;
 
-    static {
-        System.out.println("System MAC key: "+macKey);
-    }
-
-    @PostConstruct
-    private void postConstruct(){
-        Account testAccount = new Account();
-        testAccount.setKeyIdentifier("kidtest");
-        testAccount.setMacKey(macKey);
-
-        Domain domain = new Domain();
-        domain.setBase("winllc.com");
-
-        testAccount = accountRepository.save(testAccount);
-
-        domain.getCanIssueAccounts().add(testAccount);
-
-        domain = domainRepository.save(domain);
-
-        testAccount.getCanIssueDomains().add(domain);
-        accountRepository.save(testAccount);
-    }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createNewAccount(@RequestBody AccountRequestForm form){
+    public ResponseEntity<?> createNewAccount(@Valid @RequestBody AccountRequest form){
+        //TODO return both to account holder for entry into ACME client
+
+        Account account = buildNew();
+        account.setProjectName(form.getProjectName());
+
+        account = accountRepository.save(account);
+
+        return ResponseEntity.ok(String.valueOf(account.getId()));
+    }
+
+    public Account buildNew(){
         String macKey = AppUtil.generate256BitString();
         String keyIdentifier = AppUtil.generate20BitString();
 
@@ -81,31 +72,55 @@ public class AccountService {
         account = accountRepository.save(account);
 
         log.info("Created account with kid: "+account.getKeyIdentifier());
-        log.info("Mac Key: "+Base64.getEncoder().encodeToString(account.getMacKey().getBytes()));
-
-        //TODO return both to account holder for entry into ACME client
-
-        return ResponseEntity.status(201).build();
+        log.info("Mac Key: "+ Base64.getEncoder().encodeToString(account.getMacKey().getBytes()));
+        return account;
     }
 
-    @PostMapping("/request")
-    public ResponseEntity<?> createAccountRequest(@RequestBody AccountRequestForm form){
+    @GetMapping("/myAccounts")
+    public ResponseEntity<?> getAccountsForCurrentUser(@AuthenticationPrincipal RAUser raUser){
+        Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
+        if(optionalUser.isPresent()){
+            User currentUser = optionalUser.get();
+            List<PocEntry> pocEntries = pocEntryRepository.findAllByEmailEquals(currentUser.getUsername());
 
-        //todo
+            List<Account> accounts;
+            if(!CollectionUtils.isEmpty(pocEntries)) {
+                accounts = accountRepository.findAllByAccountUsersContainsOrPocsIn(currentUser, pocEntries);
+            }else{
+                accounts = accountRepository.findAllByAccountUsersContains(currentUser);
+            }
 
-        return ResponseEntity.ok().build();
+            Set<Account> filtered = new HashSet<>(accounts);
+
+            List<AccountInfo> accountInfoList = new ArrayList<>();
+            for(Account account : filtered){
+                AccountInfo info = buildAccountInfo(account);
+                accountInfoList.add(info);
+            }
+
+            return ResponseEntity.ok(accountInfoList);
+        }else{
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("/update")
-    public ResponseEntity<?> updateAccount(@RequestBody AccountUpdateForm form) throws Exception {
-        //TODO
+    @Transactional
+    public ResponseEntity<?> updateAccount(@Valid @RequestBody AccountUpdateForm form) throws Exception {
+
         if(form.isValid()){
             Optional<Account> optionalAccount = accountRepository.findById(form.getId());
             if(optionalAccount.isPresent()){
                 Account account = optionalAccount.get();
+                account.setAcmeRequireHttpValidation(form.isAcmeRequireHttpValidation());
 
-                Map<String, PocEntry> existingPocMap = account.getPocs().stream()
+                Map<String, PocEntry> existingPocMap = pocEntryRepository.findAllByAccount(account).stream()
                         .collect(Collectors.toMap(p -> p.getEmail(), p -> p));
+
+                List<String> emailsToRemove = existingPocMap.values()
+                        .stream().filter(p -> !form.getPocEmails().contains(new PocFormEntry(p.getEmail())))
+                        .map(e -> e.getEmail())
+                        .collect(Collectors.toList());
 
                 for(PocFormEntry email : form.getPocEmails()){
 
@@ -123,18 +138,22 @@ public class AccountService {
                     }
                 }
 
-                accountRepository.save(account);
+                account.getPocs().removeIf(p -> emailsToRemove.contains(p.getEmail()));
+                pocEntryRepository.deleteAllByEmailInAndAccountEquals(emailsToRemove, account);
+
+                account = accountRepository.save(account);
+                return ResponseEntity.ok(new AccountInfo(account, true));
             }else{
                 throw new Exception("Could not find account with ID: "+form.getId());
             }
-
         }
 
-        return ResponseEntity.status(200).build();
+        return ResponseEntity.status(500).build();
     }
 
     @GetMapping("/all")
-    public ResponseEntity<?> getAll(){
+    public ResponseEntity<?> getAll(@AuthenticationPrincipal RAUser raUser){
+        log.info("RAUser: "+raUser.getUsername());
         List<Account> accounts = accountRepository.findAll();
 
         return ResponseEntity.ok(accounts);
@@ -143,9 +162,14 @@ public class AccountService {
     @GetMapping("/findByKeyIdentifier/{kid}")
     public ResponseEntity<?> findByKeyIdentifier(@PathVariable String kid){
 
-        Account account = accountRepository.findByKeyIdentifierEquals(kid);
+        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
-        return ResponseEntity.ok(account);
+        if(optionalAccount.isPresent()){
+            Account account = optionalAccount.get();
+            return ResponseEntity.ok(buildAccountInfo(account));
+        }else{
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/byId/{id}")
@@ -154,100 +178,89 @@ public class AccountService {
         Optional<Account> accountOptional = accountRepository.findById(id);
 
         if(accountOptional.isPresent()){
-            return ResponseEntity.ok(accountOptional.get());
+            AccountInfo info = buildAccountInfo(accountOptional.get());
+
+            return ResponseEntity.ok(info);
         }else {
             return ResponseEntity.notFound().build();
         }
     }
 
+    @GetMapping("/info/byId/{id}")
+    public ResponseEntity<?> findInfoById(@PathVariable long id){
+        Optional<Account> accountOptional = accountRepository.findById(id);
 
-    @PostMapping("/validationRules/{kid}")
-    public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid){
-        //todo
-        Account account = accountRepository.findByKeyIdentifierEquals(kid);
+        if(accountOptional.isPresent()){
+            Account account = accountOptional.get();
 
-        List<CAValidationRule> validationRules = new ArrayList<>();
+            AccountInfo accountInfo = buildAccountInfo(account);
 
-        for(Domain domain : account.getCanIssueDomains()){
-            CAValidationRule validationRule = new CAValidationRule();
-            validationRule.setAllowHostnameIssuance(true);
-            validationRule.setAllowIssuance(true);
-            validationRule.setBaseDomainName(domain.getBase());
-            validationRule.setIdentifierType("dns");
-            validationRule.setRequireHttpChallenge(true);
-
-            validationRules.add(validationRule);
+            return ResponseEntity.ok(accountInfo);
+        }else {
+            return ResponseEntity.notFound().build();
         }
-
-        return ResponseEntity.ok(validationRules);
     }
 
     @GetMapping("/getAccountPocs/{kid}")
     public ResponseEntity<?> getAccountPocs(@PathVariable String kid){
 
-        Account account = accountRepository.findByKeyIdentifierEquals(kid);
+        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
+
+        if(optionalAccount.isPresent()){
+            Account account = optionalAccount.get();
+            AccountInfo accountInfo = buildAccountInfo(account);
+
+            return ResponseEntity.ok(accountInfo.getPocs());
+        }else{
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id){
+
+        accountRepository.deleteById(id);
+
+        return ResponseEntity.ok().build();
+    }
+
+
+    private AccountInfo buildAccountInfo(Account account){
+        List<Domain> canIssueDomains = domainRepository.findAllByCanIssueAccountsContains(account);
+        List<User> accountUsers = userRepository.findAllByAccountsContains(account);
         List<PocEntry> pocEntries = pocEntryRepository.findAllByAccount(account);
 
-        return ResponseEntity.ok(pocEntries);
-    }
-
-    @GetMapping("/getCanIssueDomains/{kid}")
-    public ResponseEntity<?> getCanIssueDomains(@PathVariable String kid){
-        Account account = accountRepository.findByKeyIdentifierEquals(kid);
-        List<String> domainList = domainRepository.findAllByCanIssueAccountsContains(account)
-                .stream().map(Domain::getBase)
+        List<DomainInfo> domainInfoList = canIssueDomains.stream()
+                .map(d -> new DomainInfo(d, false))
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(domainList);
+        List<UserInfo> userInfoList = accountUsers.stream()
+                .map(UserInfo::new)
+                .collect(Collectors.toList());
+
+        List<UserInfo> userInfoFromPocs = pocEntries.stream()
+                .map(UserInfo::new)
+                .collect(Collectors.toList());
+
+        Set<UserInfo> userSet = new HashSet<>();
+        userSet.addAll(userInfoList);
+        userSet.addAll(userInfoFromPocs);
+
+        AccountInfo accountInfo = new AccountInfo(account, true);
+        accountInfo.setCanIssueDomains(domainInfoList);
+        accountInfo.setPocs(new ArrayList<>(userSet));
+
+        return accountInfo;
     }
 
-    @PostMapping("/verify")
-    public ResponseEntity<?> verifyExternalAccountBinding(@RequestParam String macKey, @RequestParam String keyIdentifier,
-                                                          @RequestParam String jwsObject, @RequestParam String accountObject){
-        Base64URL macKeyBase64 = new Base64URL(macKey);
 
-        System.out.println("MAC Key: "+ macKeyBase64.toString());
-        System.out.println("Key Identifier: "+keyIdentifier);
-
-        try {
-            Account account = accountRepository.findByKeyIdentifierEquals(keyIdentifier);
-
-            JWSObject jwsObjectParsed = JWSObject.parse(jwsObject);
-            JWSObject accountJWSParsed = JWSObject.parse(accountObject);
-
-            try {
-                JWSSigner signer = new MACSigner(account.getMacKey());
-
-                JWSObject testObj = new JWSObject(jwsObjectParsed.getHeader(), jwsObjectParsed.getPayload());
-                testObj.sign(signer);
-
-                System.out.println("Test signed obj: "+testObj.getSignature().toJSONString());
-
-                if(testObj.getSignature().toString().contentEquals(jwsObjectParsed.getSignature().toString())){
-                    System.out.println("Account request verified!");
-
-                    //account.setMacKey(jwsObjectParsed.getSignature().toString());
-                    //account.setKeyIdentifier(jwsObjectParsed.getHeader().getKeyID());
-
-                    //accountRepository.save(account);
-
-                    return ResponseEntity.status(200)
-                            .build();
-                }
-            } catch (KeyLengthException e) {
-                e.printStackTrace();
-            }
-
-
-        } catch (Exception e) {
-            log.error("Could not verify request", e);
-        }
-
-        //TODO verify account
-        return ResponseEntity.status(403)
-                .build();
+    private List<AccountRestriction> getAllNotCompletedAccountRestrictions(Account account){
+        return accountRestrictionRepository.findAllByAccountAndCompleted(account, false);
     }
 
+    private List<AccountRestriction> getAllNotCompletedAndOverdueAccountRestrictions(Account account){
+        return accountRestrictionRepository.findAllByAccountAndDueByBeforeAndCompletedEquals(account, Timestamp.valueOf(LocalDateTime.now()), false);
+    }
 
     private boolean verifyBinding(Account systemAccount, JWSObject accountObject, JWSObject verifyObject){
         JWK accountPublicKey = accountObject.getHeader().getJWK().toPublicJWK();

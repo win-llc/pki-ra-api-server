@@ -1,6 +1,9 @@
 plugins {
+    id 'org.springframework.boot' version '2.1.7.RELEASE'
     id 'java'
 }
+
+apply plugin: 'io.spring.dependency-management'
 
 group 'com.winllc.pki.ra'
 version '1.0-SNAPSHOT'
@@ -9,21 +12,54 @@ sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    flatDir {
+        dirs 'lib'
+    }
 }
 
 dependencies {
     compile project(":acme-common")
-    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
-    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.1.6.RELEASE'
+    //compile fileTree(dir:'..\\dogtagpki\\target\\', include:'*.jar')
+    
+    implementation name: 'pki-ca'
+    implementation name: 'pki-certsrv'
+    implementation name: 'pki-cms'
+    implementation name: 'jss4'
 
-    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jpa
-    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '2.1.7.RELEASE'
+    implementation('org.springframework.boot:spring-boot-starter-actuator')
+    implementation('org.springframework.boot:spring-boot-starter-data-jpa')
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation('org.springframework.boot:spring-boot-starter-actuator')
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation('org.springframework.boot:spring-boot-starter-hateoas')
+    implementation('org.springframework.boot:spring-boot-configuration-processor')
+    runtimeOnly('org.springframework.boot:spring-boot-devtools')
+
+    // https://mvnrepository.com/artifact/org.keycloak/keycloak-admin-client
+    compile group: 'org.keycloak', name: 'keycloak-admin-client', version: '8.0.1'
+
+    // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-client
+    compile group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.6.2.Final'
+    // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-jackson2-provider
+    compile group: 'org.jboss.resteasy', name: 'resteasy-jackson2-provider', version: '3.6.2.Final'
+    // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-jaxb-provider
+    compile group: 'org.jboss.resteasy', name: 'resteasy-jaxb-provider', version: '3.6.2.Final'
+// https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-atom-provider
+    compile group: 'org.jboss.resteasy', name: 'resteasy-atom-provider', version: '3.6.2.Final'
+// https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+    compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
+
+
+
+    // https://mvnrepository.com/artifact/mysql/mysql-connector-java
+    compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.18'
+
 
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.0.pr2'
+    //compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.0.pr2'
 
     // https://mvnrepository.com/artifact/com.h2database/h2
-    compile group: 'com.h2database', name: 'h2', version: '1.4.199'
+    //compile group: 'com.h2database', name: 'h2', version: '1.4.199'
     
     // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'

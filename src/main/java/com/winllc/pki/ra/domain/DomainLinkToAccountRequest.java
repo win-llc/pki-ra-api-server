@@ -1,13 +1,27 @@
 package com.winllc.pki.ra.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.data.jpa.domain.AbstractPersistable;
+
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-public class DomainLinkToAccountRequest extends BaseEntity {
+public class DomainLinkToAccountRequest extends AbstractPersistable<Long> {
 
     private Long accountId;
-    private Long requestedDomainId;
+    @ElementCollection
+    @JsonIgnore
+    private Set<Long> requestedDomainIds = new HashSet<>();
     private String status;
+
+    public static DomainLinkToAccountRequest buildNew(){
+        DomainLinkToAccountRequest request = new DomainLinkToAccountRequest();
+        request.setStatusRequested();
+        return request;
+    }
 
     public Long getAccountId() {
         return accountId;
@@ -25,15 +39,32 @@ public class DomainLinkToAccountRequest extends BaseEntity {
         this.status = status;
     }
 
+    public Set<Long> getRequestedDomainIds() {
+        return requestedDomainIds;
+    }
+
+    public void setRequestedDomainIds(Set<Long> requestedDomainIds) {
+        this.requestedDomainIds = requestedDomainIds;
+    }
+
     public void setStatusRequested(){
-        setStatus("requested");
+        setStatus("new");
     }
 
-    public Long getRequestedDomainId() {
-        return requestedDomainId;
+    public void setStatusRejected(){
+        setStatus("rejected");
     }
 
-    public void setRequestedDomainId(Long requestedDomainId) {
-        this.requestedDomainId = requestedDomainId;
+    public void setStatusApproved(){
+        setStatus("approved");
+    }
+
+    @Override
+    public String toString() {
+        return "DomainLinkToAccountRequest{" +
+                "accountId=" + accountId +
+                ", requestedDomainIds=" + requestedDomainIds +
+                ", status='" + status + '\'' +
+                "} " + super.toString();
     }
 }

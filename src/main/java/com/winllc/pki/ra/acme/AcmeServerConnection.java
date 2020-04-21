@@ -3,26 +3,37 @@ package com.winllc.pki.ra.acme;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.acme.common.Settings;
+import com.winllc.acme.common.util.HttpCommandUtil;
 import com.winllc.pki.ra.domain.AcmeServerConnectionInfo;
+import com.winllc.pki.ra.exception.AcmeConnectionException;
+import com.winllc.pki.ra.service.AccountRequestService;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AcmeServerConnection {
 
+    private static final Logger log = LogManager.getLogger(AcmeServerConnection.class);
+
     private static final String SAVE = "save";
     private static final String FIND_BY_NAME = "findSettingsByName";
+    private static final String FIND_BY_ID = "findSettingsById";
     private static final String DELETE = "delete";
     private static final String FIND_ALL = "findAllSettings";
 
@@ -40,7 +51,7 @@ public class AcmeServerConnection {
     }
 
     //base is either directory, ca, accountProvider
-    public String saveEntity(Settings settings, String base){
+    public String saveEntity(Settings settings, String base) throws AcmeConnectionException {
         String url = connectionInfo.getUrl()+"/"+base+"/"+SAVE;
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -48,51 +59,67 @@ public class AcmeServerConnection {
 
             return runPost(url, json);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            log.error("Could not process", e);
+            throw new AcmeConnectionException(e);
         }
-        //todo
-        return null;
     }
 
-    public <T> T getEntityByName(String base, String name, Class<T> clazz){
+    public <T> T getEntityByName(String base, String name, Class<T> clazz) throws AcmeConnectionException {
         String url = connectionInfo.getUrl()+"/"+base+"/"+FIND_BY_NAME+"/"+name;
-        String result = runGet(url);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            T val = objectMapper.readValue(result, clazz);
-            return val;
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return getEntity(url, clazz);
     }
 
-
-    public <T> List<T> getAllEntities(String base, Class<T> clazz){
-        //todo
-        String url = connectionInfo.getUrl()+"/"+base+"/"+FIND_ALL;
-        String result = runGet(url);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            List<T> val = objectMapper.readValue(result, ArrayList.class);
-            return val;
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        return null;
-
+    public <T> T getEntityById(String base, String id, Class<T> clazz) throws AcmeConnectionException {
+        String url = connectionInfo.getUrl()+"/"+base+"/"+FIND_BY_ID+"/"+id;
+        return getEntity(url, clazz);
     }
 
-    public void deleteEntity(String base, String name){
-        //todo
+    private <T> T getEntity(String url, Class<T> clazz) throws AcmeConnectionException {
+        String result = runGet(url);
+
+        if(StringUtils.isNotBlank(result)) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                T val = objectMapper.readValue(result, clazz);
+                return val;
+            } catch (Exception e) {
+                log.error("Could not get entity by name", e);
+                throw new AcmeConnectionException(e);
+            }
+        }else{
+            return null;
+        }
+    }
+
+    public <T> List<T> getAllEntitiesCustom(String path, Class<T> clazz) throws AcmeConnectionException {
+        String url = connectionInfo.getUrl()+"/"+path;
+        String result = runGet(url);
+
+        if(result != null) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                List<T> val = objectMapper.readValue(result, ArrayList.class);
+                return val;
+            } catch (Exception e) {
+                log.error("Could not get allEntities", e);
+                throw new AcmeConnectionException(e);
+            }
+        }else{
+            throw new AcmeConnectionException("GET response was empty");
+        }
+    }
+
+    public <T> List<T> getAllEntities(String base, Class<T> clazz) throws AcmeConnectionException{
+        String path = base+"/"+FIND_ALL;
+        return getAllEntitiesCustom(path, clazz);
+    }
+
+    public boolean deleteEntity(String base, String name) throws AcmeConnectionException {
         String url = connectionInfo.getUrl()+"/"+base+"/"+DELETE+"/"+name;
-        String result = runDelete(url);
-
+        return runDelete(url);
     }
 
-    private String runPost(String url, String json){
+    private String runPost(String url, String json) throws AcmeConnectionException {
 
         HttpClient httpclient = HttpClients.createDefault();
         HttpPost httppost = new HttpPost(url);
@@ -109,14 +136,16 @@ public class AcmeServerConnection {
 
             if (entity != null) {
                 if(response.getStatusLine().getStatusCode() == 200){
-                    //todo
-                }
-                try (InputStream instream = entity.getContent()) {
-                    //TODO do something useful, return true or false
+                    StringWriter writer = new StringWriter();
+                    String encoding = StandardCharsets.UTF_8.name();
+                    IOUtils.copy(entity.getContent(), writer, encoding);
+
+                    return writer.toString();
                 }
             }
         }catch (Exception e){
-            e.printStackTrace();
+            log.error("Could not delete entity", e);
+            throw new AcmeConnectionException(e);
         }finally {
             httppost.completed();
         }
@@ -124,8 +153,6 @@ public class AcmeServerConnection {
     }
 
     private String runGet(String url){
-        //todo
-
         HttpClient httpclient = HttpClients.createDefault();
         HttpGet httpGet = new HttpGet(url);
 
@@ -139,10 +166,8 @@ public class AcmeServerConnection {
 
             if (entity != null) {
                 if(response.getStatusLine().getStatusCode() == 200){
-                    //todo
+                    return IOUtils.toString(entity.getContent(), StandardCharsets.UTF_8.name());
                 }
-
-                return IOUtils.toString(entity.getContent(), StandardCharsets.UTF_8.name());
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -153,8 +178,15 @@ public class AcmeServerConnection {
         return null;
     }
 
-    private String runDelete(String url){
-        //todo
-        return null;
+    private boolean runDelete(String url) throws AcmeConnectionException{
+        HttpDelete httpDelete = new HttpDelete(url);
+
+        try {
+            HttpCommandUtil.processCustom(httpDelete, 200, result -> {return true;});
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new AcmeConnectionException(e);
+        }
     }
 }

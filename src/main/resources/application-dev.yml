@@ -1,0 +1,82 @@
+debug: false
+app-keystore:
+  location: dogtag-ca-admin-with-chain.pfx
+  password: P@ssW0rd
+  type: PKCS12
+win-ra:
+  acme-server-url: http://localhost:8181
+  acme-server-name: winllc
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+spring:
+  datasource:
+    #url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
+    url: jdbc:mysql://database.winllc-dev.com/winpkira
+    #driver-class-name: org.h2.Driver
+    driver-class-name: com.mysql.jdbc.Driver
+    username: appuser
+    password: P@ssW0rd
+  jpa:
+    open-in-view: false
+    #database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+  jackson:
+    date-format: com.fasterxml.jackson.databind.util.StdDateFormat
+    default-property-inclusion: non_null
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://keycloak.winllc-dev.com:8443/auth/realms/dev
+rest:
+  security:
+    cors:
+      allowed-origins: '*'
+      allowed-headers: '*'
+      allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+      max-age: 3600
+logging:
+  level:
+    org:
+      springframework:
+        security: debug
+server:
+  error:
+    include-stacktrace: never
+  port: 8080
+  servlet:
+    context-path: /
+  #address: 192.168.1.13
+  base-url: http://192.168.1.202:8080
+keycloak:
+  admin-interface:
+    server-base-url: 'https://keycloak.winllc-dev.com:8443/auth'
+    realm: dev
+    client-id: win-pki-ra-client
+    client-secret: 4f6e55f4-1d4c-4f84-8564-0e2fd4194eea
+    client-username: dave
+    client-password: pass
+    custom-client-scope: pki-app
+web-ui:
+  server-base: http://localhost:3000
+  uri-templates:
+    account-created: /account/edit/{0}
+permissions:
+  available:
+    - super_admin
+    - add_domain
+    - update_domain
+    - delete_domain
+    - add_account
+    - update_account
+    - delete_account
+    - add_account_restriction
+    - update_account_restriction
+    - delete_account_restriction

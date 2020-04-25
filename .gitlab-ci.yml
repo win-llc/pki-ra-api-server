@@ -36,7 +36,7 @@ deploy_staging:
     - sshpass -p "$STAGING_SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no $STAGING_SERVER_USER@$STAGING_SERVER docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.winllc-dev.com
     - sshpass -p "$STAGING_SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no $STAGING_SERVER_USER@$STAGING_SERVER docker pull registry.gitlab.winllc-dev.com/root/pki-registration-authority
     - sshpass -p "$STAGING_SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no $STAGING_SERVER_USER@$STAGING_SERVER "docker container stop winllc-ra-server && docker container rm winllc-ra-server || true"
-    - sshpass -p "$STAGING_SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no $STAGING_SERVER_USER@$STAGING_SERVER docker run --name winllc-ra-server -p 8080:8080 -d registry.gitlab.winllc-dev.com/root/pki-registration-authority
+    - sshpass -p "$STAGING_SERVER_PASSWORD" ssh -o StrictHostKeyChecking=no $STAGING_SERVER_USER@$STAGING_SERVER docker run --name winllc-ra-server -p 8080:8080 -e "spring.profiles.active=prod" -d registry.gitlab.winllc-dev.com/root/pki-registration-authority
   environment:
     name: staging
     url: http://winra.winllc-dev.com

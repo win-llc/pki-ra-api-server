@@ -1,7 +1,6 @@
 package com.winllc.pki.ra.exception;
 
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
-import jdk.vm.ci.meta.ExceptionHandler;
 
 import java.util.Map;
 

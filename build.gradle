@@ -15,11 +15,14 @@ repositories {
     flatDir {
         dirs 'lib'
     }
+
+    maven {
+        url "http://util.winllc-dev.com:8081/repository/win-llc/"
+    }
 }
 
 dependencies {
-    compile project(":acme-common")
-    //compile fileTree(dir:'..\\dogtagpki\\target\\', include:'*.jar')
+    compile group: 'com.winllc.acme.common', name: 'acme-common', version: '1.0-SNAPSHOT'
     
     implementation name: 'pki-ca'
     implementation name: 'pki-certsrv'

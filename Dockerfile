@@ -6,4 +6,4 @@ COPY build/libs/*.jar app.jar
 RUN mkdir -p /ssl
 COPY build/resources/main/trust.jks /ssl/trust.jks
 
-ENTRYPOINT ["java","$JAVA_OPTS","-jar","/app.jar"]
+ENTRYPOINT exec java $JAVA_OPTS -jar /app.jar

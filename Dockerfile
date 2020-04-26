@@ -5,5 +5,6 @@ COPY build/libs/*.jar app.jar
 
 RUN mkdir -p /ssl
 COPY build/resources/main/trust.jks /ssl/trust.jks
+COPY build/resources/main/dogtag-ca-admin-with-chain.pfx /ssl/dogtag-ca-admin-with-chain.pfx
 
 ENTRYPOINT exec java $JAVA_OPTS -jar /app.jar

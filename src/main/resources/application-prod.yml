@@ -1,7 +1,7 @@
 debug: false
 
 app-keystore:
-  location: classpath*:dogtag-ca-admin-with-chain.pfx
+  location: /ssl/dogtag-ca-admin-with-chain.pfx
   password: P@ssW0rd
   type: PKCS12
 win-ra:

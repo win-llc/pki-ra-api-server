@@ -49,7 +49,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
     private static final List<String> requiredProperties;
     private static final Map<String, String> defaultProperties;
 
-    private String baseUrl = "https://dogtag.winllc.com:8443";
+    private String baseUrl = "https://dogtag-ca.winllc-dev.com:8443";
 
     static{
         requiredProperties = new ArrayList<>();

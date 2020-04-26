@@ -1,6 +1,6 @@
 debug: false
 app-keystore:
-  location: dogtag-ca-admin-with-chain.pfx
+  location: C:\\Users\\jrmints\\IdeaProjects\\PKI Registration Authority\\src\\main\\resources\\dogtag-ca-admin-with-chain.pfx
   password: P@ssW0rd
   type: PKCS12
 win-ra:

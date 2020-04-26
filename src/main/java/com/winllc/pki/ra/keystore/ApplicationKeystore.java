@@ -38,7 +38,7 @@ public class ApplicationKeystore {
         //Resource resource = resourceLoader.getResource(keystoreLocation);
         //InputStream input = resource.getInputStream();
 
-        InputStream is = getClass().getResourceAsStream(keystoreLocation);
+        InputStream is = new FileInputStream(keystoreLocation);
 
         ks = KeyStore.getInstance(keystoreType);
         ks.load(is, keystorePassword.toCharArray());

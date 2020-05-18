@@ -6,6 +6,7 @@ import com.winllc.pki.ra.constants.AccountRestrictionType;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import java.sql.Timestamp;
 
@@ -19,12 +20,15 @@ public class AccountRestriction extends AbstractPersistable<Long> implements Acc
     private boolean completed = false;
     @JsonIgnore
     @ManyToOne
+    @JoinColumn(name="account_fk")
     private Account account;
     @JsonIgnore
     @ManyToOne
+    @JoinColumn(name="addedByUser_fk")
     private User addedByUser;
     @JsonIgnore
     @ManyToOne
+    @JoinColumn(name="markCompletedByUser_fk")
     private User markedCompletedByUser;
 
     public AccountRestrictionType getType() {

@@ -3,9 +3,7 @@ package com.winllc.pki.ra.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Entity;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,7 +15,14 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
     @OneToMany(mappedBy = "attributePolicyGroup")
     private Set<AttributePolicy> attributePolicies;
     @JsonIgnore
-    @ManyToMany
+    @ManyToMany(cascade = {
+            CascadeType.PERSIST,
+            CascadeType.MERGE
+    })
+    @JoinTable(name = "attributePolicyGroup_serverEntry",
+            joinColumns = @JoinColumn(name = "attributePolicyGroup_id"),
+            inverseJoinColumns = @JoinColumn(name = "serverEntry_id")
+    )
     private Set<ServerEntry> serverEntries;
 
     public String getName() {

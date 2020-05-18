@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Entity
@@ -14,6 +15,7 @@ public class AttributePolicy extends AbstractPersistable<Long> {
     private boolean multiValued;
     @ManyToOne
     @JsonIgnore
+    @JoinColumn(name="attributePolicyGroup_fk")
     private AttributePolicyGroup attributePolicyGroup;
 
     public boolean isVariableValue(){

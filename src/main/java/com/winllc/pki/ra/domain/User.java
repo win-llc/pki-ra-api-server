@@ -3,6 +3,7 @@ package com.winllc.pki.ra.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.jpa.domain.AbstractPersistable;
+import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -22,13 +23,29 @@ public class User extends AbstractPersistable<Long> {
     @JsonIgnore
     private List<String> roles = new ArrayList<>();
     @JsonIgnore
-    @OneToMany
+    @OneToMany(mappedBy = "accountOwner")
     private Set<AccountRequest> accountRequests;
     @JsonIgnore
-    @ManyToMany
+    @ManyToMany(mappedBy = "accountUsers")
     private Set<Account> accounts;
 
     public User() {
+    }
+
+    @PreRemove
+    private void preRemove(){
+        Set<Account> accounts = getAccounts();
+        if(!CollectionUtils.isEmpty(accounts)) {
+            for (Account account : accounts) {
+                account.getAccountUsers().remove(this);
+            }
+        }
+        Set<AccountRequest> requests = getAccountRequests();
+        if(!CollectionUtils.isEmpty(requests)) {
+            for (AccountRequest request : requests) {
+                request.setAccountOwner(null);
+            }
+        }
     }
 
     public User(User user) {
@@ -71,6 +88,7 @@ public class User extends AbstractPersistable<Long> {
     }
 
     public Set<AccountRequest> getAccountRequests() {
+        if(accountRequests == null) accountRequests = new HashSet<>();
         return accountRequests;
     }
 

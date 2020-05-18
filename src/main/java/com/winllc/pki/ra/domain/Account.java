@@ -2,6 +2,7 @@ package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
+import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -13,29 +14,64 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
     @Column(unique = true)
     private String keyIdentifier;
     private String macKey;
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String projectName;
     private boolean acmeRequireHttpValidation = false;
     private boolean enabled = true;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "account")
+    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
     private Set<PocEntry> pocs;
     @JsonIgnore
-    @ManyToMany
+    @ManyToMany(cascade = {
+            CascadeType.PERSIST,
+            CascadeType.MERGE
+    })
+    @JoinTable(name = "account_user",
+            joinColumns = @JoinColumn(name = "account_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
     private Set<User> accountUsers;
     @JsonIgnore
-    @ManyToMany
+    @ManyToMany(cascade = {
+            CascadeType.PERSIST,
+            CascadeType.MERGE
+    })
+    @JoinTable(name = "account_domain",
+            joinColumns = @JoinColumn(name = "account_id"),
+            inverseJoinColumns = @JoinColumn(name = "domain_id")
+    )
     private Set<Domain> canIssueDomains;
     @ElementCollection
     @JsonIgnore
     private Set<String> preAuthorizationIdentifiers;
     @JsonIgnore
-    @OneToMany(mappedBy = "account")
+    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
     private Set<AccountRestriction> accountRestrictions;
     @JsonIgnore
-    @OneToMany(mappedBy = "account")
+    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
     private Set<CertificateRequest> certificateRequests;
+    @JsonIgnore
+    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
+    private Set<ServerEntry> serverEntries;
+
+    @PreRemove
+    private void preRemove(){
+        Set<CertificateRequest> requests = getCertificateRequests();
+        if(!CollectionUtils.isEmpty(requests)){
+            for(CertificateRequest request : certificateRequests){
+                request.setAccount(null);
+            }
+        }
+
+        Set<ServerEntry> serverEntries = getServerEntries();
+        if(!CollectionUtils.isEmpty(serverEntries)){
+            for(ServerEntry serverEntry : serverEntries){
+                serverEntry.setAccount(null);
+            }
+        }
+
+    }
 
     public String getKeyIdentifier() {
         return keyIdentifier;
@@ -131,6 +167,15 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
 
     public void setCertificateRequests(Set<CertificateRequest> certificateRequests) {
         this.certificateRequests = certificateRequests;
+    }
+
+    public Set<ServerEntry> getServerEntries() {
+        if(serverEntries == null) serverEntries = new HashSet<>();
+        return serverEntries;
+    }
+
+    public void setServerEntries(Set<ServerEntry> serverEntries) {
+        this.serverEntries = serverEntries;
     }
 
     @Override

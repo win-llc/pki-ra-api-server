@@ -3,6 +3,7 @@ package com.winllc.pki.ra.domain;
 import com.winllc.pki.ra.util.AppUtil;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.time.ZoneOffset;
 @Entity
 public class TermsOfService extends AbstractPersistable<Long> {
 
+    @Column(nullable = false, unique = true)
     private String versionId;
     private String text;
     private Timestamp created;

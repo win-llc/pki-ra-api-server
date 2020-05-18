@@ -3,10 +3,7 @@ package com.winllc.pki.ra.domain;
 import com.winllc.acme.common.CertificateDetails;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
@@ -14,7 +11,9 @@ import java.sql.Timestamp;
 public class IssuedCertificate extends AbstractPersistable<Long> implements AccountOwnedEntity {
 
     private String certAuthorityName;
+    @Column(nullable = false)
     private String issuerDn;
+    @Column(nullable = false)
     private String subjectDn;
     @Column(length = 2000)
     private String issuedCertificate;
@@ -22,9 +21,11 @@ public class IssuedCertificate extends AbstractPersistable<Long> implements Acco
     private Timestamp revokedOn;
     private Timestamp expiresOn;
     private String status;
+    @Column(nullable = false)
     private String serial;
 
     @ManyToOne
+    @JoinColumn(name="account_fk")
     private Account account;
 
     public CertificateDetails convertToCertDetails(){

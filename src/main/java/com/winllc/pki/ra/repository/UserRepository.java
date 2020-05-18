@@ -6,11 +6,13 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
+@Transactional
 public interface UserRepository extends CrudRepository<User, UUID> {
     @EntityGraph(attributePaths = "roles")
     Optional<User> findOneByUsername(String username);
@@ -19,4 +21,5 @@ public interface UserRepository extends CrudRepository<User, UUID> {
     List<User> findAllByAccountsContains(Account account);
 
     void deleteUserByIdentifier(UUID identifier);
+    void deleteByUsernameEquals(String username);
 }

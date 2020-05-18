@@ -13,6 +13,7 @@ import com.winllc.pki.ra.security.RAUser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -38,20 +39,23 @@ public class AccountRequestService {
     private UserRepository userRepository;
 
     @GetMapping("/all")
-    public ResponseEntity<?> findAll(){
+    @ResponseStatus(HttpStatus.OK)
+    public List<AccountRequest> findAll(){
         List<AccountRequest> accountRequests = accountRequestRepository.findAll();
-        return ResponseEntity.ok(accountRequests);
+        return accountRequests;
     }
 
     @GetMapping("/pending")
-    public ResponseEntity<?> findPending(){
+    @ResponseStatus(HttpStatus.OK)
+    public List<AccountRequest> findPending(){
         List<AccountRequest> accountRequests = accountRequestRepository.findAllByStateEquals("new");
-        return ResponseEntity.ok(accountRequests);
+        return accountRequests;
     }
 
 
     @PostMapping("/submit")
-    public ResponseEntity<?> createAccountRequest(@Valid @RequestBody AccountRequestForm form) throws RAObjectNotFoundException{
+    @ResponseStatus(HttpStatus.CREATED)
+    public Long createAccountRequest(@Valid @RequestBody AccountRequestForm form) throws RAObjectNotFoundException{
         Optional<User> userOptional = userRepository.findOneByUsername(form.getAccountOwnerEmail());
         if(userOptional.isPresent()){
             User user = userOptional.get();
@@ -61,7 +65,7 @@ public class AccountRequestService {
             accountRequest.setProjectName(form.getProjectName());
 
             accountRequest = accountRequestRepository.save(accountRequest);
-            return ResponseEntity.ok(accountRequest.getId());
+            return accountRequest.getId();
         }else{
             throw new RAObjectNotFoundException(User.class, form.getAccountOwnerEmail());
         }
@@ -103,11 +107,12 @@ public class AccountRequestService {
     }
 
     @GetMapping("/findById/{id}")
-    public ResponseEntity<?> findById(@PathVariable Long id) throws RAObjectNotFoundException {
+    @ResponseStatus(HttpStatus.OK)
+    public AccountRequest findById(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<AccountRequest> optionalAccountRequest = accountRequestRepository.findById(id);
 
         if(optionalAccountRequest.isPresent()){
-            return ResponseEntity.ok(optionalAccountRequest.get());
+            return optionalAccountRequest.get();
         }else{
             throw new RAObjectNotFoundException(AccountRequest.class, id);
         }

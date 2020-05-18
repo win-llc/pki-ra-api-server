@@ -11,25 +11,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
-import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
-import java.util.Collections;
 
 @SpringBootApplication(
         exclude = {
@@ -42,9 +32,6 @@ import java.util.Collections;
 @EnableJpaRepositories(basePackages = "com.winllc.pki.ra.repository")
 @EnableTransactionManagement
 public class AppConfig {
-
-    @Autowired
-    private Environment env;
 
     @Value("${keycloak.admin-interface.server-base-url}")
     private String serverBaseUrl;
@@ -74,6 +61,9 @@ public class AppConfig {
     }
 
     public static void main(String[] args){
+        //System.setProperty("javax.net.ssl.trustStore", "C:\\Users\\jrmints\\IdeaProjects\\PKI Registration Authority\\src\\main\\resources\\trust.jks");
+        //System.setProperty("javax.net.ssl.trustStorePassword", "");
+
         SpringApplication.run(AppConfig.class, args);
     }
 

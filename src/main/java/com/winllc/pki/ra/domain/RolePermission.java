@@ -9,7 +9,7 @@ import java.util.Objects;
 @Entity
 public class RolePermission extends AbstractPersistable<Long> {
 
-    @Column(unique = true)
+    @Column(nullable = false)
     private String roleName;
     private String permission = "";
 
@@ -18,7 +18,7 @@ public class RolePermission extends AbstractPersistable<Long> {
         this.permission = permission;
     }
 
-    private RolePermission(){}
+    public RolePermission(){}
 
     public String getRoleName() {
         return roleName;

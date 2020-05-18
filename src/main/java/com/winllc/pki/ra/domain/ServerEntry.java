@@ -12,19 +12,20 @@ import java.util.Set;
 public class ServerEntry extends AbstractPersistable<Long> implements AccountOwnedEntity {
 
     private String hostname;
-    @Column(unique = true)
     private String fqdn;
     @JsonIgnore
     @ElementCollection
     private List<String> alternateDnsValues;
     @JsonIgnore
     @ManyToOne
+    @JoinColumn(name="domainParent_fk")
     private Domain domainParent;
     @JsonIgnore
     @ManyToOne
+    @JoinColumn(name="account_fk")
     private Account account;
     @JsonIgnore
-    @ManyToMany
+    @ManyToMany(mappedBy = "serverEntries")
     private Set<AttributePolicyGroup> policyGroups;
     @JsonIgnore
     @OneToMany(mappedBy = "serverEntry")

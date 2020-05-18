@@ -12,7 +12,7 @@ public class ServerSettings extends AbstractPersistable<Long> {
     private String property;
     private String value = "";
 
-    private ServerSettings(){}
+    public ServerSettings(){}
 
     public ServerSettings(String property){
         this.property = property;

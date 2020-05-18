@@ -1,8 +1,6 @@
 package com.winllc.pki.ra.repository;
 
-import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.DomainLinkToAccountRequest;
-import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
 

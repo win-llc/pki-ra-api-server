@@ -18,6 +18,7 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
 
     @Column(unique = true)
     private String name;
+    @Column(nullable = false)
     private CertAuthorityConnectionType type;
     private String baseUrl;
     private String issuePath;

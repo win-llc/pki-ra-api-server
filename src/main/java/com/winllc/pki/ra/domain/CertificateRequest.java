@@ -20,14 +20,18 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
     @Column(length = 2000)
     private String issuedCertificate;
     @ManyToOne
+    @JoinColumn(name="requestedBy_fk")
     private User requestedBy;
     @ManyToOne
+    @JoinColumn(name="adminReviewer_fk")
     private User adminReviewer;
     @ElementCollection
     private List<String> requestedDnsNames;
     @ManyToOne
+    @JoinColumn(name="account_fk")
     private Account account;
     @ManyToOne
+    @JoinColumn(name="serverEntry_fk")
     private ServerEntry serverEntry;
 
     public static CertificateRequest build(){

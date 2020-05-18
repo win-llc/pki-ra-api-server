@@ -3,6 +3,7 @@ package com.winllc.pki.ra.domain;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -10,12 +11,13 @@ import java.time.LocalDateTime;
 @Entity
 public class AuditRecord extends AbstractPersistable<Long> {
 
+    @Column(nullable = false)
     private AuditRecordType type;
     private Timestamp timestamp;
     private String accountKid;
     private String source;
 
-    private AuditRecord(){}
+    public AuditRecord(){}
 
     public static AuditRecord buildNew(AuditRecordType type){
         AuditRecord record = new AuditRecord();

@@ -7,6 +7,7 @@ import com.winllc.pki.ra.repository.UserRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,8 +23,6 @@ public class RAUserDetailsService implements UserDetailsService {
     private static final Logger log = LogManager.getLogger(RAUserDetailsService.class);
 
     private UserRepository userRepository;
-    @Autowired
-    private RolePermissionRepository rolePermissionRepository;
 
     public RAUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -47,10 +46,14 @@ public class RAUserDetailsService implements UserDetailsService {
 
         RAUser raUser = new RAUser(user);
 
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(user.getIdentifier().toString(),
+                user.getUsername(),
+                user.getRoles().stream().map(SimpleGrantedAuthority::new)
+        .collect(Collectors.toList()));
 
         //todo for testing, remove
         //raUser.setPermissions(Collections.singletonList("update_account_restriction"));
 
-        return raUser;
+        return userDetails;
     }
 }

@@ -15,11 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -59,9 +62,10 @@ class CustomPermissionEvaluatorTest {
         permissions.add("add_domain");
         permissions.add("update_server_entry");
 
-        RAUser raUser = new RAUser(user);
-        raUser.setPermissions(permissions);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(raUser, null);
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(user.getUsername(), "",
+                permissions.stream().map(p -> new SimpleGrantedAuthority(p)).collect(Collectors.toList()));
+        //raUser.setPermissions(permissions);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null);
 
         Domain domain = new Domain();
         domain.setBase("winllc-dev.com");

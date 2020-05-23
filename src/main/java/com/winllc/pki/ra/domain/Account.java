@@ -14,7 +14,7 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
     @Column(unique = true)
     private String keyIdentifier;
     private String macKey;
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String projectName;
     private boolean acmeRequireHttpValidation = false;
     private boolean enabled = true;

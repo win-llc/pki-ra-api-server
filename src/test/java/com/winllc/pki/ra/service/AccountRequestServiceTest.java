@@ -29,8 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.springframework.test.util.AssertionErrors.assertNotNull;
-import static org.springframework.test.util.AssertionErrors.assertTrue;
+import static org.springframework.test.util.AssertionErrors.*;
 
 
 @SpringBootTest(classes = AppConfig.class)
@@ -52,18 +51,12 @@ class AccountRequestServiceTest {
         Account account = new Account();
         account.setKeyIdentifier("kidtest1");
         account.setProjectName("Test Project 2");
-        account = accountRepository.save(account);
+        accountRepository.save(account);
 
         User user = new User();
         user.setUsername("test@test.com");
         user.setIdentifier(UUID.randomUUID());
-        user = userRepository.save(user);
-
-        AccountRequest accountRequest = new AccountRequest();
-        accountRequest.setAccountOwner(user);
-        accountRequest.setProjectName(account.getProjectName());
-        accountRequest.setState("new");
-        accountRequestRepository.save(accountRequest);
+        userRepository.save(user);
     }
 
     @AfterEach
@@ -76,19 +69,33 @@ class AccountRequestServiceTest {
 
     @Test
     void findAll() {
+        AccountRequest accountRequest = new AccountRequest();
+        User user = userRepository.findOneByUsername("test@test.com").get();
+        accountRequest.setAccountOwner(user);
+        accountRequest.setProjectName("New Project");
+        accountRequest.setState("new");
+        accountRequestRepository.save(accountRequest);
+
         List<AccountRequest> all = accountRequestService.findAll();
-        assertTrue("Response null check", all.size() == 0);
+        assertTrue("Response null check", all.size() == 1);
     }
 
     @Test
     void findPending() throws RAObjectNotFoundException {
+        AccountRequest accountRequest = new AccountRequest();
+        User user = userRepository.findOneByUsername("test@test.com").get();
+        accountRequest.setAccountOwner(user);
+        accountRequest.setProjectName("New Project");
+        accountRequest.setState("new");
+        accountRequestRepository.save(accountRequest);
+
         AccountRequestForm form = new AccountRequestForm();
         form.setAccountOwnerEmail("test@test.com");
         form.setProjectName("project1");
         accountRequestService.createAccountRequest(form);
 
         List<AccountRequest> all = accountRequestService.findPending();
-        assertTrue("Response null check", all.size() == 1);
+        assertTrue("Response null check", all.size() == 2);
     }
 
     @Test
@@ -104,7 +111,14 @@ class AccountRequestServiceTest {
 
     @Test
     void accountRequestUpdate() throws RAObjectNotFoundException {
-        AccountRequest accountRequest = accountRequestRepository.findAll().get(0);
+        User user = userRepository.findOneByUsername("test@test.com").get();
+
+        AccountRequest accountRequest = new AccountRequest();
+        accountRequest.setAccountOwner(user);
+        accountRequest.setProjectName("New Project");
+        accountRequest.setState("new");
+        accountRequest = accountRequestRepository.save(accountRequest);
+
         AccountRequestUpdateForm form = new AccountRequestUpdateForm();
         form.setAccountRequestId(accountRequest.getId());
         form.setState("approve");
@@ -116,12 +130,38 @@ class AccountRequestServiceTest {
     }
 
     @Test
-    void findById() {
-        //todo
+    void findById() throws RAObjectNotFoundException {
+        User user = userRepository.findOneByUsername("test@test.com").get();
+
+        AccountRequest accountRequest = new AccountRequest();
+        accountRequest.setAccountOwner(user);
+        accountRequest.setProjectName("New Project");
+        accountRequest.setState("new");
+        accountRequest = accountRequestRepository.save(accountRequest);
+
+        AccountRequest byId = accountRequestService.findById(accountRequest.getId());
+        assertNotNull("Not null", byId);
     }
 
     @Test
-    void delete() {
-        //todo
+    void delete() throws RAObjectNotFoundException {
+        User user = userRepository.findOneByUsername("test@test.com").get();
+
+        AccountRequest accountRequest = new AccountRequest();
+        accountRequest.setAccountOwner(user);
+        accountRequest.setProjectName("New Project");
+        accountRequest.setState("new");
+        accountRequest = accountRequestRepository.save(accountRequest);
+
+        AccountRequest byId = accountRequestService.findById(accountRequest.getId());
+        assertNotNull("Not null", byId);
+
+        accountRequestService.delete(accountRequest.getId());
+
+        try{
+            accountRequestService.findById(accountRequest.getId());
+            fail("Should have thrown error");
+        }catch (RAObjectNotFoundException e){
+        }
     }
 }

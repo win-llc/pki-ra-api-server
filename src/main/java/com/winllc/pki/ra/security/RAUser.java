@@ -17,6 +17,8 @@ public class RAUser extends User implements UserDetails {
         super(user);
     }
 
+    public RAUser(){}
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return AuthorityUtils.createAuthorityList(

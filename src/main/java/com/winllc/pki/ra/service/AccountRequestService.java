@@ -119,10 +119,9 @@ public class AccountRequestService {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id){
+    @ResponseStatus(HttpStatus.OK)
+    public void delete(@PathVariable Long id){
 
         accountRequestRepository.deleteById(id);
-
-        return ResponseEntity.ok().build();
     }
 }

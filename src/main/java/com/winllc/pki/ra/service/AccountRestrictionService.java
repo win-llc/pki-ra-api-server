@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,7 +30,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/accountRestriction")
 public class AccountRestrictionService {
 
-    private DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
     private static final Logger log = LogManager.getLogger(AccountRestrictionService.class);
 
@@ -38,41 +40,46 @@ public class AccountRestrictionService {
     private AccountRestrictionRepository accountRestrictionRepository;
 
     @GetMapping("/types")
-    public ResponseEntity<?> getRestrictionTypes(){
-        return ResponseEntity.ok(AccountRestrictionType.values());
+    @ResponseStatus(HttpStatus.OK)
+    public List<AccountRestrictionType> getRestrictionTypes(){
+        return Arrays.asList(AccountRestrictionType.values());
     }
 
     @GetMapping("/actions")
-    public ResponseEntity<?> getRestrictionActions(){
-        return ResponseEntity.ok(AccountRestrictionAction.values());
+    @ResponseStatus(HttpStatus.OK)
+    public List<AccountRestrictionAction> getRestrictionActions(){
+        return Arrays.asList(AccountRestrictionAction.values());
     }
 
     @GetMapping("/byId/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) throws RAObjectNotFoundException {
+    @ResponseStatus(HttpStatus.OK)
+    public AccountRestrictionForm getById(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<AccountRestriction> optionalAccountRestriction = accountRestrictionRepository.findById(id);
         if(optionalAccountRestriction.isPresent()){
             AccountRestriction restriction = optionalAccountRestriction.get();
 
-            return ResponseEntity.ok(new AccountRestrictionForm(restriction));
+            return new AccountRestrictionForm(restriction);
         }else{
             throw new RAObjectNotFoundException(AccountRestriction.class, id);
         }
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> create(@Valid @RequestBody AccountRestrictionForm form) throws Exception {
+    @ResponseStatus(HttpStatus.CREATED)
+    public Long create(@Valid @RequestBody AccountRestrictionForm form) throws Exception {
         AccountRestriction accountRestriction = formToRestriction(form);
 
         accountRestriction = accountRestrictionRepository.save(accountRestriction);
 
         log.info("Account restriction added ID: "+accountRestriction.getId());
 
-        return ResponseEntity.ok(accountRestriction.getId());
+        return accountRestriction.getId();
     }
 
     @PreAuthorize("hasPermission(#form, 'update_account_restriction')")
     @PostMapping("/update")
-    public ResponseEntity<?> update(@Valid @RequestBody AccountRestrictionForm form) throws Exception {
+    @ResponseStatus(HttpStatus.OK)
+    public AccountRestriction update(@Valid @RequestBody AccountRestrictionForm form) throws Exception {
 
         Optional<AccountRestriction> optionalAccountRestriction = accountRestrictionRepository.findById(form.getId());
 
@@ -83,36 +90,41 @@ public class AccountRestrictionService {
 
             existing.setDueBy(fromForm.getDueBy());
             existing.setCompleted(form.isCompleted());
+            if(StringUtils.isNotBlank(form.getAction())) {
+                existing.setAction(AccountRestrictionAction.valueOf(form.getAction()));
+            }
+            if(StringUtils.isNotBlank(form.getType())) {
+                existing.setType(AccountRestrictionType.valueOf(form.getType()));
+            }
 
             existing = accountRestrictionRepository.save(existing);
 
-            return ResponseEntity.ok(existing);
+            return existing;
         }else{
             throw new RAObjectNotFoundException(form);
         }
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id){
-
+    @ResponseStatus(HttpStatus.OK)
+    public void delete(@PathVariable Long id){
         accountRestrictionRepository.deleteById(id);
-
-        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/allForAccount/{accountId}")
-    public ResponseEntity<?> getAllForAccount(@PathVariable Long accountId){
+    @ResponseStatus(HttpStatus.OK)
+    public List<AccountRestrictionForm> getAllForAccount(@PathVariable Long accountId) throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findById(accountId);
         if(optionalAccount.isPresent()){
             Account account = optionalAccount.get();
 
             List<AccountRestriction> allByAccount = accountRestrictionRepository.findAllByAccount(account);
 
-            return ResponseEntity.ok(allByAccount.stream()
+            return allByAccount.stream()
             .map(AccountRestrictionForm::new)
-            .collect(Collectors.toList()));
+            .collect(Collectors.toList());
         }else{
-            return ResponseEntity.badRequest().build();
+            throw new RAObjectNotFoundException(Account.class, accountId);
         }
     }
 

@@ -11,6 +11,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.util.CollectionUtils;
 
@@ -39,19 +41,24 @@ public class RAUserJwtAuthenticationConverter
 
         String username = jwt.getClaimAsString("email");
 
-        RAUser raUser = (RAUser) raUserDetailsService.loadUserByUsername(username);
-        raUser.setRoles(authorities.stream().map(a -> a.getAuthority()).collect(Collectors.toList()));
+        //RAUser raUser = (RAUser) raUserDetailsService.loadUserByUsername(username);
+        //raUser.setRoles(authorities.stream().map(a -> a.getAuthority()).collect(Collectors.toList()));
 
-        Set<String> permissions = new HashSet<>();
-        for(String role : raUser.getRoles()){
-            List<RolePermission> allByRoleName = rolePermissionRepository.findAllByRoleName(role);
+        List<String> roles = authorities.stream().map(a -> a.getAuthority()).collect(Collectors.toList());
+
+        Set<GrantedAuthority> permissions = new HashSet<>();
+        for(GrantedAuthority role : authorities){
+            List<RolePermission> allByRoleName = rolePermissionRepository.findAllByRoleName(role.toString());
             if(!CollectionUtils.isEmpty(allByRoleName)){
-                permissions.addAll(allByRoleName.stream().map(r -> r.getPermission()).collect(Collectors.toList()));
+                permissions.addAll(allByRoleName.stream()
+                        .map(r -> new SimpleGrantedAuthority(r.getPermission()))
+                        .collect(Collectors.toList()));
             }
         }
-        raUser.setPermissions(new ArrayList<>(permissions));
+        //raUser.setPermissions(new ArrayList<>(permissions));
+        UserDetails userDetails = new User(username, "", permissions);
 
-        return Optional.of(new UsernamePasswordAuthenticationToken(raUser, "n/a", authorities))
+        return Optional.of(new UsernamePasswordAuthenticationToken(userDetails, "n/a", permissions))
                 .orElseThrow(() -> new BadCredentialsException("No user found"));
     }
 

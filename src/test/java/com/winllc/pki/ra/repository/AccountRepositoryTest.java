@@ -41,14 +41,13 @@ class AccountRepositoryTest {
         User user = new User();
         user.setIdentifier(UUID.randomUUID());
         user.setUsername("test@test.com");
+        user = userRepository.save(user);
 
         PocEntry pocEntry = new PocEntry();
         pocEntry.setAccount(account);
         pocEntry.setEmail("poc@test.com");
 
         pocEntryRepository.save(pocEntry);
-
-        user = userRepository.save(user);
 
         account.getAccountUsers().add(user);
         account.getPocs().add(pocEntry);
@@ -59,11 +58,9 @@ class AccountRepositoryTest {
     @AfterEach
     @Transactional
     void after(){
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
-
-        pocEntryRepository.deleteByEmailEqualsAndAccount("poc@test.com", account);
-        accountRepository.deleteByKeyIdentifierEquals("kidtest1");
-        userRepository.deleteByUsernameEquals("test@test.com");
+        pocEntryRepository.deleteAll();
+        accountRepository.deleteAll();
+        userRepository.deleteAll();
     }
 
     @Test

@@ -6,12 +6,14 @@ import com.winllc.pki.ra.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Component
 public class CustomPermissionEvaluator implements PermissionEvaluator {
@@ -33,13 +35,13 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
         boolean hasPermission = false;
         Object principal = authentication.getPrincipal();
-        if(principal instanceof RAUser) {
-            RAUser raUser = (RAUser) principal;
+        if(principal instanceof UserDetails) {
+            UserDetails raUser = (UserDetails) principal;
+            List<String> permissions = raUser.getAuthorities().stream().map(ga -> ga.toString()).collect(Collectors.toList());
 
             //Super admin gets automatic access
-            if(isSuperAdmin(raUser)) return true;
+            if(isSuperAdmin(raUser, permissions)) return true;
 
-            List<String> permissions = raUser.getPermissions();
             String permissionString = (String) permission;
 
             if((permissions).contains(permissionString)){
@@ -114,8 +116,7 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         return permission.startsWith("update") || permission.startsWith("delete");
     }
 
-    private boolean isSuperAdmin(RAUser raUser){
-        List<String> permissions = raUser.getPermissions();
+    private boolean isSuperAdmin(UserDetails raUser, List<String> permissions){
         return permissions.contains("super_admin");
     }
 

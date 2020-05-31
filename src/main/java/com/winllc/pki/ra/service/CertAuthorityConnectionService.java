@@ -14,6 +14,7 @@ import com.winllc.pki.ra.ca.DogTagCertAuthority;
 import com.winllc.pki.ra.ca.InternalCertAuthority;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.*;
+import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.keystore.ApplicationKeystore;
@@ -23,6 +24,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
@@ -67,8 +69,7 @@ public class CertAuthorityConnectionService {
     @Autowired
     private CertificateRequestRepository certificateRequestRepository;
 
-    private static Map<String, CertAuthority> loadedCertAuthorities = new ConcurrentHashMap<>();
-
+    private static final Map<String, CertAuthority> loadedCertAuthorities = new ConcurrentHashMap<>();
 
     @PostConstruct
     private void init() {
@@ -91,8 +92,13 @@ public class CertAuthorityConnectionService {
         }
     }
 
+    public void addLoadedCertAuthority(CertAuthority ca){
+        loadedCertAuthorities.put(ca.getName(), ca);
+    }
+
     @PostMapping("/api/info/create")
-    public ResponseEntity<?> createConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm connectionInfo) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public Long createConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm connectionInfo) throws InvalidFormException {
         ValidationResponse validationResponse = validator.validate(connectionInfo, false);
 
         if (validationResponse.isValid()) {
@@ -122,15 +128,17 @@ public class CertAuthorityConnectionService {
             //reload cert authority
             loadCertAuthority(caConnection.getName());
 
-            return ResponseEntity.ok(connectionInfo.getId());
+            return caConnection.getId();
         } else {
-            return ResponseEntity.badRequest().build();
+            throw new InvalidFormException(connectionInfo);
         }
     }
 
     @Transactional
     @PostMapping("/api/info/update")
-    public ResponseEntity<?> updateConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm form) throws RAException {
+    @ResponseStatus(HttpStatus.OK)
+    public CertAuthorityConnectionInfoForm updateConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm form)
+            throws RAException, InvalidFormException {
         //todo validate
 
         ValidationResponse validationResponse = validator.validate(form, true);
@@ -149,74 +157,78 @@ public class CertAuthorityConnectionService {
                     }
                 }
                 info.setProperties(props);
+                info.setBaseUrl(form.getBaseUrl());
 
                 CertAuthorityConnectionInfo info2 = repository.save(info);
-                return ResponseEntity.ok(buildForm(info2));
+                return buildForm(info2);
             }else{
                 throw new RAObjectNotFoundException(CertAuthorityConnectionInfo.class, form.getId());
             }
         }else{
-            throw new RAException("Cert Authority Info form invalid");
+            throw new InvalidFormException(form);
         }
     }
 
     @GetMapping("/api/info/byName/{name}")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> getConnectionInfoByName(@PathVariable String name) {
+    public CertAuthorityConnectionInfoForm getConnectionInfoByName(@PathVariable String name) throws RAObjectNotFoundException {
         Optional<CertAuthorityConnectionInfo> infoOptional = repository.findByName(name);
 
         if (infoOptional.isPresent()) {
-            return ResponseEntity.ok(buildForm(infoOptional.get()));
+            return buildForm(infoOptional.get());
         } else {
-            return ResponseEntity.noContent().build();
+            throw new RAObjectNotFoundException(CertAuthorityConnectionInfo.class, name);
         }
     }
 
     @GetMapping("/api/info/byId/{id}")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> getConnectionInfoById(@PathVariable Long id) {
+    public CertAuthorityConnectionInfoForm getConnectionInfoById(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<CertAuthorityConnectionInfo> infoOptional = repository.findById(id);
 
         if (infoOptional.isPresent()) {
-            return ResponseEntity.ok(buildForm(infoOptional.get()));
+            return buildForm(infoOptional.get());
+        } else {
+            throw new RAObjectNotFoundException(CertAuthorityConnectionInfo.class, id);
         }
-
-        return ResponseEntity.noContent().build();
     }
 
     private CertAuthorityConnectionInfoForm buildForm(CertAuthorityConnectionInfo info){
         Hibernate.initialize(info.getProperties());
         CertAuthority ca = loadedCertAuthorities.get(info.getName());
-        CertAuthorityConnectionInfoForm form = new CertAuthorityConnectionInfoForm(info, ca);
-        return form;
+        return new CertAuthorityConnectionInfoForm(info, ca);
     }
 
     @GetMapping("/api/info/all")
-    public ResponseEntity<?> getAllConnectionInfo() {
+    @ResponseStatus(HttpStatus.OK)
+    public List<CertAuthorityConnectionInfo> getAllConnectionInfo() {
         List<CertAuthorityConnectionInfo> list = repository.findAll();
 
-        return ResponseEntity.ok(list);
+        return list;
     }
 
     @DeleteMapping("/api/info/delete/{id}")
-    public ResponseEntity<?> deleteInfo(@PathVariable Long id) {
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteInfo(@PathVariable Long id) {
         repository.deleteById(id);
-
-        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/api/info/getTypes")
-    public ResponseEntity<?> getTypes() {
+    @ResponseStatus(HttpStatus.OK)
+    public List<String> getTypes() {
         List<String> certAuthorityTypes = Stream.of(CertAuthorityConnectionType.values())
                 .map(v -> v.name())
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(certAuthorityTypes);
+        return certAuthorityTypes;
     }
 
 
     @PostMapping("/issueCertificate")
-    public ResponseEntity<?> issueCertificate(@Valid @RequestBody RACertificateIssueRequest raCertificateIssueRequest) throws Exception {
+    @ResponseStatus(HttpStatus.OK)
+    public String issueCertificate(@Valid @RequestBody RACertificateIssueRequest raCertificateIssueRequest) throws Exception {
 
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(raCertificateIssueRequest.getAccountKid());
         if(optionalAccount.isPresent()) {
@@ -241,7 +253,7 @@ public class CertAuthorityConnectionService {
             record.setSource("acme");
             auditRecordRepository.save(record);
 
-            return ResponseEntity.ok(pemCert);
+            return pemCert;
         }else{
             throw new RAObjectNotFoundException(Account.class, raCertificateIssueRequest.getAccountKid());
         }
@@ -269,7 +281,8 @@ public class CertAuthorityConnectionService {
     }
 
     @PostMapping("/revokeCertificate")
-    public ResponseEntity<?> revokeCertificate(@Valid @RequestBody RACertificateRevokeRequest revokeRequest) throws Exception {
+    @ResponseStatus(HttpStatus.OK)
+    public void revokeCertificate(@Valid @RequestBody RACertificateRevokeRequest revokeRequest) throws Exception {
         CertAuthority certAuthority = loadedCertAuthorities.get(revokeRequest.getCertAuthorityName());
         if (certAuthority != null) {
             String serial = revokeRequest.getSerial();
@@ -286,7 +299,6 @@ public class CertAuthorityConnectionService {
                 AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_REVOKED);
                 //todo get account KID and add to record
                 auditRecordRepository.save(record);
-                return ResponseEntity.ok().build();
             } else {
                 throw new RAException("Could not revoke cert on Cert Authority");
             }
@@ -311,7 +323,8 @@ public class CertAuthorityConnectionService {
     }
 
     @GetMapping("/certDetails/{connectionName}")
-    public ResponseEntity<?> getCertificateStatus(@PathVariable String connectionName, @RequestParam String serial) throws Exception {
+    @ResponseStatus(HttpStatus.OK)
+    public CertificateDetails getCertificateStatus(@PathVariable String connectionName, @RequestParam String serial) throws Exception {
 
         CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
         if (certAuthority != null) {
@@ -323,7 +336,7 @@ public class CertAuthorityConnectionService {
                 details.setStatus(status);
                 details.setSerial(serial);
 
-                return ResponseEntity.ok(details);
+                return details;
             }else{
                 throw new RAException("Could not find certificate with serial: "+serial);
             }
@@ -333,7 +346,8 @@ public class CertAuthorityConnectionService {
     }
 
     @GetMapping("/trustChain/{connectionName}")
-    public ResponseEntity<?> getTrustChain(@PathVariable String connectionName) {
+    @ResponseStatus(HttpStatus.OK)
+    public String getTrustChain(@PathVariable String connectionName) {
         CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
 
         Certificate[] trustChain = certAuthority.getTrustChain();
@@ -343,15 +357,16 @@ public class CertAuthorityConnectionService {
             try {
                 stringBuilder.append(CertUtil.formatCrtFileContents(cert)).append("\n");
             } catch (CertificateEncodingException e) {
-                e.printStackTrace();
+                log.error("Could not build cert", e);
             }
         }
-        return ResponseEntity.ok(stringBuilder.toString());
+        return stringBuilder.toString();
     }
 
 
     @PostMapping("/search/{connectionName}")
-    public ResponseEntity<?> search(@PathVariable String connectionName, @RequestBody CertSearchParam certSearchParam) {
+    @ResponseStatus(HttpStatus.OK)
+    public List<CertificateDetails> search(@PathVariable String connectionName, @RequestBody CertSearchParam certSearchParam) {
         CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
 
         /*
@@ -373,7 +388,7 @@ public class CertAuthorityConnectionService {
         */
         //todo clean this up
 
-        return ResponseEntity.ok(certAuthority.search(certSearchParam));
+        return certAuthority.search(certSearchParam);
     }
 
     public Optional<CertAuthority> getCertAuthorityByName(String name) {

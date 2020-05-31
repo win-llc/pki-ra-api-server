@@ -33,13 +33,13 @@ public class CertAuthorityTypeService {
 
     @Transactional
     @GetMapping("/all")
-    public ResponseEntity<?> getAll(){
+    public List<CertAuthorityType> getAll(){
 
         List<CertAuthorityType> all = repository.findAll();
         for(CertAuthorityType type : all){
             Hibernate.initialize(type.getRequiredSettings());
         }
 
-        return ResponseEntity.ok(all);
+        return all;
     }
 }

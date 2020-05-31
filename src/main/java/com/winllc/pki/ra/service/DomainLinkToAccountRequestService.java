@@ -9,6 +9,9 @@ import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.DomainLinkToAccountRequest;
 import com.winllc.pki.ra.domain.User;
+import com.winllc.pki.ra.exception.NotAuthorizedException;
+import com.winllc.pki.ra.exception.RAException;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainLinkToAccountRequestRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
@@ -17,8 +20,10 @@ import com.winllc.pki.ra.security.RAUser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -43,44 +48,51 @@ public class DomainLinkToAccountRequestService {
 
     @Transactional
     @GetMapping("/all")
-    public ResponseEntity<?> getAllRequests(){
+    @ResponseStatus(HttpStatus.OK)
+    public List<DomainLinkToAccountRequestInfo> getAllRequests(){
         List<DomainLinkToAccountRequest> requests = requestRepository.findAll();
 
         List<DomainLinkToAccountRequestInfo> infoList = requests.stream()
                 .map(d -> buildInfo(d))
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(infoList);
+        return infoList;
     }
 
     @Transactional
     @GetMapping("/new")
-    public ResponseEntity<?> getUnapprovedRequests(){
+    @ResponseStatus(HttpStatus.OK)
+    public List<DomainLinkToAccountRequestInfo> getUnapprovedRequests(){
         List<DomainLinkToAccountRequest> requests = requestRepository.findAllByStatusEquals("new");
 
         List<DomainLinkToAccountRequestInfo> infoList = requests.stream()
                 .map(d -> buildInfo(d))
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(infoList);
+        return infoList;
     }
 
     @GetMapping("/byId/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id){
+    @ResponseStatus(HttpStatus.OK)
+    public DomainLinkToAccountRequest getById(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<DomainLinkToAccountRequest> requestOptional = requestRepository.findById(id);
 
         if(requestOptional.isPresent()){
-            return ResponseEntity.ok(requestOptional.get());
+            return requestOptional.get();
         }else{
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(DomainLinkToAccountRequest.class, id);
         }
     }
 
     @PostMapping("/linkAccount/create")
-    public ResponseEntity<?> createDomainRequest(@Valid @RequestBody DomainLinkToAccountRequestForm form, @AuthenticationPrincipal RAUser raUser){
+    @ResponseStatus(HttpStatus.CREATED)
+    public Long createDomainRequest(@Valid @RequestBody DomainLinkToAccountRequestForm form,
+                                    @AuthenticationPrincipal UserDetails raUser) throws NotAuthorizedException, RAObjectNotFoundException {
         DomainLinkToAccountRequest request = DomainLinkToAccountRequest.buildNew();
 
-        form.getRequestedDomainIds().removeIf(Objects::isNull);
+        List<Long> domainIds = new LinkedList<>(form.getRequestedDomainIds());
+        domainIds.removeIf(Objects::isNull);
+        form.setRequestedDomainIds(domainIds);
 
         Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
         Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
@@ -101,20 +113,25 @@ public class DomainLinkToAccountRequestService {
 
                 request = requestRepository.save(request);
                 log.info("Created domain link request: "+request);
-                return ResponseEntity.ok(request.getId());
+                return request.getId();
             }else{
                 log.error("Requester not associated with account");
-                return ResponseEntity.status(401).build();
+                throw new NotAuthorizedException(requester, "Link Account Create");
             }
 
         }else{
-            return ResponseEntity.badRequest().build();
+            if(!optionalAccount.isPresent()){
+                throw new RAObjectNotFoundException(Account.class, form.getAccountId());
+            }else{
+                throw new RAObjectNotFoundException(User.class, raUser.getUsername());
+            }
         }
     }
 
     @Transactional
     @PostMapping("/linkAccount/update")
-    public ResponseEntity<?> domainRequestDecision(@Valid @RequestBody DomainLinkRequestDecision decision) {
+    @ResponseStatus(HttpStatus.OK)
+    public DomainLinkToAccountRequest domainRequestDecision(@Valid @RequestBody DomainLinkRequestDecision decision) throws RAException {
         Optional<DomainLinkToAccountRequest> optionalDomainLinkToAccountRequest = requestRepository.findById(decision.getRequestId());
         if(optionalDomainLinkToAccountRequest.isPresent()){
             DomainLinkToAccountRequest request = optionalDomainLinkToAccountRequest.get();
@@ -136,23 +153,23 @@ public class DomainLinkToAccountRequestService {
                     }
                 }else{
                     log.error("Could not find requested account");
-                    return ResponseEntity.badRequest().build();
+                    throw new RAObjectNotFoundException(Account.class, request.getAccountId());
                 }
             }else if(decision.getStatus().contentEquals("reject")){
                 request.setStatusRejected();
-
             }else{
-                return ResponseEntity.badRequest().build();
+                throw new RAException("Status not valid: "+decision.getStatus());
             }
 
+            Set<Long> domainIds = new HashSet<>(request.getRequestedDomainIds());
+            request.setRequestedDomainIds(domainIds);
             request = requestRepository.save(request);
 
             log.debug("Request updated: " + request);
 
-            return ResponseEntity.ok(request);
-
+            return request;
         }else{
-            return ResponseEntity.badRequest().build();
+            throw new RAObjectNotFoundException(DomainLinkToAccountRequest.class, decision.getRequestId());
         }
     }
 

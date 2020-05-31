@@ -9,18 +9,20 @@ import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.pki.ra.beans.info.UserInfo;
 import com.winllc.pki.ra.domain.*;
+import com.winllc.pki.ra.exception.InvalidFormException;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.*;
-import com.winllc.pki.ra.security.RAUser;
 import com.winllc.pki.ra.util.AppUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.sql.Timestamp;
@@ -48,19 +50,6 @@ public class AccountService {
     @Autowired
     private AccountRestrictionRepository accountRestrictionRepository;
 
-
-    @PostMapping("/create")
-    public ResponseEntity<?> createNewAccount(@Valid @RequestBody AccountRequest form){
-        //TODO return both to account holder for entry into ACME client
-
-        Account account = buildNew();
-        account.setProjectName(form.getProjectName());
-
-        account = accountRepository.save(account);
-
-        return ResponseEntity.ok(String.valueOf(account.getId()));
-    }
-
     public Account buildNew(){
         String macKey = AppUtil.generate256BitString();
         String keyIdentifier = AppUtil.generate20BitString();
@@ -76,8 +65,22 @@ public class AccountService {
         return account;
     }
 
+    @PostMapping("/create")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Long createNewAccount(@Valid @RequestBody AccountRequest form){
+        //TODO return both to account holder for entry into ACME client
+
+        Account account = buildNew();
+        account.setProjectName(form.getProjectName());
+
+        account = accountRepository.save(account);
+
+        return account.getId();
+    }
+
     @GetMapping("/myAccounts")
-    public ResponseEntity<?> getAccountsForCurrentUser(@AuthenticationPrincipal RAUser raUser){
+    @ResponseStatus(HttpStatus.OK)
+    public List<AccountInfo> getAccountsForCurrentUser(@AuthenticationPrincipal UserDetails raUser) throws RAObjectNotFoundException {
         Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
         if(optionalUser.isPresent()){
             User currentUser = optionalUser.get();
@@ -98,16 +101,16 @@ public class AccountService {
                 accountInfoList.add(info);
             }
 
-            return ResponseEntity.ok(accountInfoList);
+            return accountInfoList;
         }else{
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(User.class, raUser.getUsername());
         }
     }
 
     @PostMapping("/update")
     @Transactional
-    public ResponseEntity<?> updateAccount(@Valid @RequestBody AccountUpdateForm form) throws Exception {
-
+    @ResponseStatus(HttpStatus.OK)
+    public AccountInfo updateAccount(@Valid @RequestBody AccountUpdateForm form) throws Exception {
         if(form.isValid()){
             Optional<Account> optionalAccount = accountRepository.findById(form.getId());
             if(optionalAccount.isPresent()){
@@ -142,52 +145,56 @@ public class AccountService {
                 pocEntryRepository.deleteAllByEmailInAndAccountEquals(emailsToRemove, account);
 
                 account = accountRepository.save(account);
-                return ResponseEntity.ok(new AccountInfo(account, true));
+                return buildAccountInfo(account);
             }else{
                 throw new Exception("Could not find account with ID: "+form.getId());
             }
+        }else{
+            throw new InvalidFormException(form);
         }
-
-        return ResponseEntity.status(500).build();
     }
 
     @GetMapping("/all")
-    public ResponseEntity<?> getAll(@AuthenticationPrincipal RAUser raUser){
+    @ResponseStatus(HttpStatus.OK)
+    public List<Account> getAll(@AuthenticationPrincipal UserDetails raUser){
         log.info("RAUser: "+raUser.getUsername());
         List<Account> accounts = accountRepository.findAll();
 
-        return ResponseEntity.ok(accounts);
+        return accounts;
     }
 
     @GetMapping("/findByKeyIdentifier/{kid}")
-    public ResponseEntity<?> findByKeyIdentifier(@PathVariable String kid){
+    @ResponseStatus(HttpStatus.OK)
+    public AccountInfo findByKeyIdentifier(@PathVariable String kid) throws RAObjectNotFoundException {
 
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
         if(optionalAccount.isPresent()){
             Account account = optionalAccount.get();
-            return ResponseEntity.ok(buildAccountInfo(account));
+            return buildAccountInfo(account);
         }else{
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(Account.class, kid);
         }
     }
 
     @GetMapping("/byId/{id}")
-    public ResponseEntity<?> findById(@PathVariable long id){
+    @ResponseStatus(HttpStatus.OK)
+    public AccountInfo findById(@PathVariable long id) throws RAObjectNotFoundException {
 
         Optional<Account> accountOptional = accountRepository.findById(id);
 
         if(accountOptional.isPresent()){
             AccountInfo info = buildAccountInfo(accountOptional.get());
 
-            return ResponseEntity.ok(info);
+            return info;
         }else {
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(Account.class, id);
         }
     }
 
     @GetMapping("/info/byId/{id}")
-    public ResponseEntity<?> findInfoById(@PathVariable long id){
+    @ResponseStatus(HttpStatus.OK)
+    public AccountInfo findInfoById(@PathVariable long id) throws RAObjectNotFoundException {
         Optional<Account> accountOptional = accountRepository.findById(id);
 
         if(accountOptional.isPresent()){
@@ -195,14 +202,15 @@ public class AccountService {
 
             AccountInfo accountInfo = buildAccountInfo(account);
 
-            return ResponseEntity.ok(accountInfo);
+            return accountInfo;
         }else {
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(Account.class, id);
         }
     }
 
     @GetMapping("/getAccountPocs/{kid}")
-    public ResponseEntity<?> getAccountPocs(@PathVariable String kid){
+    @ResponseStatus(HttpStatus.OK)
+    public List<UserInfo> getAccountPocs(@PathVariable String kid) throws RAObjectNotFoundException {
 
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
@@ -210,18 +218,17 @@ public class AccountService {
             Account account = optionalAccount.get();
             AccountInfo accountInfo = buildAccountInfo(account);
 
-            return ResponseEntity.ok(accountInfo.getPocs());
+            return accountInfo.getPocs();
         }else{
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(Account.class, kid);
         }
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id){
+    @ResponseStatus(HttpStatus.OK)
+    public void delete(@PathVariable Long id){
 
         accountRepository.deleteById(id);
-
-        return ResponseEntity.ok().build();
     }
 
 

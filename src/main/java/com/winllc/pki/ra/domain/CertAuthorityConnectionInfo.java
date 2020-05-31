@@ -4,11 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
 import org.springframework.data.jpa.domain.AbstractPersistable;
+import org.springframework.util.CollectionUtils;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -25,8 +23,18 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
     private String revokePath;
     private String searchPath;
     @JsonIgnore
-    @OneToMany(mappedBy = "certAuthorityConnectionInfo", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "certAuthorityConnectionInfo", fetch = FetchType.EAGER, orphanRemoval = true)
     private Set<CertAuthorityConnectionProperty> properties;
+
+    @PreRemove
+    private void preRemove(){
+        Set<CertAuthorityConnectionProperty> properties = getProperties();
+        if(!CollectionUtils.isEmpty(properties)){
+            for(CertAuthorityConnectionProperty property : properties){
+                property.setCertAuthorityConnectionInfo(null);
+            }
+        }
+    }
 
     public String getName() {
         return name;

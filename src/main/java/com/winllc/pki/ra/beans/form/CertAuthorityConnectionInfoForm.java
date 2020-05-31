@@ -23,7 +23,7 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
     private String searchPath;
     private Set<CertAuthorityConnectionProperty> properties;
 
-    private CertAuthorityConnectionInfoForm() {
+    public CertAuthorityConnectionInfoForm() {
     }
 
     @Override
@@ -36,6 +36,7 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
         this.name = info.getName();
         this.type = info.getType().name();
         this.properties = info.getProperties();
+        this.baseUrl = info.getBaseUrl();
         addRequiredPropertyPlaceholders(ca);
     }
 

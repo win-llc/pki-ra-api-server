@@ -3,9 +3,7 @@ package com.winllc.pki.ra.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
+import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,6 +13,7 @@ public class DomainLinkToAccountRequest extends AbstractPersistable<Long> {
     @Column(nullable = false)
     private Long accountId;
     @ElementCollection
+    @CollectionTable(name="domainLinkToAccountRequest_requestedDomainIds", joinColumns = @JoinColumn(name = "request_id"))
     @JsonIgnore
     private Set<Long> requestedDomainIds = new HashSet<>();
     @Column(nullable = false)

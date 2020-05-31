@@ -10,6 +10,7 @@ import com.winllc.pki.ra.beans.validator.CertRequestFormValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.*;
+import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.*;
@@ -18,8 +19,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -53,48 +56,54 @@ public class CertificateRequestService {
     private CertRequestFormValidator formValidator;
 
     @GetMapping("/all")
-    public ResponseEntity<?> getAll() {
+    @ResponseStatus(HttpStatus.OK)
+    public List<CertificateRequest> getAll() {
         List<CertificateRequest> requests = requestRepository.findAll();
-        return ResponseEntity.ok(requests);
+        return requests;
     }
 
     @GetMapping("/allWithStatus/{status}")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> getAllWithStatus(@PathVariable String status) {
+    public List<CertificateRequest> getAllWithStatus(@PathVariable String status) {
         List<CertificateRequest> requests = requestRepository.findAllByStatusEquals(status);
 
         requests.forEach(r -> Hibernate.initialize(r.getRequestedDnsNames()));
 
-        return ResponseEntity.ok(requests);
+        return requests;
     }
 
     @GetMapping("/byId/{id}")
-    public ResponseEntity<?> byId(@PathVariable Long id) throws RAObjectNotFoundException {
+    @ResponseStatus(HttpStatus.OK)
+    public CertificateRequestInfo byId(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<CertificateRequest> byId = requestRepository.findById(id);
 
         if (byId.isPresent()) {
-            return ResponseEntity.ok(new CertificateRequestInfo(byId.get()));
+            return new CertificateRequestInfo(byId.get());
         } else {
             throw new RAObjectNotFoundException(CertificateRequest.class, id);
         }
     }
 
     @GetMapping("/byIdFull/{id}")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> byIdFull(@PathVariable Long id) throws RAObjectNotFoundException {
+    public CertificateRequest byIdFull(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<CertificateRequest> byId = requestRepository.findById(id);
 
         if (byId.isPresent()) {
             CertificateRequest certificateRequest = byId.get();
             Hibernate.initialize(certificateRequest.getRequestedDnsNames());
-            return ResponseEntity.ok(certificateRequest);
+            return certificateRequest;
         } else {
             throw new RAObjectNotFoundException(CertificateRequest.class, id);
         }
     }
 
     @PostMapping("/submit")
-    public ResponseEntity<?> submitRequest(@Valid @RequestBody CertificateRequestForm form, @AuthenticationPrincipal RAUser raUser) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public Long submitRequest(@Valid @RequestBody CertificateRequestForm form, @AuthenticationPrincipal UserDetails raUser)
+            throws InvalidFormException, RAObjectNotFoundException {
         ValidationResponse validationResponse = formValidator.validate(form, false);
         if (validationResponse.isValid()) {
             CertificateRequest certificateRequest = CertificateRequest.build();
@@ -107,38 +116,40 @@ public class CertificateRequestService {
             Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
             Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
 
-            if (optionalUser.isPresent() &&  optionalAccount.isPresent()) {
+            if (optionalUser.isPresent() && optionalAccount.isPresent()) {
                 User user = optionalUser.get();
                 Account account = optionalAccount.get();
                 certificateRequest.setRequestedBy(user);
                 certificateRequest.setAccount(account);
                 certificateRequest = requestRepository.save(certificateRequest);
-                return ResponseEntity.ok(certificateRequest.getId());
+                return certificateRequest.getId();
             } else {
-                return ResponseEntity.notFound().build();
+                throw new RAObjectNotFoundException(User.class, raUser.getUsername());
             }
         } else {
-            return ResponseEntity.badRequest().build();
+            throw new InvalidFormException(form);
         }
     }
 
     @GetMapping("/decision/{id}")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> reviewRequestGet(@PathVariable Long id) throws RAObjectNotFoundException {
+    public CertificateRequest reviewRequestGet(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<CertificateRequest> optionalCertificateRequest = requestRepository.findById(id);
 
         if (optionalCertificateRequest.isPresent()) {
             CertificateRequest certificateRequest = optionalCertificateRequest.get();
             Hibernate.initialize(certificateRequest.getRequestedDnsNames());
-            return ResponseEntity.ok(certificateRequest);
+            return certificateRequest;
         } else {
             throw new RAObjectNotFoundException(CertificateRequest.class, id);
         }
     }
 
     @PostMapping("/decision")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> reviewRequest(@Valid @RequestBody CertificateRequestDecisionForm form) throws RAException {
+    public CertificateRequest reviewRequest(@Valid @RequestBody CertificateRequestDecisionForm form) throws RAException {
         Optional<CertificateRequest> optionalCertificateRequest = requestRepository.findById(form.getRequestId());
         if (optionalCertificateRequest.isPresent()) {
             CertificateRequest request = optionalCertificateRequest.get();
@@ -155,16 +166,17 @@ public class CertificateRequestService {
                 request.setStatus(form.getStatus());
             }
 
-            requestRepository.save(request);
-            return ResponseEntity.ok().build();
+            request = requestRepository.save(request);
+            return request;
         } else {
             throw new RAObjectNotFoundException(form);
         }
     }
 
     @GetMapping("/myRequests")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> myRequests(@AuthenticationPrincipal RAUser raUser) throws RAObjectNotFoundException {
+    public List<CertificateRequest> myRequests(@AuthenticationPrincipal UserDetails raUser) throws RAObjectNotFoundException {
         Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
         if (optionalUser.isPresent()) {
             User currentUser = optionalUser.get();
@@ -173,7 +185,7 @@ public class CertificateRequestService {
 
             requests.forEach(r -> Hibernate.initialize(r.getRequestedDnsNames()));
 
-            return ResponseEntity.ok(requests);
+            return requests;
         } else {
             throw new RAObjectNotFoundException(User.class, raUser.getUsername());
         }
@@ -193,10 +205,10 @@ public class CertificateRequestService {
 
         //check if any server entries with same subject exist, if so, associate this request
         //todo
-        String certificateDn = issuedCertificate.getSubjectDN().getName();
-        String issuedFqdn = certificateDn.substring(0, certificateDn.indexOf(",")).replace("cn=", "").replace("CN=", "");
+        String issuedFqdn = getFqdnFromCert(issuedCertificate);
+
         Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findDistinctByFqdnEquals(issuedFqdn);
-        if(serverEntryOptional.isPresent()){
+        if (serverEntryOptional.isPresent()) {
             ServerEntry serverEntry = serverEntryOptional.get();
             serverEntry.getCertificateRequests().add(request);
             serverEntryRepository.save(serverEntry);
@@ -211,6 +223,19 @@ public class CertificateRequestService {
         request.setIssuedCertificate(certPem);
         request.setReviewedOn(Timestamp.valueOf(LocalDateTime.now()));
         request.setStatus("issued");
+    }
+
+    private static String getFqdnFromCert(X509Certificate issuedCertificate){
+        String certificateDn = issuedCertificate.getSubjectDN().getName();
+        String issuedFqdn = certificateDn.toLowerCase();
+
+        if(certificateDn.contains(",")){
+            issuedFqdn = issuedFqdn.substring(0, certificateDn.indexOf(",")).replace("cn=", "");
+        }
+
+        issuedFqdn = issuedFqdn.replace("cn=", "");
+
+        return issuedFqdn;
     }
 
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PreRemove;
 
 @Entity
 public class CertAuthorityConnectionProperty extends AbstractPersistable<Long> {
@@ -16,6 +17,11 @@ public class CertAuthorityConnectionProperty extends AbstractPersistable<Long> {
     @ManyToOne
     @JoinColumn(name="certAuthorityConnectionInfo_fk")
     private CertAuthorityConnectionInfo certAuthorityConnectionInfo;
+
+    @PreRemove
+    private void preRemove(){
+        this.certAuthorityConnectionInfo = null;
+    }
 
     public String getName() {
         return name;

@@ -7,6 +7,7 @@ import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
 import com.winllc.pki.ra.repository.AttributePolicyRepository;
+import com.winllc.pki.ra.service.external.SecurityPolicyService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,9 @@ public class AttributePolicyService {
     private AttributePolicyGroupRepository attributePolicyGroupRepository;
     @Autowired
     private AttributePolicyRepository attributePolicyRepository;
+    //todo integrate this with attribute policy
+    @Autowired
+    private SecurityPolicyService securityPolicyService;
 
     @GetMapping("/group/byId/{id}")
     public ResponseEntity<?> findPolicyGroupById(@PathVariable Long id) throws RAObjectNotFoundException {

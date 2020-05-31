@@ -4,8 +4,6 @@ plugins {
     id 'java'
 }
 
-apply plugin: 'io.spring.dependency-management'
-
 group 'com.winllc.pki.ra'
 version '1.0-SNAPSHOT'
 

@@ -1,0 +1,136 @@
+package com.winllc.pki.ra.service;
+
+import com.winllc.pki.ra.beans.DomainLinkRequestDecision;
+import com.winllc.pki.ra.beans.form.DomainLinkToAccountRequestForm;
+import com.winllc.pki.ra.beans.info.DomainLinkToAccountRequestInfo;
+import com.winllc.pki.ra.config.AppConfig;
+import com.winllc.pki.ra.domain.Account;
+import com.winllc.pki.ra.domain.Domain;
+import com.winllc.pki.ra.domain.DomainLinkToAccountRequest;
+import com.winllc.pki.ra.domain.User;
+import com.winllc.pki.ra.exception.NotAuthorizedException;
+import com.winllc.pki.ra.exception.RAException;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import com.winllc.pki.ra.repository.AccountRepository;
+import com.winllc.pki.ra.repository.DomainLinkToAccountRequestRepository;
+import com.winllc.pki.ra.repository.DomainRepository;
+import com.winllc.pki.ra.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.context.ActiveProfiles;
+
+import javax.transaction.Transactional;
+
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest(classes = AppConfig.class)
+@ActiveProfiles("test")
+class DomainLinkToAccountRequestServiceTest {
+
+    @Autowired
+    private DomainLinkToAccountRequestService linkToAccountRequestService;
+    @Autowired
+    private DomainRepository domainRepository;
+    @Autowired
+    private DomainLinkToAccountRequestRepository requestRepository;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private UserRepository userRepository;
+
+    @BeforeEach
+    @Transactional
+    void before(){
+        Account account = new Account();
+        account.setKeyIdentifier("testkid1");
+        account.setProjectName("Test Project");
+        account = accountRepository.save(account);
+
+        User user = new User();
+        user.getAccounts().add(account);
+        user.setIdentifier(UUID.randomUUID());
+        user.setUsername("test@test.com");
+        user = userRepository.save(user);
+
+        account.getAccountUsers().add(user);
+        accountRepository.save(account);
+
+        Domain domain = new Domain();
+        domain.setBase("winllc-dev.com");
+        domain.getCanIssueAccounts().add(account);
+
+        domain = domainRepository.save(domain);
+
+        DomainLinkToAccountRequest request = DomainLinkToAccountRequest.buildNew();
+        request.setAccountId(account.getId());
+        request.setRequestedDomainIds(Collections.singleton(domain.getId()));
+        requestRepository.save(request);
+    }
+
+    @AfterEach
+    @Transactional
+    void after(){
+        domainRepository.deleteAll();
+        requestRepository.deleteAll();
+        accountRepository.deleteAll();
+        userRepository.deleteAll();
+    }
+
+    @Test
+    void getAllRequests() {
+        List<DomainLinkToAccountRequestInfo> allRequests = linkToAccountRequestService.getAllRequests();
+        assertEquals(1, allRequests.size());
+    }
+
+    @Test
+    void getUnapprovedRequests() {
+        List<DomainLinkToAccountRequestInfo> allRequests = linkToAccountRequestService.getUnapprovedRequests();
+        assertEquals(1, allRequests.size());
+    }
+
+    @Test
+    void getById() throws RAObjectNotFoundException {
+        DomainLinkToAccountRequest request = requestRepository.findAll().get(0);
+        request = linkToAccountRequestService.getById(request.getId());
+        assertNotNull(request);
+    }
+
+    @Test
+    void createDomainRequest() throws NotAuthorizedException, RAObjectNotFoundException {
+        Account account = accountRepository.findAll().get(0);
+        Domain domain = domainRepository.findAll().get(0);
+
+        DomainLinkToAccountRequestForm form = new DomainLinkToAccountRequestForm();
+        form.setAccountId(account.getId());
+        form.setRequestedDomainIds(Collections.singletonList(domain.getId()));
+
+        UserDetails userDetails =
+                new org.springframework.security.core.userdetails.User("test@test.com", "", new ArrayList<>());
+
+        Long domainRequest = linkToAccountRequestService.createDomainRequest(form, userDetails);
+        assertTrue(domainRequest > 0);
+    }
+
+    @Test
+    @Transactional
+    void domainRequestDecision() throws RAException {
+        DomainLinkToAccountRequest request = requestRepository.findAll().get(0);
+
+        DomainLinkRequestDecision decision = new DomainLinkRequestDecision();
+        decision.setRequestId(request.getId());
+        decision.setStatus("approve");
+        linkToAccountRequestService.domainRequestDecision(decision);
+
+        Account account = accountRepository.findAll().get(0);
+        Set<Domain> canIssueDomains = account.getCanIssueDomains();
+        boolean canIssue = canIssueDomains.stream().anyMatch(d -> d.getBase().contentEquals("winllc-dev.com"));
+        assertTrue(canIssue);
+    }
+}

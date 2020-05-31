@@ -2,8 +2,10 @@ package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
+import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,7 +17,7 @@ public class ServerEntry extends AbstractPersistable<Long> implements AccountOwn
     private String fqdn;
     @JsonIgnore
     @ElementCollection
-    private List<String> alternateDnsValues;
+    private List<String> alternateDnsValues = new ArrayList<>();
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name="domainParent_fk")
@@ -32,6 +34,32 @@ public class ServerEntry extends AbstractPersistable<Long> implements AccountOwn
     private Set<CertificateRequest> certificateRequests;
     private String openidClientId;
     private String openidClientRedirectUrl;
+
+    @PreRemove
+    private void preRemove(){
+        if(domainParent != null){
+            setDomainParent(null);
+        }
+
+        if(account != null){
+            Set<ServerEntry> serverEntries = account.getServerEntries();
+            if(!CollectionUtils.isEmpty(serverEntries)){
+                account.getServerEntries().remove(this);
+            }
+        }
+
+        if(!CollectionUtils.isEmpty(policyGroups)){
+            for(AttributePolicyGroup policyGroup : policyGroups){
+                policyGroup.getServerEntries().remove(this);
+            }
+        }
+
+        if(!CollectionUtils.isEmpty(certificateRequests)){
+            for(CertificateRequest request : certificateRequests){
+                request.setServerEntry(null);
+            }
+        }
+    }
 
     public String getHostname() {
         return hostname;

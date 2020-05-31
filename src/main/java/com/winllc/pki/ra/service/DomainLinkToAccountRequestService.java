@@ -161,6 +161,7 @@ public class DomainLinkToAccountRequestService {
                 throw new RAException("Status not valid: "+decision.getStatus());
             }
 
+            //workaround for element collection
             Set<Long> domainIds = new HashSet<>(request.getRequestedDomainIds());
             request.setRequestedDomainIds(domainIds);
             request = requestRepository.save(request);

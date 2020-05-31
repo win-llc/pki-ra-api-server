@@ -16,6 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -38,57 +39,61 @@ public class DomainService {
     private DomainRepository domainRepository;
 
     @GetMapping("/all")
-    public ResponseEntity<?> getAllAvailableDomains(){
+    @ResponseStatus(HttpStatus.OK)
+    public List<Domain> getAllAvailableDomains(){
         List<Domain> all = domainRepository.findAll();
 
-        return ResponseEntity.ok(all);
+        return all;
     }
 
     @GetMapping("/searchByBase/{search}")
-    public ResponseEntity<?> searchDomainByBaseDomain(@PathVariable String search){
-        return ResponseEntity.ok(domainRepository.findAllByBaseContains(search));
+    @ResponseStatus(HttpStatus.OK)
+    public List<Domain> searchDomainByBaseDomain(@PathVariable String search){
+        return domainRepository.findAllByBaseContains(search);
     }
 
     @GetMapping("/byId/{id}")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> getDomainById(@PathVariable Long id) throws Exception {
+    public DomainInfo getDomainById(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<Domain> optionalDomain = domainRepository.findById(id);
         if(optionalDomain.isPresent()){
             Domain domain = optionalDomain.get();
             Hibernate.initialize(domain.getCanIssueAccounts());
-            return ResponseEntity.ok(new DomainInfo(domain, true));
+            return new DomainInfo(domain, true);
         }else{
             throw new RAObjectNotFoundException(Domain.class, id);
         }
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createDomain(@Valid @RequestBody DomainForm form){
+    @ResponseStatus(HttpStatus.CREATED)
+    public Long createDomain(@Valid @RequestBody DomainForm form){
         Domain domain = new Domain();
         domain.setBase(form.getBase());
         domain = domainRepository.save(domain);
 
-        return ResponseEntity.ok(domain.getId());
+        return domain.getId();
     }
 
     @PostMapping("/update")
-    public ResponseEntity<?> updateDomain(@Valid @RequestBody DomainForm form) throws RAObjectNotFoundException{
+    @ResponseStatus(HttpStatus.OK)
+    public Domain updateDomain(@Valid @RequestBody DomainForm form) throws RAObjectNotFoundException{
         Optional<Domain> optionalDomain = domainRepository.findById(form.getId());
         if(optionalDomain.isPresent()){
             Domain existing = optionalDomain.get();
             existing.setBase(form.getBase());
             existing = domainRepository.save(existing);
-            return ResponseEntity.ok(existing);
+            return existing;
         }else{
             throw new RAObjectNotFoundException(form);
         }
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteDomain(@PathVariable Long id){
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteDomain(@PathVariable Long id){
         domainRepository.deleteById(id);
-        return ResponseEntity.ok().build();
     }
-
 
 }

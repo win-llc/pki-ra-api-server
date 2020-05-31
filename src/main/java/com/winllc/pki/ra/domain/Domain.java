@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.util.CollectionUtils;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ManyToMany;
-import javax.persistence.PreRemove;
+import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,6 +16,9 @@ public class Domain extends AbstractPersistable<Long> {
     @JsonIgnore
     @ManyToMany(mappedBy = "canIssueDomains")
     private Set<Account> canIssueAccounts;
+    @JsonIgnore
+    @OneToMany(mappedBy = "domainParent")
+    private Set<ServerEntry> serverEntries;
 
     @PreRemove
     private void preRemove() {
@@ -26,6 +26,13 @@ public class Domain extends AbstractPersistable<Long> {
         if (!CollectionUtils.isEmpty(accounts)) {
             for (Account account : accounts) {
                 account.getCanIssueDomains().remove(this);
+            }
+        }
+
+        Set<ServerEntry> serverEntries = getServerEntries();
+        if(!CollectionUtils.isEmpty(serverEntries)){
+            for(ServerEntry serverEntry : serverEntries){
+                serverEntry.setDomainParent(null);
             }
         }
     }
@@ -45,5 +52,13 @@ public class Domain extends AbstractPersistable<Long> {
 
     public void setCanIssueAccounts(Set<Account> canIssueAccounts) {
         this.canIssueAccounts = canIssueAccounts;
+    }
+
+    public Set<ServerEntry> getServerEntries() {
+        return serverEntries;
+    }
+
+    public void setServerEntries(Set<ServerEntry> serverEntries) {
+        this.serverEntries = serverEntries;
     }
 }

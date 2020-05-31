@@ -2,8 +2,10 @@ package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
+import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
+import java.util.Set;
 
 @Entity
 public class AccountRequest extends AbstractPersistable<Long> {
@@ -25,6 +27,13 @@ public class AccountRequest extends AbstractPersistable<Long> {
     @PreRemove
     private void preRemove(){
         setAccountOwner(null);
+
+        if(accountOwner != null){
+            Set<AccountRequest> accountRequests = accountOwner.getAccountRequests();
+            if(!CollectionUtils.isEmpty(accountRequests)){
+                accountRequests.remove(this);
+            }
+        }
     }
 
     public String getProjectName() {

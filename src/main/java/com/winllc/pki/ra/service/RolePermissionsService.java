@@ -5,6 +5,7 @@ import com.winllc.pki.ra.config.PermissionProperties;
 import com.winllc.pki.ra.domain.RolePermission;
 import com.winllc.pki.ra.repository.RolePermissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
@@ -27,25 +28,29 @@ public class RolePermissionsService {
     private RolePermissionRepository rolePermissionRepository;
 
     @GetMapping("/available")
-    public ResponseEntity<?> getAvailableRoles(){
-        return ResponseEntity.ok(rolePermissionRepository.getAllRoleNames());
+    @ResponseStatus(HttpStatus.OK)
+    public List<String> getAvailableRoles(){
+        return rolePermissionRepository.getAllRoleNames();
     }
 
     @GetMapping("/permissions/available")
-    public ResponseEntity<?> getAvailablePermissions(){
-        return ResponseEntity.ok(permissionProperties.getAvailable());
+    @ResponseStatus(HttpStatus.OK)
+    public List<String> getAvailablePermissions(){
+        return permissionProperties.getAvailable();
     }
 
     @GetMapping("/permissions/byRoleName/{role}")
-    public ResponseEntity<?> getAllForRole(@PathVariable String role){
+    @ResponseStatus(HttpStatus.OK)
+    public List<RolePermission> getAllForRole(@PathVariable String role){
 
         List<RolePermission> allByRoleName = rolePermissionRepository.findAllByRoleName(role);
 
-        return ResponseEntity.ok(allByRoleName);
+        return allByRoleName;
     }
 
     @PostMapping("/permissions/update")
-    public ResponseEntity updateRolePermissions(@Valid @RequestBody RolePermissionsForm form){
+    @ResponseStatus(HttpStatus.OK)
+    public RolePermissionsForm updateRolePermissions(@Valid @RequestBody RolePermissionsForm form){
         List<RolePermission> currentRolePermissions = rolePermissionRepository.findAllByRoleName(form.getRoleName());
 
         Map<Boolean, List<RolePermission>> existingPermissionInNewList = currentRolePermissions.stream()
@@ -80,6 +85,6 @@ public class RolePermissionsService {
         newForm.setRoleName(form.getRoleName());
         newForm.setPermissions(existingKeep.stream().map(p -> p.getPermission()).collect(Collectors.toList()));
 
-        return ResponseEntity.ok(newForm);
+        return newForm;
     }
 }

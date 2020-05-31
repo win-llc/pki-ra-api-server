@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PreRemove;
 import java.sql.Timestamp;
 
 @Entity
@@ -30,6 +31,13 @@ public class AccountRestriction extends AbstractPersistable<Long> implements Acc
     @ManyToOne
     @JoinColumn(name="markCompletedByUser_fk")
     private User markedCompletedByUser;
+
+    @PreRemove
+    private void preRemove(){
+        if(account != null){
+            account.getAccountRestrictions().remove(this);
+        }
+    }
 
     public AccountRestrictionType getType() {
         return type;

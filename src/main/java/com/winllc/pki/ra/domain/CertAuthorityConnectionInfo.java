@@ -23,7 +23,7 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
     private String revokePath;
     private String searchPath;
     @JsonIgnore
-    @OneToMany(mappedBy = "certAuthorityConnectionInfo", fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "certAuthorityConnectionInfo", fetch = FetchType.EAGER)
     private Set<CertAuthorityConnectionProperty> properties;
 
     @PreRemove

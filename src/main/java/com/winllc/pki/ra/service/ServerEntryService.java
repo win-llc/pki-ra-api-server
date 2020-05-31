@@ -23,8 +23,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -52,7 +54,8 @@ public class ServerEntryService {
     private UserRepository userRepository;
 
     @PostMapping("/create")
-    public ResponseEntity<?> createServerEntry(@Valid @RequestBody ServerEntryForm form) throws RAObjectNotFoundException {
+    @ResponseStatus(HttpStatus.CREATED)
+    public Long createServerEntry(@Valid @RequestBody ServerEntryForm form) throws RAObjectNotFoundException {
 
         Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
 
@@ -65,8 +68,6 @@ public class ServerEntryService {
                     .findAny();
 
             if(optionalDomain.isPresent()){
-                //String hostname = form.getFqdn().split(".")[0];
-
                 Domain domain = optionalDomain.get();
                 ServerEntry entry = new ServerEntry();
                 entry.setAccount(account);
@@ -78,7 +79,7 @@ public class ServerEntryService {
 
                 log.info("Created a Server Entry: "+entry);
 
-                return ResponseEntity.ok(entry.getId());
+                return entry.getId();
             }else{
                 throw new RAObjectNotFoundException(Domain.class, form.getFqdn());
             }
@@ -89,8 +90,9 @@ public class ServerEntryService {
     }
 
     @PostMapping("/update")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> updateServerEntry(@Valid @RequestBody ServerEntryForm form) throws RAException {
+    public ServerEntryInfo updateServerEntry(@Valid @RequestBody ServerEntryForm form) throws RAException {
         //todo update attributes in directory
 
         log.info("Is account linked: "+form.isAccountLinkedForm());
@@ -104,9 +106,12 @@ public class ServerEntryService {
                 serverEntry.setAlternateDnsValues(form.getAlternateDnsValues());
                 serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
 
+                List<String> alternateDnsValues = new ArrayList<>(serverEntry.getAlternateDnsValues());
+                serverEntry.setAlternateDnsValues(alternateDnsValues);
+
                 serverEntry = serverEntryRepository.save(serverEntry);
 
-                return ResponseEntity.ok(entryToInfo(serverEntry));
+                return entryToInfo(serverEntry);
             }else{
                 throw new RAException("Invalid Server Entry form");
             }
@@ -116,30 +121,33 @@ public class ServerEntryService {
     }
 
     @GetMapping("/byId/{id}")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> getServerEntry(@PathVariable Long id) throws RAObjectNotFoundException {
+    public ServerEntryInfo getServerEntry(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<ServerEntry> entryOptional = serverEntryRepository.findById(id);
 
         if(entryOptional.isPresent()){
             ServerEntry entry = entryOptional.get();
 
-            return ResponseEntity.ok(entryToInfo(entry));
+            return entryToInfo(entry);
         }else{
             throw new RAObjectNotFoundException(ServerEntry.class, id);
         }
     }
 
     @GetMapping("/allByAccountId/{accountId}")
-    public ResponseEntity<?> getAllServerEntriesForAccount(@PathVariable Long accountId){
+    @ResponseStatus(HttpStatus.OK)
+    public List<ServerEntry> getAllServerEntriesForAccount(@PathVariable Long accountId){
 
         List<ServerEntry> allByAccountId = serverEntryRepository.findAllByAccountId(accountId);
 
-        return ResponseEntity.ok(allByAccountId);
+        return allByAccountId;
     }
 
     @GetMapping("/allForUser")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> getAllServerEntriesForUser(@AuthenticationPrincipal RAUser raUser) throws RAObjectNotFoundException {
+    public List<ServerEntryInfo> getAllServerEntriesForUser(@AuthenticationPrincipal UserDetails raUser) throws RAObjectNotFoundException {
 
         Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
 
@@ -158,15 +166,16 @@ public class ServerEntryService {
                 entries.addAll(temp);
             }
 
-            return ResponseEntity.ok(entries);
+            return entries;
         }else{
             throw new RAObjectNotFoundException(User.class, raUser.getUsername());
         }
     }
 
     @PostMapping("/enableForOIDConnect")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> enableForOIDConnect(@RequestBody ServerEntryForm form) throws RAException {
+    public ServerEntryInfo enableForOIDConnect(@RequestBody ServerEntryForm form) throws RAException {
         //todo
 
         Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(form.getId());
@@ -174,6 +183,7 @@ public class ServerEntryService {
             ServerEntry serverEntry = serverEntryOptional.get();
 
             try {
+                //todo generify
                 serverEntry = keycloakService.createClient(serverEntry);
 
                 if(serverEntry != null){
@@ -181,7 +191,7 @@ public class ServerEntryService {
                     Hibernate.initialize(serverEntry.getAlternateDnsValues());
                     serverEntry = serverEntryRepository.save(serverEntry);
 
-                    return ResponseEntity.ok(entryToInfo(serverEntry));
+                    return entryToInfo(serverEntry);
                 }else{
                     throw new RAException("Could not create OIDC client");
                 }
@@ -194,8 +204,9 @@ public class ServerEntryService {
     }
 
     @PostMapping("/disableForOIDConnect")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> disableForOIDConnect(@RequestBody ServerEntryForm form) throws RAException {
+    public ServerEntryInfo disableForOIDConnect(@RequestBody ServerEntryForm form) throws RAException {
         //todo
 
         Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(form.getId());
@@ -204,7 +215,7 @@ public class ServerEntryService {
             ServerEntry serverEntry = optionalServerEntry.get();
             serverEntry = keycloakService.deleteClient(serverEntry);
             if(serverEntry != null){
-                return ResponseEntity.ok(entryToInfo(serverEntry));
+                return entryToInfo(serverEntry);
             }else {
                 throw new RAException("Did not delete the OIDC client");
             }
@@ -216,7 +227,8 @@ public class ServerEntryService {
     }
 
     @PostMapping("/buildDeploymentPackage")
-    public ResponseEntity<?> buildDeploymentPackage(@RequestBody ServerEntryForm form) throws RAObjectNotFoundException {
+    @ResponseStatus(HttpStatus.OK)
+    public List<String> buildDeploymentPackage(@RequestBody ServerEntryForm form) throws RAObjectNotFoundException {
 
         Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(form.getId());
         if(serverEntryOptional.isPresent()) {
@@ -225,7 +237,7 @@ public class ServerEntryService {
             if(optionalAccount.isPresent()){
                 Account account = optionalAccount.get();
                 ServerEntryDockerDeploymentFile deploymentFile = buildDeploymentFile(serverEntry, account);
-                return ResponseEntity.ok(deploymentFile.buildContent());
+                return deploymentFile.buildContent();
             }else{
                 throw new RAObjectNotFoundException(Account.class, serverEntry.getAccount().getId());
             }
@@ -235,7 +247,8 @@ public class ServerEntryService {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteServerEntry(@PathVariable Long id) throws RAException {
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteServerEntry(@PathVariable Long id) throws RAException {
 
         Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
         if(serverEntryOptional.isPresent()){
@@ -247,8 +260,6 @@ public class ServerEntryService {
             }
 
             serverEntryRepository.deleteById(id);
-
-            return ResponseEntity.ok().build();
         }else{
             throw new RAObjectNotFoundException(ServerEntry.class, id);
         }

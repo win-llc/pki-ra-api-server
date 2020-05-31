@@ -12,7 +12,7 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
 
     private String name;
     @JsonIgnore
-    @OneToMany(mappedBy = "attributePolicyGroup")
+    @OneToMany(mappedBy = "attributePolicyGroup", orphanRemoval = true)
     private Set<AttributePolicy> attributePolicies;
     @JsonIgnore
     @ManyToMany(cascade = {
@@ -24,6 +24,15 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
             inverseJoinColumns = @JoinColumn(name = "serverEntry_id")
     )
     private Set<ServerEntry> serverEntries;
+
+    @PreRemove
+    private void preRemove(){
+        if(serverEntries != null){
+            for(ServerEntry serverEntry : serverEntries){
+                serverEntry.getPolicyGroups().remove(this);
+            }
+        }
+    }
 
     public String getName() {
         return name;

@@ -14,12 +14,15 @@ public class DomainForm extends ValidForm<Domain> {
         this.base = entity.getBase();
     }
 
-    private DomainForm() {
+    public DomainForm(String base) {
+        this.base = base;
     }
+
+    private DomainForm(){}
 
     @Override
     protected void processIsValid() {
-
+        //todo
     }
 
     public String getBase() {

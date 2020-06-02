@@ -28,8 +28,22 @@ public class User extends AbstractPersistable<Long> {
     @JsonIgnore
     @ManyToMany(mappedBy = "accountUsers")
     private Set<Account> accounts;
+    @JsonIgnore
+    @OneToMany(mappedBy = "addedByUser", cascade = CascadeType.PERSIST)
+    private Set<AccountRestriction> accountRestrictionsAddedByUser;
+    @JsonIgnore
+    @OneToMany(mappedBy = "markedCompletedByUser", cascade = CascadeType.PERSIST)
+    private Set<AccountRestriction> accountRestrictionsMarkedCompletedByUser;
+
 
     public User() {
+    }
+
+    public User(User user) {
+        this(
+                user.getIdentifier(),
+                user.getUsername(),
+                user.getRoles());
     }
 
     @PreRemove
@@ -46,13 +60,20 @@ public class User extends AbstractPersistable<Long> {
                 request.setAccountOwner(null);
             }
         }
-    }
 
-    public User(User user) {
-        this(
-                user.getIdentifier(),
-                user.getUsername(),
-                user.getRoles());
+        Set<AccountRestriction> markedCompletedByUser = getAccountRestrictionsMarkedCompletedByUser();
+        if(!CollectionUtils.isEmpty(markedCompletedByUser)){
+            for(AccountRestriction accountRestriction : markedCompletedByUser){
+                accountRestriction.setMarkedCompletedByUser(null);
+            }
+        }
+
+        Set<AccountRestriction> addedByUser = getAccountRestrictionsAddedByUser();
+        if(!CollectionUtils.isEmpty(addedByUser)){
+            for(AccountRestriction accountRestriction : addedByUser){
+                accountRestriction.setAddedByUser(null);
+            }
+        }
     }
 
     @PersistenceConstructor
@@ -105,6 +126,23 @@ public class User extends AbstractPersistable<Long> {
         this.accounts = accounts;
     }
 
+    public Set<AccountRestriction> getAccountRestrictionsAddedByUser() {
+        if(accountRestrictionsAddedByUser == null) accountRestrictionsAddedByUser = new HashSet<>();
+        return accountRestrictionsAddedByUser;
+    }
+
+    public void setAccountRestrictionsAddedByUser(Set<AccountRestriction> accountRestrictionsAddedByUser) {
+        this.accountRestrictionsAddedByUser = accountRestrictionsAddedByUser;
+    }
+
+    public Set<AccountRestriction> getAccountRestrictionsMarkedCompletedByUser() {
+        if(accountRestrictionsMarkedCompletedByUser == null) accountRestrictionsMarkedCompletedByUser = new HashSet<>();
+        return accountRestrictionsMarkedCompletedByUser;
+    }
+
+    public void setAccountRestrictionsMarkedCompletedByUser(Set<AccountRestriction> accountRestrictionsMarkedCompletedByUser) {
+        this.accountRestrictionsMarkedCompletedByUser = accountRestrictionsMarkedCompletedByUser;
+    }
 
     @Override
     public boolean equals(Object o) {

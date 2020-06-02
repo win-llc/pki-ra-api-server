@@ -12,7 +12,7 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
 
     private String name;
     @JsonIgnore
-    @OneToMany(mappedBy = "attributePolicyGroup", orphanRemoval = true)
+    @OneToMany(mappedBy = "attributePolicyGroup")
     private Set<AttributePolicy> attributePolicies;
     @JsonIgnore
     @ManyToMany(cascade = {
@@ -43,6 +43,7 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
     }
 
     public Set<AttributePolicy> getAttributePolicies() {
+        if(attributePolicies == null) attributePolicies = new HashSet<>();
         return attributePolicies;
     }
 

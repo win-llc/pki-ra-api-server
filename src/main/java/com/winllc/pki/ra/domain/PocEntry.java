@@ -2,10 +2,7 @@ package com.winllc.pki.ra.domain;
 
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.PreRemove;
+import javax.persistence.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
@@ -30,7 +27,9 @@ public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedE
 
     @PreRemove
     private void preRemove(){
-        setAccount(null);
+        if(account != null){
+            account.getPocs().remove(this);
+        }
     }
 
     public String getEmail() {

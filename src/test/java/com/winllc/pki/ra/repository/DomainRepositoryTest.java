@@ -3,6 +3,7 @@ package com.winllc.pki.ra.repository;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
+import com.winllc.pki.ra.service.AccountService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.transaction.Transactional;
 
 import java.util.Collections;
@@ -26,6 +29,10 @@ class DomainRepositoryTest {
     private DomainRepository domainRepository;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private AccountService accountService;
+    @Autowired
+    private EntityManagerFactory entityManagerFactory;
 
     @BeforeEach
     @Transactional
@@ -33,7 +40,8 @@ class DomainRepositoryTest {
         Account account = new Account();
         account.setProjectName("Test Name");
         account.setKeyIdentifier("testkid1");
-        account = accountRepository.save(account);
+
+        account = saveAccount(account);
 
         Domain domain1 = new Domain();
         domain1.setBase("test.winllc-dev.com");
@@ -47,7 +55,20 @@ class DomainRepositoryTest {
 
         account.getCanIssueDomains().add(domain1);
         account.getCanIssueDomains().add(domain2);
-        accountRepository.save(account);
+        saveAccount(account);
+    }
+
+    @Transactional
+    Account saveAccount(Account account){
+        /*
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        entityManager.getTransaction().begin();
+        entityManager.persist(account);
+        account = entityManager.find(Account.class, account.getId());
+        entityManager.getTransaction().commit();
+
+         */
+        return accountRepository.save(account);
     }
 
     @AfterEach

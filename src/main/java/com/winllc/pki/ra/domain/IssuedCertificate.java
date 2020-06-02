@@ -33,8 +33,14 @@ public class IssuedCertificate extends AbstractPersistable<Long> implements Acco
         details.setStatus(this.getStatus());
         details.setIssuer(this.getIssuerDn());
         details.setCertificateBase64(this.getIssuedCertificate());
-
         return details;
+    }
+
+    @PreRemove
+    private void preRemove(){
+        if(account != null){
+            account.getIssuedCertificates().remove(this);
+        }
     }
 
     public String getCertAuthorityName() {

@@ -10,6 +10,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.PreRemove;
 import java.sql.Timestamp;
+import java.util.Objects;
 
 @Entity
 public class AccountRestriction extends AbstractPersistable<Long> implements AccountOwnedEntity {
@@ -36,6 +37,14 @@ public class AccountRestriction extends AbstractPersistable<Long> implements Acc
     private void preRemove(){
         if(account != null){
             account.getAccountRestrictions().remove(this);
+        }
+
+        if(addedByUser != null){
+            addedByUser.getAccountRestrictionsAddedByUser().remove(this);
+        }
+
+        if(markedCompletedByUser != null){
+            markedCompletedByUser.getAccountRestrictionsMarkedCompletedByUser().remove(this);
         }
     }
 
@@ -102,4 +111,5 @@ public class AccountRestriction extends AbstractPersistable<Long> implements Acc
     public void setMarkedCompletedByUser(User markedCompletedByUser) {
         this.markedCompletedByUser = markedCompletedByUser;
     }
+
 }

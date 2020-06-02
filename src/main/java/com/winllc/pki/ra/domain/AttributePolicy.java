@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PreRemove;
 
 @Entity
 public class AttributePolicy extends AbstractPersistable<Long> {
@@ -17,6 +18,13 @@ public class AttributePolicy extends AbstractPersistable<Long> {
     @JsonIgnore
     @JoinColumn(name="attributePolicyGroup_fk")
     private AttributePolicyGroup attributePolicyGroup;
+
+    @PreRemove
+    private void preRemove(){
+        if(attributePolicyGroup != null){
+            attributePolicyGroup.getAttributePolicies().remove(this);
+        }
+    }
 
     public boolean isVariableValue(){
         return attributeValue != null && attributeValue.startsWith("{") && attributeValue.endsWith("}");

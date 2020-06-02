@@ -41,6 +41,17 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
         return request;
     }
 
+    @PreRemove
+    private void preRemove(){
+        if(account != null){
+            account.getCertificateRequests().remove(this);
+        }
+
+        if(serverEntry != null){
+            serverEntry.getCertificateRequests().remove(this);
+        }
+    }
+
     public String getCsr() {
         return csr;
     }

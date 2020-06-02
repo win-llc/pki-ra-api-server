@@ -65,6 +65,11 @@ public class AccountService {
         return account;
     }
 
+    @Transactional
+    public Account save(Account account){
+        return accountRepository.save(account);
+    }
+
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public Long createNewAccount(@Valid @RequestBody AccountRequest form){

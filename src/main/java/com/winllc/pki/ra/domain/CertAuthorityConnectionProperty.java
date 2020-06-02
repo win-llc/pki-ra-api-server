@@ -20,7 +20,9 @@ public class CertAuthorityConnectionProperty extends AbstractPersistable<Long> {
 
     @PreRemove
     private void preRemove(){
-        this.certAuthorityConnectionInfo = null;
+        if(this.certAuthorityConnectionInfo != null){
+            this.certAuthorityConnectionInfo.getProperties().remove(this);
+        }
     }
 
     public String getName() {

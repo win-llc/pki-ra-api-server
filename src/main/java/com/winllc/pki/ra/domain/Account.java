@@ -20,7 +20,7 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
     private boolean enabled = true;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<PocEntry> pocs;
     @JsonIgnore
     @ManyToMany(cascade = {
@@ -46,14 +46,17 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
     @JsonIgnore
     private Set<String> preAuthorizationIdentifiers;
     @JsonIgnore
-    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<AccountRestriction> accountRestrictions;
     @JsonIgnore
-    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<CertificateRequest> certificateRequests;
     @JsonIgnore
-    @OneToMany(mappedBy = "account", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<ServerEntry> serverEntries;
+    @JsonIgnore
+    @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    private Set<IssuedCertificate> issuedCertificates;
 
     @PreRemove
     private void preRemove(){
@@ -71,6 +74,33 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
             }
         }
 
+        Set<Domain> domains = getCanIssueDomains();
+        if(!CollectionUtils.isEmpty(domains)){
+            for(Domain domain : domains){
+                domain.getCanIssueAccounts().remove(this);
+            }
+        }
+
+        Set<User> users = getAccountUsers();
+        if(!CollectionUtils.isEmpty(users)){
+            for(User user : users){
+                user.getAccounts().remove(this);
+            }
+        }
+
+        Set<PocEntry> pocEntries = getPocs();
+        if(!CollectionUtils.isEmpty(pocEntries)){
+            for(PocEntry pocEntry : pocEntries){
+                pocEntry.setAccount(this);
+            }
+        }
+
+        Set<IssuedCertificate> issuedCertificates = getIssuedCertificates();
+        if(!CollectionUtils.isEmpty(issuedCertificates)){
+            for(IssuedCertificate issuedCertificate : issuedCertificates){
+                issuedCertificate.setAccount(null);
+            }
+        }
     }
 
     public String getKeyIdentifier() {
@@ -113,7 +143,6 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
         this.acmeRequireHttpValidation = acmeRequireHttpValidation;
     }
 
-
     public Set<User> getAccountUsers() {
         if(accountUsers == null) accountUsers = new HashSet<>();
         return accountUsers;
@@ -150,11 +179,13 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
     }
 
     public Set<AccountRestriction> getAccountRestrictions() {
+        if(accountRestrictions == null) accountRestrictions = new HashSet<>();
         return accountRestrictions;
     }
 
     public void setAccountRestrictions(Set<AccountRestriction> accountRestrictions) {
-        this.accountRestrictions = accountRestrictions;
+        this.getAccountRestrictions().clear();
+        this.getAccountRestrictions().addAll(accountRestrictions);
     }
 
     public void addPoc(PocEntry pocEntry){
@@ -162,6 +193,7 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
     }
 
     public Set<CertificateRequest> getCertificateRequests() {
+        if(certificateRequests == null) certificateRequests = new HashSet<>();
         return certificateRequests;
     }
 
@@ -176,6 +208,15 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
 
     public void setServerEntries(Set<ServerEntry> serverEntries) {
         this.serverEntries = serverEntries;
+    }
+
+    public Set<IssuedCertificate> getIssuedCertificates() {
+        if(issuedCertificates == null) issuedCertificates = new HashSet<>();
+        return issuedCertificates;
+    }
+
+    public void setIssuedCertificates(Set<IssuedCertificate> issuedCertificates) {
+        this.issuedCertificates = issuedCertificates;
     }
 
     @Override

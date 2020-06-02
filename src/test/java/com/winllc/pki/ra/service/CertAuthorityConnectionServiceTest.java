@@ -87,7 +87,6 @@ class CertAuthorityConnectionServiceTest {
         account.setMacKey("testmac1");
         account.setProjectName("Test Project");
         accountRepository.save(account);
-
     }
 
     @AfterEach

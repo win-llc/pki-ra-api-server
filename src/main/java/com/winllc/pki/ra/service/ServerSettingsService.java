@@ -1,10 +1,12 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.domain.ServerSettings;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.ServerSettingsRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,27 +38,37 @@ public class ServerSettingsService {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<?> findAll(){
-        return ResponseEntity.ok(repository.findAll());
+    @ResponseStatus(HttpStatus.OK)
+    public List<ServerSettings> findAll(){
+        return repository.findAll();
     }
 
     @PostMapping("/update")
-    public ResponseEntity<?> updateSettings(@RequestBody ServerSettings serverSettings){
+    @ResponseStatus(HttpStatus.OK)
+    public ServerSettings updateSettings(@RequestBody ServerSettings serverSettings){
         ServerSettings updated = updateSetting(serverSettings);
-        return ResponseEntity.ok(updated);
+        return updated;
     }
 
     @PostMapping("/updateAll")
-    public ResponseEntity<?> updateAllSettings(@RequestBody List<ServerSettings> settingsList){
+    @ResponseStatus(HttpStatus.OK)
+    public List<ServerSettings> updateAllSettings(@RequestBody List<ServerSettings> settingsList){
         List<ServerSettings> updatedList = new ArrayList<>();
         for(ServerSettings settings : settingsList){
             updatedList.add(updateSetting(settings));
         }
-        return ResponseEntity.ok(updatedList);
+        return updatedList;
     }
 
-    public Optional<ServerSettings> getSetting(String name){
-        return repository.findDistinctByPropertyEquals(name);
+    @GetMapping("/getByName/{name}")
+    @ResponseStatus(HttpStatus.OK)
+    public ServerSettings getSetting(@PathVariable String name) throws RAObjectNotFoundException {
+        Optional<ServerSettings> distinctByPropertyEquals = repository.findDistinctByPropertyEquals(name);
+        if(distinctByPropertyEquals.isPresent()){
+            return distinctByPropertyEquals.get();
+        }else{
+            throw new RAObjectNotFoundException(ServerSettings.class, name);
+        }
     }
 
     private void addSetting(ServerSettings serverSettings){
@@ -68,7 +80,7 @@ public class ServerSettingsService {
         }
     }
 
-    public ServerSettings updateSetting(ServerSettings serverSettings){
+    private ServerSettings updateSetting(ServerSettings serverSettings){
         Optional<ServerSettings> optionalSetting = repository.findDistinctByPropertyEquals(serverSettings.getProperty());
         if(optionalSetting.isPresent()){
             ServerSettings settings = optionalSetting.get();

@@ -3,9 +3,11 @@ package com.winllc.pki.ra.service;
 import com.winllc.acme.common.DirectoryDataSettings;
 import com.winllc.pki.ra.domain.TermsOfService;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.TermsOfServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,55 +27,61 @@ public class TermsOfServiceManagementService {
     private String serverBaseUrl;
 
     @GetMapping("/api/tos/all")
-    public ResponseEntity<?> getAll(){
+    @ResponseStatus(HttpStatus.OK)
+    public List<TermsOfService> getAll(){
 
         List<TermsOfService> termsList = repository.findAll();
 
-        return ResponseEntity.ok(termsList);
+        return termsList;
     }
 
     @GetMapping("/api/tos/getAllForDirectory/{directory}")
-    public ResponseEntity<?> getAllForDirectory(@PathVariable String directory){
+    @ResponseStatus(HttpStatus.OK)
+    public List<TermsOfService> getAllForDirectory(@PathVariable String directory){
 
         List<TermsOfService> termsList = repository.findAllByForDirectoryName(directory);
 
-        return ResponseEntity.ok(termsList);
+        return termsList;
     }
 
     @GetMapping("/api/tos/getById/{id}")
-    public ResponseEntity<?> getById(@PathVariable long id){
+    @ResponseStatus(HttpStatus.OK)
+    public TermsOfService getById(@PathVariable long id) throws RAObjectNotFoundException {
 
         Optional<TermsOfService> optionalTermsOfService = repository.findById(id);
 
         if(optionalTermsOfService.isPresent()){
-            return ResponseEntity.ok(optionalTermsOfService.get());
+            return optionalTermsOfService.get();
         }else{
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(TermsOfService.class, id);
         }
     }
 
     @GetMapping("/api/tos/version/{versionId}")
-    public ResponseEntity<?> getByVersionId(@PathVariable String versionId){
+    @ResponseStatus(HttpStatus.OK)
+    public TermsOfService getByVersionId(@PathVariable String versionId) throws RAObjectNotFoundException {
         Optional<TermsOfService> optionalTermsOfService = repository.findByVersionId(versionId);
         if(optionalTermsOfService.isPresent()){
-            return ResponseEntity.ok(optionalTermsOfService.get());
+            return optionalTermsOfService.get();
         }else{
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(TermsOfService.class, versionId);
         }
     }
 
     @GetMapping("/tos/version/{versionId}/view")
-    public ResponseEntity<?> getForView(@PathVariable String versionId){
+    @ResponseStatus(HttpStatus.OK)
+    public String getForView(@PathVariable String versionId) throws RAObjectNotFoundException {
         Optional<TermsOfService> optionalTermsOfService = repository.findByVersionId(versionId);
         if(optionalTermsOfService.isPresent()){
-            return ResponseEntity.ok(optionalTermsOfService.get().getText());
+            return optionalTermsOfService.get().getText();
         }else{
-            return ResponseEntity.notFound().build();
+            throw new RAObjectNotFoundException(TermsOfService.class, versionId);
         }
     }
 
     @PostMapping("/api/tos/save/{connectionName}")
-    public ResponseEntity<?> save(@PathVariable("connectionName") String acmeServerConnectionName,
+    @ResponseStatus(HttpStatus.CREATED)
+    public Long save(@PathVariable("connectionName") String acmeServerConnectionName,
                                   @Valid @RequestBody TermsOfService tos) throws AcmeConnectionException, IOException {
         DirectoryDataSettings settings = acmeServerManagementService.getDirectorySettingsByName(acmeServerConnectionName, tos.getForDirectoryName());
 
@@ -81,12 +89,14 @@ public class TermsOfServiceManagementService {
 
         newTos = createAndUpdateAcmeServer(newTos, settings, acmeServerConnectionName);
 
-        return ResponseEntity.ok(newTos.getId());
+        return newTos.getId();
     }
 
     @PostMapping("/api/tos/update/{connectionName}")
-    public ResponseEntity<?> update(@PathVariable("connectionName") String acmeServerConnectionName,
-                                    @Valid @RequestBody TermsOfService tos) throws AcmeConnectionException, IOException {
+    @ResponseStatus(HttpStatus.OK)
+    public TermsOfService update(@PathVariable("connectionName") String acmeServerConnectionName,
+                                    @Valid @RequestBody TermsOfService tos) throws AcmeConnectionException,
+            IOException, RAObjectNotFoundException {
         DirectoryDataSettings settings = acmeServerManagementService.getDirectorySettingsByName(acmeServerConnectionName, tos.getForDirectoryName());
 
         Optional<TermsOfService> latestVersionOptional = repository.findByVersionId(tos.getVersionId());
@@ -94,18 +104,17 @@ public class TermsOfServiceManagementService {
         if(latestVersionOptional.isPresent()){
             tos = createAndUpdateAcmeServer(tos, settings, acmeServerConnectionName);
 
-            return ResponseEntity.ok(tos);
+            return tos;
         }else{
-            return ResponseEntity.badRequest().build();
+            throw new RAObjectNotFoundException(TermsOfService.class, tos.getVersionId());
         }
     }
 
     @DeleteMapping("/api/tos/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id){
+    @ResponseStatus(HttpStatus.OK)
+    public void delete(@PathVariable Long id){
 
         repository.deleteById(id);
-
-        return ResponseEntity.ok().build();
     }
 
     private TermsOfService createAndUpdateAcmeServer(TermsOfService tos, DirectoryDataSettings settings,

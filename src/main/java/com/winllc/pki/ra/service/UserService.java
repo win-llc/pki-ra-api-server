@@ -4,6 +4,7 @@ import com.winllc.pki.ra.repository.UserRepository;
 import com.winllc.pki.ra.security.RAUser;
 import com.winllc.pki.ra.service.external.KeycloakService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,22 +18,22 @@ import java.util.stream.Collectors;
 public class UserService {
 
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private KeycloakService keycloakService;
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(@AuthenticationPrincipal UserDetails userDetails){
+    @ResponseStatus(HttpStatus.OK)
+    public RAUser getProfile(@AuthenticationPrincipal UserDetails userDetails){
         RAUser raUser = new RAUser();
         raUser.setUsername(userDetails.getUsername());
         raUser.setPermissions(userDetails.getAuthorities().stream().map(ga -> ga.toString()).collect(Collectors.toList()));
-        return ResponseEntity.ok(raUser);
+        return raUser;
     }
 
     @PostMapping("/search/{search}")
-    public ResponseEntity<?> searchUsersFromIdentityProvider(@PathVariable String search){
+    @ResponseStatus(HttpStatus.OK)
+    public List<String> searchUsersFromIdentityProvider(@PathVariable String search){
 
         List<String> users = keycloakService.searchUsers(search);
-        return ResponseEntity.ok(users);
+        return users;
     }
 }

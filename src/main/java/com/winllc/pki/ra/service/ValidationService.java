@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.provider.HibernateUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -41,7 +43,8 @@ public class ValidationService {
     private AccountRestrictionService accountRestrictionService;
 
     @PostMapping("/rules/{kid}")
-    public ResponseEntity<?> getAccountValidationRules(@PathVariable String kid) throws RAObjectNotFoundException {
+    @ResponseStatus(HttpStatus.OK)
+    public AccountValidationResponse getAccountValidationRules(@PathVariable String kid) throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
         if (optionalAccount.isPresent()) {
@@ -68,29 +71,31 @@ public class ValidationService {
             boolean accountValid = accountRestrictionService.checkIfAccountValid(account);
             response.setAccountIsValid(accountValid);
 
-            return ResponseEntity.ok(response);
+            return response;
         } else {
             throw new RAObjectNotFoundException(Account.class, kid);
         }
     }
 
     @GetMapping("/account/preAuthzIdentifiers/{kid}")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ResponseEntity<?> getAccountPreAuthorizedIdentifiers(@PathVariable String kid) throws RAObjectNotFoundException {
+    public Set<String> getAccountPreAuthorizedIdentifiers(@PathVariable String kid) throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
             Hibernate.initialize(account.getPreAuthorizationIdentifiers());
 
-            return ResponseEntity.ok(account.getPreAuthorizationIdentifiers());
+            return account.getPreAuthorizationIdentifiers();
         } else {
             throw new RAObjectNotFoundException(Account.class, kid);
         }
     }
 
     @PostMapping("/account/verify")
-    public ResponseEntity<?> verifyExternalAccountBinding(@RequestParam String macKey, @RequestParam String keyIdentifier,
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean verifyExternalAccountBinding(@RequestParam String macKey, @RequestParam String keyIdentifier,
                                                           @RequestParam String jwsObject, @RequestParam String accountObject) throws RAException {
         Base64URL macKeyBase64 = new Base64URL(macKey);
 
@@ -113,9 +118,7 @@ public class ValidationService {
 
                 if (testObj.getSignature().toString().contentEquals(jwsObjectParsed.getSignature().toString())) {
                     log.info("Account request verified!");
-
-                    return ResponseEntity.status(200)
-                            .build();
+                    return true;
                 } else {
                     throw new RAException("Could not verify EAB, signatures did not match");
                 }
@@ -130,7 +133,8 @@ public class ValidationService {
     }
 
     @GetMapping("/account/getCanIssueDomains/{kid}")
-    public ResponseEntity<?> getCanIssueDomains(@PathVariable String kid) throws RAObjectNotFoundException {
+    @ResponseStatus(HttpStatus.OK)
+    public List<String> getCanIssueDomains(@PathVariable String kid) throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
@@ -138,7 +142,7 @@ public class ValidationService {
                     .stream().map(Domain::getBase)
                     .collect(Collectors.toList());
 
-            return ResponseEntity.ok(domainList);
+            return domainList;
         } else {
             throw new RAObjectNotFoundException(Account.class, kid);
         }

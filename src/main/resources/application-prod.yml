@@ -69,6 +69,8 @@ keycloak:
     client-username: dave
     client-password: pass
     custom-client-scope: pki-app
+authentication:
+  jwt-required-audience: pki-ra-client-public
 web-ui:
   server-base: http://winra.winllc-dev.com:3000
   uri-templates:

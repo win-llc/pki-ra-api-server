@@ -3,6 +3,7 @@ package com.winllc.pki.ra.beans.info;
 import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.domain.Account;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AccountInfo extends InfoObject<Account> {
@@ -16,6 +17,8 @@ public class AccountInfo extends InfoObject<Account> {
     private UserInfo accountOwner;
     private List<UserInfo> pocs;
     private List<DomainInfo> canIssueDomains;
+
+    private List<AcmeConnectionInfo> acmeConnectionInfoList;
 
     public AccountInfo(Account entity, boolean loadKeys) {
         super(entity);
@@ -90,5 +93,54 @@ public class AccountInfo extends InfoObject<Account> {
 
     public void setAcmeRequireHttpValidation(boolean acmeRequireHttpValidation) {
         this.acmeRequireHttpValidation = acmeRequireHttpValidation;
+    }
+
+    public List<AcmeConnectionInfo> getAcmeConnectionInfoList() {
+        if(acmeConnectionInfoList == null) acmeConnectionInfoList = new ArrayList<>();
+        return acmeConnectionInfoList;
+    }
+
+    public void setAcmeConnectionInfoList(List<AcmeConnectionInfo> acmeConnectionInfoList) {
+        this.acmeConnectionInfoList = acmeConnectionInfoList;
+    }
+
+    public static class AcmeConnectionInfo {
+        private String directory;
+
+        private String url;
+        private String macKeyBase64;
+        private String accountKeyId;
+
+        public String getDirectory() {
+            return directory;
+        }
+
+        public void setDirectory(String directory) {
+            this.directory = directory;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getMacKeyBase64() {
+            return macKeyBase64;
+        }
+
+        public void setMacKeyBase64(String macKeyBase64) {
+            this.macKeyBase64 = macKeyBase64;
+        }
+
+        public String getAccountKeyId() {
+            return accountKeyId;
+        }
+
+        public void setAccountKeyId(String accountKeyId) {
+            this.accountKeyId = accountKeyId;
+        }
     }
 }

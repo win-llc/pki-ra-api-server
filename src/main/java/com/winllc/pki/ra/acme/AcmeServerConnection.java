@@ -6,13 +6,11 @@ import com.winllc.acme.common.Settings;
 import com.winllc.acme.common.util.HttpCommandUtil;
 import com.winllc.pki.ra.domain.AcmeServerConnectionInfo;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
-import com.winllc.pki.ra.service.AccountRequestService;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -21,11 +19,12 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AcmeServerConnection {
 
@@ -98,8 +97,12 @@ public class AcmeServerConnection {
         if(result != null) {
             ObjectMapper objectMapper = new ObjectMapper();
             try {
-                List<T> val = objectMapper.readValue(result, ArrayList.class);
-                return val;
+                List<LinkedHashMap> val = objectMapper.readValue(result, ArrayList.class);
+                return val.stream()
+                        .map(v -> objectMapper.convertValue(v, clazz))
+                        .collect(Collectors.toList());
+                //return objectMapper.convertValue(val, new TypeReference<List<T>>(){});
+                //return val;
             } catch (Exception e) {
                 log.error("Could not get allEntities", e);
                 throw new AcmeConnectionException(e);
@@ -124,6 +127,7 @@ public class AcmeServerConnection {
         HttpClient httpclient = HttpClients.createDefault();
         HttpPost httppost = new HttpPost(url);
 
+
         try {
             StringEntity jsonEntity = new StringEntity(json);
             httppost.setEntity(jsonEntity);
@@ -146,8 +150,6 @@ public class AcmeServerConnection {
         }catch (Exception e){
             log.error("Could not delete entity", e);
             throw new AcmeConnectionException(e);
-        }finally {
-            httppost.completed();
         }
         return null;
     }
@@ -171,8 +173,6 @@ public class AcmeServerConnection {
             }
         }catch (Exception e){
             e.printStackTrace();
-        }finally {
-            httpGet.completed();
         }
 
         return null;

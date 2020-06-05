@@ -41,8 +41,6 @@ class AccountRequestServiceTest {
     @Autowired
     private AccountRequestRepository accountRequestRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private AccountRepository accountRepository;
 
     @BeforeEach
@@ -51,18 +49,13 @@ class AccountRequestServiceTest {
         Account account = new Account();
         account.setKeyIdentifier("kidtest1");
         account.setProjectName("Test Project 2");
+        account.setMacKey("testmac1");
         accountRepository.save(account);
-
-        User user = new User();
-        user.setUsername("test@test.com");
-        user.setIdentifier(UUID.randomUUID());
-        userRepository.save(user);
     }
 
     @AfterEach
     @Transactional
     void after(){
-        userRepository.deleteAll();
         accountRepository.deleteAll();
         accountRequestRepository.deleteAll();
     }
@@ -70,8 +63,7 @@ class AccountRequestServiceTest {
     @Test
     void findAll() {
         AccountRequest accountRequest = new AccountRequest();
-        User user = userRepository.findOneByUsername("test@test.com").get();
-        accountRequest.setAccountOwner(user);
+        accountRequest.setAccountOwnerEmail("test@test.com");
         accountRequest.setProjectName("New Project");
         accountRequest.setState("new");
         accountRequestRepository.save(accountRequest);
@@ -83,8 +75,7 @@ class AccountRequestServiceTest {
     @Test
     void findPending() throws RAObjectNotFoundException {
         AccountRequest accountRequest = new AccountRequest();
-        User user = userRepository.findOneByUsername("test@test.com").get();
-        accountRequest.setAccountOwner(user);
+        accountRequest.setAccountOwnerEmail("test@test.com");
         accountRequest.setProjectName("New Project");
         accountRequest.setState("new");
         accountRequestRepository.save(accountRequest);
@@ -111,10 +102,8 @@ class AccountRequestServiceTest {
 
     @Test
     void accountRequestUpdate() throws RAObjectNotFoundException {
-        User user = userRepository.findOneByUsername("test@test.com").get();
-
         AccountRequest accountRequest = new AccountRequest();
-        accountRequest.setAccountOwner(user);
+        accountRequest.setAccountOwnerEmail("test@test.com");
         accountRequest.setProjectName("New Project");
         accountRequest.setState("new");
         accountRequest = accountRequestRepository.save(accountRequest);
@@ -131,10 +120,8 @@ class AccountRequestServiceTest {
 
     @Test
     void findById() throws RAObjectNotFoundException {
-        User user = userRepository.findOneByUsername("test@test.com").get();
-
         AccountRequest accountRequest = new AccountRequest();
-        accountRequest.setAccountOwner(user);
+        accountRequest.setAccountOwnerEmail("test@test.com");
         accountRequest.setProjectName("New Project");
         accountRequest.setState("new");
         accountRequest = accountRequestRepository.save(accountRequest);
@@ -145,10 +132,8 @@ class AccountRequestServiceTest {
 
     @Test
     void delete() throws RAObjectNotFoundException {
-        User user = userRepository.findOneByUsername("test@test.com").get();
-
         AccountRequest accountRequest = new AccountRequest();
-        accountRequest.setAccountOwner(user);
+        accountRequest.setAccountOwnerEmail("test@test.com");
         accountRequest.setProjectName("New Project");
         accountRequest.setState("new");
         accountRequest = accountRequestRepository.save(accountRequest);

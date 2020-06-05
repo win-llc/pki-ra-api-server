@@ -10,7 +10,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.PreRemove;
 import java.sql.Timestamp;
-import java.util.Objects;
 
 @Entity
 public class AccountRestriction extends AbstractPersistable<Long> implements AccountOwnedEntity {
@@ -24,27 +23,13 @@ public class AccountRestriction extends AbstractPersistable<Long> implements Acc
     @ManyToOne
     @JoinColumn(name="account_fk")
     private Account account;
-    @JsonIgnore
-    @ManyToOne
-    @JoinColumn(name="addedByUser_fk")
-    private User addedByUser;
-    @JsonIgnore
-    @ManyToOne
-    @JoinColumn(name="markCompletedByUser_fk")
-    private User markedCompletedByUser;
+    private String addedByUser;
+    private String markedCompletedByUser;
 
     @PreRemove
     private void preRemove(){
         if(account != null){
             account.getAccountRestrictions().remove(this);
-        }
-
-        if(addedByUser != null){
-            addedByUser.getAccountRestrictionsAddedByUser().remove(this);
-        }
-
-        if(markedCompletedByUser != null){
-            markedCompletedByUser.getAccountRestrictionsMarkedCompletedByUser().remove(this);
         }
     }
 
@@ -96,20 +81,19 @@ public class AccountRestriction extends AbstractPersistable<Long> implements Acc
         this.account = account;
     }
 
-    public User getAddedByUser() {
+    public String getAddedByUser() {
         return addedByUser;
     }
 
-    public void setAddedByUser(User addedByUser) {
+    public void setAddedByUser(String addedByUser) {
         this.addedByUser = addedByUser;
     }
 
-    public User getMarkedCompletedByUser() {
+    public String getMarkedCompletedByUser() {
         return markedCompletedByUser;
     }
 
-    public void setMarkedCompletedByUser(User markedCompletedByUser) {
+    public void setMarkedCompletedByUser(String markedCompletedByUser) {
         this.markedCompletedByUser = markedCompletedByUser;
     }
-
 }

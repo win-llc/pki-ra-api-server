@@ -1,16 +1,10 @@
 package com.winllc.pki.ra.ca;
 
-import com.netscape.certsrv.ca.CACertClient;
 import com.netscape.certsrv.cert.*;
-import com.netscape.certsrv.client.ClientConfig;
-import com.netscape.certsrv.client.PKIClient;
-import com.netscape.certsrv.client.SubsystemClient;
-import com.netscape.certsrv.profile.PolicyDefault;
 import com.netscape.certsrv.profile.ProfileAttribute;
 import com.netscape.certsrv.profile.ProfileInput;
 import com.netscape.certsrv.profile.ProfilePolicySet;
 import com.netscape.certsrv.property.Descriptor;
-import com.netscape.certsrv.request.RequestId;
 import com.winllc.acme.common.CertSearchConverter;
 import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertificateDetails;
@@ -19,26 +13,19 @@ import com.winllc.acme.common.util.CertUtil;
 import com.winllc.acme.common.util.HttpCommandUtil;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.keystore.ApplicationKeystore;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.dogtagpki.legacy.core.policy.PolicySet;
-import org.hibernate.Hibernate;
 import org.mozilla.jss.netscape.security.x509.RevocationReason;
-import org.springframework.util.CollectionUtils;
 
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 public class DogTagCertAuthority extends AbstractCertAuthority {
 
@@ -54,6 +41,8 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
     static{
         requiredProperties = new ArrayList<>();
         requiredProperties.add("BASE_URL");
+        requiredProperties.add("ADMIN_USERNAME");
+        requiredProperties.add("ADMIN_PASSWORD");
 
         defaultProperties = new HashMap<>();
     }
@@ -62,7 +51,8 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         super(info);
         this.applicationKeystore = applicationKeystore;
         try {
-            this.baseUrl = info.getPropertyByName("BASE_URL").get().getValue();
+            //this.baseUrl = info.getPropertyByName("BASE_URL").get().getValue();
+            this.baseUrl = info.getBaseUrl();
         }catch (Exception e){
             throw e;
         }
@@ -82,18 +72,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
     public X509Certificate issueCertificate(String csr, SubjectAltNames sans) throws Exception {
         String requestPath = "/ca/rest/certrequests";
 
-        CertEnrollmentRequest var1 = new CertEnrollmentRequest();
-        var1.setProfileId("caServerCert");
-        var1.setRenewal(false);
-        ProfileInput var2 = var1.createInput("CertReqInput");
-        var2.addAttribute(new ProfileAttribute("cert_request_type", "pkcs10", (Descriptor)null));
-        var2.addAttribute(new ProfileAttribute("cert_request", csr, (Descriptor)null));
-        ProfileInput var4 = var1.createInput("SubmitterInfoInput");
-        var4.addAttribute(new ProfileAttribute("requestor_name", "admin", (Descriptor)null));
-        var4.addAttribute(new ProfileAttribute("requestor_email", "admin@redhat.com", (Descriptor)null));
-        var4.addAttribute(new ProfileAttribute("requestor_phone", "650-555-5555", (Descriptor)null));
-        var1.setAttribute("uid", "caadmin");
-        var1.setAttribute("pwd", "P@ssW0rd");
+        CertEnrollmentRequest certEnrollmentRequest = buildCertEnrollmentRequest(csr);
 
         Function<String, CertRequestInfo> returnFunction = (s) -> {
             try {
@@ -108,7 +87,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         };
 
         //Submit the request
-        CertRequestInfo val = processDogtagPostOperation(baseUrl+requestPath, var1, returnFunction, 200);
+        CertRequestInfo val = processDogtagPostOperation(baseUrl+requestPath, certEnrollmentRequest, returnFunction, 200);
 
         if(val != null){
             if(val.getOperationResult().equalsIgnoreCase("success")){
@@ -119,7 +98,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
                     try {
                         return CertReviewResponse.fromXML(s);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Could not convert CertReviewResponse", e);
                     }
                     return null;
                 };
@@ -146,7 +125,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
                     try {
                         return CertRequestInfo.valueOf(s);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Could not convert CertRequestInfo", e);
                     }
                     return null;
                 };
@@ -315,6 +294,24 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         public CertSearchRequest convertOr(CertSearchParam param) {
             return null;
         }
+    }
+
+    private CertEnrollmentRequest buildCertEnrollmentRequest(String csr){
+        CertEnrollmentRequest request = new CertEnrollmentRequest();
+        request.setProfileId("caServerCert");
+        request.setRenewal(false);
+        ProfileInput var2 = request.createInput("CertReqInput");
+        var2.addAttribute(new ProfileAttribute("cert_request_type", "pkcs10", (Descriptor)null));
+        var2.addAttribute(new ProfileAttribute("cert_request", csr, (Descriptor)null));
+        ProfileInput var4 = request.createInput("SubmitterInfoInput");
+        var4.addAttribute(new ProfileAttribute("requestor_name", "none", (Descriptor)null));
+        var4.addAttribute(new ProfileAttribute("requestor_email", "none", (Descriptor)null));
+        var4.addAttribute(new ProfileAttribute("requestor_phone", "none", (Descriptor)null));
+        //todo replace with property
+        request.setAttribute("uid", "caadmin");
+        //todo replace with property
+        request.setAttribute("pwd", "P@ssW0rd");
+        return request;
     }
 
 }

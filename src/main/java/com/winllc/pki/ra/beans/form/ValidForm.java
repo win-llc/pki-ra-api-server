@@ -4,10 +4,7 @@ import com.winllc.pki.ra.beans.info.InfoObject;
 import com.winllc.pki.ra.domain.AccountOwnedEntity;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 

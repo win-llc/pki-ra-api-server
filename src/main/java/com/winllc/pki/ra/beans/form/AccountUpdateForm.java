@@ -6,7 +6,6 @@ import com.winllc.pki.ra.util.FormValidationUtil;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class AccountUpdateForm extends ValidForm<Account> {

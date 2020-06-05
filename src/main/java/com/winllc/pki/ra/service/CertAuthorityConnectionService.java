@@ -1,7 +1,8 @@
 package com.winllc.pki.ra.service;
 
-import com.netscape.cms.servlet.csadmin.Cert;
-import com.winllc.acme.common.*;
+import com.winllc.acme.common.CertSearchParam;
+import com.winllc.acme.common.CertificateDetails;
+import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
@@ -25,7 +26,6 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -96,15 +96,20 @@ public class CertAuthorityConnectionService {
         loadedCertAuthorities.put(ca.getName(), ca);
     }
 
+    //todo CertAuthorityConnectionTemplate?
+
+
     @PostMapping("/api/info/create")
     @ResponseStatus(HttpStatus.CREATED)
     public Long createConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm connectionInfo) throws InvalidFormException {
+        //todo allow required inputs on form before submitting here
         ValidationResponse validationResponse = validator.validate(connectionInfo, false);
 
         if (validationResponse.isValid()) {
             CertAuthorityConnectionInfo caConnection = new CertAuthorityConnectionInfo();
             caConnection.setName(connectionInfo.getName());
             caConnection.setType(CertAuthorityConnectionType.valueOf(connectionInfo.getType()));
+            caConnection.setBaseUrl(connectionInfo.getBaseUrl());
             caConnection = repository.save(caConnection);
 
             loadCertAuthority(caConnection.getName());
@@ -138,7 +143,7 @@ public class CertAuthorityConnectionService {
     @PostMapping("/api/info/update")
     @ResponseStatus(HttpStatus.OK)
     public CertAuthorityConnectionInfoForm updateConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm form)
-            throws RAException, InvalidFormException {
+            throws RAException {
         //todo validate
 
         ValidationResponse validationResponse = validator.validate(form, true);

@@ -9,6 +9,7 @@ import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AccountRequest;
 import com.winllc.pki.ra.domain.PocEntry;
 import com.winllc.pki.ra.domain.User;
+import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.PocEntryRepository;
@@ -35,8 +36,6 @@ class AccountServiceTest {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private PocEntryRepository pocEntryRepository;
 
     @BeforeEach
@@ -48,21 +47,16 @@ class AccountServiceTest {
         account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
-        User user = new User();
-        user.setIdentifier(UUID.randomUUID());
-        user.setUsername("test@test.com");
-        user.getAccounts().add(account);
-
-        user = userRepository.save(user);
-
-        account.getAccountUsers().add(user);
-        accountRepository.save(account);
+        PocEntry pocEntry = new PocEntry();
+        pocEntry.setAccount(account);
+        pocEntry.setEmail("test@test.com");
+        pocEntry.setEnabled(true);
+        pocEntryRepository.save(pocEntry);
     }
 
     @AfterEach
     @Transactional
     void after(){
-        userRepository.deleteAll();
         pocEntryRepository.deleteAll();
         accountRepository.deleteAll();
     }
@@ -85,7 +79,7 @@ class AccountServiceTest {
     }
 
     @Test
-    void getAccountsForCurrentUser() throws RAObjectNotFoundException {
+    void getAccountsForCurrentUser() throws RAObjectNotFoundException, AcmeConnectionException {
         UserDetails userDetails = new org.springframework.security.core.userdetails.User("test@test.com", "", Collections.emptyList());
         List<AccountInfo> accountsForCurrentUser = accountService.getAccountsForCurrentUser(userDetails);
         assertEquals(1, accountsForCurrentUser.size());
@@ -98,7 +92,9 @@ class AccountServiceTest {
 
         List<PocFormEntry> pocFormEntries = new ArrayList<>();
         PocFormEntry entry = new PocFormEntry();
-        entry.setEmail("test2@test.com");
+        entry.setEmail("test@test.com");
+        pocFormEntries.add(entry);
+
         form.setPocEmails(pocFormEntries);
 
         AccountInfo accountInfo = accountService.updateAccount(form);

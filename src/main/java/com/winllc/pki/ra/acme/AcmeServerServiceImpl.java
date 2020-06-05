@@ -16,7 +16,7 @@ public class AcmeServerServiceImpl implements AcmeServerService {
     private static final String CERT_AUTHORITY_BASE = "certAuthority";
     private static final String EXTERNAL_ACCOUNT_PROVIDER_BASE = "externalAccountProvider";
 
-    private AcmeServerConnection connection;
+    private final AcmeServerConnection connection;
 
     public AcmeServerServiceImpl(AcmeServerConnection connection) {
         this.connection = connection;
@@ -125,5 +125,7 @@ public class AcmeServerServiceImpl implements AcmeServerService {
         this.connection.deleteEntity(EXTERNAL_ACCOUNT_PROVIDER_BASE, name);
     }
 
-
+    public AcmeServerConnection getConnection() {
+        return connection;
+    }
 }

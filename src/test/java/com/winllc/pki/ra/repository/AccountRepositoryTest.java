@@ -26,8 +26,6 @@ class AccountRepositoryTest {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private PocEntryRepository pocEntryRepository;
 
     @BeforeEach
@@ -38,18 +36,12 @@ class AccountRepositoryTest {
         account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
-        User user = new User();
-        user.setIdentifier(UUID.randomUUID());
-        user.setUsername("test@test.com");
-        user = userRepository.save(user);
-
         PocEntry pocEntry = new PocEntry();
         pocEntry.setAccount(account);
         pocEntry.setEmail("poc@test.com");
 
         pocEntryRepository.save(pocEntry);
 
-        account.getAccountUsers().add(user);
         account.getPocs().add(pocEntry);
 
         accountRepository.save(account);
@@ -60,7 +52,6 @@ class AccountRepositoryTest {
     void after(){
         pocEntryRepository.deleteAll();
         accountRepository.deleteAll();
-        userRepository.deleteAll();
     }
 
     @Test
@@ -69,20 +60,4 @@ class AccountRepositoryTest {
         assertTrue(optionalAccount.isPresent());
     }
 
-    @Test
-    void findAllByAccountUsersContains() {
-        User user = userRepository.findOneByUsername("test@test.com").get();
-
-        List<Account> accountList = accountRepository.findAllByAccountUsersContains(user);
-        assertEquals(1, accountList.size());
-    }
-
-    @Test
-    void findAllByAccountUsersContainsOrPocsIn() {
-        Optional<User> optionalUser = userRepository.findOneByUsername("test@test.com");
-        List<PocEntry> allByEmailEquals = pocEntryRepository.findAllByEmailEquals("poc@test.com");
-
-        List<Account> accounts = accountRepository.findAllByAccountUsersContainsOrPocsIn(optionalUser.get(), allByEmailEquals);
-        assertEquals(1, accounts.size());
-    }
 }

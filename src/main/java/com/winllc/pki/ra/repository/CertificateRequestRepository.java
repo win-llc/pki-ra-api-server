@@ -1,7 +1,6 @@
 package com.winllc.pki.ra.repository;
 
 import com.winllc.pki.ra.domain.CertificateRequest;
-import com.winllc.pki.ra.domain.User;
 import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
@@ -12,5 +11,5 @@ import java.util.List;
 public interface CertificateRequestRepository extends BaseRepository<CertificateRequest> {
 
     List<CertificateRequest> findAllByStatusEquals(String status);
-    List<CertificateRequest> findAllByRequestedByEquals(User user);
+    List<CertificateRequest> findAllByRequestedByEquals(String user);
 }

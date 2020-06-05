@@ -1,58 +1,22 @@
 package com.winllc.pki.ra.security;
 
-import com.winllc.pki.ra.domain.User;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.User;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class RAUser extends User implements UserDetails {
+public class RAUser extends User {
 
     private List<String> permissions = new ArrayList<>();
 
-    public RAUser(User user) {
-        super(user);
+    public RAUser(String username){
+        this(username, "", new ArrayList<>());
     }
 
-    public RAUser(){}
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return AuthorityUtils.createAuthorityList(
-                getRoles().stream().map(r -> r).toArray(String[]::new));
-    }
-
-    @Override
-    public String getPassword() {
-        return "n/a";
-    }
-
-    @Override
-    public String getUsername() {
-        return super.getUsername();
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
+    public RAUser(String username, String password, Collection<? extends GrantedAuthority> authorities) {
+        super(username, password, authorities);
     }
 
     public List<String> getPermissions() {

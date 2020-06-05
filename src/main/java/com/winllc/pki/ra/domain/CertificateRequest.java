@@ -3,7 +3,6 @@ package com.winllc.pki.ra.domain;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,12 +18,8 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
     private String status;
     @Column(length = 2000)
     private String issuedCertificate;
-    @ManyToOne
-    @JoinColumn(name="requestedBy_fk")
-    private User requestedBy;
-    @ManyToOne
-    @JoinColumn(name="adminReviewer_fk")
-    private User adminReviewer;
+    private String requestedBy;
+    private String adminReviewer;
     @ElementCollection
     private List<String> requestedDnsNames;
     @ManyToOne
@@ -100,19 +95,19 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
         this.issuedCertificate = issuedCertificate;
     }
 
-    public User getRequestedBy() {
+    public String getRequestedBy() {
         return requestedBy;
     }
 
-    public void setRequestedBy(User requestedBy) {
+    public void setRequestedBy(String requestedBy) {
         this.requestedBy = requestedBy;
     }
 
-    public User getAdminReviewer() {
+    public String getAdminReviewer() {
         return adminReviewer;
     }
 
-    public void setAdminReviewer(User adminReviewer) {
+    public void setAdminReviewer(String adminReviewer) {
         this.adminReviewer = adminReviewer;
     }
 

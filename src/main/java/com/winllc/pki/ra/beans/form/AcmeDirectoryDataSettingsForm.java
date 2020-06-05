@@ -3,7 +3,6 @@ package com.winllc.pki.ra.beans.form;
 import com.winllc.acme.common.DirectoryDataSettings;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 public class AcmeDirectoryDataSettingsForm extends AcmeSettingsForm<DirectoryDataSettings> {

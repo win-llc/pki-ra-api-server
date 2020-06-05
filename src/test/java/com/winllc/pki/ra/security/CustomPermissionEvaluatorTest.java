@@ -3,11 +3,9 @@ package com.winllc.pki.ra.security;
 import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.ServerEntry;
-import com.winllc.pki.ra.domain.User;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.repository.AccountRepository;
+import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
 import com.winllc.pki.ra.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -33,7 +31,7 @@ class CustomPermissionEvaluatorTest {
     @Autowired
     private CustomPermissionEvaluator customPermissionEvaluator;
     @Autowired
-    private UserRepository userRepository;
+    private PocEntryRepository pocEntryRepository;
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
@@ -45,24 +43,18 @@ class CustomPermissionEvaluatorTest {
         Account account = new Account();
         account.setProjectName("Test Project");
         account.setKeyIdentifier("kidtest1");
+        account.setMacKey("testmac1");
 
         account = accountRepository.save(account);
 
-        User user = new User();
-        user.setUsername("test@test.com");
-        user.setIdentifier(UUID.randomUUID());
-        user.getAccounts().add(account);
-
-        user = userRepository.save(user);
-
-        account.getAccountUsers().add(user);
-        account = accountRepository.save(account);
+        PocEntry pocEntry = PocEntry.buildNew("test@test.com", account);
+        pocEntryRepository.save(pocEntry);
 
         List<String> permissions = new ArrayList<>();
         permissions.add("add_domain");
         permissions.add("update_server_entry");
 
-        UserDetails userDetails = new org.springframework.security.core.userdetails.User(user.getUsername(), "",
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User("test@test.com", "",
                 permissions.stream().map(p -> new SimpleGrantedAuthority(p)).collect(Collectors.toList()));
         //raUser.setPermissions(permissions);
         Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null);
@@ -95,7 +87,7 @@ class CustomPermissionEvaluatorTest {
         assertFalse(canDeleteServerEntry);
 
         accountRepository.deleteAll();
-        userRepository.deleteAll();
+        pocEntryRepository.deleteAll();
         serverEntryRepository.deleteAll();
     }
 

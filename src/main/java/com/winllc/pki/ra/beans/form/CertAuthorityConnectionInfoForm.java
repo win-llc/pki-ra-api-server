@@ -1,16 +1,10 @@
 package com.winllc.pki.ra.beans.form;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.winllc.pki.ra.ca.CertAuthority;
-import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionProperty;
 
-import javax.persistence.Column;
-import javax.persistence.OneToMany;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConnectionInfo> {

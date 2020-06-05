@@ -1,6 +1,5 @@
 package com.winllc.pki.ra.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;

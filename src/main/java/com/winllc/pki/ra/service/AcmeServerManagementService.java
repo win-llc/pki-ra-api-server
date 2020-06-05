@@ -10,19 +10,21 @@ import com.winllc.pki.ra.acme.AcmeServerServiceImpl;
 import com.winllc.pki.ra.domain.AcmeServerConnectionInfo;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.repository.AcmeServerConnectionInfoRepository;
-import com.winllc.pki.ra.security.RAUser;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/acmeServerManagement")
@@ -59,18 +61,27 @@ public class AcmeServerManagementService {
         services.put(serverService.getName(), serverService);
     }
 
+    public Optional<AcmeServerService> getAcmeServerServiceByName(String name){
+        if(services.containsKey(name)){
+            return Optional.of(services.get(name));
+        }else{
+            return Optional.empty();
+        }
+    }
 
     @PostMapping("/saveAcmeServerConnection")
-    public ResponseEntity<?> save(@RequestBody AcmeServerConnectionInfo connectionInfo){
+    @ResponseStatus(HttpStatus.CREATED)
+    public AcmeServerConnectionInfo save(@RequestBody AcmeServerConnectionInfo connectionInfo){
         connectionInfo = connectionInfoRepository.save(connectionInfo);
         load(connectionInfo);
 
-        return ResponseEntity.ok(connectionInfo);
+        return connectionInfo;
     }
 
     @GetMapping("/getAcmeServerConnectionInfoByName/{name}")
-    public ResponseEntity<?> getAcmeServerConnectionInfoByName(@PathVariable String name){
-        return ResponseEntity.ok(connectionInfoRepository.findByName(name));
+    @ResponseStatus(HttpStatus.OK)
+    public AcmeServerConnectionInfo getAcmeServerConnectionInfoByName(@PathVariable String name){
+        return connectionInfoRepository.findByName(name);
     }
 
     @GetMapping("/getAcmeServerConnectionInfoById/{id}")
@@ -134,10 +145,11 @@ public class AcmeServerManagementService {
     }
 
     @GetMapping("{connectionName}/getAllDirectorySettings")
-    public ResponseEntity<?> getAllDirectorySettings(@PathVariable String connectionName) throws AcmeConnectionException {
+    @ResponseStatus(HttpStatus.OK)
+    public List<DirectoryDataSettings> getAllDirectorySettings(@PathVariable String connectionName) throws AcmeConnectionException {
         AcmeServerService acmeServerService = services.get(connectionName);
         List<DirectoryDataSettings> allDirectorySettings = acmeServerService.getAllDirectorySettings();
-        return ResponseEntity.ok(allDirectorySettings);
+        return allDirectorySettings;
     }
 
     @DeleteMapping("{connectionName}/deleteDirectorySettings/{name}")

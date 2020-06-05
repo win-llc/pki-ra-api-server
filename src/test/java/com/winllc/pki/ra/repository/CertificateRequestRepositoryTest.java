@@ -27,8 +27,6 @@ class CertificateRequestRepositoryTest {
     private CertificateRequestRepository requestRepository;
     @Autowired
     private AccountRepository accountRepository;
-    @Autowired
-    private UserRepository userRepository;
 
     @BeforeEach
     @Transactional
@@ -38,15 +36,9 @@ class CertificateRequestRepositoryTest {
         account.setProjectName("Test Project");
         account = accountRepository.save(account);
         
-        User user = new User();
-        user.getAccounts().add(account);
-        user.setIdentifier(UUID.randomUUID());
-        user.setUsername("test@test.com");
-        user = userRepository.save(user);
-        
         CertificateRequest request = new CertificateRequest();
         request.setAccount(account);
-        request.setRequestedBy(user);
+        request.setRequestedBy("test@test.com");
         request.setStatus("new");
         requestRepository.save(request);
     }
@@ -55,7 +47,6 @@ class CertificateRequestRepositoryTest {
     @Transactional
     void after(){
         requestRepository.deleteAll();
-        userRepository.deleteAll();
         accountRepository.deleteAll();
     }
     
@@ -67,8 +58,7 @@ class CertificateRequestRepositoryTest {
 
     @Test
     void findAllByRequestedByEquals() {
-        Optional<User> optionalUser = userRepository.findOneByUsername("test@test.com");
-        List<CertificateRequest> requests = requestRepository.findAllByRequestedByEquals(optionalUser.get());
+        List<CertificateRequest> requests = requestRepository.findAllByRequestedByEquals("test@test.com");
         assertEquals(1, requests.size());
     }
 }

@@ -1,7 +1,6 @@
 package com.winllc.pki.ra.beans.form;
 
 import com.winllc.pki.ra.constants.AccountStatusType;
-import com.winllc.pki.ra.domain.AccountOwnedEntity;
 import com.winllc.pki.ra.domain.AccountRequest;
 
 import javax.validation.constraints.NotEmpty;

@@ -43,8 +43,6 @@ class AccountRestrictionServiceTest {
     private AccountRestrictionRepository accountRestrictionRepository;
     @Autowired
     private AccountRepository accountRepository;
-    @Autowired
-    private UserRepository userRepository;
 
     @BeforeEach
     @Transactional
@@ -53,11 +51,6 @@ class AccountRestrictionServiceTest {
         account.setKeyIdentifier("kidtest1");
         account.setProjectName("Test Project 2");
         accountRepository.save(account);
-
-        User user = new User();
-        user.setUsername("test@test.com");
-        user.setIdentifier(UUID.randomUUID());
-        userRepository.save(user);
     }
 
     @AfterEach
@@ -65,7 +58,6 @@ class AccountRestrictionServiceTest {
     void after(){
         accountRestrictionRepository.deleteAll();
         accountRepository.deleteAll();
-        userRepository.deleteAll();
     }
 
     @Test
@@ -83,11 +75,10 @@ class AccountRestrictionServiceTest {
     @Test
     void getById() throws RAObjectNotFoundException {
         Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
-        User user = userRepository.findOneByUsername("test@test.com").get();
 
         AccountRestriction accountRestriction = new AccountRestriction();
         accountRestriction.setAccount(account);
-        accountRestriction.setAddedByUser(user);
+        accountRestriction.setAddedByUser("test@test.com");
         accountRestriction.setType(AccountRestrictionType.REQUIRE_ACCREDITATION_BY);
         accountRestriction.setAction(AccountRestrictionAction.DISABLE_ACCOUNT);
         accountRestriction.setDueBy(Timestamp.from(LocalDateTime.now().plusDays(3).toInstant(ZoneOffset.UTC)));
@@ -130,11 +121,10 @@ class AccountRestrictionServiceTest {
     @Test
     void delete() {
         Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
-        User user = userRepository.findOneByUsername("test@test.com").get();
 
         AccountRestriction accountRestriction = new AccountRestriction();
         accountRestriction.setAccount(account);
-        accountRestriction.setAddedByUser(user);
+        accountRestriction.setAddedByUser("test@test.com");
         accountRestriction.setType(AccountRestrictionType.REQUIRE_ACCREDITATION_BY);
         accountRestriction.setAction(AccountRestrictionAction.DISABLE_ACCOUNT);
         accountRestriction = accountRestrictionRepository.save(accountRestriction);
@@ -150,11 +140,10 @@ class AccountRestrictionServiceTest {
     @Test
     void getAllForAccount() throws RAObjectNotFoundException {
         Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
-        User user = userRepository.findOneByUsername("test@test.com").get();
 
         AccountRestriction accountRestriction = new AccountRestriction();
         accountRestriction.setAccount(account);
-        accountRestriction.setAddedByUser(user);
+        accountRestriction.setAddedByUser("test@test.com");
         accountRestriction.setType(AccountRestrictionType.REQUIRE_ACCREDITATION_BY);
         accountRestriction.setAction(AccountRestrictionAction.DISABLE_ACCOUNT);
         accountRestriction.setDueBy(Timestamp.from(LocalDateTime.now().plusDays(3).toInstant(ZoneOffset.UTC)));

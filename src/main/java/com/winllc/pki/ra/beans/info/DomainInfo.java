@@ -1,6 +1,5 @@
 package com.winllc.pki.ra.beans.info;
 
-import com.winllc.pki.ra.beans.info.InfoObject;
 import com.winllc.pki.ra.domain.Domain;
 
 import java.util.List;

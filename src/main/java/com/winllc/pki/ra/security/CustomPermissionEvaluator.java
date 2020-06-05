@@ -28,8 +28,6 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
     private PocEntryRepository pocEntryRepository;
     @Autowired
     private ServerEntryRepository serverEntryRepository;
-    @Autowired
-    private UserRepository userRepository;
 
     @Override
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
@@ -86,14 +84,10 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
                         if (accountAtomic.get() != null) {
                             Account account = accountAtomic.get();
 
-                            Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
+                            Optional<PocEntry> pocOptional = pocEntryRepository.findDistinctByEmailEqualsAndAccount(raUser.getUsername(), account);
 
-                            List<Account> userAccounts = accountRepository.findAllByAccountUsersContains(optionalUser.get());
-                            for(Account userAccount : userAccounts){
-                                if(userAccount.getKeyIdentifier().contentEquals(account.getKeyIdentifier())){
-                                    isMemberOfAppropriateAccount = true;
-                                    break;
-                                }
+                            if(pocOptional.isPresent()){
+                                isMemberOfAppropriateAccount = true;
                             }
                         }
                     }

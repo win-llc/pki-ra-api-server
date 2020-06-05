@@ -37,8 +37,6 @@ class TermsOfServiceManagementServiceTest {
     private TermsOfServiceRepository termsOfServiceRepository;
     @Autowired
     private AccountRepository accountRepository;
-    @Autowired
-    private UserRepository userRepository;
     @MockBean
     private AcmeServerManagementService acmeServerManagementService;
 
@@ -55,12 +53,6 @@ class TermsOfServiceManagementServiceTest {
         account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
-        User user = new User();
-        user.getAccounts().add(account);
-        user.setIdentifier(UUID.randomUUID());
-        user.setUsername("test@test.com");
-        user = userRepository.save(user);
-
         TermsOfService termsOfService = new TermsOfService();
         termsOfService.setText("test tos 1");
         termsOfService.setVersionId("1a");
@@ -72,7 +64,6 @@ class TermsOfServiceManagementServiceTest {
     @Transactional
     void after(){
         termsOfServiceRepository.deleteAll();
-        userRepository.deleteAll();
         accountRepository.deleteAll();
     }
 

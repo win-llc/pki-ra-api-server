@@ -1,6 +1,5 @@
 package com.winllc.pki.ra.beans.info;
 
-import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.domain.ServerEntry;
 
 import java.util.List;

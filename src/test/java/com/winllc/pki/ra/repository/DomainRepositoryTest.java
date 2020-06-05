@@ -29,10 +29,6 @@ class DomainRepositoryTest {
     private DomainRepository domainRepository;
     @Autowired
     private AccountRepository accountRepository;
-    @Autowired
-    private AccountService accountService;
-    @Autowired
-    private EntityManagerFactory entityManagerFactory;
 
     @BeforeEach
     @Transactional

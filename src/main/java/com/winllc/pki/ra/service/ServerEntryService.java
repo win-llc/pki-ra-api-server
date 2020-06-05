@@ -1,22 +1,23 @@
 package com.winllc.pki.ra.service;
 
 import com.nimbusds.jose.util.Base64;
-import com.winllc.pki.ra.beans.*;
+import com.winllc.pki.ra.beans.AcmeClientDetails;
+import com.winllc.pki.ra.beans.OIDCClientDetails;
+import com.winllc.pki.ra.beans.ServerEntryDockerDeploymentFile;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
 import com.winllc.pki.ra.beans.validator.ServerEntryFormValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
+import com.winllc.pki.ra.domain.PocEntry;
 import com.winllc.pki.ra.domain.ServerEntry;
-import com.winllc.pki.ra.domain.User;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
+import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
-import com.winllc.pki.ra.repository.UserRepository;
-import com.winllc.pki.ra.security.RAUser;
 import com.winllc.pki.ra.service.external.KeycloakService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -24,7 +25,6 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -51,7 +51,7 @@ public class ServerEntryService {
     @Autowired
     private KeycloakService keycloakService;
     @Autowired
-    private UserRepository userRepository;
+    private PocEntryRepository pocEntryRepository;
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
@@ -147,29 +147,21 @@ public class ServerEntryService {
     @GetMapping("/allForUser")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public List<ServerEntryInfo> getAllServerEntriesForUser(@AuthenticationPrincipal UserDetails raUser) throws RAObjectNotFoundException {
+    public List<ServerEntryInfo> getAllServerEntriesForUser(@AuthenticationPrincipal UserDetails raUser) {
+        List<PocEntry> pocEntries = pocEntryRepository.findAllByEmailEquals(raUser.getUsername());
+        List<Account> allByAccountUsersContains = accountRepository.findAllByPocsIn(pocEntries);
 
-        Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
-
-        if(optionalUser.isPresent()){
-            User user = optionalUser.get();
-
-            List<Account> allByAccountUsersContains = accountRepository.findAllByAccountUsersContains(user);
-
-            List<ServerEntryInfo> entries = new ArrayList<>();
-            for(Account account : allByAccountUsersContains) {
-                List<ServerEntryInfo> temp = serverEntryRepository.findAllByAccountId(account.getId())
-                        .stream().map(i -> {
-                            return entryToInfo(i);
-                        })
-                        .collect(Collectors.toList());
-                entries.addAll(temp);
-            }
-
-            return entries;
-        }else{
-            throw new RAObjectNotFoundException(User.class, raUser.getUsername());
+        List<ServerEntryInfo> entries = new ArrayList<>();
+        for(Account account : allByAccountUsersContains) {
+            List<ServerEntryInfo> temp = serverEntryRepository.findAllByAccountId(account.getId())
+                    .stream().map(i -> {
+                        return entryToInfo(i);
+                    })
+                    .collect(Collectors.toList());
+            entries.addAll(temp);
         }
+
+        return entries;
     }
 
     @PostMapping("/enableForOIDConnect")

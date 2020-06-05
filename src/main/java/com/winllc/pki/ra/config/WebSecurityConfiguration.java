@@ -5,13 +5,15 @@ import com.winllc.pki.ra.security.AudienceValidator;
 import com.winllc.pki.ra.security.RAUserDetailsService;
 import com.winllc.pki.ra.security.RAUserJwtAuthenticationConverter;
 import com.winllc.pki.ra.security.RAUserRolesJwtAuthenticationConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.*;
@@ -27,6 +29,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    @Value("${authentication.jwt-required-audience}")
+    private String jwtRequiredAudience;
 
     private final OAuth2ResourceServerProperties oAuth2ResourceServerProperties;
 
@@ -47,19 +52,19 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-                .cors().configurationSource(corsConfigurationSource())
+                    .cors().configurationSource(corsConfigurationSource())
                 .and()
-                .csrf()
-                .disable()
-                .authorizeRequests()
-                .antMatchers("/**")
-                .permitAll()
-                .antMatchers("/api/**")
-                .fullyAuthenticated()
+                    .csrf()
+                    .disable()
+                    .authorizeRequests()
+                    .antMatchers("/**")
+                    .permitAll()
+                    .antMatchers("/api/**")
+                    .fullyAuthenticated()
                 .and()
-                .oauth2ResourceServer()
-                .jwt()
-                .jwtAuthenticationConverter(raUserJwtAuthenticationConverter());
+                    .oauth2ResourceServer()
+                    .jwt()
+                    .jwtAuthenticationConverter(raUserJwtAuthenticationConverter());
     }
 
     @Bean
@@ -76,7 +81,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                         JwtDecoders.fromOidcIssuerLocation(
                                 oAuth2ResourceServerProperties.getJwt().getIssuerUri());
 
-        OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator();
+        OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator(jwtRequiredAudience);
         OAuth2TokenValidator<Jwt> withIssuer =
                 JwtValidators.createDefaultWithIssuer(
                         oAuth2ResourceServerProperties.getJwt().getIssuerUri());
@@ -96,5 +101,15 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Bean
     RAUserRolesJwtAuthenticationConverter raUserRolesJwtAuthenticationConverter() {
         return new RAUserRolesJwtAuthenticationConverter(raUserDetailsService);
+    }
+
+    @Override
+    protected UserDetailsService userDetailsService() {
+        return raUserDetailsService;
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(raUserDetailsService);
     }
 }

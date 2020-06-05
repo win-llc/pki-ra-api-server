@@ -2,20 +2,18 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.AccountRequestUpdateForm;
-import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AccountRequest;
-import com.winllc.pki.ra.domain.User;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AccountRequestRepository;
+import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.repository.UserRepository;
-import com.winllc.pki.ra.security.RAUser;
+import com.winllc.pki.ra.service.external.IdentityProviderService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -37,6 +35,10 @@ public class AccountRequestService {
     private AccountRepository accountRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PocEntryRepository pocEntryRepository;
+    @Autowired
+    private IdentityProviderService identityProviderService;
 
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)
@@ -56,19 +58,21 @@ public class AccountRequestService {
     @PostMapping("/submit")
     @ResponseStatus(HttpStatus.CREATED)
     public Long createAccountRequest(@Valid @RequestBody AccountRequestForm form) throws RAObjectNotFoundException{
-        Optional<User> userOptional = userRepository.findOneByUsername(form.getAccountOwnerEmail());
-        if(userOptional.isPresent()){
-            User user = userOptional.get();
+        //todo should not be required to be in user repo
+        //Optional<IdentityExternal> optionalIdentityExternal = identityProviderService.findByEmail(form.getAccountOwnerEmail());
+        //Optional<User> userOptional = userRepository.findOneByUsername(form.getAccountOwnerEmail());
+        //if(userOptional.isPresent()){
+            //User user = userOptional.get();
 
             AccountRequest accountRequest = AccountRequest.createNew();
-            accountRequest.setAccountOwner(user);
+            accountRequest.setAccountOwnerEmail(form.getAccountOwnerEmail());
             accountRequest.setProjectName(form.getProjectName());
 
             accountRequest = accountRequestRepository.save(accountRequest);
             return accountRequest.getId();
-        }else{
-            throw new RAObjectNotFoundException(User.class, form.getAccountOwnerEmail());
-        }
+        //}else{
+        //    throw new RAObjectNotFoundException(User.class, form.getAccountOwnerEmail());
+        //}
     }
 
     @PostMapping("/update")
@@ -80,18 +84,6 @@ public class AccountRequestService {
             AccountRequest accountRequest = optionalAccountRequest.get();
             if(form.getState().contentEquals("approve")){
                 accountRequest.approve();
-
-                Account account = accountService.buildNew();
-                account.setProjectName(accountRequest.getProjectName());
-
-                User accountOwner = accountRequest.getAccountOwner();
-
-                account.getAccountUsers().add(accountOwner);
-                account = accountRepository.save(account);
-
-                accountOwner.getAccounts().add(account);
-
-                userRepository.save(accountOwner);
             }else if(form.getState().contentEquals("reject")){
                 accountRequest.reject();
             }else{

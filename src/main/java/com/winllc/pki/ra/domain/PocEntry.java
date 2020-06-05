@@ -2,7 +2,10 @@ package com.winllc.pki.ra.domain;
 
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.PreRemove;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
@@ -10,6 +13,7 @@ import java.time.LocalDateTime;
 public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedEntity {
 
     private String email;
+    private boolean groupEmail;
     private boolean enabled;
     private Timestamp addedOn;
     @ManyToOne
@@ -38,6 +42,14 @@ public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedE
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public boolean isGroupEmail() {
+        return groupEmail;
+    }
+
+    public void setGroupEmail(boolean groupEmail) {
+        this.groupEmail = groupEmail;
     }
 
     public boolean isEnabled() {

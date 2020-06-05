@@ -38,11 +38,9 @@ class UserRepositoryTest {
         User user = new User();
         user.setIdentifier(UUID.randomUUID());
         user.setUsername("test@test.com");
-        user.getAccounts().add(account);
 
         user = userRepository.save(user);
 
-        account.getAccountUsers().add(user);
         accountRepository.save(account);
     }
 
@@ -64,13 +62,6 @@ class UserRepositoryTest {
         User oneByUsername = userRepository.findOneByUsername("test@test.com").get();
         Optional<User> oneByIdentifier = userRepository.findOneByIdentifier(oneByUsername.getIdentifier());
         assertTrue(oneByIdentifier.isPresent());
-    }
-
-    @Test
-    void findAllByAccountsContains() {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
-        List<User> allByAccountsContains = userRepository.findAllByAccountsContains(account);
-        assertEquals(1, allByAccountsContains.size());
     }
 
     @Test

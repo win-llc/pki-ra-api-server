@@ -1,21 +1,14 @@
 package com.winllc.pki.ra.security;
 
-import com.winllc.pki.ra.domain.RolePermission;
-import com.winllc.pki.ra.domain.User;
-import com.winllc.pki.ra.repository.RolePermissionRepository;
 import com.winllc.pki.ra.repository.UserRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 @Service
 public class RAUserDetailsService implements UserDetailsService {
@@ -31,25 +24,10 @@ public class RAUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        Optional<User> userOptional = userRepository.findOneByUsername(username);
-        User user;
-        if(userOptional.isPresent()){
-            user = userOptional.get();
-        }else{
-            log.debug(username+" did not exist, save to DB");
-            User temp = new User();
-            temp.setUsername(username);
-            temp.setIdentifier(UUID.randomUUID());
-
-            user = userRepository.save(temp);
-        }
-
-        RAUser raUser = new RAUser(user);
-
-        UserDetails userDetails = new org.springframework.security.core.userdetails.User(user.getIdentifier().toString(),
-                user.getUsername(),
-                user.getRoles().stream().map(SimpleGrantedAuthority::new)
-        .collect(Collectors.toList()));
+        //todo remove all this
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(username,
+                username,
+                new ArrayList<>());
 
         //todo for testing, remove
         //raUser.setPermissions(Collections.singletonList("update_account_restriction"));

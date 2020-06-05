@@ -4,16 +4,10 @@ import com.winllc.pki.ra.beans.OIDCClientDetails;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
 import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.ServerEntry;
-import com.winllc.pki.ra.domain.User;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.DomainRepository;
-import com.winllc.pki.ra.repository.ServerEntryRepository;
-import com.winllc.pki.ra.repository.UserRepository;
+import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.service.external.KeycloakService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +40,8 @@ class ServerEntryServiceTest {
     private UserRepository userRepository;
     @Autowired
     private DomainRepository domainRepository;
+    @Autowired
+    private PocEntryRepository pocEntryRepository;
     @MockBean
     private KeycloakService keycloakService;
 
@@ -58,14 +54,8 @@ class ServerEntryServiceTest {
         account.setMacKey("testmac1");
         account = accountRepository.save(account);
 
-        User user = new User();
-        user.setUsername("test@test.com");
-        user.setIdentifier(UUID.randomUUID());
-        user.getAccounts().add(account);
-        userRepository.save(user);
-
-        account.getAccountUsers().add(user);
-        accountRepository.save(account);
+        PocEntry pocEntry = PocEntry.buildNew("test@test.com", account);
+        pocEntryRepository.save(pocEntry);
 
         Domain domain = new Domain();
         domain.setBase("winllc-dev.com");
@@ -92,6 +82,7 @@ class ServerEntryServiceTest {
         serverEntryRepository.deleteAll();
         accountRepository.deleteAll();
         userRepository.deleteAll();
+        pocEntryRepository.deleteAll();
     }
 
     @Test

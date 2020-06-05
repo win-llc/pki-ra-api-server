@@ -27,16 +27,6 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
             CascadeType.PERSIST,
             CascadeType.MERGE
     })
-    @JoinTable(name = "account_user",
-            joinColumns = @JoinColumn(name = "account_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<User> accountUsers;
-    @JsonIgnore
-    @ManyToMany(cascade = {
-            CascadeType.PERSIST,
-            CascadeType.MERGE
-    })
     @JoinTable(name = "account_domain",
             joinColumns = @JoinColumn(name = "account_id"),
             inverseJoinColumns = @JoinColumn(name = "domain_id")
@@ -81,17 +71,10 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
             }
         }
 
-        Set<User> users = getAccountUsers();
-        if(!CollectionUtils.isEmpty(users)){
-            for(User user : users){
-                user.getAccounts().remove(this);
-            }
-        }
-
         Set<PocEntry> pocEntries = getPocs();
         if(!CollectionUtils.isEmpty(pocEntries)){
             for(PocEntry pocEntry : pocEntries){
-                pocEntry.setAccount(this);
+                pocEntry.setAccount(null);
             }
         }
 
@@ -141,15 +124,6 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
 
     public void setAcmeRequireHttpValidation(boolean acmeRequireHttpValidation) {
         this.acmeRequireHttpValidation = acmeRequireHttpValidation;
-    }
-
-    public Set<User> getAccountUsers() {
-        if(accountUsers == null) accountUsers = new HashSet<>();
-        return accountUsers;
-    }
-
-    public void setAccountUsers(Set<User> accountUsers) {
-        this.accountUsers = accountUsers;
     }
 
     public Set<PocEntry> getPocs() {

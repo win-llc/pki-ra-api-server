@@ -4,7 +4,6 @@ import com.winllc.acme.common.AdditionalSetting;
 import com.winllc.acme.common.CertificateAuthoritySettings;
 
 import javax.validation.constraints.NotEmpty;
-import java.util.ArrayList;
 import java.util.List;
 
 public class AcmeCertificateAuthoritySettingsForm extends AcmeSettingsForm<CertificateAuthoritySettings> {

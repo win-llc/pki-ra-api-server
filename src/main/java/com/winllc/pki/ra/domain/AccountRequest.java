@@ -1,19 +1,15 @@
 package com.winllc.pki.ra.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
-import org.springframework.util.CollectionUtils;
 
-import javax.persistence.*;
-import java.util.Set;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.PreRemove;
 
 @Entity
 public class AccountRequest extends AbstractPersistable<Long> {
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="accountOwner_fk")
-    private User accountOwner;
+    private String accountOwnerEmail;
     private String projectName;
     @Column(nullable = false)
     private String state;
@@ -26,14 +22,7 @@ public class AccountRequest extends AbstractPersistable<Long> {
 
     @PreRemove
     private void preRemove(){
-        setAccountOwner(null);
 
-        if(accountOwner != null){
-            Set<AccountRequest> accountRequests = accountOwner.getAccountRequests();
-            if(!CollectionUtils.isEmpty(accountRequests)){
-                accountRequests.remove(this);
-            }
-        }
     }
 
     public String getProjectName() {
@@ -44,12 +33,12 @@ public class AccountRequest extends AbstractPersistable<Long> {
         this.projectName = projectName;
     }
 
-    public User getAccountOwner() {
-        return accountOwner;
+    public String getAccountOwnerEmail() {
+        return accountOwnerEmail;
     }
 
-    public void setAccountOwner(User accountOwner) {
-        this.accountOwner = accountOwner;
+    public void setAccountOwnerEmail(String accountOwnerEmail) {
+        this.accountOwnerEmail = accountOwnerEmail;
     }
 
     public String getState() {

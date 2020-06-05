@@ -1,11 +1,9 @@
 package com.winllc.pki.ra.beans.form;
 
 import com.winllc.pki.ra.domain.AccountRequest;
-import com.winllc.pki.ra.util.FormValidationUtil;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 
 public class AccountRequestForm extends ValidForm<AccountRequest> {
 

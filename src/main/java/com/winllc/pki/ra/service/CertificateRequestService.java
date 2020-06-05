@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.SubjectAltNames;
+import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.CertificateRequestForm;
@@ -14,13 +14,11 @@ import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.*;
-import com.winllc.pki.ra.security.RAUser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -114,12 +112,10 @@ public class CertificateRequestService {
                     .collect(Collectors.toList()));
 
             Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
-            Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
 
-            if (optionalUser.isPresent() && optionalAccount.isPresent()) {
-                User user = optionalUser.get();
+            if (optionalAccount.isPresent()) {
                 Account account = optionalAccount.get();
-                certificateRequest.setRequestedBy(user);
+                certificateRequest.setRequestedBy(raUser.getUsername());
                 certificateRequest.setAccount(account);
                 certificateRequest = requestRepository.save(certificateRequest);
                 return certificateRequest.getId();
@@ -176,19 +172,12 @@ public class CertificateRequestService {
     @GetMapping("/myRequests")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public List<CertificateRequest> myRequests(@AuthenticationPrincipal UserDetails raUser) throws RAObjectNotFoundException {
-        Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
-        if (optionalUser.isPresent()) {
-            User currentUser = optionalUser.get();
+    public List<CertificateRequest> myRequests(@AuthenticationPrincipal UserDetails raUser) {
+        List<CertificateRequest> requests = requestRepository.findAllByRequestedByEquals(raUser.getUsername());
 
-            List<CertificateRequest> requests = requestRepository.findAllByRequestedByEquals(currentUser);
+        requests.forEach(r -> Hibernate.initialize(r.getRequestedDnsNames()));
 
-            requests.forEach(r -> Hibernate.initialize(r.getRequestedDnsNames()));
-
-            return requests;
-        } else {
-            throw new RAObjectNotFoundException(User.class, raUser.getUsername());
-        }
+        return requests;
     }
 
 

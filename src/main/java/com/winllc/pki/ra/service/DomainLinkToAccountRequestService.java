@@ -1,27 +1,19 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.beans.*;
+import com.winllc.pki.ra.beans.DomainLinkRequestDecision;
 import com.winllc.pki.ra.beans.form.DomainLinkToAccountRequestForm;
 import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.pki.ra.beans.info.DomainLinkToAccountRequestInfo;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.DomainLinkToAccountRequest;
-import com.winllc.pki.ra.domain.User;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.NotAuthorizedException;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.DomainLinkToAccountRequestRepository;
-import com.winllc.pki.ra.repository.DomainRepository;
-import com.winllc.pki.ra.repository.UserRepository;
-import com.winllc.pki.ra.security.RAUser;
+import com.winllc.pki.ra.repository.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -45,6 +37,8 @@ public class DomainLinkToAccountRequestService {
     private AccountRepository accountRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PocEntryRepository pocEntryRepository;
 
     @Transactional
     @GetMapping("/all")
@@ -94,17 +88,18 @@ public class DomainLinkToAccountRequestService {
         domainIds.removeIf(Objects::isNull);
         form.setRequestedDomainIds(domainIds);
 
-        Optional<User> optionalUser = userRepository.findOneByUsername(raUser.getUsername());
         Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
         List<Domain> requestedDomains = domainRepository.findAllByIdIn(form.getRequestedDomainIds());
-        if(optionalUser.isPresent() && optionalAccount.isPresent()){
-            User requester = optionalUser.get();
+        if(optionalAccount.isPresent()){
             Account account = optionalAccount.get();
 
             //Ensure user exists in the account
 
-            List<User> accountUsers = userRepository.findAllByAccountsContains(account);
-            if(accountUsers.contains(requester)){
+            Optional<PocEntry> pocEntryOptional = pocEntryRepository
+                    .findDistinctByEmailEqualsAndAccount(raUser.getUsername(), account);
+
+            //List<User> accountUsers = userRepository.findAllByAccountsContains(account);
+            if(pocEntryOptional.isPresent()){
                 Set<Long> avaialableDomains = requestedDomains.stream()
                         .map(r -> r.getId())
                         .collect(Collectors.toSet());
@@ -116,7 +111,7 @@ public class DomainLinkToAccountRequestService {
                 return request.getId();
             }else{
                 log.error("Requester not associated with account");
-                throw new NotAuthorizedException(requester, "Link Account Create");
+                throw new NotAuthorizedException(raUser.getUsername(), "Link Account Create");
             }
 
         }else{

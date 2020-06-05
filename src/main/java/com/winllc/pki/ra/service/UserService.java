@@ -1,11 +1,9 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.repository.UserRepository;
 import com.winllc.pki.ra.security.RAUser;
 import com.winllc.pki.ra.service.external.KeycloakService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -20,11 +18,11 @@ public class UserService {
     @Autowired
     private KeycloakService keycloakService;
 
+
     @GetMapping("/profile")
     @ResponseStatus(HttpStatus.OK)
     public RAUser getProfile(@AuthenticationPrincipal UserDetails userDetails){
-        RAUser raUser = new RAUser();
-        raUser.setUsername(userDetails.getUsername());
+        RAUser raUser = new RAUser(userDetails.getUsername());
         raUser.setPermissions(userDetails.getAuthorities().stream().map(ga -> ga.toString()).collect(Collectors.toList()));
         return raUser;
     }
@@ -36,4 +34,5 @@ public class UserService {
         List<String> users = keycloakService.searchUsers(search);
         return users;
     }
+
 }

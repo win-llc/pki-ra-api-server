@@ -4,17 +4,11 @@ import com.winllc.pki.ra.beans.DomainLinkRequestDecision;
 import com.winllc.pki.ra.beans.form.DomainLinkToAccountRequestForm;
 import com.winllc.pki.ra.beans.info.DomainLinkToAccountRequestInfo;
 import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.DomainLinkToAccountRequest;
-import com.winllc.pki.ra.domain.User;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.NotAuthorizedException;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.DomainLinkToAccountRequestRepository;
-import com.winllc.pki.ra.repository.DomainRepository;
-import com.winllc.pki.ra.repository.UserRepository;
+import com.winllc.pki.ra.repository.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +37,7 @@ class DomainLinkToAccountRequestServiceTest {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
-    private UserRepository userRepository;
+    private PocEntryRepository pocEntryRepository;
 
     @BeforeEach
     @Transactional
@@ -53,14 +47,8 @@ class DomainLinkToAccountRequestServiceTest {
         account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
-        User user = new User();
-        user.getAccounts().add(account);
-        user.setIdentifier(UUID.randomUUID());
-        user.setUsername("test@test.com");
-        user = userRepository.save(user);
-
-        account.getAccountUsers().add(user);
-        accountRepository.save(account);
+        PocEntry pocEntry = PocEntry.buildNew("test@test.com", account);
+        pocEntryRepository.save(pocEntry);
 
         Domain domain = new Domain();
         domain.setBase("winllc-dev.com");
@@ -80,7 +68,6 @@ class DomainLinkToAccountRequestServiceTest {
         domainRepository.deleteAll();
         requestRepository.deleteAll();
         accountRepository.deleteAll();
-        userRepository.deleteAll();
     }
 
     @Test

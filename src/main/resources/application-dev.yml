@@ -16,7 +16,7 @@ management:
       show-details: always
 spring:
   datasource:
-    url: jdbc:mysql://database.winllc-dev.com/winpkira
+    url: jdbc:mysql://database.winllc-dev.com/winpkira-dev
     driver-class-name: com.mysql.jdbc.Driver
     username: appuser
     password: P@ssW0rd
@@ -48,10 +48,13 @@ server:
   error:
     include-stacktrace: never
   port: 8080
+  ssl:
+    trust-store: classpath:trust.jks
+    enabled: false
   servlet:
     context-path: /
   #address: 192.168.1.13
-  base-url: http://192.168.1.202:8080
+  base-url: http://192.168.1.3:8080
 keycloak:
   admin-interface:
     server-base-url: 'https://keycloak.winllc-dev.com:8443/auth'
@@ -59,8 +62,10 @@ keycloak:
     client-id: win-pki-ra-client
     client-secret: 4f6e55f4-1d4c-4f84-8564-0e2fd4194eea
     client-username: dave
-    client-password: pass
+    client-password: password
     custom-client-scope: pki-app
+authentication:
+  jwt-required-audience: pki-ra-client-public
 web-ui:
   server-base: http://localhost:3000
   uri-templates:

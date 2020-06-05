@@ -6,15 +6,15 @@ import com.winllc.pki.ra.domain.RolePermission;
 import com.winllc.pki.ra.repository.RolePermissionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.management.relation.Role;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -26,6 +26,12 @@ public class RolePermissionsService {
     private PermissionProperties permissionProperties;
     @Autowired
     private RolePermissionRepository rolePermissionRepository;
+
+    @GetMapping("/all")
+    @ResponseStatus(HttpStatus.OK)
+    public List<RolePermission> getAll(){
+        return rolePermissionRepository.findAll();
+    }
 
     @GetMapping("/available")
     @ResponseStatus(HttpStatus.OK)
@@ -46,6 +52,33 @@ public class RolePermissionsService {
         List<RolePermission> allByRoleName = rolePermissionRepository.findAllByRoleName(role);
 
         return allByRoleName;
+    }
+
+    @PostMapping("/permissions/updateAll")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public List<RolePermission> updateAllRolePermissions(@RequestBody List<RolePermission> rolePermissions){
+        List<RolePermission> currentRolePermissions = rolePermissionRepository.findAll();
+
+        //Delete entries that were removed
+        List<RolePermission> toDelete = currentRolePermissions.stream()
+                .filter(existing -> !rolePermissions.contains(existing))
+                .collect(Collectors.toList());
+        toDelete.forEach(perm -> rolePermissionRepository.delete(perm));
+
+        if(!CollectionUtils.isEmpty(rolePermissions)){
+            for(RolePermission rolePermission : rolePermissions){
+                Optional<RolePermission> rolePermissionOptional = rolePermissionRepository.findDistinctByRoleNameAndPermission(
+                        rolePermission.getRoleName(), rolePermission.getPermission());
+                //Add to DB if does not exist
+                if(!rolePermissionOptional.isPresent()){
+                    rolePermissionRepository.save(rolePermission);
+                }
+            }
+
+        }
+
+        return rolePermissionRepository.findAll();
     }
 
     @PostMapping("/permissions/update")

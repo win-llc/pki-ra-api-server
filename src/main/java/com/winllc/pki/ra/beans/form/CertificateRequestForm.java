@@ -3,7 +3,6 @@ package com.winllc.pki.ra.beans.form;
 import com.winllc.acme.common.SubjectAltName;
 import com.winllc.pki.ra.domain.CertificateRequest;
 
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 

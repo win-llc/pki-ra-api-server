@@ -1,17 +1,11 @@
 package com.winllc.pki.ra.beans.info;
 
 import com.winllc.pki.ra.domain.PocEntry;
-import com.winllc.pki.ra.domain.User;
 
 import java.util.Objects;
 
-public class UserInfo extends InfoObject<User> {
+public class UserInfo extends InfoObject<PocEntry> {
     private String username;
-
-    public UserInfo(User entity) {
-        super(entity);
-        this.username = entity.getUsername();
-    }
 
     public UserInfo(PocEntry pocEntry){
         this.setId(pocEntry.getId());

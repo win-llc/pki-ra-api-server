@@ -30,4 +30,6 @@ public interface AcmeServerService {
     List<ExternalAccountProviderSettings> getAllExternalAccountProviderSettings() throws AcmeConnectionException;
     void deleteExternalAccountProviderSettings(String name) throws AcmeConnectionException;
 
+    AcmeServerConnection getConnection();
+
 }

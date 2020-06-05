@@ -64,8 +64,6 @@ class CertificateRequestServiceTest {
     @Autowired
     private CertificateRequestRepository certificateRequestRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private AccountRepository accountRepository;
     @Autowired
     private AuditRecordRepository auditRecordRepository;
@@ -84,16 +82,10 @@ class CertificateRequestServiceTest {
         account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
-        User user = new User();
-        user.getAccounts().add(account);
-        user.setIdentifier(UUID.randomUUID());
-        user.setUsername("test@test.com");
-        user = userRepository.save(user);
-
         CertificateRequest request = new CertificateRequest();
         request.setCsr(testCsr);
         request.setStatus("new");
-        request.setRequestedBy(user);
+        request.setRequestedBy("test@test.com");
         request.setAccount(account);
 
         certificateRequestRepository.save(request);
@@ -103,7 +95,6 @@ class CertificateRequestServiceTest {
     @Transactional
     void after(){
         certificateRequestRepository.deleteAll();
-        userRepository.deleteAll();
         accountRepository.deleteAll();
         auditRecordRepository.deleteAll();
         serverEntryRepository.deleteAll();

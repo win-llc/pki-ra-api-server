@@ -2,9 +2,9 @@ package com.winllc.pki.ra.security;
 
 import com.winllc.pki.ra.domain.RolePermission;
 import com.winllc.pki.ra.repository.RolePermissionRepository;
+import com.winllc.pki.ra.repository.UserRepository;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.configurationprocessor.json.JSONException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,6 +28,8 @@ public class RAUserJwtAuthenticationConverter
 
     @Autowired
     private RolePermissionRepository rolePermissionRepository;
+    @Autowired
+    private UserRepository userRepository;
     private final RAUserDetailsService raUserDetailsService;
 
     public RAUserJwtAuthenticationConverter(
@@ -40,6 +42,18 @@ public class RAUserJwtAuthenticationConverter
         Collection<GrantedAuthority> authorities = extractAuthorities(jwt);
 
         String username = jwt.getClaimAsString("email");
+
+        /*
+        Optional<com.winllc.pki.ra.domain.User> userOptional = userRepository.findOneByUsername(username);
+        if(!userOptional.isPresent()){
+            com.winllc.pki.ra.domain.User temp = new com.winllc.pki.ra.domain.User();
+            temp.setUsername(username);
+            temp.setIdentifier(UUID.randomUUID());
+
+            userRepository.save(temp);
+        }
+
+         */
 
         //RAUser raUser = (RAUser) raUserDetailsService.loadUserByUsername(username);
         //raUser.setRoles(authorities.stream().map(a -> a.getAuthority()).collect(Collectors.toList()));

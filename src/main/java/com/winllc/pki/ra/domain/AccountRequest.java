@@ -10,6 +10,7 @@ import javax.persistence.PreRemove;
 public class AccountRequest extends AbstractPersistable<Long> {
 
     private String accountOwnerEmail;
+    private String requestedByEmail;
     private String projectName;
     @Column(nullable = false)
     private String state;
@@ -31,6 +32,14 @@ public class AccountRequest extends AbstractPersistable<Long> {
 
     public void setProjectName(String projectName) {
         this.projectName = projectName;
+    }
+
+    public String getRequestedByEmail() {
+        return requestedByEmail;
+    }
+
+    public void setRequestedByEmail(String requestedByEmail) {
+        this.requestedByEmail = requestedByEmail;
     }
 
     public String getAccountOwnerEmail() {

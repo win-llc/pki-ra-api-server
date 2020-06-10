@@ -1,14 +1,16 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.DirectoryDataSettings;
+import com.winllc.acme.common.model.data.DirectoryData;
+import com.winllc.pki.ra.acme.AcmeServerConnection;
+import com.winllc.pki.ra.acme.AcmeServerService;
+import com.winllc.pki.ra.acme.AcmeServerServiceImpl;
 import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.beans.form.AccountUpdateForm;
 import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.beans.info.UserInfo;
 import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AccountRequest;
-import com.winllc.pki.ra.domain.PocEntry;
-import com.winllc.pki.ra.domain.User;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
@@ -17,8 +19,10 @@ import com.winllc.pki.ra.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.util.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -26,6 +30,8 @@ import javax.transaction.Transactional;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = AppConfig.class)
 @ActiveProfiles("test")
@@ -37,6 +43,8 @@ class AccountServiceTest {
     private AccountRepository accountRepository;
     @Autowired
     private PocEntryRepository pocEntryRepository;
+    @MockBean
+    private AcmeServerManagementService acmeServerManagementService;
 
     @BeforeEach
     @Transactional
@@ -79,7 +87,19 @@ class AccountServiceTest {
     }
 
     @Test
-    void getAccountsForCurrentUser() throws RAObjectNotFoundException, AcmeConnectionException {
+    void getAccountsForCurrentUser() throws  AcmeConnectionException {
+        DirectoryDataSettings settings = new DirectoryDataSettings();
+        settings.setName("acme");
+
+        AcmeServerConnectionInfo info = new AcmeServerConnectionInfo();
+        info.setName("acme");
+        info.setUrl("https://test.com");
+        AcmeServerConnection connection = new AcmeServerConnection(info);
+        AcmeServerService acmeServerService = new AcmeServerServiceImpl(connection);
+
+        when(acmeServerManagementService.getAllDirectorySettings(any())).thenReturn(Collections.singletonList(settings));
+        when(acmeServerManagementService.getAcmeServerServiceByName(any())).thenReturn(Optional.of(acmeServerService));
+
         UserDetails userDetails = new org.springframework.security.core.userdetails.User("test@test.com", "", Collections.emptyList());
         List<AccountInfo> accountsForCurrentUser = accountService.getAccountsForCurrentUser(userDetails);
         assertEquals(1, accountsForCurrentUser.size());

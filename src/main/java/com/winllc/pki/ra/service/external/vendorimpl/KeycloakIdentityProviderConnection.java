@@ -1,5 +1,6 @@
-package com.winllc.pki.ra.service.external;
+package com.winllc.pki.ra.service.external.vendorimpl;
 
+import com.winllc.pki.ra.service.external.IdentityProviderConnection;
 import com.winllc.pki.ra.service.external.beans.IdentityExternal;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.UserRepresentation;
@@ -20,7 +21,7 @@ public class KeycloakIdentityProviderConnection implements IdentityProviderConne
 
     @Override
     public String getConnectionName() {
-        return null;
+        return "identity-keycloak";
     }
 
     @Override

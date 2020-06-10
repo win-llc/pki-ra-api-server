@@ -2,6 +2,7 @@ package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
+import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -14,23 +15,15 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
     @JsonIgnore
     @OneToMany(mappedBy = "attributePolicyGroup")
     private Set<AttributePolicy> attributePolicies;
-    @JsonIgnore
-    @ManyToMany(cascade = {
-            CascadeType.PERSIST,
-            CascadeType.MERGE
-    })
-    @JoinTable(name = "attributePolicyGroup_serverEntry",
-            joinColumns = @JoinColumn(name = "attributePolicyGroup_id"),
-            inverseJoinColumns = @JoinColumn(name = "serverEntry_id")
-    )
-    private Set<ServerEntry> serverEntries;
+    @ManyToOne
+    @JoinColumn(name="account_fk")
+    private Account account;
+    private String securityPolicyServiceName;
 
     @PreRemove
     private void preRemove(){
-        if(serverEntries != null){
-            for(ServerEntry serverEntry : serverEntries){
-                serverEntry.getPolicyGroups().remove(this);
-            }
+        if(account != null && !CollectionUtils.isEmpty(account.getPolicyGroups())){
+            account.getPolicyGroups().remove(this);
         }
     }
 
@@ -51,12 +44,19 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
         this.attributePolicies = attributePolicies;
     }
 
-    public Set<ServerEntry> getServerEntries() {
-        if(serverEntries == null) serverEntries = new HashSet<>();
-        return serverEntries;
+    public String getSecurityPolicyServiceName() {
+        return securityPolicyServiceName;
     }
 
-    public void setServerEntries(Set<ServerEntry> serverEntries) {
-        this.serverEntries = serverEntries;
+    public void setSecurityPolicyServiceName(String securityPolicyServiceName) {
+        this.securityPolicyServiceName = securityPolicyServiceName;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
     }
 }

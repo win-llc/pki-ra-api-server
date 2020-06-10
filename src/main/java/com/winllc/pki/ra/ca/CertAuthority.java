@@ -11,13 +11,11 @@ import java.util.Map;
 
 public interface CertAuthority {
     CertAuthorityConnectionType getType();
-    List<String> getRequiredConnectionProperties();
-    Map<String, String> getDefaultProperties();
     String getName();
     X509Certificate issueCertificate(String csr, SubjectAltNames sans) throws Exception;
     boolean revokeCertificate(String serial, int reason) throws Exception;
     String getCertificateStatus(String serial);
     List<CertificateDetails> search(CertSearchParam params);
-    Certificate[] getTrustChain();
+    Certificate[] getTrustChain() throws Exception;
     X509Certificate getCertificateBySerial(String serial) throws Exception;
 }

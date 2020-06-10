@@ -14,10 +14,17 @@ public class AttributePolicy extends AbstractPersistable<Long> {
     private String attributeName;
     private String attributeValue;
     private boolean multiValued;
+    private boolean staticValue;
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name="attributePolicyGroup_fk")
     private AttributePolicyGroup attributePolicyGroup;
+
+    //if value from security policy is true, check if security policy service associated with the AttributePolicyGroup
+    //contains a matching key-value, if yes apply the value
+    private boolean valueFromSecurityPolicy;
+    private String securityAttributeKeyName;
+    private String securityAttributeValue;
 
     @PreRemove
     private void preRemove(){
@@ -26,10 +33,12 @@ public class AttributePolicy extends AbstractPersistable<Long> {
         }
     }
 
+    @JsonIgnore
     public boolean isVariableValue(){
         return attributeValue != null && attributeValue.startsWith("{") && attributeValue.endsWith("}");
     }
 
+    @JsonIgnore
     public String getVariableValueField(){
         return attributeValue.replace("{","").replace("}","");
     }
@@ -64,5 +73,37 @@ public class AttributePolicy extends AbstractPersistable<Long> {
 
     public void setAttributePolicyGroup(AttributePolicyGroup attributePolicyGroup) {
         this.attributePolicyGroup = attributePolicyGroup;
+    }
+
+    public boolean isStaticValue() {
+        return staticValue;
+    }
+
+    public void setStaticValue(boolean staticValue) {
+        this.staticValue = staticValue;
+    }
+
+    public boolean isValueFromSecurityPolicy() {
+        return valueFromSecurityPolicy;
+    }
+
+    public void setValueFromSecurityPolicy(boolean valueFromSecurityPolicy) {
+        this.valueFromSecurityPolicy = valueFromSecurityPolicy;
+    }
+
+    public String getSecurityAttributeKeyName() {
+        return securityAttributeKeyName;
+    }
+
+    public void setSecurityAttributeKeyName(String securityAttributeKeyName) {
+        this.securityAttributeKeyName = securityAttributeKeyName;
+    }
+
+    public String getSecurityAttributeValue() {
+        return securityAttributeValue;
+    }
+
+    public void setSecurityAttributeValue(String securityAttributeValue) {
+        this.securityAttributeValue = securityAttributeValue;
     }
 }

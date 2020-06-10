@@ -1,7 +1,8 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.security.RAUser;
-import com.winllc.pki.ra.service.external.KeycloakService;
+import com.winllc.pki.ra.service.external.beans.IdentityExternal;
+import com.winllc.pki.ra.service.external.vendorimpl.KeycloakIdentityProviderConnection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     @Autowired
-    private KeycloakService keycloakService;
+    private KeycloakIdentityProviderConnection keycloakService;
 
 
     @GetMapping("/profile")
@@ -31,8 +32,10 @@ public class UserService {
     @ResponseStatus(HttpStatus.OK)
     public List<String> searchUsersFromIdentityProvider(@PathVariable String search){
 
-        List<String> users = keycloakService.searchUsers(search);
-        return users;
+        List<IdentityExternal> identityExternals = keycloakService.searchByEmailLike(search);
+        return identityExternals.stream()
+                .map(e -> e.getEmail())
+                .collect(Collectors.toList());
     }
 
 }

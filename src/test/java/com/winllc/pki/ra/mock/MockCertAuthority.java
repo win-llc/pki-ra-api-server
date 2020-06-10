@@ -71,16 +71,6 @@ public class MockCertAuthority implements CertAuthority {
     }
 
     @Override
-    public List<String> getRequiredConnectionProperties() {
-        return new ArrayList<>();
-    }
-
-    @Override
-    public Map<String, String> getDefaultProperties() {
-        return new HashMap<>();
-    }
-
-    @Override
     public String getName() {
         return "mockca";
     }

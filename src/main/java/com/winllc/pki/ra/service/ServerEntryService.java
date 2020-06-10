@@ -18,7 +18,8 @@ import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
 import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
-import com.winllc.pki.ra.service.external.KeycloakService;
+import com.winllc.pki.ra.service.external.EntityDirectoryService;
+import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,10 +49,13 @@ public class ServerEntryService {
     private AccountRepository accountRepository;
     @Autowired
     private DomainRepository domainRepository;
+    //todo replace with OIDCProviderService
     @Autowired
-    private KeycloakService keycloakService;
+    private KeycloakOIDCProviderConnection oidcProviderConnection;
     @Autowired
     private PocEntryRepository pocEntryRepository;
+    @Autowired
+    private EntityDirectoryService entityDirectoryService;
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
@@ -76,6 +80,9 @@ public class ServerEntryService {
                 entry.setHostname(form.getFqdn());
 
                 entry = serverEntryRepository.save(entry);
+
+                //apply attributes to external directory
+                entityDirectoryService.applyServerEntryToDirectory(entry);
 
                 log.info("Created a Server Entry: "+entry);
 
@@ -110,6 +117,9 @@ public class ServerEntryService {
                 serverEntry.setAlternateDnsValues(alternateDnsValues);
 
                 serverEntry = serverEntryRepository.save(serverEntry);
+
+                //apply attributes to external directory
+                entityDirectoryService.applyServerEntryToDirectory(serverEntry);
 
                 return entryToInfo(serverEntry);
             }else{
@@ -176,7 +186,7 @@ public class ServerEntryService {
 
             try {
                 //todo generify
-                serverEntry = keycloakService.createClient(serverEntry);
+                serverEntry = oidcProviderConnection.createClient(serverEntry);
 
                 if(serverEntry != null){
                     serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
@@ -205,7 +215,7 @@ public class ServerEntryService {
 
         if(optionalServerEntry.isPresent()){
             ServerEntry serverEntry = optionalServerEntry.get();
-            serverEntry = keycloakService.deleteClient(serverEntry);
+            serverEntry = oidcProviderConnection.deleteClient(serverEntry);
             if(serverEntry != null){
                 return entryToInfo(serverEntry);
             }else {
@@ -248,7 +258,7 @@ public class ServerEntryService {
 
             //if server entry is deleted, remove the OIDC client if it exists
             if(StringUtils.isNotBlank(serverEntry.getOpenidClientId())){
-                keycloakService.deleteClient(serverEntry);
+                oidcProviderConnection.deleteClient(serverEntry);
             }
 
             serverEntryRepository.deleteById(id);
@@ -270,7 +280,7 @@ public class ServerEntryService {
         //todo make dynamic
         acmeClientDetails.setAcmeServerValue("http://192.168.1.202:8181/acme/directory");
 
-        OIDCClientDetails oidcClientDetails = keycloakService.getClient(serverEntry);
+        OIDCClientDetails oidcClientDetails = oidcProviderConnection.getClient(serverEntry);
 
         ServerEntryDockerDeploymentFile dockerDeploymentFile = new ServerEntryDockerDeploymentFile();
         dockerDeploymentFile.setAcmeClientDetails(acmeClientDetails);

@@ -1,44 +1,34 @@
-package com.winllc.pki.ra.service.external;
+package com.winllc.pki.ra.service.external.vendorimpl;
 
 import com.winllc.pki.ra.beans.OIDCClientDetails;
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
+import com.winllc.pki.ra.service.external.OIDCProviderConnection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.ClientResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import javax.ws.rs.core.Response;
 import java.util.*;
-import java.util.stream.Collectors;
 
-@Service
-public class KeycloakService {
+@Component
+public class KeycloakOIDCProviderConnection implements OIDCProviderConnection {
 
-    private static final Logger log = LogManager.getLogger(KeycloakService.class);
+    private static final Logger log = LogManager.getLogger(KeycloakOIDCProviderConnection.class);
 
     @Value("${keycloak.admin-interface.server-base-url}")
     private String serverBaseUrl;
-    //private String serverUrlAuth = serverBaseUrl+"/auth";
     @Value("${keycloak.admin-interface.realm}")
     private String realm;
-    @Value("${keycloak.admin-interface.client-id}")
-    private String clientId;
-    @Value("${keycloak.admin-interface.client-secret}")
-    private String clientSecret;
     @Value("${keycloak.admin-interface.custom-client-scope}")
     private String customClientScope;
-    @Value("${keycloak.admin-interface.client-username}")
-    private String username;
-    @Value("${keycloak.admin-interface.client-password}")
-    private String password;
 
     @Autowired
     private Keycloak keycloak;
@@ -112,6 +102,7 @@ public class KeycloakService {
 }
      */
 
+    @Override
     public ServerEntry createClient(ServerEntry serverEntry) throws Exception {
         String url = "https://"+serverEntry.getFqdn();
 
@@ -181,7 +172,7 @@ public class KeycloakService {
 
         Response response =
                 keycloak.realm(realm)
-                .clients().create(client);
+                        .clients().create(client);
 
         int status = response.getStatus();
 
@@ -209,6 +200,7 @@ public class KeycloakService {
         }
     }
 
+    @Override
     public ServerEntry deleteClient(ServerEntry serverEntry) throws RAException {
         log.info("Going to delete Keycloak Client: "+serverEntry);
         Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(serverEntry.getId());
@@ -230,7 +222,8 @@ public class KeycloakService {
         }
     }
 
-    public OIDCClientDetails getClient(ServerEntry serverEntry){
+    @Override
+    public OIDCClientDetails getClient(ServerEntry serverEntry) {
         log.info("Getting client for: "+serverEntry.getFqdn());
         String oidcProviderMetadataURL = serverBaseUrl+"/realms/"+realm+"/.well-known/openid-configuration";
 
@@ -250,14 +243,8 @@ public class KeycloakService {
         return clientDetails;
     }
 
-    public List<String> searchUsers(String username){
-        //todo https://www.keycloak.org/docs-api/5.0/rest-api/index.html#_users_resource
-        List<UserRepresentation> search = keycloak.realm(realm)
-                .users().search(username);
-        return search.stream()
-                .map(u -> u.getEmail())
-                .collect(Collectors.toList());
+    @Override
+    public String getConnectionName() {
+        return "oidc-keycloak";
     }
-
-
 }

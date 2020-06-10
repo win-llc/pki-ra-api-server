@@ -118,7 +118,7 @@ public class CertAuthorityConnectionService {
 
             //Create the required settings for the connection, will be filled in on edit screen
             Set<CertAuthorityConnectionProperty> props = new HashSet<>();
-            for(String requiredProp : ca.getRequiredConnectionProperties()){
+            for(String requiredProp : ca.getType().getRequiredProperties()){
                 CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
                 prop.setName(requiredProp);
                 prop.setValue("");
@@ -352,7 +352,7 @@ public class CertAuthorityConnectionService {
 
     @GetMapping("/trustChain/{connectionName}")
     @ResponseStatus(HttpStatus.OK)
-    public String getTrustChain(@PathVariable String connectionName) {
+    public String getTrustChain(@PathVariable String connectionName) throws Exception {
         CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
 
         Certificate[] trustChain = certAuthority.getTrustChain();

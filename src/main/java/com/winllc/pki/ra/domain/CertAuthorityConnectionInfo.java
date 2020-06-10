@@ -23,6 +23,8 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
     @JsonIgnore
     @OneToMany(mappedBy = "certAuthorityConnectionInfo", fetch = FetchType.EAGER)
     private Set<CertAuthorityConnectionProperty> properties;
+    //todo require this
+    private String trustChainBase64;
 
     @PreRemove
     private void preRemove(){
@@ -88,6 +90,14 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
 
     public void setProperties(Set<CertAuthorityConnectionProperty> properties) {
         this.properties = properties;
+    }
+
+    public String getTrustChainBase64() {
+        return trustChainBase64;
+    }
+
+    public void setTrustChainBase64(String trustChainBase64) {
+        this.trustChainBase64 = trustChainBase64;
     }
 
     public Optional<CertAuthorityConnectionProperty> getPropertyByName(String name){

@@ -207,7 +207,7 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
-    void getTrustChain() {
+    void getTrustChain() throws Exception {
         String trustChain = connectionService.getTrustChain("mockca");
         Certificate[] certificates = CertUtil.trustChainStringToCertArray(trustChain);
         assertTrue(certificates.length > 0);

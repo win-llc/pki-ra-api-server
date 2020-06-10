@@ -71,6 +71,11 @@ keycloak:
     custom-client-scope: pki-app
 authentication:
   jwt-required-audience: pki-ra-client-public
+external-services:
+  oidc:
+    enabled-connection-names: oidc-keycloak
+  identity:
+    enabled-connection-names: identity-keycloak
 web-ui:
   server-base: http://winra.winllc-dev.com:3000
   uri-templates:

@@ -23,6 +23,7 @@ import org.mozilla.jss.netscape.security.x509.RevocationReason;
 
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.text.MessageFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
@@ -33,19 +34,13 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
 
     private ApplicationKeystore applicationKeystore;
 
-    private static final List<String> requiredProperties;
-    private static final Map<String, String> defaultProperties;
+    //Constants
+    private final String requestPath = "/ca/rest/certrequests";
+    private final String revokePath = "/ca/rest/agent/certs/";
+    private final String searchPath = "/ca/rest/certs/search";
+    private final String retrieveCert = "/ca/rest/certs/{0}";
 
     private String baseUrl = "https://dogtag-ca.winllc-dev.com:8443";
-
-    static{
-        requiredProperties = new ArrayList<>();
-        requiredProperties.add("BASE_URL");
-        requiredProperties.add("ADMIN_USERNAME");
-        requiredProperties.add("ADMIN_PASSWORD");
-
-        defaultProperties = new HashMap<>();
-    }
 
     public DogTagCertAuthority(CertAuthorityConnectionInfo info, ApplicationKeystore applicationKeystore) throws Exception {
         super(info);
@@ -59,19 +54,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
     }
 
     @Override
-    public List<String> getRequiredConnectionProperties() {
-        return requiredProperties;
-    }
-
-    @Override
-    public Map<String, String> getDefaultProperties() {
-        return defaultProperties;
-    }
-
-    @Override
     public X509Certificate issueCertificate(String csr, SubjectAltNames sans) throws Exception {
-        String requestPath = "/ca/rest/certrequests";
-
         CertEnrollmentRequest certEnrollmentRequest = buildCertEnrollmentRequest(csr);
 
         Function<String, CertRequestInfo> returnFunction = (s) -> {
@@ -134,16 +117,17 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
                 CertRequestInfo requestInfo = processDogtagGetOperation(baseUrl + "/ca/rest/certrequests/"+requestId,getRequestFunction);
 
                 return getCertificateBySerial(requestInfo.getCertId().toHexString());
+            }else{
+                throw new Exception("Dogtag operation failed with result: "+val.getOperationResult());
             }
+        }else{
+            throw new Exception("Could not process Dogtag certificate request");
         }
-
-        return null;
     }
 
 
     @Override
     public boolean revokeCertificate(String serial, int reason) throws Exception {
-        String revokePath = "/ca/rest/agent/certs/";
         CertRevokeRequest request = new CertRevokeRequest();
         request.setReason(RevocationReason.fromInt(reason));
 
@@ -172,12 +156,13 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
 
     @Override
     public String getCertificateStatus(String serial) {
+        //todo
         return null;
     }
 
     @Override
     public List<CertificateDetails> search(CertSearchParam params) {
-        String searchPath = "/ca/rest/certs/search";
+
 
         CertSearchRequest certSearchRequest = new CertSearchRequest();
 
@@ -188,9 +173,19 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         return null;
     }
 
+    /*
     @Override
-    public Certificate[] getTrustChain() {
-        //todo
+    public Certificate[] getTrustChain() throws Exception {
+        //todo iterate
+
+        //todo this should be pulled from the connection properties
+
+        String trustChain = getInfo().getTrustChainBase64();
+
+        X509Certificate rootCa = CertUtil.base64ToCert(trustChain);
+
+        return new Certificate[]{rootCa};
+
         String rootCa = "-----BEGIN CERTIFICATE-----\n" +
                 "MIIEBDCCAuygAwIBAgIBATANBgkqhkiG9w0BAQsFADBtMRMwEQYKCZImiZPyLGQB\n" +
                 "GRYDY29tMRowGAYKCZImiZPyLGQBGRYKd2lubGxjLWRldjETMBEGCgmSJomT8ixk\n" +
@@ -225,6 +220,8 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         return new Certificate[0];
     }
 
+     */
+
     @Override
     public X509Certificate getCertificateBySerial(String serial) throws Exception {
         Function<String, CertData> getCertFunction = s -> {
@@ -236,7 +233,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
             return null;
         };
 
-        CertData certData = processDogtagGetOperation(baseUrl + "/ca/rest/certs/"+serial, getCertFunction);
+        CertData certData = processDogtagGetOperation(baseUrl + MessageFormat.format(retrieveCert, serial), getCertFunction);
 
         return CertUtil.base64ToCert(certData.getEncoded());
     }

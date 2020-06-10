@@ -11,6 +11,7 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
 
     private String name;
     private String type;
+    private String trustChainBase64;
     private String baseUrl;
     private String issuePath;
     private String revokePath;
@@ -31,12 +32,13 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
         this.type = info.getType().name();
         this.properties = info.getProperties();
         this.baseUrl = info.getBaseUrl();
+        this.trustChainBase64 = info.getTrustChainBase64();
         addRequiredPropertyPlaceholders(ca);
     }
 
     private void addRequiredPropertyPlaceholders(CertAuthority ca){
         if(properties == null) properties = new HashSet<>();
-        for(String requiredProp : ca.getRequiredConnectionProperties()){
+        for(String requiredProp : ca.getType().getRequiredProperties()){
             boolean containsProp = this.properties.stream()
                     .anyMatch(p -> p.getName().equals(requiredProp));
             if(!containsProp){
@@ -70,6 +72,14 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
 
     public void setBaseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
+    }
+
+    public String getTrustChainBase64() {
+        return trustChainBase64;
+    }
+
+    public void setTrustChainBase64(String trustChainBase64) {
+        this.trustChainBase64 = trustChainBase64;
     }
 
     public String getIssuePath() {

@@ -62,29 +62,6 @@ public class AttributePolicyService {
     }
 
 
-
-    private void updateServerEntriesWithPolicyGroup(AttributePolicyGroup attributePolicyGroup){
-
-        Set<ServerEntry> serverEntrySet = attributePolicyGroup.getServerEntries();
-
-        for(ServerEntry serverEntry : serverEntrySet) {
-            Map<String, Object> attributeUpdateMap = new HashMap<>();
-            for (AttributePolicy attributePolicy : attributePolicyGroup.getAttributePolicies()) {
-                String attributeValue = attributePolicy.getAttributeValue();
-                if(attributePolicy.isVariableValue()){
-                    Optional<Object> optionalFieldValue = getServerEntryField(serverEntry, attributePolicy.getVariableValueField());
-                    if(optionalFieldValue.isPresent()){
-                        attributeValue = optionalFieldValue.get().toString();
-                    }else{
-                        log.error("Could not get ServerEntry field: "+attributePolicy.getVariableValueField());
-                        attributeValue = "";
-                    }
-                }
-                attributeUpdateMap.put(attributePolicy.getAttributeName(), attributeValue);
-            }
-        }
-    }
-
     //if attribute policy value is in format {value} treat as variable
     private Optional<Object> getServerEntryField(ServerEntry serverEntry, String serverEntryField){
         Class  aClass = ServerEntry.class;

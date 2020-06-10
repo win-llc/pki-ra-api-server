@@ -47,6 +47,9 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
     @JsonIgnore
     @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<IssuedCertificate> issuedCertificates;
+    @JsonIgnore
+    @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    private Set<AttributePolicyGroup> policyGroups;
 
     @PreRemove
     private void preRemove(){
@@ -82,6 +85,13 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
         if(!CollectionUtils.isEmpty(issuedCertificates)){
             for(IssuedCertificate issuedCertificate : issuedCertificates){
                 issuedCertificate.setAccount(null);
+            }
+        }
+
+        Set<AttributePolicyGroup> attributePolicyGroups = getPolicyGroups();
+        if(!CollectionUtils.isEmpty(attributePolicyGroups)){
+            for(AttributePolicyGroup group : attributePolicyGroups){
+                group.setAccount(null);
             }
         }
     }
@@ -191,6 +201,14 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
 
     public void setIssuedCertificates(Set<IssuedCertificate> issuedCertificates) {
         this.issuedCertificates = issuedCertificates;
+    }
+
+    public Set<AttributePolicyGroup> getPolicyGroups() {
+        return policyGroups;
+    }
+
+    public void setPolicyGroups(Set<AttributePolicyGroup> policyGroups) {
+        this.policyGroups = policyGroups;
     }
 
     @Override

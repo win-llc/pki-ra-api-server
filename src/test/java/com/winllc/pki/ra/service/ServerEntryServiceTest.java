@@ -8,14 +8,13 @@ import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.*;
-import com.winllc.pki.ra.service.external.KeycloakService;
+import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -43,7 +42,7 @@ class ServerEntryServiceTest {
     @Autowired
     private PocEntryRepository pocEntryRepository;
     @MockBean
-    private KeycloakService keycloakService;
+    private KeycloakOIDCProviderConnection oidcProviderConnection;
 
     @BeforeEach
     @Transactional
@@ -140,7 +139,7 @@ class ServerEntryServiceTest {
     @Transactional
     void enableForOIDConnect() throws Exception {
         ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
-        when(keycloakService.createClient(any())).thenReturn(serverEntry);
+        when(oidcProviderConnection.createClient(any())).thenReturn(serverEntry);
 
         ServerEntryForm form = new ServerEntryForm();
         form.setId(serverEntry.getId());
@@ -152,7 +151,7 @@ class ServerEntryServiceTest {
     @Transactional
     void disableForOIDConnect() throws RAException {
         ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
-        when(keycloakService.deleteClient(any())).thenReturn(serverEntry);
+        when(oidcProviderConnection.deleteClient(any())).thenReturn(serverEntry);
 
         ServerEntryForm form = new ServerEntryForm();
         form.setId(serverEntry.getId());
@@ -165,7 +164,7 @@ class ServerEntryServiceTest {
         ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
 
         OIDCClientDetails oidcClientDetails = new OIDCClientDetails();
-        when(keycloakService.getClient(any())).thenReturn(oidcClientDetails);
+        when(oidcProviderConnection.getClient(any())).thenReturn(oidcClientDetails);
 
         ServerEntryForm form = new ServerEntryForm();
         form.setId(serverEntry.getId());

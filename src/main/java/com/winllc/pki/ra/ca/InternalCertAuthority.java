@@ -117,16 +117,6 @@ public class InternalCertAuthority extends AbstractCertAuthority {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<String> getRequiredConnectionProperties() {
-        return requiredProperties;
-    }
-
-    @Override
-    public Map<String, String> getDefaultProperties() {
-        return defaultProperties;
-    }
-
     public X509Certificate issueCertificate(String pkcs10, SubjectAltNames sans) {
 
         try {

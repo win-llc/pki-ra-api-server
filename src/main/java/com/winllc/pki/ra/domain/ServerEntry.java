@@ -27,9 +27,6 @@ public class ServerEntry extends AbstractPersistable<Long> implements AccountOwn
     @JoinColumn(name="account_fk")
     private Account account;
     @JsonIgnore
-    @ManyToMany(mappedBy = "serverEntries")
-    private Set<AttributePolicyGroup> policyGroups;
-    @JsonIgnore
     @OneToMany(mappedBy = "serverEntry")
     private Set<CertificateRequest> certificateRequests;
     private String openidClientId;
@@ -45,12 +42,6 @@ public class ServerEntry extends AbstractPersistable<Long> implements AccountOwn
             Set<ServerEntry> serverEntries = account.getServerEntries();
             if(!CollectionUtils.isEmpty(serverEntries)){
                 account.getServerEntries().remove(this);
-            }
-        }
-
-        if(!CollectionUtils.isEmpty(policyGroups)){
-            for(AttributePolicyGroup policyGroup : policyGroups){
-                policyGroup.getServerEntries().remove(this);
             }
         }
 
@@ -115,15 +106,6 @@ public class ServerEntry extends AbstractPersistable<Long> implements AccountOwn
 
     public void setOpenidClientRedirectUrl(String openidClientRedirectUrl) {
         this.openidClientRedirectUrl = openidClientRedirectUrl;
-    }
-
-    public Set<AttributePolicyGroup> getPolicyGroups() {
-        if(policyGroups == null) policyGroups = new HashSet<>();
-        return policyGroups;
-    }
-
-    public void setPolicyGroups(Set<AttributePolicyGroup> policyGroups) {
-        this.policyGroups = policyGroups;
     }
 
     public Set<CertificateRequest> getCertificateRequests() {

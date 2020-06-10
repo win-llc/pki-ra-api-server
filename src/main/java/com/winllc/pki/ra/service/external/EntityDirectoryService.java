@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service.external;
 
+import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AttributePolicyGroup;
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,18 +28,25 @@ public class EntityDirectoryService {
     @Autowired
     private SecurityPolicyService securityPolicyService;
 
+    //return the applied attribute map
     @Transactional
-    public void applyServerEntryToDirectory(ServerEntry serverEntry){
+    public Map<String, Object> applyServerEntryToDirectory(ServerEntry serverEntry){
         //todo
 
         //apply attributes from Attribute Policy Groups
-        Set<AttributePolicyGroup> policyGroups = serverEntry.getAccount().getPolicyGroups();
+        Account account = serverEntry.getAccount();
+        List<AttributePolicyGroup> policyGroups = attributePolicyGroupRepository.findAllByAccount(account);
 
         Map<String, Object> attributeMap = new HashMap<>();
         policyGroups.forEach(pg -> {
             Map<String, String> securityPolicyMap = new HashMap<>();
             if(StringUtils.isNotBlank(pg.getSecurityPolicyServiceName())) {
-                securityPolicyMap.putAll(securityPolicyService.getSecurityPolicyMapForService(pg.getSecurityPolicyServiceName()));
+                try {
+                    securityPolicyMap.putAll(securityPolicyService
+                            .getSecurityPolicyMapForService(pg.getSecurityPolicyServiceName(), serverEntry));
+                } catch (Exception e) {
+                    log.error("Could not retrieve Security Policy", e);
+                }
             }
 
             pg.getAttributePolicies().forEach(ap -> {
@@ -60,9 +69,11 @@ public class EntityDirectoryService {
         });
 
         applyAttributesToServerEntry(serverEntry, attributeMap);
+
+        return attributeMap;
     }
 
-    private void applyAttributesToServerEntry(ServerEntry serverEntry, Map<String, Object> attributeValueMap){
+    private boolean applyAttributesToServerEntry(ServerEntry serverEntry, Map<String, Object> attributeValueMap){
         //todo add attributes to an entity service, such as an LDAP directory
 
         log.info("Will apply attributes to: "+serverEntry.getFqdn());
@@ -70,5 +81,6 @@ public class EntityDirectoryService {
             log.info("Attribute: "+entry.getKey() + " : " + entry.getValue());
         }
 
+        return true;
     }
 }

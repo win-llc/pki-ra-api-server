@@ -1,6 +1,8 @@
 package com.winllc.pki.ra.service.external;
 
+import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.service.external.beans.ExternalSecurityPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,18 +16,31 @@ import java.util.Map;
 public class SecurityPolicyService {
     //todo
 
+    @Autowired
+    private List<SecurityPolicyConnection> connections;
+
     public ExternalSecurityPolicy lookupSecurityPolicyForFqdn(String fqdn){
         //todo
         return null;
     }
 
-    public Map<String, String> getSecurityPolicyMapForService(String serviceName){
+    public Map<String, String> getSecurityPolicyMapForService(String serviceName, ServerEntry serverEntry) throws Exception {
         //todo
-        return new HashMap<>();
+        SecurityPolicyConnection connection = getConnection(serviceName);
+
+        return connection.getSecurityPolicyMapForService(serverEntry);
     }
 
-    public List<String> getSecurityPolicyNamesForService(String serviceName){
-        Map<String, String> map = getSecurityPolicyMapForService(serviceName);
+    public List<String> getSecurityPolicyNamesForService(String serviceName, ServerEntry serverEntry) throws Exception {
+        Map<String, String> map = getSecurityPolicyMapForService(serviceName, serverEntry);
         return new ArrayList<>(map.keySet());
     }
+
+    public SecurityPolicyConnection getConnection(String name) throws Exception {
+        for(SecurityPolicyConnection connection : connections){
+            if(connection.getConnectionName().equals(name)) return connection;
+        }
+        throw new Exception("No connection: "+name);
+    }
+
 }

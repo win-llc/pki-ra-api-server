@@ -204,6 +204,7 @@ public class Account extends AbstractPersistable<Long> implements AccountOwnedEn
     }
 
     public Set<AttributePolicyGroup> getPolicyGroups() {
+        if(policyGroups == null) policyGroups = new HashSet<>();
         return policyGroups;
     }
 

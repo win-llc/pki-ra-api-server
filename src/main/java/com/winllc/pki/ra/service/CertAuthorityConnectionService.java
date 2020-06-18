@@ -9,10 +9,7 @@ import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.pki.ra.beans.validator.CertAuthorityConnectionInfoValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
-import com.winllc.pki.ra.ca.CertAuthority;
-import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
-import com.winllc.pki.ra.ca.DogTagCertAuthority;
-import com.winllc.pki.ra.ca.InternalCertAuthority;
+import com.winllc.pki.ra.ca.*;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.InvalidFormException;
@@ -84,10 +81,6 @@ public class CertAuthorityConnectionService {
         if (optionalCertAuthority.isPresent()) {
             CertAuthority ca = optionalCertAuthority.get();
 
-            if (ca instanceof InternalCertAuthority) {
-                ((InternalCertAuthority) ca).setEntityManager(entityManagerFactory);
-            }
-
             loadedCertAuthorities.put(ca.getName(), ca);
         }
     }
@@ -118,9 +111,9 @@ public class CertAuthorityConnectionService {
 
             //Create the required settings for the connection, will be filled in on edit screen
             Set<CertAuthorityConnectionProperty> props = new HashSet<>();
-            for(String requiredProp : ca.getType().getRequiredProperties()){
+            for(ConnectionProperty connectionProperty : ca.getType().getRequiredProperties()){
                 CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
-                prop.setName(requiredProp);
+                prop.setName(connectionProperty.getName());
                 prop.setValue("");
                 prop.setCertAuthorityConnectionInfo(caConnection);
                 prop = propertyRepository.save(prop);
@@ -422,7 +415,7 @@ public class CertAuthorityConnectionService {
                 Hibernate.initialize(info.getProperties());
                 switch (info.getType()) {
                     case INTERNAL:
-                        certAuthority = new InternalCertAuthority(info);
+                        certAuthority = new InternalCertAuthority(info, entityManagerFactory);
                         break;
                     case DOGTAG:
                         certAuthority = new DogTagCertAuthority(info, applicationKeystore);

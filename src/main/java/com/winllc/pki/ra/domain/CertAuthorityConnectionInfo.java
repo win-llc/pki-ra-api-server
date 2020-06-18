@@ -25,6 +25,8 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
     private Set<CertAuthorityConnectionProperty> properties;
     //todo require this
     private String trustChainBase64;
+    //use to pull auth cert from application keystore for mutual client auth
+    private String authKeyAlias;
 
     @PreRemove
     private void preRemove(){
@@ -98,6 +100,14 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
 
     public void setTrustChainBase64(String trustChainBase64) {
         this.trustChainBase64 = trustChainBase64;
+    }
+
+    public String getAuthKeyAlias() {
+        return authKeyAlias;
+    }
+
+    public void setAuthKeyAlias(String authKeyAlias) {
+        this.authKeyAlias = authKeyAlias;
     }
 
     public Optional<CertAuthorityConnectionProperty> getPropertyByName(String name){

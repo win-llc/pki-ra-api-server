@@ -81,7 +81,7 @@ public class AppConfig {
     }
 
 
-    @Bean
+    @Bean(destroyMethod = "close")
     public Keycloak keycloak() throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
 
         /*

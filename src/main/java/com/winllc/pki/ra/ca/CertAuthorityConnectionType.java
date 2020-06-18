@@ -7,15 +7,21 @@ import java.util.stream.Stream;
 
 public enum CertAuthorityConnectionType {
     INTERNAL(new ArrayList<>()),
-    DOGTAG(Stream.of("ADMIN_USERNAME", "ADMIN_PASSWORD").collect(Collectors.toList()));
+    DOGTAG(Stream.of(
+            ConnectionProperty.build().addName("ADMIN_USERNAME")
+            .addFriendlyName("Admin Username"),
+            ConnectionProperty.build().addName("ADMIN_PASSWORD")
+            .addFriendlyName("Admin Password")
+            )
+            .collect(Collectors.toList()));
 
-    List<String> requiredProperties;
+    List<ConnectionProperty> requiredProperties;
 
-    CertAuthorityConnectionType(List<String> requiredProperties) {
+    CertAuthorityConnectionType(List<ConnectionProperty> requiredProperties) {
         this.requiredProperties = requiredProperties;
     }
 
-    public List<String> getRequiredProperties() {
+    public List<ConnectionProperty> getRequiredProperties() {
         return requiredProperties;
     }
 }

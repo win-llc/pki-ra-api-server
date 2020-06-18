@@ -14,7 +14,7 @@ public interface CertAuthority {
     String getName();
     X509Certificate issueCertificate(String csr, SubjectAltNames sans) throws Exception;
     boolean revokeCertificate(String serial, int reason) throws Exception;
-    String getCertificateStatus(String serial);
+    String getCertificateStatus(String serial) throws Exception;
     List<CertificateDetails> search(CertSearchParam params);
     Certificate[] getTrustChain() throws Exception;
     X509Certificate getCertificateBySerial(String serial) throws Exception;

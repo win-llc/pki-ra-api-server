@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.beans.form;
 
 import com.winllc.pki.ra.ca.CertAuthority;
+import com.winllc.pki.ra.ca.ConnectionProperty;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionProperty;
 
@@ -38,7 +39,8 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
 
     private void addRequiredPropertyPlaceholders(CertAuthority ca){
         if(properties == null) properties = new HashSet<>();
-        for(String requiredProp : ca.getType().getRequiredProperties()){
+        for(ConnectionProperty connectionProperty : ca.getType().getRequiredProperties()){
+            String requiredProp = connectionProperty.getName();
             boolean containsProp = this.properties.stream()
                     .anyMatch(p -> p.getName().equals(requiredProp));
             if(!containsProp){

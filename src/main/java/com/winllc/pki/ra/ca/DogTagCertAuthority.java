@@ -64,7 +64,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
                 log.info(certRequestInfos);
                 return requestInfo;
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Could not build CertRequestInfos", e);
             }
             return null;
         };
@@ -155,14 +155,15 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
     }
 
     @Override
-    public String getCertificateStatus(String serial) {
+    public String getCertificateStatus(String serial) throws Exception {
         //todo
-        return null;
+        CertData certData = getCertDataBySerial(serial);
+
+        return certData.getStatus();
     }
 
     @Override
     public List<CertificateDetails> search(CertSearchParam params) {
-
 
         CertSearchRequest certSearchRequest = new CertSearchRequest();
 
@@ -224,6 +225,12 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
 
     @Override
     public X509Certificate getCertificateBySerial(String serial) throws Exception {
+        CertData certData = getCertDataBySerial(serial);
+
+        return CertUtil.base64ToCert(certData.getEncoded());
+    }
+
+    private CertData getCertDataBySerial(String serial) throws Exception {
         Function<String, CertData> getCertFunction = s -> {
             try {
                 return CertData.valueOf(s);
@@ -234,8 +241,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         };
 
         CertData certData = processDogtagGetOperation(baseUrl + MessageFormat.format(retrieveCert, serial), getCertFunction);
-
-        return CertUtil.base64ToCert(certData.getEncoded());
+        return certData;
     }
 
 
@@ -261,9 +267,12 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         return processDogtagOperation(approvePost, processFunction, expectedStatus);
     }
 
-    private <T> T processDogtagOperation(HttpRequestBase httpRequest, Function<String, T> processFunction, int expectedStatus) throws Exception {
+    private <T> T processDogtagOperation(HttpRequestBase httpRequest, Function<String, T> processFunction, int expectedStatus)
+            throws Exception {
         return HttpCommandUtil.processCustomWithClientAuth(httpRequest, expectedStatus, processFunction,
-                applicationKeystore.getKeyStore(), applicationKeystore.getKeystorePassword());
+                applicationKeystore.getKeyStore(), applicationKeystore.getKeystorePassword(),
+                //todo replace with connection properties alias
+                "{f10f1eb3-2226-48f0-8761-cf67bcf09c08}");
     }
 
     private class DogtagSearchConverter implements CertSearchConverter<CertSearchRequest> {

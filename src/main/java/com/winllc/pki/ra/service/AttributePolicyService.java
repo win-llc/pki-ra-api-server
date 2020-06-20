@@ -1,25 +1,29 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.form.AttributePolicyGroupForm;
+import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AttributePolicy;
 import com.winllc.pki.ra.domain.AttributePolicyGroup;
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
 import com.winllc.pki.ra.repository.AttributePolicyRepository;
 import com.winllc.pki.ra.service.external.SecurityPolicyService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.AbstractPersistable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/attributePolicy")
@@ -27,6 +31,8 @@ public class AttributePolicyService {
 
     private static final Logger log = LogManager.getLogger(AttributePolicyService.class);
 
+    @Autowired
+    private AccountRepository accountRepository;
     @Autowired
     private AttributePolicyGroupRepository attributePolicyGroupRepository;
     @Autowired
@@ -36,47 +42,88 @@ public class AttributePolicyService {
     private SecurityPolicyService securityPolicyService;
 
     @GetMapping("/group/byId/{id}")
-    public ResponseEntity<?> findPolicyGroupById(@PathVariable Long id) throws RAObjectNotFoundException {
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public AttributePolicyGroupForm findPolicyGroupById(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<AttributePolicyGroup> policyGroupOptional = attributePolicyGroupRepository.findById(id);
         if(policyGroupOptional.isPresent()){
-            return ResponseEntity.ok(policyGroupOptional.get());
+            AttributePolicyGroupForm form = new AttributePolicyGroupForm(policyGroupOptional.get());
+            return form;
         }else{
             throw new RAObjectNotFoundException(AttributePolicyGroup.class, id);
         }
     }
 
     @PostMapping("/group/create")
-    public ResponseEntity<?> createGroupPolicyGroup(@Valid @RequestBody AttributePolicyGroupForm form){
-        AttributePolicyGroup attributePolicyGroup = new AttributePolicyGroup();
-        //attributePolicyGroup.setAttributePolicies();
+    @ResponseStatus(HttpStatus.CREATED)
+    public Long createGroupPolicyGroup(@Valid @RequestBody AttributePolicyGroupForm form)
+            throws RAObjectNotFoundException {
 
-        //todo
-        return null;
+        Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
+
+        if(optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            AttributePolicyGroup attributePolicyGroup = new AttributePolicyGroup();
+            attributePolicyGroup.setName(form.getName());
+            attributePolicyGroup.setAccount(account);
+            attributePolicyGroup = attributePolicyGroupRepository.save(attributePolicyGroup);
+
+            if (!CollectionUtils.isEmpty(form.getAttributePolicies())) {
+                for(AttributePolicy ap : form.getAttributePolicies()){
+                    ap.setAttributePolicyGroup(attributePolicyGroup);
+                    ap = attributePolicyRepository.save(ap);
+                    attributePolicyGroup.getAttributePolicies().add(ap);
+                }
+            }
+            return attributePolicyGroup.getId();
+        }else{
+            throw new RAObjectNotFoundException(Account.class, form.getAccountId());
+        }
     }
 
     @PostMapping("/group/update")
-    public ResponseEntity<?> updateGroupPolicyGroup(@Valid @RequestBody AttributePolicyGroupForm form){
-        //todo
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public AttributePolicyGroupForm updateGroupPolicyGroup(@Valid @RequestBody AttributePolicyGroupForm form) throws RAObjectNotFoundException {
+        Optional<AttributePolicyGroup> optionalAttributePolicyGroup = attributePolicyGroupRepository.findById(form.getId());
 
-        return null;
+        if(optionalAttributePolicyGroup.isPresent()){
+            //todo generify the process of updating a set of child objects given the existing and updated lists
+            //todo use an Updateable interface on the domain object with the update method
+            AttributePolicyGroup apg = optionalAttributePolicyGroup.get();
+            final Set<AttributePolicy> existing = apg.getAttributePolicies();
+            final Map<Long, AttributePolicy> updated = form.getAttributePolicies().stream()
+                    .filter(ep -> ep.getId() != null)
+                    .collect(Collectors.toMap(ep -> ep.getId(), ep -> ep));
+            List<AttributePolicy> newPolicies = form.getAttributePolicies().stream()
+                    .filter(ep -> ep.getId() == null)
+                    .collect(Collectors.toList());
+
+            Map<Boolean, List<AttributePolicy>> updateDeleteMap = existing.stream()
+                    .collect(Collectors.groupingBy(e -> updated.containsKey(e.getId())));
+
+            List<AttributePolicy> toUpdate = updateDeleteMap.get(true);
+            List<AttributePolicy> toDelete = updateDeleteMap.get(false);
+
+            if(toDelete != null) toDelete.forEach(ap -> attributePolicyRepository.delete(ap));
+            if(toUpdate != null) toUpdate.forEach(ap -> {
+                ap.update(updated.get(ap.getId()));
+                attributePolicyRepository.save(ap);
+            });
+            newPolicies.forEach(np -> attributePolicyRepository.save(np));
+
+            Optional<AttributePolicyGroup> optionalUpdatedGroup = attributePolicyGroupRepository.findById(form.getId());
+
+            return new AttributePolicyGroupForm(optionalUpdatedGroup.get());
+        }else{
+            throw new RAObjectNotFoundException(AttributePolicyGroup.class, form.getId());
+        }
     }
 
-
-    //if attribute policy value is in format {value} treat as variable
-    private Optional<Object> getServerEntryField(ServerEntry serverEntry, String serverEntryField){
-        Class  aClass = ServerEntry.class;
-        Field field = null;
-        try {
-            field = aClass.getField(serverEntryField);
-
-            String objectInstance = new String();
-
-            Object value = field.get(objectInstance);
-            return Optional.of(value);
-        } catch (Exception e) {
-            log.error("Could not find field on ServerEntry: "+serverEntryField, e);
-        }
-        return Optional.empty();
+    @DeleteMapping("/group/delete/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteAttributePolicyGroup(@PathVariable Long id){
+        attributePolicyGroupRepository.deleteById(id);
     }
 
 

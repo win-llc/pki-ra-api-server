@@ -12,10 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.Field;
+import java.util.*;
 
 @Service
 public class EntityDirectoryService {
@@ -50,20 +48,35 @@ public class EntityDirectoryService {
             }
 
             pg.getAttributePolicies().forEach(ap -> {
-                boolean addAttributeToMap = false;
+                String attributeValueToAdd = null;
                 //if the AttributePolicy requires a security policy to apply the attribute, check the policy map
                 //from the Policy Service
-                if(ap.isValueFromSecurityPolicy()){
+                if(ap.checkSecurityPolicyBackedAttribute()){
+                    //todo attribute value should be able to come from the security policy,
+                    //not just allow value if key/value pair is found
                     if(securityPolicyMap.containsKey(ap.getSecurityAttributeKeyName())){
-                        addAttributeToMap = securityPolicyMap.get(ap.getSecurityAttributeKeyName())
-                                .equals(ap.getSecurityAttributeValue());
+                        if(ap.isUseSecurityAttributeValueIfNameExists()){
+                            attributeValueToAdd = ap.getSecurityAttributeValue();
+                        }else if(ap.isUseValueIfSecurityAttributeNameValueExists()){
+                            String securityPolicy = securityPolicyMap.get(ap.getSecurityAttributeKeyName());
+                            if(securityPolicy.equalsIgnoreCase(ap.getSecurityAttributeValue())){
+                                attributeValueToAdd = ap.getAttributeValue();
+                            }
+                        }
                     }
                 }else{
-                    addAttributeToMap = true;
+                    if(ap.isStaticValue()){
+                        attributeValueToAdd = ap.getAttributeValue();
+                    }else{
+                        Optional<Object> optionalServerValue = getServerEntryField(serverEntry, ap.getVariableValueField());
+                        if(optionalServerValue.isPresent()){
+                            attributeValueToAdd = optionalServerValue.get().toString();
+                        }
+                    }
                 }
 
-                if(addAttributeToMap){
-                    attributeMap.put(ap.getAttributeName(), ap.getAttributeValue());
+                if(attributeValueToAdd != null){
+                    attributeMap.put(ap.getAttributeName(), attributeValueToAdd);
                 }
             });
         });
@@ -82,5 +95,18 @@ public class EntityDirectoryService {
         }
 
         return true;
+    }
+
+    //if attribute policy value is in format {value} treat as variable
+    private Optional<Object> getServerEntryField(ServerEntry serverEntry, String serverEntryField){
+        try {
+            Field field = serverEntry.getClass().getDeclaredField(serverEntryField);
+            field.setAccessible(true);
+            Object value = field.get(serverEntry);
+            return Optional.of(value);
+        }catch (Exception e){
+            log.error("Could not find field: "+serverEntryField, e);
+        }
+        return Optional.empty();
     }
 }

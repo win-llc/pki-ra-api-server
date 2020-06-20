@@ -10,15 +10,17 @@ public class AttributePolicyGroupForm extends ValidForm<AttributePolicyGroup> {
     //todo
 
     private String name;
+    private Long accountId;
     private List<AttributePolicy> attributePolicies;
 
     public AttributePolicyGroupForm(AttributePolicyGroup attributePolicyGroup){
         super(attributePolicyGroup);
         this.name = attributePolicyGroup.getName();
+        this.accountId = attributePolicyGroup.getAccount().getId();
         this.attributePolicies = new ArrayList<>(attributePolicyGroup.getAttributePolicies());
     }
 
-    private AttributePolicyGroupForm(){}
+    public AttributePolicyGroupForm(){}
 
     @Override
     protected void processIsValid() {
@@ -33,7 +35,16 @@ public class AttributePolicyGroupForm extends ValidForm<AttributePolicyGroup> {
         this.name = name;
     }
 
+    public Long getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
+    }
+
     public List<AttributePolicy> getAttributePolicies() {
+        if(attributePolicies == null) attributePolicies = new ArrayList<>();
         return attributePolicies;
     }
 

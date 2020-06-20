@@ -7,7 +7,7 @@ plugins {
 group 'com.winllc.pki.ra'
 version '1.0-SNAPSHOT'
 
-sourceCompatibility = 1.8
+//sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
@@ -51,6 +51,11 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-oauth2-resource-server')
     implementation('org.springframework.boot:spring-boot-starter-hateoas')
     implementation('org.springframework.boot:spring-boot-configuration-processor')
+
+    // https://mvnrepository.com/artifact/org.springframework.ldap/spring-ldap-core
+    compile group: 'org.springframework.ldap', name: 'spring-ldap-core', version: '2.3.3.RELEASE'
+
+
     runtimeOnly('org.springframework.boot:spring-boot-devtools')
 
     // https://mvnrepository.com/artifact/org.keycloak/keycloak-admin-client

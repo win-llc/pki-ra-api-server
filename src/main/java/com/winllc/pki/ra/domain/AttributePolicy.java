@@ -1,6 +1,8 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Entity;
@@ -22,15 +24,29 @@ public class AttributePolicy extends AbstractPersistable<Long> {
 
     //if value from security policy is true, check if security policy service associated with the AttributePolicyGroup
     //contains a matching key-value, if yes apply the value
-    private boolean valueFromSecurityPolicy;
+
+    //if the security policy attribute exists, use the security policy value
+    private boolean useSecurityAttributeValueIfNameExists;
+    //if the security policy attribute and value match, use the above value
+    private boolean useValueIfSecurityAttributeNameValueExists;
     private String securityAttributeKeyName;
     private String securityAttributeValue;
 
     @PreRemove
     private void preRemove(){
         if(attributePolicyGroup != null){
-            attributePolicyGroup.getAttributePolicies().remove(this);
+            //attributePolicyGroup.getAttributePolicies().remove(this);
         }
+    }
+
+    @JsonIgnore
+    public void update(AttributePolicy updated){
+        setAttributeValue(updated.getAttributeValue());
+        setSecurityAttributeKeyName(updated.getSecurityAttributeKeyName());
+        setSecurityAttributeValue(updated.getSecurityAttributeValue());
+        setUseSecurityAttributeValueIfNameExists(updated.isUseSecurityAttributeValueIfNameExists());
+        setUseValueIfSecurityAttributeNameValueExists(updated.isUseValueIfSecurityAttributeNameValueExists());
+        setStaticValue(updated.isStaticValue());
     }
 
     @JsonIgnore
@@ -41,6 +57,11 @@ public class AttributePolicy extends AbstractPersistable<Long> {
     @JsonIgnore
     public String getVariableValueField(){
         return attributeValue.replace("{","").replace("}","");
+    }
+
+    @JsonIgnore
+    public boolean checkSecurityPolicyBackedAttribute(){
+        return useSecurityAttributeValueIfNameExists || useValueIfSecurityAttributeNameValueExists;
     }
 
     public String getAttributeName() {
@@ -83,12 +104,20 @@ public class AttributePolicy extends AbstractPersistable<Long> {
         this.staticValue = staticValue;
     }
 
-    public boolean isValueFromSecurityPolicy() {
-        return valueFromSecurityPolicy;
+    public boolean isUseSecurityAttributeValueIfNameExists() {
+        return useSecurityAttributeValueIfNameExists;
     }
 
-    public void setValueFromSecurityPolicy(boolean valueFromSecurityPolicy) {
-        this.valueFromSecurityPolicy = valueFromSecurityPolicy;
+    public void setUseSecurityAttributeValueIfNameExists(boolean useSecurityAttributeValueIfNameExists) {
+        this.useSecurityAttributeValueIfNameExists = useSecurityAttributeValueIfNameExists;
+    }
+
+    public boolean isUseValueIfSecurityAttributeNameValueExists() {
+        return useValueIfSecurityAttributeNameValueExists;
+    }
+
+    public void setUseValueIfSecurityAttributeNameValueExists(boolean useValueIfSecurityAttributeNameValueExists) {
+        this.useValueIfSecurityAttributeNameValueExists = useValueIfSecurityAttributeNameValueExists;
     }
 
     public String getSecurityAttributeKeyName() {
@@ -106,4 +135,6 @@ public class AttributePolicy extends AbstractPersistable<Long> {
     public void setSecurityAttributeValue(String securityAttributeValue) {
         this.securityAttributeValue = securityAttributeValue;
     }
+
+
 }

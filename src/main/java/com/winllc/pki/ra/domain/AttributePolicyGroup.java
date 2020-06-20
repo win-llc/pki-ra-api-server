@@ -13,7 +13,7 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
 
     private String name;
     @JsonIgnore
-    @OneToMany(mappedBy = "attributePolicyGroup")
+    @OneToMany(mappedBy = "attributePolicyGroup", orphanRemoval = true)
     private Set<AttributePolicy> attributePolicies;
     @ManyToOne
     @JoinColumn(name="account_fk")

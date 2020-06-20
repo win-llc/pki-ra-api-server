@@ -61,40 +61,55 @@ class EntityDirectoryServiceTest {
 
         Map<String, String> policyMapForServer = new HashMap<>();
         policyMapForServer.put("matchName", "matchValue");
+        policyMapForServer.put("nameExists", "overrideValue");
 
         when(securityPolicyService
                 .getSecurityPolicyMapForService("secpolicysvc", serverEntry)).thenReturn(policyMapForServer);
 
         //will be added
-        AttributePolicy attributePolicy = new AttributePolicy();
-        attributePolicy.setValueFromSecurityPolicy(true);
-        attributePolicy.setSecurityAttributeKeyName("matchName");
-        attributePolicy.setSecurityAttributeValue("matchValue");
-        attributePolicy.setAttributeName("testName");
-        attributePolicy.setAttributeValue("testValue");
-        attributePolicy = attributePolicyRepository.save(attributePolicy);
+        AttributePolicy apUseSecurityPolicyValue = new AttributePolicy();
+        apUseSecurityPolicyValue.setUseSecurityAttributeValueIfNameExists(true);
+        apUseSecurityPolicyValue.setSecurityAttributeKeyName("matchName");
+        apUseSecurityPolicyValue.setSecurityAttributeValue("matchValue");
+        apUseSecurityPolicyValue.setAttributeName("apUseSecurityPolicyValue");
+        apUseSecurityPolicyValue.setAttributeValue("testValue");
+        apUseSecurityPolicyValue = attributePolicyRepository.save(apUseSecurityPolicyValue);
 
-        //will not be added
-        AttributePolicy attributePolicy2 = new AttributePolicy();
-        attributePolicy2.setValueFromSecurityPolicy(true);
-        attributePolicy2.setSecurityAttributeKeyName("noMatchName");
-        attributePolicy2.setSecurityAttributeValue("noMatchValue");
-        attributePolicy2.setAttributeName("testName2");
-        attributePolicy2.setAttributeValue("testValue2");
-        attributePolicy2 = attributePolicyRepository.save(attributePolicy2);
+        AttributePolicy apUseValueIfSecurityNameValueMatch = new AttributePolicy();
+        apUseValueIfSecurityNameValueMatch.setUseValueIfSecurityAttributeNameValueExists(true);
+        apUseValueIfSecurityNameValueMatch.setSecurityAttributeKeyName("matchName");
+        apUseValueIfSecurityNameValueMatch.setSecurityAttributeValue("matchValue");
+        apUseValueIfSecurityNameValueMatch.setAttributeName("apUseValueIfSecurityNameValueMatch");
+        apUseValueIfSecurityNameValueMatch.setAttributeValue("testValue");
+        apUseValueIfSecurityNameValueMatch = attributePolicyRepository.save(apUseValueIfSecurityNameValueMatch);
+
+        AttributePolicy apNoMatchSecurityPolicyNameValue = new AttributePolicy();
+        apNoMatchSecurityPolicyNameValue.setUseValueIfSecurityAttributeNameValueExists(true);
+        apNoMatchSecurityPolicyNameValue.setSecurityAttributeKeyName("matchName");
+        apNoMatchSecurityPolicyNameValue.setSecurityAttributeValue("noMatchValue");
+        apNoMatchSecurityPolicyNameValue.setAttributeName("apNoMatchSecurityPolicyNameValue");
+        apNoMatchSecurityPolicyNameValue.setAttributeValue("noAddValue");
+        apNoMatchSecurityPolicyNameValue = attributePolicyRepository.save(apNoMatchSecurityPolicyNameValue);
 
         //will be added
-        AttributePolicy attributePolicy3 = new AttributePolicy();
-        attributePolicy3.setValueFromSecurityPolicy(false);
-        attributePolicy3.setAttributeName("testStaticName");
-        attributePolicy3.setAttributeValue("testStaticValue");
-        attributePolicy3 = attributePolicyRepository.save(attributePolicy3);
+        AttributePolicy apStaticValue = new AttributePolicy();
+        apStaticValue.setStaticValue(true);
+        apStaticValue.setAttributeName("apStaticValue");
+        apStaticValue.setAttributeValue("testStaticValue");
+        apStaticValue = attributePolicyRepository.save(apStaticValue);
+
+        AttributePolicy apVariableValueFromServerEntry = new AttributePolicy();
+        apVariableValueFromServerEntry.setAttributeName("apVariableValueFromServerEntry");
+        apVariableValueFromServerEntry.setAttributeValue("{fqdn}");
+        apVariableValueFromServerEntry = attributePolicyRepository.save(apVariableValueFromServerEntry);
 
         AttributePolicyGroup attributePolicyGroup = new AttributePolicyGroup();
         attributePolicyGroup.setSecurityPolicyServiceName("secpolicysvc");
-        attributePolicyGroup.getAttributePolicies().add(attributePolicy);
-        attributePolicyGroup.getAttributePolicies().add(attributePolicy2);
-        attributePolicyGroup.getAttributePolicies().add(attributePolicy3);
+        attributePolicyGroup.getAttributePolicies().add(apUseSecurityPolicyValue);
+        attributePolicyGroup.getAttributePolicies().add(apUseValueIfSecurityNameValueMatch);
+        attributePolicyGroup.getAttributePolicies().add(apNoMatchSecurityPolicyNameValue);
+        attributePolicyGroup.getAttributePolicies().add(apStaticValue);
+        attributePolicyGroup.getAttributePolicies().add(apVariableValueFromServerEntry);
         attributePolicyGroup.setAccount(account);
         attributePolicyGroup = attributePolicyGroupRepository.save(attributePolicyGroup);
 
@@ -104,6 +119,11 @@ class EntityDirectoryServiceTest {
         serverEntry.setAccount(account);
 
         Map<String, Object> appliedAttributeMap = entityDirectoryService.applyServerEntryToDirectory(serverEntry);
-        assertEquals(2, appliedAttributeMap.size());
+
+        assertEquals("matchValue", appliedAttributeMap.get("apUseSecurityPolicyValue").toString());
+        assertEquals("testValue", appliedAttributeMap.get("apUseValueIfSecurityNameValueMatch").toString());
+        assertFalse(appliedAttributeMap.containsKey("apNoMatchSecurityPolicyNameValue"));
+        assertEquals("testStaticValue", appliedAttributeMap.get("apStaticValue").toString());
+        assertEquals(serverEntry.getFqdn(), appliedAttributeMap.get("apVariableValueFromServerEntry").toString());
     }
 }

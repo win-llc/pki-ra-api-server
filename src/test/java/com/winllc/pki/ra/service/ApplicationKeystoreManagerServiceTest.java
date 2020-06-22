@@ -12,10 +12,12 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.cert.X509Certificate;
@@ -30,9 +32,14 @@ class ApplicationKeystoreManagerServiceTest {
 
     //NOTE app.jks has 2 key entries by default
 
-    private String caKeystorePassword = "P@ssW0rd";
-    private String caKeystoreLocation = "C:\\Users\\jrmints\\IdeaProjects\\PKI Registration Authority\\src\\main\\resources\\ca-internal\\win-llc-intermediate-2.pfx";
-    private String caKeystoreAlias = "alias";
+    @Value("${internal-ca.password}")
+    private String caKeystorePassword;
+    @Value("${internal-ca.location}")
+    private String caKeystoreLocation;
+    @Value("${internal-ca.alias}")
+    private String caKeystoreAlias;
+    @Value("${internal-ca.type}")
+    private String caKeystoreType;
 
     @Autowired
     private ApplicationKeystoreManagerService managerService;
@@ -163,7 +170,10 @@ class ApplicationKeystoreManagerServiceTest {
         System.out.println("Loading keystore: "+location);
         FileInputStream fis = new FileInputStream(location);
 
-        KeyStore ks = KeyStore.getInstance("PKCS12");
+        //ClassLoader classLoader = getClass().getClassLoader();
+        //InputStream inputStream = classLoader.getResourceAsStream(location);
+
+        KeyStore ks = KeyStore.getInstance(caKeystoreType);
 
         ks.load(fis, password.toCharArray());
         IOUtils.closeQuietly(fis);

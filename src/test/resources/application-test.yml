@@ -1,12 +1,17 @@
 debug: false
 
 app-keystore:
-  location: C:\\Users\\jrmints\\IdeaProjects\\PKI Registration Authority\\src\\test\\resources\\app.jks
+  location: src/test/resources/app.jks
   password: password
   type: JKS
 win-ra:
   acme-server-url: http://winra.winllc-dev.com:8181
   acme-server-name: winllc
+internal-ca:
+  location: src/main/resources/ca-internal/win-llc-intermediate-2.pfx
+  password: P@ssW0rd
+  type: PKCS12
+  alias: alias
 management:
   endpoints:
     web:

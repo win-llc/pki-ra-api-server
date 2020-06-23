@@ -7,6 +7,9 @@ win-ra:
   acme-server-url: http://localhost:8181
   acme-server-name: winllc
 management:
+  health:
+    ldap:
+      enabled: false
   endpoints:
     web:
       exposure:

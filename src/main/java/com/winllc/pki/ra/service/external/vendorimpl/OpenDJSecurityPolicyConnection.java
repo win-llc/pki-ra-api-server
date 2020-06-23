@@ -12,7 +12,7 @@ import java.util.Map;
 //todo should be loaded as a bean
 public class OpenDJSecurityPolicyConnection implements SecurityPolicyConnection {
 
-    private LdapTemplate ldapTemplate;
+    //private LdapTemplate ldapTemplate;
 
     @Override
     public Map<String, String> getSecurityPolicyMapForService(ServerEntry serverEntry) {
@@ -29,7 +29,7 @@ public class OpenDJSecurityPolicyConnection implements SecurityPolicyConnection 
         return "opendj";
     }
 
-    public void setLdapTemplate(LdapTemplate ldapTemplate) {
-        this.ldapTemplate = ldapTemplate;
-    }
+    //public void setLdapTemplate(LdapTemplate ldapTemplate) {
+    //    this.ldapTemplate = ldapTemplate;
+    //}
 }

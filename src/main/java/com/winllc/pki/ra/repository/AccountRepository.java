@@ -15,5 +15,6 @@ public interface AccountRepository extends BaseRepository<Account> {
 
     Optional<Account> findByKeyIdentifierEquals(String kid);
     List<Account> findAllByPocsIn(Collection<PocEntry> pocEntries);
+    List<Account> findAllByPocsContaining(PocEntry poc);
     void deleteByKeyIdentifierEquals(String kid);
 }

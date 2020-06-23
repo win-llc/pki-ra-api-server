@@ -1,14 +1,12 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.form.AttributePolicyGroupForm;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AttributePolicy;
-import com.winllc.pki.ra.domain.AttributePolicyGroup;
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
 import com.winllc.pki.ra.repository.AttributePolicyRepository;
+import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.service.external.SecurityPolicyService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,8 @@ public class AttributePolicyService {
 
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private PocEntryRepository pocEntryRepository;
     @Autowired
     private AttributePolicyGroupRepository attributePolicyGroupRepository;
     @Autowired
@@ -52,6 +55,25 @@ public class AttributePolicyService {
         }else{
             throw new RAObjectNotFoundException(AttributePolicyGroup.class, id);
         }
+    }
+
+    @GetMapping("/group/my")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public List<AttributePolicyGroupForm> myAttributePolicyGroups(@AuthenticationPrincipal UserDetails raUser){
+        List<PocEntry> allByEmailEquals = pocEntryRepository.findAllByEmailEquals(raUser.getUsername());
+        List<Account> allUserAccounts = accountRepository.findAllByPocsIn(allByEmailEquals);
+
+        List<AttributePolicyGroupForm> groups = new ArrayList<>();
+        for(Account account : allUserAccounts){
+            List<AttributePolicyGroup> accountPolicyGroups = attributePolicyGroupRepository.findAllByAccount(account);
+            List<AttributePolicyGroupForm> forms = accountPolicyGroups.stream()
+                    .map(apg -> new AttributePolicyGroupForm(apg))
+                    .collect(Collectors.toList());
+            groups.addAll(forms);
+        }
+
+        return groups;
     }
 
     @PostMapping("/group/create")

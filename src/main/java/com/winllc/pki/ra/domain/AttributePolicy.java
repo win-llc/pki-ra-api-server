@@ -22,9 +22,6 @@ public class AttributePolicy extends AbstractPersistable<Long> {
     @JoinColumn(name="attributePolicyGroup_fk")
     private AttributePolicyGroup attributePolicyGroup;
 
-    //if value from security policy is true, check if security policy service associated with the AttributePolicyGroup
-    //contains a matching key-value, if yes apply the value
-
     //if the security policy attribute exists, use the security policy value
     private boolean useSecurityAttributeValueIfNameExists;
     //if the security policy attribute and value match, use the above value

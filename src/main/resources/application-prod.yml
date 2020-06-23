@@ -1,5 +1,4 @@
 debug: false
-
 app-keystore:
   location: /ssl/dogtag-ca-admin-with-chain.pfx
   password: P@ssW0rd
@@ -8,6 +7,9 @@ win-ra:
   acme-server-url: http://winra.winllc-dev.com:8181
   acme-server-name: winllc
 management:
+  health:
+    ldap:
+      enabled: false
   endpoints:
     web:
       exposure:

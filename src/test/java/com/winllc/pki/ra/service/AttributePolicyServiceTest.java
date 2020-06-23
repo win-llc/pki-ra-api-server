@@ -5,18 +5,22 @@ import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AttributePolicy;
 import com.winllc.pki.ra.domain.AttributePolicyGroup;
+import com.winllc.pki.ra.domain.PocEntry;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
 import com.winllc.pki.ra.repository.AttributePolicyRepository;
+import com.winllc.pki.ra.repository.PocEntryRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.transaction.Transactional;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +38,8 @@ class AttributePolicyServiceTest {
     private AttributePolicyRepository attributePolicyRepository;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private PocEntryRepository pocEntryRepository;
 
     @BeforeEach
     void beforeEach(){
@@ -42,6 +48,11 @@ class AttributePolicyServiceTest {
         account.setMacKey("testmac1");
         account.setProjectName("Test Project");
         account = accountRepository.save(account);
+
+        PocEntry pocEntry = new PocEntry();
+        pocEntry.setEmail("test@test.com");
+        pocEntry.setAccount(account);
+        pocEntry = pocEntryRepository.save(pocEntry);
 
         AttributePolicyGroup attributePolicyGroup = new AttributePolicyGroup();
         attributePolicyGroup.setAccount(account);
@@ -70,6 +81,7 @@ class AttributePolicyServiceTest {
     void afterEach(){
         attributePolicyGroupRepository.deleteAll();
         accountRepository.deleteAll();
+        pocEntryRepository.deleteAll();
     }
 
     @Test
@@ -83,6 +95,15 @@ class AttributePolicyServiceTest {
 
         AttributePolicyGroupForm policyGroupById = attributePolicyService.findPolicyGroupById(testGroup.getId());
         assertEquals("test", policyGroupById.getName());
+    }
+
+    @Test
+    void myAttributePolicyGroups() {
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User("test@test.com", "",
+                Collections.emptyList());
+
+        List<AttributePolicyGroupForm> forms = attributePolicyService.myAttributePolicyGroups(userDetails);
+        assertEquals(1, forms.size());
     }
 
     @Test

@@ -67,7 +67,7 @@ server:
     trust-store-password: password
 keycloak:
   admin-interface:
-    server-base-url: 'https://keycloak.winllc-dev.com:8443/auth'
+    server-base-url:
     realm: dev
     client-id: win-pki-ra-client
     client-secret: 4f6e55f4-1d4c-4f84-8564-0e2fd4194eea

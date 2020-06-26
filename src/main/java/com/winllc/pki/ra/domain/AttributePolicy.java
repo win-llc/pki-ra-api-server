@@ -5,34 +5,35 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.PreRemove;
+import javax.persistence.*;
 
 @Entity
 public class AttributePolicy extends AbstractPersistable<Long> {
 
     private String attributeName;
     private String attributeValue;
-    private boolean multiValued;
-    private boolean staticValue;
+    @Column(columnDefinition="tinyint(1) default 0")
+    private boolean multiValued = false;
+    @Column(columnDefinition="tinyint(1) default 0")
+    private boolean staticValue = false;
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name="attributePolicyGroup_fk")
     private AttributePolicyGroup attributePolicyGroup;
 
     //if the security policy attribute exists, use the security policy value
-    private boolean useSecurityAttributeValueIfNameExists;
+    @Column(columnDefinition="tinyint(1) default 0")
+    private boolean useSecurityAttributeValueIfNameExists = false;
     //if the security policy attribute and value match, use the above value
-    private boolean useValueIfSecurityAttributeNameValueExists;
+    @Column(columnDefinition="tinyint(1) default 0")
+    private boolean useValueIfSecurityAttributeNameValueExists = false;
     private String securityAttributeKeyName;
     private String securityAttributeValue;
 
     @PreRemove
     private void preRemove(){
         if(attributePolicyGroup != null){
-            //attributePolicyGroup.getAttributePolicies().remove(this);
+            attributePolicyGroup.getAttributePolicies().remove(this);
         }
     }
 

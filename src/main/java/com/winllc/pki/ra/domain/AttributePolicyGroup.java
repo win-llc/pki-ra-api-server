@@ -13,7 +13,7 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
 
     private String name;
     @JsonIgnore
-    @OneToMany(mappedBy = "attributePolicyGroup", orphanRemoval = true)
+    @OneToMany(mappedBy = "attributePolicyGroup", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<AttributePolicy> attributePolicies;
     @ManyToOne
     @JoinColumn(name="account_fk")
@@ -24,6 +24,10 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
     private void preRemove(){
         if(account != null && !CollectionUtils.isEmpty(account.getPolicyGroups())){
             account.getPolicyGroups().remove(this);
+        }
+
+        for(AttributePolicy attributePolicy : getAttributePolicies()){
+            attributePolicy.setAttributePolicyGroup(null);
         }
     }
 

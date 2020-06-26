@@ -10,6 +10,7 @@ import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.service.external.SecurityPolicyService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.http.HttpStatus;
@@ -50,7 +51,9 @@ public class AttributePolicyService {
     public AttributePolicyGroupForm findPolicyGroupById(@PathVariable Long id) throws RAObjectNotFoundException {
         Optional<AttributePolicyGroup> policyGroupOptional = attributePolicyGroupRepository.findById(id);
         if(policyGroupOptional.isPresent()){
-            AttributePolicyGroupForm form = new AttributePolicyGroupForm(policyGroupOptional.get());
+            AttributePolicyGroup apg = policyGroupOptional.get();
+            Hibernate.initialize(apg.getAttributePolicies());
+            AttributePolicyGroupForm form = new AttributePolicyGroupForm(apg);
             return form;
         }else{
             throw new RAObjectNotFoundException(AttributePolicyGroup.class, id);
@@ -127,16 +130,27 @@ public class AttributePolicyService {
             List<AttributePolicy> toUpdate = updateDeleteMap.get(true);
             List<AttributePolicy> toDelete = updateDeleteMap.get(false);
 
+            Set<AttributePolicy> attributePolicies = new HashSet<>();
+
             if(toDelete != null) toDelete.forEach(ap -> attributePolicyRepository.delete(ap));
-            if(toUpdate != null) toUpdate.forEach(ap -> {
-                ap.update(updated.get(ap.getId()));
-                attributePolicyRepository.save(ap);
+            if(toUpdate != null) {
+                AttributePolicyGroup finalApg = apg;
+                toUpdate.forEach(ap -> {
+                    ap.update(updated.get(ap.getId()));
+                    ap.setAttributePolicyGroup(finalApg);
+                    attributePolicies.add(attributePolicyRepository.save(ap));
+                });
+            }
+            AttributePolicyGroup finalApg1 = apg;
+            newPolicies.forEach(np -> {
+                np.setAttributePolicyGroup(finalApg1);
+                attributePolicies.add(attributePolicyRepository.save(np));;
             });
-            newPolicies.forEach(np -> attributePolicyRepository.save(np));
 
-            Optional<AttributePolicyGroup> optionalUpdatedGroup = attributePolicyGroupRepository.findById(form.getId());
+            apg.setAttributePolicies(attributePolicies);
+            apg = attributePolicyGroupRepository.save(apg);
 
-            return new AttributePolicyGroupForm(optionalUpdatedGroup.get());
+            return new AttributePolicyGroupForm(apg);
         }else{
             throw new RAObjectNotFoundException(AttributePolicyGroup.class, form.getId());
         }

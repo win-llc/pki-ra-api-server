@@ -19,20 +19,14 @@ public class SecurityPolicyService {
     @Autowired
     private List<SecurityPolicyConnection> connections;
 
-    public ExternalSecurityPolicy lookupSecurityPolicyForFqdn(String fqdn){
-        //todo
-        return null;
-    }
-
-    public Map<String, String> getSecurityPolicyMapForService(String serviceName, ServerEntry serverEntry) throws Exception {
-        //todo
+    public Map<String, String> getSecurityPolicyMapForService(String serviceName, String fqdn) throws Exception {
         SecurityPolicyConnection connection = getConnection(serviceName);
 
-        return connection.getSecurityPolicyMapForService(serverEntry);
+        return connection.getSecurityPolicyMapForService(fqdn);
     }
 
-    public List<String> getSecurityPolicyNamesForService(String serviceName, ServerEntry serverEntry) throws Exception {
-        Map<String, String> map = getSecurityPolicyMapForService(serviceName, serverEntry);
+    public List<String> getSecurityPolicyNamesForService(String serviceName, String fqdn) throws Exception {
+        Map<String, String> map = getSecurityPolicyMapForService(serviceName, fqdn);
         return new ArrayList<>(map.keySet());
     }
 
@@ -41,6 +35,10 @@ public class SecurityPolicyService {
             if(connection.getConnectionName().equals(name)) return connection;
         }
         throw new Exception("No connection: "+name);
+    }
+
+    public List<SecurityPolicyConnection> getAllConnections(){
+        return connections;
     }
 
 }

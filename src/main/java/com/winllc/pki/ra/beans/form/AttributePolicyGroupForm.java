@@ -7,17 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AttributePolicyGroupForm extends ValidForm<AttributePolicyGroup> {
-    //todo
 
     private String name;
     private Long accountId;
     private List<AttributePolicy> attributePolicies;
+    private String securityPolicyServiceName;
 
     public AttributePolicyGroupForm(AttributePolicyGroup attributePolicyGroup){
         super(attributePolicyGroup);
         this.name = attributePolicyGroup.getName();
         this.accountId = attributePolicyGroup.getAccount().getId();
         this.attributePolicies = new ArrayList<>(attributePolicyGroup.getAttributePolicies());
+        this.securityPolicyServiceName = attributePolicyGroup.getSecurityPolicyServiceName();
     }
 
     public AttributePolicyGroupForm(){}
@@ -50,5 +51,13 @@ public class AttributePolicyGroupForm extends ValidForm<AttributePolicyGroup> {
 
     public void setAttributePolicies(List<AttributePolicy> attributePolicies) {
         this.attributePolicies = attributePolicies;
+    }
+
+    public String getSecurityPolicyServiceName() {
+        return securityPolicyServiceName;
+    }
+
+    public void setSecurityPolicyServiceName(String securityPolicyServiceName) {
+        this.securityPolicyServiceName = securityPolicyServiceName;
     }
 }

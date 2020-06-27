@@ -64,7 +64,7 @@ class EntityDirectoryServiceTest {
         policyMapForServer.put("nameExists", "overrideValue");
 
         when(securityPolicyService
-                .getSecurityPolicyMapForService("secpolicysvc", serverEntry)).thenReturn(policyMapForServer);
+                .getSecurityPolicyMapForService("secpolicysvc", serverEntry.getFqdn())).thenReturn(policyMapForServer);
 
         //will be added
         AttributePolicy apUseSecurityPolicyValue = new AttributePolicy();

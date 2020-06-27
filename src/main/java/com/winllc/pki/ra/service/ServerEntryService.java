@@ -34,6 +34,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -262,6 +263,22 @@ public class ServerEntryService {
             }
 
             serverEntryRepository.deleteById(id);
+        }else{
+            throw new RAObjectNotFoundException(ServerEntry.class, id);
+        }
+    }
+
+    @GetMapping("/calculateAttributes/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public Map<String, Object> getCalculatedAttributes(@PathVariable Long id) throws RAObjectNotFoundException {
+        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
+        if(serverEntryOptional.isPresent()) {
+            ServerEntry serverEntry = serverEntryOptional.get();
+
+            Map<String, Object> attributeMap = entityDirectoryService.calculateAttributeMapForServerEntry(serverEntry);
+
+            return attributeMap;
         }else{
             throw new RAObjectNotFoundException(ServerEntry.class, id);
         }

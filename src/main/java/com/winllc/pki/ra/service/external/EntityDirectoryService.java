@@ -32,6 +32,25 @@ public class EntityDirectoryService {
         //todo
 
         //apply attributes from Attribute Policy Groups
+        Map<String, Object> attributeMap = calculateAttributeMapForServerEntry(serverEntry);
+
+        applyAttributesToServerEntry(serverEntry, attributeMap);
+
+        return attributeMap;
+    }
+
+    private boolean applyAttributesToServerEntry(ServerEntry serverEntry, Map<String, Object> attributeValueMap){
+        //todo add attributes to an entity service, such as an LDAP directory
+
+        log.info("Will apply attributes to: "+serverEntry.getFqdn());
+        for(Map.Entry<String, Object> entry: attributeValueMap.entrySet()){
+            log.info("Attribute: "+entry.getKey() + " : " + entry.getValue());
+        }
+
+        return true;
+    }
+
+    public Map<String, Object> calculateAttributeMapForServerEntry(ServerEntry serverEntry){
         Account account = serverEntry.getAccount();
         List<AttributePolicyGroup> policyGroups = attributePolicyGroupRepository.findAllByAccount(account);
 
@@ -40,8 +59,9 @@ public class EntityDirectoryService {
             Map<String, String> securityPolicyMap = new HashMap<>();
             if(StringUtils.isNotBlank(pg.getSecurityPolicyServiceName())) {
                 try {
-                    securityPolicyMap.putAll(securityPolicyService
-                            .getSecurityPolicyMapForService(pg.getSecurityPolicyServiceName(), serverEntry));
+                    Map<String, String> map = securityPolicyService
+                            .getSecurityPolicyMapForService(pg.getSecurityPolicyServiceName(), serverEntry.getFqdn());
+                    securityPolicyMap.putAll(map);
                 } catch (Exception e) {
                     log.error("Could not retrieve Security Policy", e);
                 }
@@ -56,7 +76,7 @@ public class EntityDirectoryService {
                     //not just allow value if key/value pair is found
                     if(securityPolicyMap.containsKey(ap.getSecurityAttributeKeyName())){
                         if(ap.isUseSecurityAttributeValueIfNameExists()){
-                            attributeValueToAdd = ap.getSecurityAttributeValue();
+                            attributeValueToAdd = securityPolicyMap.get(ap.getSecurityAttributeKeyName());
                         }else if(ap.isUseValueIfSecurityAttributeNameValueExists()){
                             String securityPolicy = securityPolicyMap.get(ap.getSecurityAttributeKeyName());
                             if(securityPolicy.equalsIgnoreCase(ap.getSecurityAttributeValue())){
@@ -81,20 +101,7 @@ public class EntityDirectoryService {
             });
         });
 
-        applyAttributesToServerEntry(serverEntry, attributeMap);
-
         return attributeMap;
-    }
-
-    private boolean applyAttributesToServerEntry(ServerEntry serverEntry, Map<String, Object> attributeValueMap){
-        //todo add attributes to an entity service, such as an LDAP directory
-
-        log.info("Will apply attributes to: "+serverEntry.getFqdn());
-        for(Map.Entry<String, Object> entry: attributeValueMap.entrySet()){
-            log.info("Attribute: "+entry.getKey() + " : " + entry.getValue());
-        }
-
-        return true;
     }
 
     //if attribute policy value is in format {value} treat as variable

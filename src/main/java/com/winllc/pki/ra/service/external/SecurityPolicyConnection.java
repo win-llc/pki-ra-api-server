@@ -6,5 +6,5 @@ import java.util.Map;
 
 public interface SecurityPolicyConnection extends ExternalServiceConnection {
     //todo
-    Map<String, String> getSecurityPolicyMapForService(ServerEntry serverEntry);
+    Map<String, String> getSecurityPolicyMapForService(String fqdn);
 }

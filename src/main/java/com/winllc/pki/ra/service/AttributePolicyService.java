@@ -7,6 +7,7 @@ import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
 import com.winllc.pki.ra.repository.AttributePolicyRepository;
 import com.winllc.pki.ra.repository.PocEntryRepository;
+import com.winllc.pki.ra.service.external.SecurityPolicyConnection;
 import com.winllc.pki.ra.service.external.SecurityPolicyService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,6 +45,20 @@ public class AttributePolicyService {
     //todo integrate this with attribute policy
     @Autowired
     private SecurityPolicyService securityPolicyService;
+
+
+    @GetMapping("/policyService/connectionNames")
+    @ResponseStatus(HttpStatus.OK)
+    public List<String> getSecurityPolicyServiceNames(){
+        List<SecurityPolicyConnection> allConnections = securityPolicyService.getAllConnections();
+        if(!CollectionUtils.isEmpty(allConnections)){
+            return allConnections.stream()
+                    .map(c -> c.getConnectionName())
+                    .collect(Collectors.toList());
+        }else{
+            return new ArrayList<>();
+        }
+    }
 
     @GetMapping("/group/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -91,6 +106,7 @@ public class AttributePolicyService {
             AttributePolicyGroup attributePolicyGroup = new AttributePolicyGroup();
             attributePolicyGroup.setName(form.getName());
             attributePolicyGroup.setAccount(account);
+            attributePolicyGroup.setSecurityPolicyServiceName(form.getSecurityPolicyServiceName());
             attributePolicyGroup = attributePolicyGroupRepository.save(attributePolicyGroup);
 
             if (!CollectionUtils.isEmpty(form.getAttributePolicies())) {

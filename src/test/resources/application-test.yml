@@ -65,6 +65,11 @@ server:
     enabled: false
     trust-store: /ssl/trust.jk
     trust-store-password: password
+policy-server:
+  ldap-url: ldap://directory.winllc-dev.com:389
+  ldap-username: cn=Directory Manager
+  ldap-password: P@ssW0rd
+  ldap-base-dn: ou=policy-server,dc=winllc-dev,dc=com
 keycloak:
   admin-interface:
     server-base-url:

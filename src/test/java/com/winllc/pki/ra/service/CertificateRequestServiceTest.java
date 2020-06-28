@@ -37,7 +37,8 @@ import static org.mockito.Mockito.when;
 class CertificateRequestServiceTest {
 
     private final String testCsr =
-            "MIIDDDCCAfQCAQAwgZkxCzAJBgNVBAYTAlVTMREwDwYDVQQIDAhWaXJnaW5pYTET\n" +
+                    "-----BEGIN CERTIFICATE REQUEST-----\n" +
+                    "MIIDDDCCAfQCAQAwgZkxCzAJBgNVBAYTAlVTMREwDwYDVQQIDAhWaXJnaW5pYTET\n" +
                     "MBEGA1UEBwwKQWxleGFuZHJpYTEQMA4GA1UECgwHV0lOIExMQzEMMAoGA1UECwwD\n" +
                     "RGV2MSgwJgYJKoZIhvcNAQkBFhlwb3N0bWFzdGVyQHdpbmxsYy1kZXYuY29tMRgw\n" +
                     "FgYDVQQDDA90ZXN0LndpbmxsYy5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw\n" +
@@ -53,7 +54,24 @@ class CertificateRequestServiceTest {
                     "kUEry9++H5BXjx/EDwI7atY+1U9pmxKvzAoinBBrkxXsC49BY1+PNGRmfJPxznmN\n" +
                     "poF6hkCJVX5Ygw6Ib4qdPAonbCiGM7yq6ur9V3K6HpOVcHEIErSCD4j4+mX//8JV\n" +
                     "zkzJN+9CSiuL7eXJKoZbbYF/3EnlCKCFx+u//WfqbAsdBJL9s+FB7crUBdMgT0UY\n" +
-                    "RTJb2gZMJXwJ8vCPugoK9g";
+                    "RTJb2gZMJXwJ8vCPugoK9g\n" +
+                    "-----END CERTIFICATE REQUEST-----";
+
+    String testCsr2 = "-----BEGIN CERTIFICATE REQUEST-----\n" +
+            "MIICVzCCAT8CAQAwEjEQMA4GA1UEAxMHdGVzdGtleTCCASIwDQYJKoZIhvcNAQEB\n" +
+            "BQADggEPADCCAQoCggEBAMqIvm215QC1E2CwEsNMpn44foQY8sIymQAT4AYMC3UF\n" +
+            "Dtdcf1G9FY0gdtr4hP+FS3XuYR+V06j66RQg0cdUax4NFGeCuPcAN5q8g6Qj7Zp2\n" +
+            "OrLm8shemmUTjT+VoA1s1kbw6nZuF+3I9Z5BEV2wnG2j9kBEk7JnWwKzU0zggEY5\n" +
+            "5RqOYN09dw6GKSCkc7fZjGB8mdAZX643pF3fHi1KSzEiRGmeDTCxx0Gw5S+KngoN\n" +
+            "jlpQKcL64TRE5T14qcm9gWaDrdkkV4HjDtyQ1HPFM0g6sEQ5GjAEsirnI7VszIBV\n" +
+            "2P0Ed8xE5z2Vm9bzqqOrrtfn0klw44BtyqeklfxNdKkCAwEAAaAAMA0GCSqGSIb3\n" +
+            "DQEBCwUAA4IBAQC42u5jUspAOHg7P/aK+DJFqKfUHA/qPkzMvIdyHCmpvs/aPoyj\n" +
+            "8kVpPAGp/mweVq/EClsnDq2y5ml4uFfcsFTVcpDRIzVOu5Bi0Et+s1T0+Y6nABBK\n" +
+            "f76VPTBFCOkokSb2XCEBV6JRSz8PG47+6HdoijHqpvusrNhF5SBy8FCYTnCwWGbw\n" +
+            "ZUujaOiuT+htifDY7sIYB08SMA7anUBNGznmj+cgJ2+LRZjbqNMXJQYAuU8VR9jf\n" +
+            "abOIZU/OJnAm6jk68HUY6ov63t0onT9H+QNk0HJbVz+v5J7K2XQd+lM0iQk85PnD\n" +
+            "FdOUg6b53ONKhTy6BglmCd+0t5+aW46MOBgZ\n" +
+            "-----END CERTIFICATE REQUEST-----";
 
     @Autowired
     private CertificateRequestService certificateRequestService;
@@ -134,7 +152,7 @@ class CertificateRequestServiceTest {
 
         CertificateRequestForm form = new CertificateRequestForm();
         form.setCertAuthorityName("mockca");
-        form.setCsr(testCsr);
+        form.setCsr(testCsr2);
         form.setAccountId(account.getId());
         form.setRequestedDnsNames(Collections.singletonList(san));
         Long aLong = certificateRequestService.submitRequest(form, userDetails);

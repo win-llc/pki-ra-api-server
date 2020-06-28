@@ -1,6 +1,8 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.util.CertUtil;
+import com.winllc.pki.ra.beans.form.AppKeyStoreEntryForm;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.keystore.KeyEntryWrapper;
 import org.apache.commons.lang.StringUtils;
@@ -11,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
-import sun.security.x509.*;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -43,14 +44,27 @@ public class ApplicationKeystoreManagerService {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/getEntryByAlias/{alias}")
+    @ResponseStatus(HttpStatus.OK)
+    public AppKeyStoreEntryForm getEntry(@PathVariable String alias) throws RAObjectNotFoundException {
+        Optional<KeyEntryWrapper> optionalEntry = getKeyByAlias(alias);
+        if(optionalEntry.isPresent()){
+            AppKeyStoreEntryForm form = new AppKeyStoreEntryForm(optionalEntry.get());
+            return form;
+        }else{
+            throw new RAObjectNotFoundException(KeyEntryWrapper.class, alias);
+        }
+    }
+
     @PostMapping("/addEntry")
     @ResponseStatus(HttpStatus.CREATED)
-    public String addEntry(@RequestParam String alias, @RequestParam boolean buildCsr)
+    public String addEntry(@RequestBody AppKeyStoreEntryForm form)
             throws Exception {
+        String alias = form.getAlias();
         createKey(alias);
         log.info("Key and self-signed cert added to keystore: "+alias);
 
-        if(buildCsr){
+        if(form.isGenerateCsr()){
             String csr = generateCsrForEntry(alias);
             return csr;
         }else{
@@ -60,17 +74,16 @@ public class ApplicationKeystoreManagerService {
 
     @PostMapping("/addSignedCertAndChainToEntry")
     @ResponseStatus(HttpStatus.OK)
-    public void addSignedCertAndChainToEntry(@RequestParam String alias, @RequestParam String certificate,
-                                               @RequestParam String chain)
+    public void addSignedCertAndChainToEntry(@RequestBody AppKeyStoreEntryForm form)
             throws Exception {
         KeyEntryWrapper wrapper = new KeyEntryWrapper();
-        wrapper.setAlias(alias);
+        wrapper.setAlias(form.getAlias());
 
-        X509Certificate x509Cert = CertUtil.base64ToCert(certificate);
+        X509Certificate x509Cert = CertUtil.base64ToCert(form.getUploadCertificate());
         wrapper.setCertificate(x509Cert);
 
-        if(StringUtils.isNotBlank(chain)) {
-            Certificate[] certificates = CertUtil.trustChainStringToCertArray(chain);
+        if(StringUtils.isNotBlank(form.getUploadChain())) {
+            Certificate[] certificates = CertUtil.trustChainStringToCertArray(form.getUploadChain());
             wrapper.setChain(certificates);
         }
 
@@ -79,8 +92,13 @@ public class ApplicationKeystoreManagerService {
 
     @PostMapping("/createCsrForEntry")
     @ResponseStatus(HttpStatus.OK)
-    public String createCsrForEntry(@RequestParam String alias) throws Exception {
-        return generateCsrForEntry(alias);
+    public String createCsrForEntry(@RequestBody AppKeyStoreEntryForm form) throws Exception {
+        return generateCsrForEntry(form.getAlias());
+    }
+
+    @DeleteMapping("/deleteByAlias/{alias}")
+    public void deleteEntry(@PathVariable String alias) throws KeyStoreException {
+        deleteKeyByAlias(alias);
     }
 
     /*

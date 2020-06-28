@@ -18,6 +18,7 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
     private String revokePath;
     private String searchPath;
     private Set<CertAuthorityConnectionProperty> properties;
+    private String authKeyAlias;
 
     public CertAuthorityConnectionInfoForm() {
     }
@@ -34,6 +35,7 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
         this.properties = info.getProperties();
         this.baseUrl = info.getBaseUrl();
         this.trustChainBase64 = info.getTrustChainBase64();
+        this.authKeyAlias = info.getAuthKeyAlias();
         addRequiredPropertyPlaceholders(ca);
     }
 
@@ -114,5 +116,13 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
 
     public void setProperties(Set<CertAuthorityConnectionProperty> properties) {
         this.properties = properties;
+    }
+
+    public String getAuthKeyAlias() {
+        return authKeyAlias;
+    }
+
+    public void setAuthKeyAlias(String authKeyAlias) {
+        this.authKeyAlias = authKeyAlias;
     }
 }

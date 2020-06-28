@@ -4,6 +4,7 @@ import com.netscape.cms.servlet.csadmin.Cert;
 import com.winllc.acme.common.SubjectAltName;
 import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.util.CertUtil;
+import com.winllc.pki.ra.beans.form.AppKeyStoreEntryForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.keystore.KeyEntryWrapper;
@@ -90,9 +91,14 @@ class ApplicationKeystoreManagerServiceTest {
 
     @Test
     void addEntryWithCsr() throws Exception {
-        String csr = managerService.addEntry("test2", true);
+        AppKeyStoreEntryForm form = new AppKeyStoreEntryForm();
+        form.setAlias("test2");
+        form.setGenerateCsr(true);
+
+        String csr = managerService.addEntry(form);
         PKCS10CertificationRequest certificationRequest = CertUtil.convertPemToPKCS10CertificationRequest(csr);
-        assertTrue(certificationRequest.getSubject().toString().contains("CN=test2"));
+        String subject = certificationRequest.getSubject().toString();
+        assertTrue(subject.contains("CN=test2"));
 
         managerService.deleteKeyByAlias("test2");
     }
@@ -101,7 +107,11 @@ class ApplicationKeystoreManagerServiceTest {
     void createCsrForEntry() throws Exception {
         managerService.createKey("test1");
 
-        String csr = managerService.createCsrForEntry("test1");
+        AppKeyStoreEntryForm form = new AppKeyStoreEntryForm();
+        form.setAlias("test1");
+        form.setGenerateCsr(true);
+
+        String csr = managerService.createCsrForEntry(form);
         PKCS10CertificationRequest certificationRequest = CertUtil.convertPemToPKCS10CertificationRequest(csr);
         assertTrue(certificationRequest.getSubject().toString().contains("CN=test1"));
     }
@@ -128,7 +138,11 @@ class ApplicationKeystoreManagerServiceTest {
 
     @Test
     void testUpdateKeyEntry() throws Exception {
-        String csr = managerService.addEntry("test1", true);
+        AppKeyStoreEntryForm form = new AppKeyStoreEntryForm();
+        form.setAlias("test1");
+        form.setGenerateCsr(true);
+
+        String csr = managerService.addEntry(form);
         PKCS10CertificationRequest certificationRequest = CertUtil.csrBase64ToPKC10Object(csr);
 
         Optional<KeyEntryWrapper> optionalKey = managerService.getKeyByAlias("test1");

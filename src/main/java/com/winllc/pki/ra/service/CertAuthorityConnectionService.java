@@ -103,6 +103,7 @@ public class CertAuthorityConnectionService {
             caConnection.setName(connectionInfo.getName());
             caConnection.setType(CertAuthorityConnectionType.valueOf(connectionInfo.getType()));
             caConnection.setBaseUrl(connectionInfo.getBaseUrl());
+            caConnection.setAuthKeyAlias(connectionInfo.getAuthKeyAlias());
             caConnection = repository.save(caConnection);
 
             loadCertAuthority(caConnection.getName());
@@ -142,6 +143,8 @@ public class CertAuthorityConnectionService {
         ValidationResponse validationResponse = validator.validate(form, true);
 
         if(validationResponse.isValid()) {
+
+
             Optional<CertAuthorityConnectionInfo> optionalInfo = repository.findById(form.getId());
             if (optionalInfo.isPresent()) {
                 final CertAuthorityConnectionInfo info = optionalInfo.get();
@@ -156,6 +159,7 @@ public class CertAuthorityConnectionService {
                 }
                 info.setProperties(props);
                 info.setBaseUrl(form.getBaseUrl());
+                info.setAuthKeyAlias(form.getAuthKeyAlias());
 
                 CertAuthorityConnectionInfo info2 = repository.save(info);
                 return buildForm(info2);

@@ -272,7 +272,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         return HttpCommandUtil.processCustomWithClientAuth(httpRequest, expectedStatus, processFunction,
                 applicationKeystore.getKeyStore(), applicationKeystore.getKeystorePassword(),
                 //todo replace with connection properties alias
-                "{f10f1eb3-2226-48f0-8761-cf67bcf09c08}");
+                "dogtag-admin");
     }
 
     private class DogtagSearchConverter implements CertSearchConverter<CertSearchRequest> {

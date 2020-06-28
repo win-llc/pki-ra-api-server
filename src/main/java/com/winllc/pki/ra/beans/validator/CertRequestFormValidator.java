@@ -10,7 +10,7 @@ public class CertRequestFormValidator implements FormValidator<CertificateReques
     public ValidationResponse validate(CertificateRequestForm form, boolean editMode) {
         ValidationResponse validationResponse = new ValidationResponse();
         try {
-            CertUtil.csrBase64ToPKC10Object(form.getCsr());
+            CertUtil.convertPemToPKCS10CertificationRequest(form.getCsr());
         } catch (Exception e) {
             validationResponse.addError("csr", e.getMessage());
         }

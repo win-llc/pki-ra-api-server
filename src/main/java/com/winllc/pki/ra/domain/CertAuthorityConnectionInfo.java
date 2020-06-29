@@ -6,6 +6,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -24,6 +25,7 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
     @OneToMany(mappedBy = "certAuthorityConnectionInfo", fetch = FetchType.EAGER)
     private Set<CertAuthorityConnectionProperty> properties;
     //todo require this
+    @Column(length = 3000)
     private String trustChainBase64;
     //use to pull auth cert from application keystore for mutual client auth
     private String authKeyAlias;
@@ -87,6 +89,7 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
     }
 
     public Set<CertAuthorityConnectionProperty> getProperties() {
+        if(properties == null) properties = new HashSet<>();
         return properties;
     }
 

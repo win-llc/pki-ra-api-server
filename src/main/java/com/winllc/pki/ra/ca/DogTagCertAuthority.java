@@ -47,7 +47,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         this.applicationKeystore = applicationKeystore;
         try {
             //this.baseUrl = info.getPropertyByName("BASE_URL").get().getValue();
-            this.baseUrl = info.getBaseUrl();
+            //this.baseUrl = info.getBaseUrl();
         }catch (Exception e){
             throw e;
         }

@@ -111,6 +111,7 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
     }
 
     public Set<CertAuthorityConnectionProperty> getProperties() {
+        if(properties == null) properties = new HashSet<>();
         return properties;
     }
 

@@ -104,18 +104,28 @@ public class CertAuthorityConnectionService {
             caConnection.setType(CertAuthorityConnectionType.valueOf(connectionInfo.getType()));
             caConnection.setBaseUrl(connectionInfo.getBaseUrl());
             caConnection.setAuthKeyAlias(connectionInfo.getAuthKeyAlias());
+            caConnection.setTrustChainBase64(connectionInfo.getTrustChainBase64());
             caConnection = repository.save(caConnection);
 
             loadCertAuthority(caConnection.getName());
 
             CertAuthority ca = loadedCertAuthorities.get(caConnection.getName());
 
+            Map<String, CertAuthorityConnectionProperty> propMap = connectionInfo.getProperties().stream()
+                    .collect(Collectors.toMap(p -> p.getName(), p -> p));
+
             //Create the required settings for the connection, will be filled in on edit screen
             Set<CertAuthorityConnectionProperty> props = new HashSet<>();
             for(ConnectionProperty connectionProperty : ca.getType().getRequiredProperties()){
                 CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
                 prop.setName(connectionProperty.getName());
-                prop.setValue("");
+
+                if(propMap.containsKey(connectionProperty.getName())){
+                    prop.setValue(propMap.get(connectionProperty.getName()).getValue());
+                }else {
+                    prop.setValue("");
+                }
+
                 prop.setCertAuthorityConnectionInfo(caConnection);
                 prop = propertyRepository.save(prop);
                 props.add(prop);
@@ -144,7 +154,6 @@ public class CertAuthorityConnectionService {
 
         if(validationResponse.isValid()) {
 
-
             Optional<CertAuthorityConnectionInfo> optionalInfo = repository.findById(form.getId());
             if (optionalInfo.isPresent()) {
                 final CertAuthorityConnectionInfo info = optionalInfo.get();
@@ -160,6 +169,7 @@ public class CertAuthorityConnectionService {
                 info.setProperties(props);
                 info.setBaseUrl(form.getBaseUrl());
                 info.setAuthKeyAlias(form.getAuthKeyAlias());
+                info.setTrustChainBase64(form.getTrustChainBase64());
 
                 CertAuthorityConnectionInfo info2 = repository.save(info);
                 return buildForm(info2);
@@ -227,6 +237,19 @@ public class CertAuthorityConnectionService {
         return certAuthorityTypes;
     }
 
+    @GetMapping("/api/info/getRequiredPropertiesForType/{connectionType}")
+    public List<ConnectionProperty> getRequiredPropertiesForType(@PathVariable String connectionType) throws RAObjectNotFoundException {
+        Optional<CertAuthorityConnectionType> typeOptional = Stream.of(CertAuthorityConnectionType.values())
+                .filter(v -> v.name().equalsIgnoreCase(connectionType))
+                .findFirst();
+
+        if(typeOptional.isPresent()){
+            CertAuthorityConnectionType type = typeOptional.get();
+            return type.getRequiredProperties();
+        }else{
+            throw new RAObjectNotFoundException(CertAuthorityConnectionType.class, connectionType);
+        }
+    }
 
     @PostMapping("/issueCertificate")
     @ResponseStatus(HttpStatus.OK)

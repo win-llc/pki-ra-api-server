@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.beans.form;
 
+import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AttributePolicy;
 import com.winllc.pki.ra.domain.AttributePolicyGroup;
 
@@ -10,13 +11,16 @@ public class AttributePolicyGroupForm extends ValidForm<AttributePolicyGroup> {
 
     private String name;
     private Long accountId;
+    private String accountName;
     private List<AttributePolicy> attributePolicies;
     private String securityPolicyServiceName;
 
     public AttributePolicyGroupForm(AttributePolicyGroup attributePolicyGroup){
         super(attributePolicyGroup);
         this.name = attributePolicyGroup.getName();
-        this.accountId = attributePolicyGroup.getAccount().getId();
+        Account account = attributePolicyGroup.getAccount();
+        this.accountId = account.getId();
+        this.accountName = account.getProjectName();
         this.attributePolicies = new ArrayList<>(attributePolicyGroup.getAttributePolicies());
         this.securityPolicyServiceName = attributePolicyGroup.getSecurityPolicyServiceName();
     }
@@ -34,6 +38,14 @@ public class AttributePolicyGroupForm extends ValidForm<AttributePolicyGroup> {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 
     public Long getAccountId() {

@@ -7,7 +7,6 @@ import java.util.List;
 
 public class ServerEntryForm extends ValidForm<ServerEntry> {
 
-    @NotEmpty
     private String fqdn;
     private Long accountId;
     private List<String> alternateDnsValues;

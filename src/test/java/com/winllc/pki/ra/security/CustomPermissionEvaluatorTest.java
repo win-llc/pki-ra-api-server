@@ -69,7 +69,7 @@ class CustomPermissionEvaluatorTest {
         boolean canUpdateDomain = customPermissionEvaluator.hasPermission(authentication, domainForm, "update_domain");
         assertFalse(canUpdateDomain);
 
-        ServerEntry serverEntry = new ServerEntry();
+        ServerEntry serverEntry = ServerEntry.buildNew();
         serverEntry.setAccount(account);
         serverEntry.setFqdn("test.winllc-dev.com");
 

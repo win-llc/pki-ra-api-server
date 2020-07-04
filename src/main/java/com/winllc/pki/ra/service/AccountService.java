@@ -7,6 +7,7 @@ import com.winllc.pki.ra.beans.form.AccountUpdateForm;
 import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.pki.ra.beans.info.UserInfo;
+import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.InvalidFormException;
@@ -45,7 +46,7 @@ public class AccountService {
     @Autowired
     private PocEntryRepository pocEntryRepository;
     @Autowired
-    private UserRepository userRepository;
+    private AuditRecordService auditRecordService;
     @Autowired
     private AccountRestrictionRepository accountRestrictionRepository;
     @Autowired
@@ -68,7 +69,9 @@ public class AccountService {
 
     @Transactional
     public Account save(Account account) {
-        return accountRepository.save(account);
+        Account saved = accountRepository.save(account);
+        auditRecordService.save(AuditRecord.buildNew(AuditRecordType.ACCOUNT_ADDED, saved));
+        return saved;
     }
 
     @PostMapping("/create")
@@ -79,7 +82,7 @@ public class AccountService {
         Account account = buildNew();
         account.setProjectName(form.getProjectName());
 
-        account = accountRepository.save(account);
+        account = save(account);
 
         return account.getId();
     }
@@ -248,7 +251,16 @@ public class AccountService {
     @ResponseStatus(HttpStatus.OK)
     public void delete(@PathVariable Long id) {
 
-        accountRepository.deleteById(id);
+        Optional<Account> optionalAccount = accountRepository.findById(id);
+
+        if(optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            accountRepository.delete(account);
+
+            auditRecordService.save(AuditRecord.buildNew(AuditRecordType.ACCOUNT_REMOVED, account));
+        }else{
+            log.debug("Did not delete Account, ID not found: "+id);
+        }
     }
 
 

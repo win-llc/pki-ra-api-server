@@ -5,13 +5,10 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
-public class ServerEntry extends AbstractPersistable<Long> implements AccountOwnedEntity {
+public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
 
     private String hostname;
     private String fqdn;
@@ -31,6 +28,14 @@ public class ServerEntry extends AbstractPersistable<Long> implements AccountOwn
     private Set<CertificateRequest> certificateRequests;
     private String openidClientId;
     private String openidClientRedirectUrl;
+
+    private ServerEntry(){}
+
+    public static ServerEntry buildNew(){
+        ServerEntry serverEntry = new ServerEntry();
+        serverEntry.setUuid(UUID.randomUUID());
+        return serverEntry;
+    }
 
     @PreRemove
     private void preRemove(){

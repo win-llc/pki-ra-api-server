@@ -209,7 +209,7 @@ public class InternalCertAuthority extends AbstractCertAuthority {
     }
 
     private IssuedCertificate x509ToIssuedCertificate(X509Certificate x509Certificate, String status) throws CertificateEncodingException {
-        IssuedCertificate issuedCertificate = new IssuedCertificate();
+        IssuedCertificate issuedCertificate = IssuedCertificate.buildNew();
         issuedCertificate.setSubjectDn(x509Certificate.getSubjectDN().getName());
         issuedCertificate.setIssuerDn(x509Certificate.getIssuerDN().getName());
         issuedCertificate.setIssuedOn(Timestamp.from(x509Certificate.getNotBefore().toInstant()));

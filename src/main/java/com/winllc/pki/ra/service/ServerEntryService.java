@@ -8,10 +8,8 @@ import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
 import com.winllc.pki.ra.beans.validator.ServerEntryFormValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.PocEntry;
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.pki.ra.constants.AuditRecordType;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
@@ -57,11 +55,12 @@ public class ServerEntryService {
     private PocEntryRepository pocEntryRepository;
     @Autowired
     private EntityDirectoryService entityDirectoryService;
+    @Autowired
+    private AuditRecordService auditRecordService;
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public Long createServerEntry(@Valid @RequestBody ServerEntryForm form) throws RAObjectNotFoundException {
-
         Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
 
         if(optionalAccount.isPresent()){
@@ -74,13 +73,15 @@ public class ServerEntryService {
 
             if(optionalDomain.isPresent()){
                 Domain domain = optionalDomain.get();
-                ServerEntry entry = new ServerEntry();
+                ServerEntry entry = ServerEntry.buildNew();
                 entry.setAccount(account);
                 entry.setDomainParent(domain);
                 entry.setFqdn(form.getFqdn());
                 entry.setHostname(form.getFqdn());
 
                 entry = serverEntryRepository.save(entry);
+
+                auditRecordService.save(AuditRecord.buildNew(AuditRecordType.SERVER_ENTRY_ADDED, entry));
 
                 //apply attributes to external directory
                 entityDirectoryService.applyServerEntryToDirectory(entry);
@@ -118,6 +119,8 @@ public class ServerEntryService {
                 serverEntry.setAlternateDnsValues(alternateDnsValues);
 
                 serverEntry = serverEntryRepository.save(serverEntry);
+
+                auditRecordService.save(AuditRecord.buildNew(AuditRecordType.SERVER_ENTRY_UPDATED, serverEntry));
 
                 //apply attributes to external directory
                 entityDirectoryService.applyServerEntryToDirectory(serverEntry);
@@ -263,6 +266,7 @@ public class ServerEntryService {
             }
 
             serverEntryRepository.deleteById(id);
+            auditRecordService.save(AuditRecord.buildNew(AuditRecordType.SERVER_ENTRY_REMOVED, serverEntry));
         }else{
             throw new RAObjectNotFoundException(ServerEntry.class, id);
         }

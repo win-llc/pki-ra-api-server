@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
-public class Account extends AbstractPersistable<Long> implements AccountOwnedEntity {
+public class Account extends UniqueEntity implements AccountOwnedEntity {
     @Column(unique = true)
     private String keyIdentifier;
     private String macKey;

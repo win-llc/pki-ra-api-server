@@ -8,7 +8,7 @@ public class UserInfo extends InfoObject<PocEntry> {
     private String username;
 
     public UserInfo(PocEntry pocEntry){
-        this.setId(pocEntry.getId());
+        super(pocEntry);
         this.username = pocEntry.getEmail();
     }
 

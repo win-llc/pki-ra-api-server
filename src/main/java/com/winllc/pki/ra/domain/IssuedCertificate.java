@@ -5,10 +5,11 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.UUID;
 
 @Entity
 @Table(name = "IssuedCertificate")
-public class IssuedCertificate extends AbstractPersistable<Long> implements AccountOwnedEntity {
+public class IssuedCertificate extends UniqueEntity implements AccountOwnedEntity {
 
     private String certAuthorityName;
     @Column(nullable = false)
@@ -27,6 +28,14 @@ public class IssuedCertificate extends AbstractPersistable<Long> implements Acco
     @ManyToOne
     @JoinColumn(name="account_fk")
     private Account account;
+
+    private IssuedCertificate(){}
+
+    public static IssuedCertificate buildNew(){
+        IssuedCertificate issuedCertificate = new IssuedCertificate();
+        issuedCertificate.setUuid(UUID.randomUUID());
+        return issuedCertificate;
+    }
 
     public CertificateDetails convertToCertDetails(){
         CertificateDetails details = new CertificateDetails();

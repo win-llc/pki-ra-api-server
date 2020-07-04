@@ -34,7 +34,7 @@ class ServerEntryRepositoryTest {
         account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
-        ServerEntry serverEntry = new ServerEntry();
+        ServerEntry serverEntry = ServerEntry.buildNew();
         serverEntry.setAccount(account);
         serverEntry.setFqdn("test.winllc-dev.com");
         serverEntry = serverEntryRepository.save(serverEntry);

@@ -14,6 +14,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -34,6 +35,7 @@ import java.security.NoSuchAlgorithmException;
 @EntityScan("com.winllc.pki.ra.domain")
 @EnableJpaRepositories(basePackages = "com.winllc.pki.ra.repository")
 @EnableTransactionManagement
+@EnableJpaAuditing
 public class AppConfig {
 
     @Value("${keycloak.admin-interface.server-base-url}")

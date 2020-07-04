@@ -56,7 +56,7 @@ class EntityDirectoryServiceTest {
     void applyServerEntryToDirectory() throws Exception {
         Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
 
-        ServerEntry serverEntry = new ServerEntry();
+        ServerEntry serverEntry = ServerEntry.buildNew();
         serverEntry.setFqdn("test.winllc-dev.com");
 
         Map<String, String> policyMapForServer = new HashMap<>();

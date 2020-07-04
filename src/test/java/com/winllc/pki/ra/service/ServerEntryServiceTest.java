@@ -64,7 +64,7 @@ class ServerEntryServiceTest {
         account.getCanIssueDomains().add(domain);
         accountRepository.save(account);
 
-        ServerEntry serverEntry = new ServerEntry();
+        ServerEntry serverEntry = ServerEntry.buildNew();
         serverEntry.setFqdn("test.winllc-dev.com");
         serverEntry.setAccount(account);
         serverEntry.setDomainParent(domain);

@@ -42,7 +42,7 @@ class AccountRestrictionRepositoryTest {
 
     @Test
     void findAllByAccount() {
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
@@ -63,7 +63,7 @@ class AccountRestrictionRepositoryTest {
 
     @Test
     void findAllByAccountAndCompleted() {
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
@@ -86,7 +86,7 @@ class AccountRestrictionRepositoryTest {
 
     @Test
     void findAllByAccountAndDueByBefore() {
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
@@ -109,7 +109,7 @@ class AccountRestrictionRepositoryTest {
 
     @Test
     void findAllByAccountAndDueByBeforeAndCompletedEquals() {
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setProjectName("Test Project");
         account = accountRepository.save(account);
 

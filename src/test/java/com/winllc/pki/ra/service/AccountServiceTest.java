@@ -49,7 +49,7 @@ class AccountServiceTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setKeyIdentifier("kidtest1");
         account.setMacKey("testmac1");
         account.setProjectName("Test Project");

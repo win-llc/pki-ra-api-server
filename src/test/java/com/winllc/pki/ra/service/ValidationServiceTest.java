@@ -54,7 +54,7 @@ class ValidationServiceTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setKeyIdentifier("kidtest1");
         account.setMacKey(testMacKey);
         account.setProjectName("Test Project");

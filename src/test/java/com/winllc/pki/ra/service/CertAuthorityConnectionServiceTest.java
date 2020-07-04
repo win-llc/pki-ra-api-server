@@ -82,7 +82,7 @@ class CertAuthorityConnectionServiceTest {
         CertAuthority mockCa = new MockCertAuthority();
         connectionService.addLoadedCertAuthority(mockCa);
 
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setKeyIdentifier("kidtest1");
         account.setMacKey("testmac1");
         account.setProjectName("Test Project");

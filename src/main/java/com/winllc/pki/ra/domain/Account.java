@@ -8,6 +8,7 @@ import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 public class Account extends UniqueEntity implements AccountOwnedEntity {
@@ -50,6 +51,14 @@ public class Account extends UniqueEntity implements AccountOwnedEntity {
     @JsonIgnore
     @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<AttributePolicyGroup> policyGroups;
+
+    public static Account buildNew(){
+        Account account = new Account();
+        account.setUuid(UUID.randomUUID());
+        return account;
+    }
+
+    private Account(){}
 
     @PreRemove
     private void preRemove(){

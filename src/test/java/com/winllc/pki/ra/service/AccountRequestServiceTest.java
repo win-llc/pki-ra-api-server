@@ -46,7 +46,7 @@ class AccountRequestServiceTest {
     @BeforeEach
     @Transactional
     void init(){
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setKeyIdentifier("kidtest1");
         account.setProjectName("Test Project 2");
         account.setMacKey("testmac1");

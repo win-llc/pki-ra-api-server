@@ -56,7 +56,7 @@ public class AccountService {
         String macKey = AppUtil.generate256BitString();
         String keyIdentifier = AppUtil.generate20BitString();
 
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setKeyIdentifier(keyIdentifier);
         account.setMacKey(macKey);
 

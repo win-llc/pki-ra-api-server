@@ -40,7 +40,7 @@ class CustomPermissionEvaluatorTest {
     @Test
     void hasPermission() {
         //todo
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setProjectName("Test Project");
         account.setKeyIdentifier("kidtest1");
         account.setMacKey("testmac1");

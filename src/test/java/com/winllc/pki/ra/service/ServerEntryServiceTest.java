@@ -47,7 +47,7 @@ class ServerEntryServiceTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setKeyIdentifier("kidtest1");
         account.setProjectName("Test Project 3");
         account.setMacKey("testmac1");

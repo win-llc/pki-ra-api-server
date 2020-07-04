@@ -29,7 +29,7 @@ class PocEntryRepositoryTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setProjectName("Test Name");
         account.setKeyIdentifier("testkid1");
         account = accountRepository.save(account);

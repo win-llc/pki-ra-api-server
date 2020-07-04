@@ -42,7 +42,7 @@ class DomainLinkToAccountRequestServiceTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = new Account();
+        Account account = Account.buildNew();
         account.setKeyIdentifier("testkid1");
         account.setProjectName("Test Project");
         account = accountRepository.save(account);

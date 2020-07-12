@@ -48,9 +48,8 @@ class TermsOfServiceManagementServiceTest {
 
         when(acmeServerManagementService.getDirectorySettingsByName(any(), any())).thenReturn(directoryDataSettings);
 
-        Account account = Account.buildNew();
+        Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("testkid1");
-        account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
         TermsOfService termsOfService = new TermsOfService();

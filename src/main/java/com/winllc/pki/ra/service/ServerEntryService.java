@@ -30,10 +30,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -60,14 +57,17 @@ public class ServerEntryService {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public Long createServerEntry(@Valid @RequestBody ServerEntryForm form) throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
 
         if(optionalAccount.isPresent()){
             Account account = optionalAccount.get();
 
-            List<Domain> canIssueDomains = domainRepository.findAllByCanIssueAccountsContains(account);
-            Optional<Domain> optionalDomain = canIssueDomains.stream()
+            Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
+
+            Optional<Domain> optionalDomain = accountDomainPolicies.stream()
+                    .map(p -> p.getTargetDomain())
                     .filter(d -> form.getFqdn().endsWith(d.getBase()))
                     .findAny();
 

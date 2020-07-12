@@ -40,6 +40,8 @@ class ServerEntryServiceTest {
     @Autowired
     private DomainRepository domainRepository;
     @Autowired
+    private DomainPolicyRepository domainPolicyRepository;
+    @Autowired
     private PocEntryRepository pocEntryRepository;
     @MockBean
     private KeycloakOIDCProviderConnection oidcProviderConnection;
@@ -47,9 +49,8 @@ class ServerEntryServiceTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew();
+        Account account = Account.buildNew("Test Project 3");
         account.setKeyIdentifier("kidtest1");
-        account.setProjectName("Test Project 3");
         account.setMacKey("testmac1");
         account = accountRepository.save(account);
 
@@ -58,11 +59,12 @@ class ServerEntryServiceTest {
 
         Domain domain = new Domain();
         domain.setBase("winllc-dev.com");
-        domain.getCanIssueAccounts().add(account);
         domain = domainRepository.save(domain);
 
-        account.getCanIssueDomains().add(domain);
-        accountRepository.save(account);
+        DomainPolicy domainPolicy = new DomainPolicy(domain);
+        domainPolicy = domainPolicyRepository.save(domainPolicy);
+        account.getAccountDomainPolicies().add(domainPolicy);
+        account = accountRepository.save(account);
 
         ServerEntry serverEntry = ServerEntry.buildNew();
         serverEntry.setFqdn("test.winllc-dev.com");

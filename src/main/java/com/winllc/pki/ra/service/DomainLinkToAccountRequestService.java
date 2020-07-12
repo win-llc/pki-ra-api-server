@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -36,9 +37,9 @@ public class DomainLinkToAccountRequestService {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private PocEntryRepository pocEntryRepository;
+    @Autowired
+    private DomainPolicyRepository domainPolicyRepository;
 
     @Transactional
     @GetMapping("/all")
@@ -134,17 +135,28 @@ public class DomainLinkToAccountRequestService {
                 request.setStatusApproved();
 
                 Optional<Account> optionalAccount = accountRepository.findById(request.getAccountId());
-                List<Domain> requestedDomains = domainRepository.findAllByIdIn(new ArrayList(request.getRequestedDomainIds()));
+                List<Domain> requestedDomains = domainRepository.findAllByIdIn(new ArrayList<>(request.getRequestedDomainIds()));
                 if(optionalAccount.isPresent()){
                     Account account = optionalAccount.get();
 
-                    account.getCanIssueDomains().addAll(requestedDomains);
+                    if(!CollectionUtils.isEmpty(requestedDomains)){
+                        Set<DomainPolicy> domainPolicies = requestedDomains.stream()
+                                .map(DomainPolicy::new)
+                                .collect(Collectors.toSet());
 
-                    account = accountRepository.save(account);
+                        Set<DomainPolicy> saved = new HashSet<>();
+                        for(DomainPolicy dp : domainPolicies){
+                            DomainPolicy temp = domainPolicyRepository.save(dp);
+                            Domain domain = dp.getTargetDomain();
 
-                    for(Domain requestedDomain : requestedDomains){
-                        requestedDomain.getCanIssueAccounts().add(account);
-                        domainRepository.save(requestedDomain);
+                            domain.getAllDomainPolicies().add(temp);
+                            domainRepository.save(domain);
+
+                            saved.add(temp);
+                        }
+
+                        account.getAccountDomainPolicies().addAll(saved);
+                        accountRepository.save(account);
                     }
                 }else{
                     log.error("Could not find requested account");

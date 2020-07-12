@@ -4,10 +4,11 @@ import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.util.Base64URL;
-import com.winllc.acme.common.AccountValidationResponse;
-import com.winllc.acme.common.CAValidationRule;
+import com.winllc.acme.common.CertIssuanceValidationResponse;
+import com.winllc.acme.common.CertIssuanceValidationRule;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
+import com.winllc.pki.ra.domain.DomainPolicy;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
@@ -20,10 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -41,29 +39,44 @@ public class ValidationService {
 
     @PostMapping("/rules/{kid}")
     @ResponseStatus(HttpStatus.OK)
-    public AccountValidationResponse getAccountValidationRules(@PathVariable String kid) throws RAObjectNotFoundException {
+    @Transactional
+    public CertIssuanceValidationResponse getAccountValidationRules(@PathVariable String kid) throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
 
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
-            List<Domain> allByCanIssueAccountsContains = domainRepository.findAllByCanIssueAccountsContains(account);
+            Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
 
-            List<CAValidationRule> validationRules = new ArrayList<>();
+            List<CertIssuanceValidationRule> validationRules = new ArrayList<>();
+
+            Hibernate.initialize(account.getAccountDomainPolicies());
+            Map<String, DomainPolicy> restrictionMap = account.getAccountDomainPolicies().stream()
+                    .collect(Collectors.toMap(r -> r.getTargetDomain().getBase(), r -> r));
 
             //TODO fix this
-            for (Domain domain : allByCanIssueAccountsContains) {
-                CAValidationRule validationRule = new CAValidationRule();
-                validationRule.setAllowHostnameIssuance(true);
-                validationRule.setAllowIssuance(true);
+            for (DomainPolicy domainPolicy : accountDomainPolicies) {
+                Domain domain = domainPolicy.getTargetDomain();
+
+                CertIssuanceValidationRule validationRule = new CertIssuanceValidationRule();
                 validationRule.setBaseDomainName(domain.getBase());
+                validationRule.setAllowHostnameIssuance(true);
                 validationRule.setIdentifierType("dns");
-                validationRule.setRequireHttpChallenge(account.isAcmeRequireHttpValidation());
+
+                //If restrictions exist for this domain on the account, apply restrictions
+                if(restrictionMap.containsKey(domain.getBase())){
+                    DomainPolicy restriction = restrictionMap.get(domain.getBase());
+                    validationRule.setRequireHttpChallenge(restriction.isAcmeRequireHttpValidation());
+                    validationRule.setAllowIssuance(restriction.isAllowIssuance());
+                }else{
+                    validationRule.setAllowIssuance(true);
+                    validationRule.setRequireHttpChallenge(false);
+                }
 
                 validationRules.add(validationRule);
             }
 
-            AccountValidationResponse response = new AccountValidationResponse(account.getKeyIdentifier());
-            response.setCaValidationRules(validationRules);
+            CertIssuanceValidationResponse response = new CertIssuanceValidationResponse(account.getKeyIdentifier());
+            response.setCertIssuanceValidationRules(validationRules);
 
             boolean accountValid = accountRestrictionService.checkIfAccountValid(account);
             response.setAccountIsValid(accountValid);
@@ -131,12 +144,16 @@ public class ValidationService {
 
     @GetMapping("/account/getCanIssueDomains/{kid}")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public List<String> getCanIssueDomains(@PathVariable String kid) throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
-            List<String> domainList = domainRepository.findAllByCanIssueAccountsContains(account)
-                    .stream().map(Domain::getBase)
+            Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
+            List<String> domainList = accountDomainPolicies
+                    .stream()
+                    .map(DomainPolicy::getTargetDomain)
+                    .map(Domain::getBase)
                     .collect(Collectors.toList());
 
             return domainList;

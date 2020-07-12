@@ -30,9 +30,8 @@ class UserRepositoryTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew();
+        Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("kidtest1");
-        account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
         User user = new User();

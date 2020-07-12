@@ -29,6 +29,11 @@ public abstract class AbstractCertAuthority implements CertAuthority {
     }
 
     @Override
+    public CertAuthorityConnectionInfo getConnectionInfo() {
+        return info;
+    }
+
+    @Override
     public Certificate[] getTrustChain() throws Exception {
         //todo iterate
 

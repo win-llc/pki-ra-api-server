@@ -31,9 +31,8 @@ class CertificateRequestRepositoryTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew();
+        Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("testkid1");
-        account.setProjectName("Test Project");
         account = accountRepository.save(account);
         
         CertificateRequest request = new CertificateRequest();

@@ -91,9 +91,8 @@ class CertificateRequestServiceTest {
     void before() throws Exception {
         when(certAuthorityConnectionService.processIssueCertificate(any())).thenReturn(CertUtil.base64ToCert(MockCertAuthority.testX509Cert));
 
-        Account account = Account.buildNew();
+        Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("testkid1");
-        account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
         CertificateRequest request = new CertificateRequest();

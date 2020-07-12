@@ -1,22 +1,35 @@
 package com.winllc.pki.ra.beans.info;
 
 import com.winllc.pki.ra.domain.Domain;
+import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class DomainInfo extends InfoObject<Domain> {
 
     private String base;
-    private List<AccountInfo> accountsThatCanIssue;
+    private DomainInfo parentDomainInfo;
+    private List<DomainInfo> subDomainInfo;
 
-    public DomainInfo(Domain domain, boolean loadAccountInfo){
+    public DomainInfo(Domain domain, boolean loadSubDomains){
         super(domain);
         this.base = domain.getBase();
-        if(loadAccountInfo) {
-            this.accountsThatCanIssue = domain.getCanIssueAccounts().stream()
-                    .map(a -> new AccountInfo(a, false))
-                    .collect(Collectors.toList());
+
+        if(domain.getParentDomain() != null){
+            DomainInfo parentInfo = new DomainInfo(domain.getParentDomain(), false);
+            this.parentDomainInfo = parentInfo;
+        }
+
+        if(loadSubDomains) {
+            if (!CollectionUtils.isEmpty(domain.getSubDomains())) {
+                List<DomainInfo> infoList = new ArrayList<>();
+                for (Domain subDomain : domain.getSubDomains()) {
+                    infoList.add(new DomainInfo(subDomain, false));
+                }
+                subDomainInfo = infoList;
+            }
         }
     }
 
@@ -28,11 +41,19 @@ public class DomainInfo extends InfoObject<Domain> {
         this.base = base;
     }
 
-    public List<AccountInfo> getAccountsThatCanIssue() {
-        return accountsThatCanIssue;
+    public DomainInfo getParentDomainInfo() {
+        return parentDomainInfo;
     }
 
-    public void setAccountsThatCanIssue(List<AccountInfo> accountsThatCanIssue) {
-        this.accountsThatCanIssue = accountsThatCanIssue;
+    public void setParentDomainInfo(DomainInfo parentDomainInfo) {
+        this.parentDomainInfo = parentDomainInfo;
+    }
+
+    public List<DomainInfo> getSubDomainInfo() {
+        return subDomainInfo;
+    }
+
+    public void setSubDomainInfo(List<DomainInfo> subDomainInfo) {
+        this.subDomainInfo = subDomainInfo;
     }
 }

@@ -28,7 +28,6 @@ public class AccountInfo extends InfoObject<Account> {
             this.macKeyBase64 = Base64.encode(this.macKey).toString();
         }
         this.projectName = entity.getProjectName();
-        this.acmeRequireHttpValidation = entity.isAcmeRequireHttpValidation();
     }
 
     public String getKeyIdentifier() {

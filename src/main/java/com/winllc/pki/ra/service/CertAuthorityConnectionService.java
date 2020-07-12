@@ -1,8 +1,6 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.CertSearchParam;
-import com.winllc.acme.common.CertificateDetails;
-import com.winllc.acme.common.SubjectAltNames;
+import com.winllc.acme.common.*;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
@@ -285,7 +283,7 @@ public class CertAuthorityConnectionService {
     }
 
     public X509Certificate processIssueCertificate(RACertificateIssueRequest certificateRequest) throws Exception {
-
+//todo validation checks, probably before this, notify POCs on failure
         CertAuthority certAuthority = loadedCertAuthorities.get(certificateRequest.getCertAuthorityName());
 
         SubjectAltNames subjectAltNames = null;
@@ -344,6 +342,24 @@ public class CertAuthorityConnectionService {
             }
         }else{
             throw new RAObjectNotFoundException(CertificateRequest.class, revokeRequest.getRequestId());
+        }
+    }
+
+    @GetMapping("/validationRules/{connectionName}")
+    @ResponseStatus(HttpStatus.OK)
+    public CertIssuanceValidationResponse getValidationRules(@PathVariable String connectionName) throws RAObjectNotFoundException {
+        CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
+        if (certAuthority != null) {
+            CertIssuanceValidationResponse response = new CertIssuanceValidationResponse();
+            //todo get global validation rules from connection info
+
+            CertAuthorityConnectionInfo info = certAuthority.getConnectionInfo();
+
+            //response.getCertIssuanceValidationRules().add();
+
+            return response;
+        }else{
+            throw new RAObjectNotFoundException(CertAuthority.class, connectionName);
         }
     }
 

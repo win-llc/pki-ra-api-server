@@ -49,10 +49,9 @@ class AccountServiceTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew();
+        Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("kidtest1");
         account.setMacKey("testmac1");
-        account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
         PocEntry pocEntry = new PocEntry();
@@ -67,14 +66,6 @@ class AccountServiceTest {
     void after(){
         pocEntryRepository.deleteAll();
         accountRepository.deleteAll();
-    }
-
-    @Test
-    void buildNew() {
-        Account account = accountService.buildNew();
-
-        Account byId = accountRepository.findById(account.getId()).get();
-        assertTrue(byId.getMacKey().length() > 6);
     }
 
     @Test

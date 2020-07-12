@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.pki.ra.util.AppUtil;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
@@ -11,18 +11,18 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-public class Account extends UniqueEntity implements AccountOwnedEntity {
+public class Account extends UniqueEntity implements AccountOwnedEntity, DomainCertIssuanceRestrictionHolder {
     @Column(unique = true)
     private String keyIdentifier;
     private String macKey;
     @Column(unique = true)
     private String projectName;
-    private boolean acmeRequireHttpValidation = false;
     private boolean enabled = true;
 
     @JsonIgnore
     @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<PocEntry> pocs;
+    /*
     @JsonIgnore
     @ManyToMany(cascade = {
             CascadeType.PERSIST,
@@ -33,6 +33,8 @@ public class Account extends UniqueEntity implements AccountOwnedEntity {
             inverseJoinColumns = @JoinColumn(name = "domain_id")
     )
     private Set<Domain> canIssueDomains;
+     */
+
     @ElementCollection
     @JsonIgnore
     private Set<String> preAuthorizationIdentifiers;
@@ -52,9 +54,22 @@ public class Account extends UniqueEntity implements AccountOwnedEntity {
     @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<AttributePolicyGroup> policyGroups;
 
-    public static Account buildNew(){
+    @JsonIgnore
+    @OneToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinColumn(name="issueRestriction_FK")
+    private Set<DomainPolicy> accountDomainPolicies;
+
+    public static Account buildNew(String projectName){
         Account account = new Account();
         account.setUuid(UUID.randomUUID());
+
+        String macKey = AppUtil.generate256BitString();
+        String keyIdentifier = AppUtil.generate20BitString();
+
+        account.setKeyIdentifier(keyIdentifier);
+        account.setMacKey(macKey);
+        account.setProjectName(projectName);
+
         return account;
     }
 
@@ -64,7 +79,7 @@ public class Account extends UniqueEntity implements AccountOwnedEntity {
     private void preRemove(){
         Set<CertificateRequest> requests = getCertificateRequests();
         if(!CollectionUtils.isEmpty(requests)){
-            for(CertificateRequest request : certificateRequests){
+            for(CertificateRequest request : requests){
                 request.setAccount(null);
             }
         }
@@ -76,12 +91,14 @@ public class Account extends UniqueEntity implements AccountOwnedEntity {
             }
         }
 
+        /*
         Set<Domain> domains = getCanIssueDomains();
         if(!CollectionUtils.isEmpty(domains)){
             for(Domain domain : domains){
                 domain.getCanIssueAccounts().remove(this);
             }
         }
+         */
 
         Set<PocEntry> pocEntries = getPocs();
         if(!CollectionUtils.isEmpty(pocEntries)){
@@ -137,14 +154,6 @@ public class Account extends UniqueEntity implements AccountOwnedEntity {
         this.enabled = enabled;
     }
 
-    public boolean isAcmeRequireHttpValidation() {
-        return acmeRequireHttpValidation;
-    }
-
-    public void setAcmeRequireHttpValidation(boolean acmeRequireHttpValidation) {
-        this.acmeRequireHttpValidation = acmeRequireHttpValidation;
-    }
-
     public Set<PocEntry> getPocs() {
         if(pocs == null) pocs = new HashSet<>();
         return pocs;
@@ -154,6 +163,7 @@ public class Account extends UniqueEntity implements AccountOwnedEntity {
         this.pocs = pocs;
     }
 
+    /*
     public Set<Domain> getCanIssueDomains() {
         if(canIssueDomains == null) canIssueDomains = new HashSet<>();
         return canIssueDomains;
@@ -162,6 +172,7 @@ public class Account extends UniqueEntity implements AccountOwnedEntity {
     public void setCanIssueDomains(Set<Domain> canIssueDomains) {
         this.canIssueDomains = canIssueDomains;
     }
+     */
 
     public Set<String> getPreAuthorizationIdentifiers() {
         return preAuthorizationIdentifiers;
@@ -221,6 +232,15 @@ public class Account extends UniqueEntity implements AccountOwnedEntity {
         this.policyGroups = policyGroups;
     }
 
+    public Set<DomainPolicy> getAccountDomainPolicies() {
+        if(accountDomainPolicies == null) accountDomainPolicies = new HashSet<>();
+        return accountDomainPolicies;
+    }
+
+    public void setAccountDomainPolicies(Set<DomainPolicy> accountDomainPolicies) {
+        this.accountDomainPolicies = accountDomainPolicies;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -241,5 +261,11 @@ public class Account extends UniqueEntity implements AccountOwnedEntity {
     @JsonIgnore
     public Account getAccount() {
         return this;
+    }
+
+    @JsonIgnore
+    @Override
+    public Set<DomainPolicy> getDomainIssuanceRestrictions() {
+        return getAccountDomainPolicies();
     }
 }

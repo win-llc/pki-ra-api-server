@@ -39,9 +39,8 @@ class EntityDirectoryServiceTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew();
+        Account account = Account.buildNew("Test Project 2");
         account.setKeyIdentifier("kidtest1");
-        account.setProjectName("Test Project 2");
         accountRepository.save(account);
     }
 

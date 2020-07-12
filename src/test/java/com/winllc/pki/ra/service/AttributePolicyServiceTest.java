@@ -43,10 +43,9 @@ class AttributePolicyServiceTest {
 
     @BeforeEach
     void beforeEach(){
-        Account account = Account.buildNew();
+        Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("kidtest1");
         account.setMacKey("testmac1");
-        account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
         PocEntry pocEntry = new PocEntry();

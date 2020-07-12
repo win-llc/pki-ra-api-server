@@ -47,7 +47,6 @@ public class DomainService {
         Optional<Domain> optionalDomain = domainRepository.findById(id);
         if(optionalDomain.isPresent()){
             Domain domain = optionalDomain.get();
-            Hibernate.initialize(domain.getCanIssueAccounts());
             return new DomainInfo(domain, true);
         }else{
             throw new RAObjectNotFoundException(Domain.class, id);
@@ -56,9 +55,25 @@ public class DomainService {
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public Long createDomain(@Valid @RequestBody DomainForm form){
+    @Transactional
+    public Long createDomain(@Valid @RequestBody DomainForm form) throws RAObjectNotFoundException {
         Domain domain = new Domain();
         domain.setBase(form.getBase());
+
+        if(form.getParentDomainId() != null){
+            Optional<Domain> optionalDomain = domainRepository.findById(form.getParentDomainId());
+            if(optionalDomain.isPresent()){
+                Domain parentDomain = optionalDomain.get();
+                domain.setParentDomain(parentDomain);
+                domain = domainRepository.save(domain);
+
+                parentDomain.getSubDomains().add(domain);
+                domainRepository.save(parentDomain);
+            }else{
+                throw new RAObjectNotFoundException(Domain.class, form.getParentDomainId());
+            }
+        }
+
         domain = domainRepository.save(domain);
 
         return domain.getId();

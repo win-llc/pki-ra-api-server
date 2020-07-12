@@ -55,18 +55,45 @@ class DomainServiceTest {
     }
 
     @Test
+    @Transactional
     void getDomainById() throws RAObjectNotFoundException {
         Domain domain = domainRepository.findAll().get(0);
         DomainInfo domainById = domainService.getDomainById(domain.getId());
         assertNotNull(domainById);
+
+        DomainForm form = new DomainForm("test.com");
+
+        Long domainId = domainService.createDomain(form);
+        assertTrue(domainId > 0);
+
+        DomainForm withParentForm = new DomainForm("sub.test.com");
+        withParentForm.setParentDomainId(domainId);
+
+        Long subDomainId = domainService.createDomain(withParentForm);
+        DomainInfo subDomainInfo = domainService.getDomainById(subDomainId);
+
+        assertEquals("test.com", subDomainInfo.getParentDomainInfo().getBase());
+
+        DomainInfo parentDomainInfo = domainService.getDomainById(domainId);
+        assertEquals(1, parentDomainInfo.getSubDomainInfo().size());
     }
 
     @Test
-    void createDomain() {
+    @Transactional
+    void createDomain() throws RAObjectNotFoundException {
         DomainForm form = new DomainForm("test.com");
 
-        Long domain = domainService.createDomain(form);
-        assertTrue(domain > 0);
+        Long domainId = domainService.createDomain(form);
+        assertTrue(domainId > 0);
+
+        DomainForm withParentForm = new DomainForm("sub.test.com");
+        withParentForm.setParentDomainId(domainId);
+
+        Long subDomainId = domainService.createDomain(withParentForm);
+        Domain checkSubDomain = domainRepository.findById(subDomainId).get();
+
+        assertEquals("sub.test.com", checkSubDomain.getBase());
+        assertEquals(domainId, checkSubDomain.getParentDomain().getId());
     }
 
     @Test

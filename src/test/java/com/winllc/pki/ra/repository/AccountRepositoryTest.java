@@ -31,9 +31,8 @@ class AccountRepositoryTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew();
+        Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("kidtest1");
-        account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
         PocEntry pocEntry = new PocEntry();

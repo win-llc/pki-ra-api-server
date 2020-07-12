@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 public class AccountUpdateForm extends ValidForm<Account> {
 
     private List<PocFormEntry> pocEmails;
-    private boolean acmeRequireHttpValidation;
 
     public AccountUpdateForm(Account entity) {
         super(entity);
@@ -38,13 +37,5 @@ public class AccountUpdateForm extends ValidForm<Account> {
 
     public void setPocEmails(List<PocFormEntry> pocEmails) {
         this.pocEmails = pocEmails;
-    }
-
-    public boolean isAcmeRequireHttpValidation() {
-        return acmeRequireHttpValidation;
-    }
-
-    public void setAcmeRequireHttpValidation(boolean acmeRequireHttpValidation) {
-        this.acmeRequireHttpValidation = acmeRequireHttpValidation;
     }
 }

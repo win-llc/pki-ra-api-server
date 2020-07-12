@@ -7,6 +7,7 @@ import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
+import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 
 import java.io.IOException;
 import java.security.cert.Certificate;
@@ -73,6 +74,11 @@ public class MockCertAuthority implements CertAuthority {
     @Override
     public String getName() {
         return "mockca";
+    }
+
+    @Override
+    public CertAuthorityConnectionInfo getConnectionInfo() {
+        return null;
     }
 
     @Override

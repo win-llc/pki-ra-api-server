@@ -31,8 +31,6 @@ public class OpenDJSecurityPolicyConnection implements SecurityPolicyConnection 
     @Override
     public Map<String, String> getSecurityPolicyMapForService(String fqdn) {
         //todo
-        Map<String, String> testMap = new HashMap<>();
-
         LdapTemplate ldapTemplate = buildLdapTemplate();
         
         return ldapTemplate.lookup("cn=" + fqdn, new AttributesMapper<Map<String, String>>() {

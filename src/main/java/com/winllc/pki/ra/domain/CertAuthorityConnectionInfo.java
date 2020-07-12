@@ -30,6 +30,8 @@ public class CertAuthorityConnectionInfo extends AbstractPersistable<Long> {
     //use to pull auth cert from application keystore for mutual client auth
     private String authKeyAlias;
 
+    //todo include global validation contraints
+
     @PreRemove
     private void preRemove(){
         Set<CertAuthorityConnectionProperty> properties = getProperties();

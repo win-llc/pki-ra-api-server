@@ -22,7 +22,6 @@ public class AcmeCertificateAuthoritySettingsForm extends AcmeSettingsForm<Certi
         this.type = entity.getType();
         this.name = entity.getName();
         this.issuerDn = entity.getIssuerDn();
-        this.mapsToExternalAccountProviderName = entity.getMapsToExternalAccountProviderName();
         this.mapsToCaConnectionName = entity.getMapsToCaConnectionName();
         this.baseUrl = entity.getBaseUrl();
         this.additionalSettings = entity.getAdditionalSettings();

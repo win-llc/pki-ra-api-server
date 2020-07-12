@@ -35,6 +35,8 @@ class DomainLinkToAccountRequestServiceTest {
     @Autowired
     private DomainLinkToAccountRequestRepository requestRepository;
     @Autowired
+    private DomainPolicyRepository domainPolicyRepository;
+    @Autowired
     private AccountRepository accountRepository;
     @Autowired
     private PocEntryRepository pocEntryRepository;
@@ -42,9 +44,8 @@ class DomainLinkToAccountRequestServiceTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew();
+        Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("testkid1");
-        account.setProjectName("Test Project");
         account = accountRepository.save(account);
 
         PocEntry pocEntry = PocEntry.buildNew("test@test.com", account);
@@ -52,7 +53,12 @@ class DomainLinkToAccountRequestServiceTest {
 
         Domain domain = new Domain();
         domain.setBase("winllc-dev.com");
-        domain.getCanIssueAccounts().add(account);
+        domain = domainRepository.save(domain);
+
+        DomainPolicy domainPolicy = new DomainPolicy(domain);
+        domainPolicy = domainPolicyRepository.save(domainPolicy);
+        account.getAccountDomainPolicies().add(domainPolicy);
+        account = accountRepository.save(account);
 
         domain = domainRepository.save(domain);
 
@@ -116,8 +122,8 @@ class DomainLinkToAccountRequestServiceTest {
         linkToAccountRequestService.domainRequestDecision(decision);
 
         Account account = accountRepository.findAll().get(0);
-        Set<Domain> canIssueDomains = account.getCanIssueDomains();
-        boolean canIssue = canIssueDomains.stream().anyMatch(d -> d.getBase().contentEquals("winllc-dev.com"));
+        Set<DomainPolicy> canIssueDomains = account.getAccountDomainPolicies();
+        boolean canIssue = canIssueDomains.stream().anyMatch(d -> d.getTargetDomain().getBase().contentEquals("winllc-dev.com"));
         assertTrue(canIssue);
     }
 }

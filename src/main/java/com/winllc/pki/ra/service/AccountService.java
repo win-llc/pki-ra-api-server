@@ -52,20 +52,6 @@ public class AccountService {
     @Autowired
     private AcmeServerManagementService acmeServerManagementService;
 
-    public Account buildNew() {
-        String macKey = AppUtil.generate256BitString();
-        String keyIdentifier = AppUtil.generate20BitString();
-
-        Account account = Account.buildNew();
-        account.setKeyIdentifier(keyIdentifier);
-        account.setMacKey(macKey);
-
-        account = accountRepository.save(account);
-
-        log.info("Created account with kid: " + account.getKeyIdentifier());
-        log.info("Mac Key: " + Base64.getEncoder().encodeToString(account.getMacKey().getBytes()));
-        return account;
-    }
 
     @Transactional
     public Account save(Account account) {
@@ -79,8 +65,7 @@ public class AccountService {
     public Long createNewAccount(@Valid @RequestBody AccountRequest form) {
         //TODO return both to account holder for entry into ACME client
 
-        Account account = buildNew();
-        account.setProjectName(form.getProjectName());
+        Account account = Account.buildNew(form.getProjectName());
 
         account = save(account);
 
@@ -138,7 +123,6 @@ public class AccountService {
             Optional<Account> optionalAccount = accountRepository.findById(form.getId());
             if (optionalAccount.isPresent()) {
                 Account account = optionalAccount.get();
-                account.setAcmeRequireHttpValidation(form.isAcmeRequireHttpValidation());
 
                 Map<String, PocEntry> existingPocMap = pocEntryRepository.findAllByAccount(account).stream()
                         .collect(Collectors.toMap(p -> p.getEmail(), p -> p));
@@ -188,6 +172,7 @@ public class AccountService {
 
     @GetMapping("/findByKeyIdentifier/{kid}")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public AccountInfo findByKeyIdentifier(@PathVariable String kid) throws RAObjectNotFoundException {
 
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
@@ -202,6 +187,7 @@ public class AccountService {
 
     @GetMapping("/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public AccountInfo findById(@PathVariable long id) throws RAObjectNotFoundException {
 
         Optional<Account> accountOptional = accountRepository.findById(id);
@@ -217,6 +203,7 @@ public class AccountService {
 
     @GetMapping("/info/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public AccountInfo findInfoById(@PathVariable long id) throws RAObjectNotFoundException {
         Optional<Account> accountOptional = accountRepository.findById(id);
 
@@ -233,6 +220,7 @@ public class AccountService {
 
     @GetMapping("/getAccountPocs/{kid}")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public List<UserInfo> getAccountPocs(@PathVariable String kid) throws RAObjectNotFoundException {
 
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
@@ -265,11 +253,15 @@ public class AccountService {
 
 
     private AccountInfo buildAccountInfo(Account account) {
-        List<Domain> canIssueDomains = domainRepository.findAllByCanIssueAccountsContains(account);
         List<PocEntry> pocEntries = pocEntryRepository.findAllByAccount(account);
+        Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
+
+        List<Domain> canIssueDomains = accountDomainPolicies.stream()
+                .map(DomainPolicy::getTargetDomain)
+                .collect(Collectors.toList());
 
         List<DomainInfo> domainInfoList = canIssueDomains.stream()
-                .map(d -> new DomainInfo(d, false))
+                .map(d -> new DomainInfo(d, true))
                 .collect(Collectors.toList());
 
         List<UserInfo> userInfoFromPocs = pocEntries.stream()

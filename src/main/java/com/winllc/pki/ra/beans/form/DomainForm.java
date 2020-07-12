@@ -8,10 +8,15 @@ public class DomainForm extends ValidForm<Domain> {
 
     @NotEmpty
     private String base;
+    private Long parentDomainId;
 
     public DomainForm(Domain entity) {
         super(entity);
         this.base = entity.getBase();
+
+        if(entity.getParentDomain() != null){
+            this.parentDomainId = entity.getParentDomain().getId();
+        }
     }
 
     public DomainForm(String base) {
@@ -31,5 +36,13 @@ public class DomainForm extends ValidForm<Domain> {
 
     public void setBase(String base) {
         this.base = base;
+    }
+
+    public Long getParentDomainId() {
+        return parentDomainId;
+    }
+
+    public void setParentDomainId(Long parentDomainId) {
+        this.parentDomainId = parentDomainId;
     }
 }

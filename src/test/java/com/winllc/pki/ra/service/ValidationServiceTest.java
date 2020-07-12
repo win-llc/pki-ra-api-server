@@ -3,17 +3,19 @@ package com.winllc.pki.ra.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
-import com.winllc.acme.common.AccountValidationResponse;
+import com.winllc.acme.common.CertIssuanceValidationResponse;
 import com.winllc.acme.common.model.AcmeJWSObject;
 import com.winllc.acme.common.model.requestresponse.ExternalAccountBinding;
 import com.winllc.acme.common.util.SecurityUtil;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
+import com.winllc.pki.ra.domain.DomainPolicy;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.mock.MockUtil;
 import com.winllc.pki.ra.repository.AccountRepository;
+import com.winllc.pki.ra.repository.DomainPolicyRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -43,6 +45,8 @@ class ValidationServiceTest {
     private AccountRepository accountRepository;
     @Autowired
     private DomainRepository domainRepository;
+    @Autowired
+    private DomainPolicyRepository domainPolicyRepository;
 
     private static String testMacKey;
 
@@ -54,19 +58,20 @@ class ValidationServiceTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew();
+        Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("kidtest1");
         account.setMacKey(testMacKey);
-        account.setProjectName("Test Project");
         account.setPreAuthorizationIdentifiers(Collections.singleton("test.winllc-dev.com"));
         account = accountRepository.save(account);
 
         Domain domain = new Domain();
         domain.setBase("winllc-dev.com");
-        domain.getCanIssueAccounts().add(account);
         domain = domainRepository.save(domain);
 
-        account.getCanIssueDomains().add(domain);
+        DomainPolicy domainPolicy = new DomainPolicy(domain);
+        domainPolicy = domainPolicyRepository.save(domainPolicy);
+        account.getAccountDomainPolicies().add(domainPolicy);
+
         accountRepository.save(account);
     }
 
@@ -79,8 +84,8 @@ class ValidationServiceTest {
 
     @Test
     void getAccountValidationRules() throws RAObjectNotFoundException {
-        AccountValidationResponse validationResponse = validationService.getAccountValidationRules("kidtest1");
-        assertEquals(1, validationResponse.getCaValidationRules().size());
+        CertIssuanceValidationResponse validationResponse = validationService.getAccountValidationRules("kidtest1");
+        assertEquals(1, validationResponse.getCertIssuanceValidationRules().size());
     }
 
     @Test

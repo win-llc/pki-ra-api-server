@@ -29,16 +29,7 @@ public class AccountRequestService {
 
     @Autowired
     private AccountRequestRepository accountRequestRepository;
-    @Autowired
-    private AccountService accountService;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PocEntryRepository pocEntryRepository;
-    @Autowired
-    private IdentityProviderService identityProviderService;
+
 
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)

@@ -257,6 +257,7 @@ public class AccountService {
         Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
 
         List<Domain> canIssueDomains = accountDomainPolicies.stream()
+                .filter(dp -> dp.getTargetDomain() != null)
                 .map(DomainPolicy::getTargetDomain)
                 .collect(Collectors.toList());
 

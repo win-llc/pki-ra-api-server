@@ -1,11 +1,12 @@
 package com.winllc.pki.ra.beans.form;
 
+import com.winllc.pki.ra.domain.CertificateRequest;
 import com.winllc.pki.ra.domain.DomainPolicy;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class DomainPolicyForm {
+public class DomainPolicyForm extends ValidForm<DomainPolicy> {
 
     private Long domainId;
     private String domainName;
@@ -15,6 +16,7 @@ public class DomainPolicyForm {
     private List<DomainPolicyForm> subDomainForms;
 
     public DomainPolicyForm(DomainPolicy restriction){
+        super(restriction);
         this.domainId = restriction.getTargetDomain().getId();
         this.domainName = restriction.getTargetDomain().getBase();
         this.acmeRequireDnsValidation = restriction.isAcmeRequireDnsValidation();
@@ -23,6 +25,11 @@ public class DomainPolicyForm {
     }
 
     private DomainPolicyForm(){}
+
+    @Override
+    protected void processIsValid() {
+
+    }
 
     public Long getDomainId() {
         return domainId;

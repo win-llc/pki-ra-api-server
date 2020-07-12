@@ -20,8 +20,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/domainRestriction")
-public class DomainCertIssuanceRestrictionService {
+@RequestMapping("/api/domainPolicy")
+public class DomainPolicyService {
 
     @Autowired
     private AccountRepository accountRepository;
@@ -31,6 +31,7 @@ public class DomainCertIssuanceRestrictionService {
     private DomainPolicyRepository restrictionRepository;
 
     @GetMapping("/byType/{type}/{id}")
+    @Transactional
     public Set<DomainPolicyForm> getRestrictionsForType(@PathVariable String type, @PathVariable Long id)
             throws Exception {
 
@@ -43,10 +44,10 @@ public class DomainCertIssuanceRestrictionService {
                 .collect(Collectors.toSet());
     }
 
-    @PostMapping("/addRestrictionForType/{type}/{targetId}")
+    @PostMapping("/addForType/{type}/{targetId}")
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
-    public Long addRestrictionForType(@PathVariable String type, @PathVariable Long targetId,
+    public Long addForType(@PathVariable String type, @PathVariable Long targetId,
                                       DomainPolicyForm form) throws Exception {
         DomainCertIssuanceRestrictionHolder holder = getTargetObject(type, targetId);
 
@@ -75,11 +76,30 @@ public class DomainCertIssuanceRestrictionService {
         }
     }
 
-    @DeleteMapping("/deleteRestrictionForType/{type}/{targetId}")
-    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/updateForType")
+    @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public void deleteRestrictionForType(@PathVariable String type, @PathVariable Long targetId,
-                                         Long restrictionId) throws Exception {
+    public DomainPolicyForm updateForType(@RequestBody DomainPolicyForm form) throws RAObjectNotFoundException {
+
+        Optional<DomainPolicy> optionalDomainPolicy = restrictionRepository.findById(form.getId());
+        if(optionalDomainPolicy.isPresent()){
+            DomainPolicy domainPolicy = optionalDomainPolicy.get();
+            domainPolicy.setAcmeRequireDnsValidation(form.isAcmeRequireDnsValidation());
+            domainPolicy.setAcmeRequireHttpValidation(form.isAcmeRequireHttpValidation());
+            domainPolicy.setAllowIssuance(form.isAllowIssuance());
+            domainPolicy = restrictionRepository.save(domainPolicy);
+
+            return new DomainPolicyForm(domainPolicy);
+        }else{
+            throw new RAObjectNotFoundException(DomainPolicy.class, form.getId());
+        }
+    }
+
+    @DeleteMapping("/deleteForType/{type}/{targetId}/{restrictionId}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public void deleteForType(@PathVariable String type, @PathVariable Long targetId,
+                                         @PathVariable Long restrictionId) throws Exception {
         DomainCertIssuanceRestrictionHolder holder = getTargetObject(type, targetId);
 
         Optional<DomainPolicy> optionalRestriction = restrictionRepository.findById(restrictionId);

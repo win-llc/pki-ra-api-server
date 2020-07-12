@@ -58,9 +58,9 @@ class DomainLinkToAccountRequestServiceTest {
         DomainPolicy domainPolicy = new DomainPolicy(domain);
         domainPolicy = domainPolicyRepository.save(domainPolicy);
         account.getAccountDomainPolicies().add(domainPolicy);
-        account = accountRepository.save(account);
+        //domain = domainRepository.save(domain);
 
-        domain = domainRepository.save(domain);
+        account = accountRepository.save(account);
 
         DomainLinkToAccountRequest request = DomainLinkToAccountRequest.buildNew();
         request.setAccountId(account.getId());

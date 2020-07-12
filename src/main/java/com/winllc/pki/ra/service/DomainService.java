@@ -65,6 +65,10 @@ public class DomainService {
             if(optionalDomain.isPresent()){
                 Domain parentDomain = optionalDomain.get();
                 domain.setParentDomain(parentDomain);
+
+                String newBase = domain.getBase()+"."+parentDomain.getBase();
+                domain.setBase(newBase);
+
                 domain = domainRepository.save(domain);
 
                 parentDomain.getSubDomains().add(domain);

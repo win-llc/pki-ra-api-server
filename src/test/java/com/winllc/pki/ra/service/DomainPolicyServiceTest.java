@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class DomainPolicyServiceTest {
 
     @Autowired
-    private DomainCertIssuanceRestrictionService restrictionService;
+    private DomainPolicyService restrictionService;
     @Autowired
     private DomainPolicyRepository restrictionRepository;
     @Autowired
@@ -85,7 +85,7 @@ class DomainPolicyServiceTest {
 
         DomainPolicyForm form = new DomainPolicyForm(restriction);
 
-        restrictionService.addRestrictionForType("account", account.getId(), form);
+        restrictionService.addForType("account", account.getId(), form);
 
         Account foundAccount = accountRepository.findById(account.getId()).get();
         assertEquals(1, foundAccount.getAccountDomainPolicies().size());
@@ -103,12 +103,12 @@ class DomainPolicyServiceTest {
 
         DomainPolicyForm form = new DomainPolicyForm(restriction);
 
-        Long restrictionId = restrictionService.addRestrictionForType("account", account.getId(), form);
+        Long restrictionId = restrictionService.addForType("account", account.getId(), form);
 
         account = accountRepository.findById(account.getId()).get();
         assertEquals(1, account.getDomainIssuanceRestrictions().size());
 
-        restrictionService.deleteRestrictionForType("account", account.getId(), restrictionId);
+        restrictionService.deleteForType("account", account.getId(), restrictionId);
 
         account = accountRepository.findById(account.getId()).get();
         assertEquals(0, account.getDomainIssuanceRestrictions().size());

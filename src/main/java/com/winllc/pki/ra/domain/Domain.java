@@ -14,7 +14,7 @@ public class Domain extends AbstractPersistable<Long>  {
     @Column(unique = true, nullable = false)
     private String base;
     @JsonIgnore
-    @OneToMany(mappedBy = "parentDomain")
+    @OneToMany(mappedBy = "parentDomain", cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE }, orphanRemoval = true)
     private Set<Domain> subDomains;
     @JsonIgnore
     @ManyToOne
@@ -35,7 +35,7 @@ public class Domain extends AbstractPersistable<Long>  {
     //private Set<DomainCertIssuanceRestriction> globalDomainCertIssuanceRestrictions;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "targetDomain", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @OneToMany(mappedBy = "targetDomain", cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE }, orphanRemoval = true)
     private Set<DomainPolicy> allDomainPolicies;
 
     @PreRemove
@@ -56,10 +56,10 @@ public class Domain extends AbstractPersistable<Long>  {
             }
         }
 
-        Set<DomainPolicy> restrictions = getAllDomainPolicies();
-        if(!CollectionUtils.isEmpty(restrictions)){
-            for(DomainPolicy restriction : restrictions){
-                restriction.setTargetDomain(null);
+        Set<DomainPolicy> policies = getAllDomainPolicies();
+        if(!CollectionUtils.isEmpty(policies)){
+            for(DomainPolicy policy : policies){
+                policy.setTargetDomain(null);
             }
         }
     }

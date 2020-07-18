@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+@Table(name = "domain")
 public class Domain extends AbstractPersistable<Long>  {
 
     @Column(unique = true, nullable = false)

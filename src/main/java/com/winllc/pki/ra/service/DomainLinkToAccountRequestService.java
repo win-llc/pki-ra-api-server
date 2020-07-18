@@ -116,11 +116,7 @@ public class DomainLinkToAccountRequestService {
             }
 
         }else{
-            if(!optionalAccount.isPresent()){
-                throw new RAObjectNotFoundException(Account.class, form.getAccountId());
-            }else{
-                throw new RAObjectNotFoundException(User.class, raUser.getUsername());
-            }
+            throw new RAObjectNotFoundException(Account.class, form.getAccountId());
         }
     }
 

@@ -5,29 +5,18 @@ import com.winllc.pki.ra.beans.form.AccountRequestUpdateForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AccountRequest;
-import com.winllc.pki.ra.domain.User;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AccountRequestRepository;
-import com.winllc.pki.ra.repository.UserRepository;
-import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.event.annotation.BeforeTestExecution;
 
 import javax.transaction.Transactional;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 import static org.springframework.test.util.AssertionErrors.*;
 

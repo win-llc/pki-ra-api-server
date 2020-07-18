@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 import javax.persistence.*;
 
 @Entity
+@Table(name = "attribute_policy")
 public class AttributePolicy extends AbstractPersistable<Long> {
 
     private String attributeName;

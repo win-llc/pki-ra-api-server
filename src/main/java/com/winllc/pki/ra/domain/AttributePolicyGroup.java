@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+@Table(name = "attribute_policy_group")
 public class AttributePolicyGroup extends AbstractPersistable<Long> {
 
     private String name;

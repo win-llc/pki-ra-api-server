@@ -6,7 +6,7 @@ import javax.persistence.MappedSuperclass;
 import java.util.UUID;
 
 @MappedSuperclass
-public class UniqueEntity extends AbstractPersistable<Long> {
+public abstract class UniqueEntity extends AbstractPersistable<Long> {
     private UUID uuid;
 
     public UUID getUuid() {

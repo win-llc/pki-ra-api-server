@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.beans.ServerSettingsGroup;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.ServerSettings;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
@@ -44,7 +45,7 @@ class ServerSettingsServiceTest {
 
     @Test
     void findAll() {
-        List<ServerSettings> all = serverSettingsService.findAll();
+        List<ServerSettingsGroup> all = serverSettingsService.findAll();
         assertEquals(1, all.size());
     }
 
@@ -61,8 +62,8 @@ class ServerSettingsServiceTest {
         ServerSettings serverSettings = serverSettingsRepository.findAll().get(0);
         List<ServerSettings> settings = new ArrayList<>();
         settings.add(serverSettings);
-        List<ServerSettings> serverSettings1 = serverSettingsService.updateAllSettings(settings);
-        assertEquals(1, serverSettings1.size());
+        List<ServerSettingsGroup> serverSettingsGroups = serverSettingsService.updateAllSettings(settings);
+        assertEquals(1, serverSettingsGroups.size());
     }
 
     @Test

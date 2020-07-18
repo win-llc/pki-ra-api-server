@@ -2,12 +2,10 @@ package com.winllc.pki.ra.domain;
 
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.PreRemove;
+import javax.persistence.*;
 
 @Entity
+@Table(name = "domain_policy")
 public class DomainPolicy extends AbstractPersistable<Long> {
 
     @ManyToOne

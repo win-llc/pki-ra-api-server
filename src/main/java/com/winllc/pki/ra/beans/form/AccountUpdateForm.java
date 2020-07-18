@@ -11,12 +11,21 @@ import java.util.stream.Collectors;
 public class AccountUpdateForm extends ValidForm<Account> {
 
     private List<PocFormEntry> pocEmails;
+    private String securityPolicyProjectId;
 
     public AccountUpdateForm(Account entity) {
         super(entity);
     }
 
     private AccountUpdateForm(){}
+
+    public String getSecurityPolicyProjectId() {
+        return securityPolicyProjectId;
+    }
+
+    public void setSecurityPolicyProjectId(String securityPolicyProjectId) {
+        this.securityPolicyProjectId = securityPolicyProjectId;
+    }
 
     @Override
     protected void processIsValid() {

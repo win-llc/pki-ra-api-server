@@ -41,8 +41,6 @@ public class CertificateRequestService {
     @Autowired
     private CertificateRequestRepository requestRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private AccountRepository accountRepository;
     @Autowired
     private AuditRecordRepository auditRecordRepository;
@@ -120,7 +118,7 @@ public class CertificateRequestService {
                 certificateRequest = requestRepository.save(certificateRequest);
                 return certificateRequest.getId();
             } else {
-                throw new RAObjectNotFoundException(User.class, raUser.getUsername());
+                throw new RAObjectNotFoundException(Account.class, form.getAccountId());
             }
         } else {
             throw new InvalidFormException(form);

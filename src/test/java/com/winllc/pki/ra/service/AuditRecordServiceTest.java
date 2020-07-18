@@ -37,8 +37,6 @@ class AuditRecordServiceTest {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private DomainRepository domainRepository;
     @Autowired
     private DomainPolicyRepository domainPolicyRepository;
@@ -82,7 +80,6 @@ class AuditRecordServiceTest {
         domainRepository.deleteAll();
         serverEntryRepository.deleteAll();
         accountRepository.deleteAll();
-        userRepository.deleteAll();
         pocEntryRepository.deleteAll();
         auditRecordRepository.deleteAll();
     }

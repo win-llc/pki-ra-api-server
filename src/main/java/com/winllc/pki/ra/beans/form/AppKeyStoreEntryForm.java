@@ -12,6 +12,7 @@ public class AppKeyStoreEntryForm {
     private String currentCertificate;
     private String uploadCertificate;
     private String uploadChain;
+    private String currentCertDetails;
 
     public AppKeyStoreEntryForm(){}
 
@@ -61,5 +62,13 @@ public class AppKeyStoreEntryForm {
 
     public void setUploadChain(String uploadChain) {
         this.uploadChain = uploadChain;
+    }
+
+    public String getCurrentCertDetails() {
+        return currentCertDetails;
+    }
+
+    public void setCurrentCertDetails(String currentCertDetails) {
+        this.currentCertDetails = currentCertDetails;
     }
 }

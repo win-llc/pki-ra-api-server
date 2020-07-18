@@ -36,8 +36,6 @@ class ServerEntryServiceTest {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private DomainRepository domainRepository;
     @Autowired
     private DomainPolicyRepository domainPolicyRepository;
@@ -82,7 +80,6 @@ class ServerEntryServiceTest {
         domainRepository.deleteAll();
         serverEntryRepository.deleteAll();
         accountRepository.deleteAll();
-        userRepository.deleteAll();
         pocEntryRepository.deleteAll();
     }
 

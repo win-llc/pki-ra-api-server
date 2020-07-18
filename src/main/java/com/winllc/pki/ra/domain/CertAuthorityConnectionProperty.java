@@ -3,12 +3,10 @@ package com.winllc.pki.ra.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.PreRemove;
+import javax.persistence.*;
 
 @Entity
+@Table(name = "cert_authority_connection_property")
 public class CertAuthorityConnectionProperty extends AbstractPersistable<Long> {
 
     private String name;

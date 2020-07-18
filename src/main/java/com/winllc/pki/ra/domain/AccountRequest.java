@@ -5,8 +5,10 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.PreRemove;
+import javax.persistence.Table;
 
 @Entity
+@Table(name = "account_request")
 public class AccountRequest extends AbstractPersistable<Long> {
 
     private String accountOwnerEmail;
@@ -14,6 +16,7 @@ public class AccountRequest extends AbstractPersistable<Long> {
     private String projectName;
     @Column(nullable = false)
     private String state;
+    private String securityPolicyServerProjectId;
 
     public static AccountRequest createNew(){
         AccountRequest request = new AccountRequest();
@@ -56,6 +59,14 @@ public class AccountRequest extends AbstractPersistable<Long> {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public String getSecurityPolicyServerProjectId() {
+        return securityPolicyServerProjectId;
+    }
+
+    public void setSecurityPolicyServerProjectId(String securityPolicyServerProjectId) {
+        this.securityPolicyServerProjectId = securityPolicyServerProjectId;
     }
 
     public void approve(){

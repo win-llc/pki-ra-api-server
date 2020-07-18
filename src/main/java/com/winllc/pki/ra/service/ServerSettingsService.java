@@ -1,5 +1,7 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.beans.ServerSettingsGroup;
+import com.winllc.pki.ra.constants.ServerSettingRequired;
 import com.winllc.pki.ra.domain.ServerSettings;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.ServerSettingsRepository;
@@ -23,6 +25,7 @@ public class ServerSettingsService {
     @Autowired
     private ServerSettingsRepository repository;
 
+    //todo remove this, replaced with SeverSettingsRequired enum
     private String[] defaultProperties = new String[]{
             "emailServer", "emailServerPort", "emailFromAddress",
             "openIdConnectEnabled", "openIdConnectServerBaseUrl", "openIdConnectRealm", "openIdConnectClientId",
@@ -38,8 +41,9 @@ public class ServerSettingsService {
 
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)
-    public List<ServerSettings> findAll(){
-        return repository.findAll();
+    public List<ServerSettingsGroup> findAll(){
+
+        return buildGroupList();
     }
 
     @PostMapping("/update")
@@ -51,12 +55,12 @@ public class ServerSettingsService {
 
     @PostMapping("/updateAll")
     @ResponseStatus(HttpStatus.OK)
-    public List<ServerSettings> updateAllSettings(@RequestBody List<ServerSettings> settingsList){
+    public List<ServerSettingsGroup> updateAllSettings(@RequestBody List<ServerSettings> settingsList){
         List<ServerSettings> updatedList = new ArrayList<>();
         for(ServerSettings settings : settingsList){
             updatedList.add(updateSetting(settings));
         }
-        return updatedList;
+        return buildGroupList();
     }
 
     @GetMapping("/getByName/{name}")
@@ -68,6 +72,37 @@ public class ServerSettingsService {
         }else{
             throw new RAObjectNotFoundException(ServerSettings.class, name);
         }
+    }
+
+    public Optional<String> getServerSettingValue(ServerSettingRequired settingRequired){
+        Optional<ServerSettings> optionalServerSettings = repository.findDistinctByPropertyEquals(settingRequired.getSettingName());
+        if(optionalServerSettings.isPresent()){
+            return Optional.of(optionalServerSettings.get().getValue());
+        }else{
+            return Optional.empty();
+        }
+    }
+
+    private List<ServerSettingsGroup> buildGroupList(){
+        List<ServerSettingsGroup> groups = new ArrayList<>();
+        for(String groupName : ServerSettingRequired.getGroupNames()){
+            ServerSettingsGroup group = new ServerSettingsGroup(groupName);
+
+            List<ServerSettingRequired> byGroupName = ServerSettingRequired.getByGroupName(groupName);
+            for(ServerSettingRequired settingRequired : byGroupName){
+                Optional<ServerSettings> optionalSetting = repository.findDistinctByPropertyEquals(settingRequired.getSettingName());
+                if(optionalSetting.isPresent()){
+                    ServerSettings setting = optionalSetting.get();
+                    setting.setGroupName(settingRequired.getSettingGroupName());
+                    group.getRequiredSettings().add(setting);
+                }else{
+                    ServerSettings settings = new ServerSettings(settingRequired.getSettingName());
+                    settings.setGroupName(settingRequired.getSettingGroupName());
+                }
+            }
+            groups.add(group);
+        }
+        return groups;
     }
 
     private void addSetting(ServerSettings serverSettings){

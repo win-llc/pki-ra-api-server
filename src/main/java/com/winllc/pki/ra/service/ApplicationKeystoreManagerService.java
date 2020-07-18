@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.nimbusds.jose.util.X509CertUtils;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.AppKeyStoreEntryForm;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
@@ -8,7 +9,12 @@ import com.winllc.pki.ra.keystore.KeyEntryWrapper;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.provider.X509CertificateObject;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.mozilla.jss.netscape.security.x509.X509CertImpl;
+import org.mozilla.jss.netscape.security.x509.X509CertInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,9 +23,8 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
+import java.security.cert.*;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,10 +51,15 @@ public class ApplicationKeystoreManagerService {
 
     @GetMapping("/getEntryByAlias/{alias}")
     @ResponseStatus(HttpStatus.OK)
-    public AppKeyStoreEntryForm getEntry(@PathVariable String alias) throws RAObjectNotFoundException {
+    public AppKeyStoreEntryForm getEntry(@PathVariable String alias) throws RAObjectNotFoundException, CertificateException, IOException {
         Optional<KeyEntryWrapper> optionalEntry = getKeyByAlias(alias);
         if(optionalEntry.isPresent()){
-            AppKeyStoreEntryForm form = new AppKeyStoreEntryForm(optionalEntry.get());
+            KeyEntryWrapper keyEntry = optionalEntry.get();
+            AppKeyStoreEntryForm form = new AppKeyStoreEntryForm(keyEntry);
+
+            X509CertInfo certImpl = new X509CertInfo(((X509Certificate) keyEntry.getCertificate()).getTBSCertificate());
+            form.setCurrentCertDetails(certImpl.toString());
+
             return form;
         }else{
             throw new RAObjectNotFoundException(KeyEntryWrapper.class, alias);

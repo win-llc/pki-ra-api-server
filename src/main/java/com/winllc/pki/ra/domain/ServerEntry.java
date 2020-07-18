@@ -8,6 +8,7 @@ import javax.persistence.*;
 import java.util.*;
 
 @Entity
+@Table(name = "server_entry")
 public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
 
     private String hostname;
@@ -29,7 +30,6 @@ public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
     private String openidClientId;
     private String openidClientRedirectUrl;
 
-    private ServerEntry(){}
 
     public static ServerEntry buildNew(){
         ServerEntry serverEntry = new ServerEntry();

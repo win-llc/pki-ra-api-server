@@ -5,11 +5,13 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 @Entity
+@Table(name = "terms_of_service")
 public class TermsOfService extends AbstractPersistable<Long> {
 
     @Column(nullable = false, unique = true)

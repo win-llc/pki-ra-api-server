@@ -1,6 +1,5 @@
 package com.winllc.pki.ra.security;
 
-import com.winllc.pki.ra.repository.UserRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,12 +13,6 @@ import java.util.ArrayList;
 public class RAUserDetailsService implements UserDetailsService {
 
     private static final Logger log = LogManager.getLogger(RAUserDetailsService.class);
-
-    private UserRepository userRepository;
-
-    public RAUserDetailsService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

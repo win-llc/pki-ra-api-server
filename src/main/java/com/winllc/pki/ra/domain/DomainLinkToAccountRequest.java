@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
+@Table(name = "domain_link_to_account_request")
 public class DomainLinkToAccountRequest extends AbstractPersistable<Long> {
 
     @Column(nullable = false)

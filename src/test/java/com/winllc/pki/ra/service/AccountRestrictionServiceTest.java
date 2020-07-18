@@ -6,16 +6,13 @@ import com.winllc.pki.ra.constants.AccountRestrictionAction;
 import com.winllc.pki.ra.constants.AccountRestrictionType;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AccountRestriction;
-import com.winllc.pki.ra.domain.User;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AccountRestrictionRepository;
-import com.winllc.pki.ra.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
@@ -27,7 +24,6 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 

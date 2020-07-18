@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 @Entity
-@Table(name = "IssuedCertificate")
+@Table(name = "issued_certificate")
 public class IssuedCertificate extends UniqueEntity implements AccountOwnedEntity {
 
     private String certAuthorityName;

@@ -31,6 +31,8 @@ class DomainRepositoryTest {
     private DomainRepository domainRepository;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private DomainPolicyRepository domainPolicyRepository;
 
     @BeforeEach
     @Transactional
@@ -41,17 +43,18 @@ class DomainRepositoryTest {
         accountRepository.save(account);
 
         Domain domain1 = new Domain();
-        domain1.setBase("test.winllc-dev.com");
+        domain1.setBase("test8.winllc-dev.com");
         domain1 = domainRepository.save(domain1);
 
         Domain domain2 = new Domain();
-        domain2.setBase("test2.winllc-dev.com");
+        domain2.setBase("test9.winllc-dev.com");
         domain2 = domainRepository.save(domain2);
     }
 
     @AfterEach
     @Transactional
     void after(){
+        domainPolicyRepository.deleteAll();;
         domainRepository.deleteAll();
         accountRepository.deleteAll();
     }
@@ -73,12 +76,12 @@ class DomainRepositoryTest {
     @Transactional
     void subDomainTest(){
         Domain parentDomain = new Domain();
-        parentDomain.setBase("test.com");
+        parentDomain.setBase("parent.com");
 
         parentDomain = domainRepository.save(parentDomain);
 
         Domain subDomain = new Domain();
-        subDomain.setBase("sub.test.com");
+        subDomain.setBase("sub.parent.com");
         subDomain.setParentDomain(parentDomain);
 
         subDomain = domainRepository.save(subDomain);
@@ -89,7 +92,7 @@ class DomainRepositoryTest {
         Domain checkParent = domainRepository.findById(parentDomain.getId()).get();
         Domain checkSub = domainRepository.findById(subDomain.getId()).get();
         Hibernate.initialize(checkParent.getSubDomains());
-        assertEquals("sub.test.com", new ArrayList<>(checkParent.getSubDomains()).get(0).getBase());
+        assertEquals("sub.parent.com", new ArrayList<>(checkParent.getSubDomains()).get(0).getBase());
         assertEquals(checkParent.getId(), checkSub.getParentDomain().getId());
     }
 }

@@ -2,14 +2,12 @@ package com.winllc.pki.ra.domain;
 
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.PreRemove;
+import javax.persistence.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "poc_entry")
 public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedEntity {
 
     private String email;

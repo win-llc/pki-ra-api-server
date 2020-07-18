@@ -5,6 +5,7 @@ import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import com.winllc.pki.ra.repository.DomainPolicyRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +28,8 @@ class DomainServiceTest {
     private DomainService domainService;
     @Autowired
     private DomainRepository domainRepository;
+    @Autowired
+    private DomainPolicyRepository domainPolicyRepository;
 
     @BeforeEach
     @Transactional
@@ -39,6 +42,7 @@ class DomainServiceTest {
     @AfterEach
     @Transactional
     void after(){
+        domainPolicyRepository.deleteAll();
         domainRepository.deleteAll();
     }
 
@@ -86,7 +90,7 @@ class DomainServiceTest {
         Long domainId = domainService.createDomain(form);
         assertTrue(domainId > 0);
 
-        DomainForm withParentForm = new DomainForm("sub.test.com");
+        DomainForm withParentForm = new DomainForm("sub");
         withParentForm.setParentDomainId(domainId);
 
         Long subDomainId = domainService.createDomain(withParentForm);

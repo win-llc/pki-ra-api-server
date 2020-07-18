@@ -5,6 +5,7 @@ import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
 import com.winllc.pki.ra.repository.AttributePolicyRepository;
+import com.winllc.pki.ra.service.SecurityPolicyService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,7 +64,8 @@ class EntityDirectoryServiceTest {
         policyMapForServer.put("nameExists", "overrideValue");
 
         when(securityPolicyService
-                .getSecurityPolicyMapForService("secpolicysvc", serverEntry.getFqdn())).thenReturn(policyMapForServer);
+                .getSecurityPolicyMapForService("secpolicysvc", serverEntry.getFqdn(),
+                        account.getSecurityPolicyServerProjectId())).thenReturn(policyMapForServer);
 
         //will be added
         AttributePolicy apUseSecurityPolicyValue = new AttributePolicy();

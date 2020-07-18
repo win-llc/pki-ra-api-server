@@ -4,11 +4,7 @@ import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.AccountRequestUpdateForm;
 import com.winllc.pki.ra.domain.AccountRequest;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AccountRequestRepository;
-import com.winllc.pki.ra.repository.PocEntryRepository;
-import com.winllc.pki.ra.repository.UserRepository;
-import com.winllc.pki.ra.service.external.IdentityProviderService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +54,7 @@ public class AccountRequestService {
             AccountRequest accountRequest = AccountRequest.createNew();
             accountRequest.setAccountOwnerEmail(form.getAccountOwnerEmail());
             accountRequest.setProjectName(form.getProjectName());
+            accountRequest.setSecurityPolicyServerProjectId(form.getSecurityPolicyProjectId());
 
             accountRequest = accountRequestRepository.save(accountRequest);
             return accountRequest.getId();

@@ -4,9 +4,11 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.util.Objects;
 
 @Entity
+@Table(name = "role_permission")
 public class RolePermission extends AbstractPersistable<Long> {
 
     @Column(nullable = false)

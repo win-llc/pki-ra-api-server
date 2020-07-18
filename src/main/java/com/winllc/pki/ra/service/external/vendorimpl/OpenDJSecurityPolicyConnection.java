@@ -2,6 +2,7 @@ package com.winllc.pki.ra.service.external.vendorimpl;
 
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.service.external.SecurityPolicyConnection;
+import com.winllc.pki.ra.service.external.SecurityPolicyServerProjectDetails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
@@ -11,8 +12,7 @@ import org.springframework.stereotype.Component;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Component
 //todo should be loaded as a bean
@@ -29,7 +29,7 @@ public class OpenDJSecurityPolicyConnection implements SecurityPolicyConnection 
     private String ldapBaseDn;
 
     @Override
-    public Map<String, String> getSecurityPolicyMapForService(String fqdn) {
+    public Map<String, String> getSecurityPolicyMapForService(String fqdn, String projectId) {
         //todo
         LdapTemplate ldapTemplate = buildLdapTemplate();
         
@@ -43,6 +43,18 @@ public class OpenDJSecurityPolicyConnection implements SecurityPolicyConnection 
                 return map;
             }
         });
+    }
+
+    @Override
+    public Optional<SecurityPolicyServerProjectDetails> getProjectDetails(String projectId) {
+        //todo
+        return Optional.empty();
+    }
+
+    @Override
+    public List<SecurityPolicyServerProjectDetails> getAllProjects() {
+        //todo
+        return new ArrayList<>();
     }
 
     @Override

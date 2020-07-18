@@ -1,15 +1,12 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.DirectoryDataSettings;
-import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.mock.MockCertAuthority;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.TermsOfServiceRepository;
-import com.winllc.pki.ra.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;

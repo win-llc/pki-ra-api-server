@@ -5,13 +5,11 @@ import com.winllc.pki.ra.constants.AccountRestrictionAction;
 import com.winllc.pki.ra.constants.AccountRestrictionType;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.PreRemove;
+import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
+@Table(name = "account_restriction")
 public class AccountRestriction extends AbstractPersistable<Long> implements AccountOwnedEntity {
 
     private AccountRestrictionType type;

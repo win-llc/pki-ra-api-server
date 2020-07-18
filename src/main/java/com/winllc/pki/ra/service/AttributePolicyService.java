@@ -8,15 +8,11 @@ import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
 import com.winllc.pki.ra.repository.AttributePolicyRepository;
 import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.service.external.SecurityPolicyConnection;
-import com.winllc.pki.ra.service.external.SecurityPolicyService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
@@ -24,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 

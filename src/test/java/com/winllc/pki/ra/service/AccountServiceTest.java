@@ -1,7 +1,6 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.DirectoryDataSettings;
-import com.winllc.acme.common.model.data.DirectoryData;
 import com.winllc.pki.ra.acme.AcmeServerConnection;
 import com.winllc.pki.ra.acme.AcmeServerService;
 import com.winllc.pki.ra.acme.AcmeServerServiceImpl;
@@ -15,11 +14,9 @@ import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.PocEntryRepository;
-import com.winllc.pki.ra.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.commons.util.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;

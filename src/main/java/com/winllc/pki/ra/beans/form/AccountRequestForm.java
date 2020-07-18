@@ -12,6 +12,7 @@ public class AccountRequestForm extends ValidForm<AccountRequest> {
     private String accountOwnerEmail;
     @NotEmpty(message = "Project Name must not be empty")
     private String projectName;
+    private String securityPolicyProjectId;
 
     public String getAccountOwnerEmail() {
         return accountOwnerEmail;
@@ -27,6 +28,14 @@ public class AccountRequestForm extends ValidForm<AccountRequest> {
 
     public void setProjectName(String projectName) {
         this.projectName = projectName;
+    }
+
+    public String getSecurityPolicyProjectId() {
+        return securityPolicyProjectId;
+    }
+
+    public void setSecurityPolicyProjectId(String securityPolicyProjectId) {
+        this.securityPolicyProjectId = securityPolicyProjectId;
     }
 
     @Override

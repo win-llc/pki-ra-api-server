@@ -1,6 +1,5 @@
 package com.winllc.pki.ra.service;
 
-import com.netscape.cms.servlet.csadmin.Cert;
 import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
@@ -8,17 +7,14 @@ import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
-import com.winllc.pki.ra.beans.validator.CertAuthorityConnectionInfoValidator;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
-import com.winllc.pki.ra.domain.User;
 import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.mock.MockCertAuthority;
 import com.winllc.pki.ra.repository.*;
 import org.junit.jupiter.api.AfterEach;
@@ -28,14 +24,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import javax.persistence.EntityManagerFactory;
 import javax.transaction.Transactional;
 
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 

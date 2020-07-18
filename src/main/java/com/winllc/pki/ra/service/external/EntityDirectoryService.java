@@ -4,7 +4,7 @@ import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AttributePolicyGroup;
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
-import com.winllc.pki.ra.service.ServerEntryService;
+import com.winllc.pki.ra.service.SecurityPolicyService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,7 +60,8 @@ public class EntityDirectoryService {
             if(StringUtils.isNotBlank(pg.getSecurityPolicyServiceName())) {
                 try {
                     Map<String, String> map = securityPolicyService
-                            .getSecurityPolicyMapForService(pg.getSecurityPolicyServiceName(), serverEntry.getFqdn());
+                            .getSecurityPolicyMapForService(pg.getSecurityPolicyServiceName(),
+                                    serverEntry.getFqdn(), account.getSecurityPolicyServerProjectId());
                     securityPolicyMap.putAll(map);
                 } catch (Exception e) {
                     log.error("Could not retrieve Security Policy", e);

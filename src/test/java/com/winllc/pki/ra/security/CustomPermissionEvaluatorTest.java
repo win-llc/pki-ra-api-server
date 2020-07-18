@@ -7,7 +7,6 @@ import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
-import com.winllc.pki.ra.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,7 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;

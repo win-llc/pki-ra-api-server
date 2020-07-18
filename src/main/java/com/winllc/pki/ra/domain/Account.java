@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
+@Table(name = "account")
 public class Account extends UniqueEntity implements AccountOwnedEntity, DomainCertIssuanceRestrictionHolder {
     @Column(unique = true)
     private String keyIdentifier;
@@ -18,6 +19,8 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
     @Column(unique = true)
     private String projectName;
     private boolean enabled = true;
+
+    private String securityPolicyServerProjectId;
 
     @JsonIgnore
     @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
@@ -73,7 +76,7 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
         return account;
     }
 
-    private Account(){}
+    public Account(){}
 
     @PreRemove
     private void preRemove(){
@@ -239,6 +242,14 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
 
     public void setAccountDomainPolicies(Set<DomainPolicy> accountDomainPolicies) {
         this.accountDomainPolicies = accountDomainPolicies;
+    }
+
+    public String getSecurityPolicyServerProjectId() {
+        return securityPolicyServerProjectId;
+    }
+
+    public void setSecurityPolicyServerProjectId(String securityPolicyServerProjectId) {
+        this.securityPolicyServerProjectId = securityPolicyServerProjectId;
     }
 
     @Override

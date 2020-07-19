@@ -32,6 +32,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/serverEntry")
@@ -43,8 +44,6 @@ public class ServerEntryService {
     private ServerEntryRepository serverEntryRepository;
     @Autowired
     private AccountRepository accountRepository;
-    @Autowired
-    private DomainRepository domainRepository;
     //todo replace with OIDCProviderService
     @Autowired
     private KeycloakOIDCProviderConnection oidcProviderConnection;
@@ -54,6 +53,16 @@ public class ServerEntryService {
     private EntityDirectoryService entityDirectoryService;
     @Autowired
     private AuditRecordService auditRecordService;
+
+
+    @GetMapping("/variableFields")
+    @ResponseStatus(HttpStatus.OK)
+    public List<String> getAvailableVariableFields(){
+        return Stream.of(ServerEntry.class.getDeclaredFields())
+                .filter(field -> field.isAnnotationPresent(EntityVariableField.class))
+                .map(field -> field.getName())
+                .collect(Collectors.toList());
+    }
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
@@ -120,7 +129,11 @@ public class ServerEntryService {
 
                 serverEntry = serverEntryRepository.save(serverEntry);
 
-                auditRecordService.save(AuditRecord.buildNew(AuditRecordType.SERVER_ENTRY_UPDATED, serverEntry));
+                try {
+                    auditRecordService.save(AuditRecord.buildNew(AuditRecordType.SERVER_ENTRY_UPDATED, serverEntry));
+                }catch (Exception e){
+                    log.error("Unable to create audit record", e);
+                }
 
                 //apply attributes to external directory
                 entityDirectoryService.applyServerEntryToDirectory(serverEntry);

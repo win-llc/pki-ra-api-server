@@ -101,7 +101,6 @@ public class AttributePolicyService {
             AttributePolicyGroup attributePolicyGroup = new AttributePolicyGroup();
             attributePolicyGroup.setName(form.getName());
             attributePolicyGroup.setAccount(account);
-            attributePolicyGroup.setSecurityPolicyServiceName(form.getSecurityPolicyServiceName());
             attributePolicyGroup = attributePolicyGroupRepository.save(attributePolicyGroup);
 
             if (!CollectionUtils.isEmpty(form.getAttributePolicies())) {

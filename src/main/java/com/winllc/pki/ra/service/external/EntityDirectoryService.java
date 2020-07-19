@@ -1,14 +1,18 @@
 package com.winllc.pki.ra.service.external;
 
+import com.winllc.pki.ra.constants.ServerSettingRequired;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AttributePolicyGroup;
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
 import com.winllc.pki.ra.service.SecurityPolicyService;
+import com.winllc.pki.ra.service.ServerSettingsService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -25,6 +29,8 @@ public class EntityDirectoryService {
     private AttributePolicyGroupRepository attributePolicyGroupRepository;
     @Autowired
     private SecurityPolicyService securityPolicyService;
+    @Autowired
+    private ServerSettingsService serverSettingsService;
 
     //return the applied attribute map
     @Transactional
@@ -56,13 +62,19 @@ public class EntityDirectoryService {
 
         Map<String, Object> attributeMap = new HashMap<>();
         policyGroups.forEach(pg -> {
-            Map<String, String> securityPolicyMap = new HashMap<>();
-            if(StringUtils.isNotBlank(pg.getSecurityPolicyServiceName())) {
+            Map<String, Object> securityPolicyMap = new HashMap<>();
+            if(StringUtils.isNotBlank(account.getSecurityPolicyServerProjectId())) {
                 try {
-                    Map<String, String> map = securityPolicyService
-                            .getSecurityPolicyMapForService(pg.getSecurityPolicyServiceName(),
-                                    serverEntry.getFqdn(), account.getSecurityPolicyServerProjectId());
-                    securityPolicyMap.putAll(map);
+                    Optional<SecurityPolicyServerProjectDetails> optionalDetails = securityPolicyService
+                            .getPolicyServerProjectDetails(null, account.getSecurityPolicyServerProjectId());
+                    if(optionalDetails.isPresent()){
+                        SecurityPolicyServerProjectDetails details = optionalDetails.get();
+                        securityPolicyMap.putAll(details.getAllSecurityAttributesMap());
+                    }
+                    //Map<String, String> map = securityPolicyService
+                    //        .getSecurityPolicyMapForService(null,
+                    //                serverEntry.getFqdn(), account.getSecurityPolicyServerProjectId());
+                    //securityPolicyMap.putAll(map);
                 } catch (Exception e) {
                     log.error("Could not retrieve Security Policy", e);
                 }
@@ -77,9 +89,9 @@ public class EntityDirectoryService {
                     //not just allow value if key/value pair is found
                     if(securityPolicyMap.containsKey(ap.getSecurityAttributeKeyName())){
                         if(ap.isUseSecurityAttributeValueIfNameExists()){
-                            attributeValueToAdd = securityPolicyMap.get(ap.getSecurityAttributeKeyName());
+                            attributeValueToAdd = securityPolicyMap.get(ap.getSecurityAttributeKeyName()).toString();
                         }else if(ap.isUseValueIfSecurityAttributeNameValueExists()){
-                            String securityPolicy = securityPolicyMap.get(ap.getSecurityAttributeKeyName());
+                            String securityPolicy = securityPolicyMap.get(ap.getSecurityAttributeKeyName()).toString();
                             if(securityPolicy.equalsIgnoreCase(ap.getSecurityAttributeValue())){
                                 attributeValueToAdd = ap.getAttributeValue();
                             }
@@ -116,5 +128,16 @@ public class EntityDirectoryService {
             log.error("Could not find field: "+serverEntryField, e);
         }
         return Optional.empty();
+    }
+
+    //todo finish this
+    private LdapTemplate buildDirectoryLdapTemplate(){
+        LdapContextSource contextSource = new LdapContextSource();
+        Optional<String> optionalUrl = serverSettingsService.getServerSettingValue(ServerSettingRequired.ENTITY_DIRECTORY_LDAP_URL);
+        optionalUrl.ifPresent(u -> contextSource.setUrl(u));
+
+        contextSource.afterPropertiesSet();
+
+        return new LdapTemplate(contextSource);
     }
 }

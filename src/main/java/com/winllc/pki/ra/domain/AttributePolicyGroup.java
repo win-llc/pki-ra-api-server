@@ -19,7 +19,6 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
     @ManyToOne
     @JoinColumn(name="account_fk")
     private Account account;
-    private String securityPolicyServiceName;
 
     @PreRemove
     private void preRemove(){
@@ -47,14 +46,6 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
 
     public void setAttributePolicies(Set<AttributePolicy> attributePolicies) {
         this.attributePolicies = attributePolicies;
-    }
-
-    public String getSecurityPolicyServiceName() {
-        return securityPolicyServiceName;
-    }
-
-    public void setSecurityPolicyServiceName(String securityPolicyServiceName) {
-        this.securityPolicyServiceName = securityPolicyServiceName;
     }
 
     public Account getAccount() {

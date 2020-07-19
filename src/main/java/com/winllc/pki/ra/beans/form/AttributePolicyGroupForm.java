@@ -13,7 +13,6 @@ public class AttributePolicyGroupForm extends ValidForm<AttributePolicyGroup> {
     private Long accountId;
     private String accountName;
     private List<AttributePolicy> attributePolicies;
-    private String securityPolicyServiceName;
 
     public AttributePolicyGroupForm(AttributePolicyGroup attributePolicyGroup){
         super(attributePolicyGroup);
@@ -22,7 +21,6 @@ public class AttributePolicyGroupForm extends ValidForm<AttributePolicyGroup> {
         this.accountId = account.getId();
         this.accountName = account.getProjectName();
         this.attributePolicies = new ArrayList<>(attributePolicyGroup.getAttributePolicies());
-        this.securityPolicyServiceName = attributePolicyGroup.getSecurityPolicyServiceName();
     }
 
     public AttributePolicyGroupForm(){}
@@ -63,13 +61,5 @@ public class AttributePolicyGroupForm extends ValidForm<AttributePolicyGroup> {
 
     public void setAttributePolicies(List<AttributePolicy> attributePolicies) {
         this.attributePolicies = attributePolicies;
-    }
-
-    public String getSecurityPolicyServiceName() {
-        return securityPolicyServiceName;
-    }
-
-    public void setSecurityPolicyServiceName(String securityPolicyServiceName) {
-        this.securityPolicyServiceName = securityPolicyServiceName;
     }
 }

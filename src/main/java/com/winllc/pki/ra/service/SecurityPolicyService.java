@@ -44,26 +44,26 @@ public class SecurityPolicyService {
 
     public Map<String, String> getSecurityPolicyMapForService(String serviceName, String fqdn,
                                                               String projectId) throws Exception {
-        SecurityPolicyConnection connection = getConnection(serviceName);
+        SecurityPolicyConnection connection = getConnection(temporaryStaticPolicyServerName);
 
         return connection.getSecurityPolicyMapForService(fqdn, projectId);
     }
 
     public List<String> getSecurityPolicyNamesForService(String serviceName, String fqdn,
                                                          String projectId) throws Exception {
-        Map<String, String> map = getSecurityPolicyMapForService(serviceName, fqdn, projectId);
+        Map<String, String> map = getSecurityPolicyMapForService(temporaryStaticPolicyServerName, fqdn, projectId);
         return new ArrayList<>(map.keySet());
     }
 
     public Optional<SecurityPolicyServerProjectDetails> getPolicyServerProjectDetails(String serviceName,
                                                                                       String projectId) throws Exception {
-        SecurityPolicyConnection connection = getConnection(serviceName);
+        SecurityPolicyConnection connection = getConnection(temporaryStaticPolicyServerName);
 
         return connection.getProjectDetails(projectId);
     }
 
     public List<SecurityPolicyServerProjectDetails> getAllProjects(String serviceName) throws Exception {
-        SecurityPolicyConnection connection = getConnection(serviceName);
+        SecurityPolicyConnection connection = getConnection(temporaryStaticPolicyServerName);
 
         return connection.getAllProjects();
     }

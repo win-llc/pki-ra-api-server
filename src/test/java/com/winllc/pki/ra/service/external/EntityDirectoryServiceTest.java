@@ -17,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import javax.transaction.Transactional;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,6 +43,7 @@ class EntityDirectoryServiceTest {
     void before(){
         Account account = Account.buildNew("Test Project 2");
         account.setKeyIdentifier("kidtest1");
+        account.setSecurityPolicyServerProjectId("project1");
         accountRepository.save(account);
     }
 
@@ -59,13 +61,23 @@ class EntityDirectoryServiceTest {
         ServerEntry serverEntry = ServerEntry.buildNew();
         serverEntry.setFqdn("test.winllc-dev.com");
 
-        Map<String, String> policyMapForServer = new HashMap<>();
+        Map<String, Object> policyMapForServer = new HashMap<>();
         policyMapForServer.put("matchName", "matchValue");
         policyMapForServer.put("nameExists", "overrideValue");
 
+        /*
         when(securityPolicyService
-                .getSecurityPolicyMapForService("secpolicysvc", serverEntry.getFqdn(),
+                .getSecurityPolicyMapForService(null, serverEntry.getFqdn(),
                         account.getSecurityPolicyServerProjectId())).thenReturn(policyMapForServer);
+
+         */
+
+        SecurityPolicyServerProjectDetails details = new SecurityPolicyServerProjectDetails();
+        details.setProjectName("project1");
+        details.setAllSecurityAttributesMap(policyMapForServer);
+        when(securityPolicyService
+        .getPolicyServerProjectDetails(any(), any()))
+                .thenReturn(Optional.of(details));
 
         //will be added
         AttributePolicy apUseSecurityPolicyValue = new AttributePolicy();
@@ -105,7 +117,6 @@ class EntityDirectoryServiceTest {
         apVariableValueFromServerEntry = attributePolicyRepository.save(apVariableValueFromServerEntry);
 
         AttributePolicyGroup attributePolicyGroup = new AttributePolicyGroup();
-        attributePolicyGroup.setSecurityPolicyServiceName("secpolicysvc");
         attributePolicyGroup.getAttributePolicies().add(apUseSecurityPolicyValue);
         attributePolicyGroup.getAttributePolicies().add(apUseValueIfSecurityNameValueMatch);
         attributePolicyGroup.getAttributePolicies().add(apNoMatchSecurityPolicyNameValue);

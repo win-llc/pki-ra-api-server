@@ -40,6 +40,7 @@ public class AttributePolicy extends AbstractPersistable<Long> {
 
     @JsonIgnore
     public void update(AttributePolicy updated){
+        setAttributeName(updated.getAttributeName());
         setAttributeValue(updated.getAttributeValue());
         setSecurityAttributeKeyName(updated.getSecurityAttributeKeyName());
         setSecurityAttributeValue(updated.getSecurityAttributeValue());

@@ -11,6 +11,7 @@ public enum ServerSettingRequired {
     EMAIL_SERVER_PORT("emailServerPort", "Email Server Port", "Email", false),
     EMAIL_SERVER_FROM_ADDRESS("emailFromAddress", "Default From Address", "Email", false),
 
+    ENTITY_DIRECTORY_LDAP_URL("entityDirectoryLdapUrl", "Entity Directory LDAP URL", "Entity Directory", false),
     //OIDC_SERVER_BASE_URL("openIdServerBaseUrl", "OIDC", false),
     //OIDC_ENABLED("openIdConnectEnabled", "OIDC", false),
 

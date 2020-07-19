@@ -12,6 +12,7 @@ import java.util.*;
 public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
 
     private String hostname;
+    @EntityVariableField
     private String fqdn;
     @JsonIgnore
     @ElementCollection

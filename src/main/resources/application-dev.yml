@@ -79,7 +79,7 @@ policy-server:
   ldap-url: ldap://directory.winllc-dev.com:389
   ldap-username: cn=Directory Manager
   ldap-password: P@ssW0rd
-  ldap-base-dn: ou=policy-server,dc=winllc-dev,dc=com
+  ldap-base-dn: dc=winllc-dev,dc=com
 
 web-ui:
   server-base: http://localhost:3000

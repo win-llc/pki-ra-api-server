@@ -63,6 +63,8 @@ public class CertAuthorityConnectionService {
     private AccountRepository accountRepository;
     @Autowired
     private CertificateRequestRepository certificateRequestRepository;
+    @Autowired
+    private ServerEntryRepository serverEntryRepository;
 
     private static final Map<String, CertAuthority> loadedCertAuthorities = new ConcurrentHashMap<>();
 
@@ -253,12 +255,17 @@ public class CertAuthorityConnectionService {
     @ResponseStatus(HttpStatus.OK)
     public String issueCertificate(@Valid @RequestBody RACertificateIssueRequest raCertificateIssueRequest) throws Exception {
 
+        //todo account shouldn't be required of EAB not required
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(raCertificateIssueRequest.getAccountKid());
         if(optionalAccount.isPresent()) {
             X509Certificate cert = processIssueCertificate(raCertificateIssueRequest);
             String pemCert = CertUtil.formatCrtFileContents(cert);
 
             Account account = optionalAccount.get();
+
+            //todo add server entry if one does not exist
+            //todo create audit record
+            serverEntryRepository.findDistinctByFqdnEqualsAndAccount("", account);
 
             //add as certificate request
             CertificateRequest certificateRequest = new CertificateRequest();

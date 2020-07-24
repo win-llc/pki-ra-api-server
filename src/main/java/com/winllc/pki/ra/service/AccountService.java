@@ -42,8 +42,6 @@ public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
-    private DomainRepository domainRepository;
-    @Autowired
     private PocEntryRepository pocEntryRepository;
     @Autowired
     private AuditRecordService auditRecordService;

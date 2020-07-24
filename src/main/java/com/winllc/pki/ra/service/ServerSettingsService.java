@@ -15,6 +15,7 @@ import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/settings")
@@ -34,9 +35,12 @@ public class ServerSettingsService {
 
     @PostConstruct
     private void postConstruct(){
-        for(String defaultProperty : defaultProperties){
-            addSetting(new ServerSettings(defaultProperty));
-        }
+        //for(String defaultProperty : defaultProperties){
+        //    addSetting(new ServerSettings(defaultProperty));
+        //}
+
+        Stream.of(ServerSettingRequired.values())
+                .forEach(s -> addSetting(new ServerSettings(s.getSettingName())));
     }
 
     @GetMapping("/all")

@@ -12,9 +12,11 @@ public class AccountUpdateForm extends ValidForm<Account> {
 
     private List<PocFormEntry> pocEmails;
     private String securityPolicyProjectId;
+    private String entityBaseDn;
 
     public AccountUpdateForm(Account entity) {
         super(entity);
+        this.entityBaseDn = entity.getEntityBaseDn();
     }
 
     private AccountUpdateForm(){}
@@ -46,5 +48,13 @@ public class AccountUpdateForm extends ValidForm<Account> {
 
     public void setPocEmails(List<PocFormEntry> pocEmails) {
         this.pocEmails = pocEmails;
+    }
+
+    public String getEntityBaseDn() {
+        return entityBaseDn;
+    }
+
+    public void setEntityBaseDn(String entityBaseDn) {
+        this.entityBaseDn = entityBaseDn;
     }
 }

@@ -14,7 +14,7 @@ public interface CertAuthority {
     CertAuthorityConnectionType getType();
     String getName();
     CertAuthorityConnectionInfo getConnectionInfo();
-    X509Certificate issueCertificate(String csr, SubjectAltNames sans) throws Exception;
+    X509Certificate issueCertificate(String csr, String dn, SubjectAltNames sans) throws Exception;
     boolean revokeCertificate(String serial, int reason) throws Exception;
     String getCertificateStatus(String serial) throws Exception;
     List<CertificateDetails> search(CertSearchParam params);

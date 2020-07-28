@@ -118,7 +118,7 @@ public class InternalCertAuthority extends AbstractCertAuthority {
                 .collect(Collectors.toList());
     }
 
-    public X509Certificate issueCertificate(String pkcs10, SubjectAltNames sans) {
+    public X509Certificate issueCertificate(String pkcs10, String dn, SubjectAltNames sans) {
 
         try {
             PKCS10CertificationRequest certificationRequest = CertUtil.csrBase64ToPKC10Object(pkcs10);

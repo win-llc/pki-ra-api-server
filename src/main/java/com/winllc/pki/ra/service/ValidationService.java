@@ -6,6 +6,7 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.util.Base64URL;
 import com.winllc.acme.common.CertIssuanceValidationResponse;
 import com.winllc.acme.common.CertIssuanceValidationRule;
+import com.winllc.acme.common.ra.RAAccountValidationResponse;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.DomainPolicy;
@@ -160,5 +161,26 @@ public class ValidationService {
         } else {
             throw new RAObjectNotFoundException(Account.class, kid);
         }
+    }
+
+    @PostMapping("/account/validateCredentials")
+    public RAAccountValidationResponse validateAccountCredentials(@RequestParam("accountId") String accountId,
+                                                                  @RequestParam("password") String password) throws RAObjectNotFoundException {
+
+        RAAccountValidationResponse response = new RAAccountValidationResponse();
+        response.setValid(false);
+
+        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(accountId);
+        if(optionalAccount.isPresent()){
+            Account account = optionalAccount.get();
+            if(account.getMacKeyBase64().contentEquals(password)){
+                response.setValid(true);
+            }else{
+                response.setMessage("AccountId and password combo failed");
+            }
+        }else{
+            response.setMessage("No account found");
+        }
+        return response;
     }
 }

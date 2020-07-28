@@ -16,5 +16,5 @@ public interface ServerEntryRepository extends BaseRepository<ServerEntry> {
     List<ServerEntry> findAllByAccount(Account account);
     List<ServerEntry> findAllByAccountId(Long id);
     Optional<ServerEntry> findDistinctByFqdnEqualsAndAccount(String fqdn, Account account);
-
+    Optional<ServerEntry> findDistinctByDistinguishedNameIgnoreCaseAndAccount(String distinguishedName, Account account);
 }

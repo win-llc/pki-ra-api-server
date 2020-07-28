@@ -54,7 +54,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
     }
 
     @Override
-    public X509Certificate issueCertificate(String csr, SubjectAltNames sans) throws Exception {
+    public X509Certificate issueCertificate(String csr, String dn, SubjectAltNames sans) throws Exception {
         CertEnrollmentRequest certEnrollmentRequest = buildCertEnrollmentRequest(csr);
 
         Function<String, CertRequestInfo> returnFunction = (s) -> {
@@ -97,7 +97,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
                         .forEach(p -> {
                             p.getDef().getAttributes().stream()
                                     .filter(pa -> pa.getName().equalsIgnoreCase("name"))
-                                    .forEach(pa -> pa.setValue("CN="+sans.getSans().get(SubjectAltNames.SubjAltNameType.DNS).get(0)));
+                                    .forEach(pa -> pa.setValue(dn));
                         });
 
 
@@ -313,6 +313,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         var4.addAttribute(new ProfileAttribute("requestor_name", "none", (Descriptor)null));
         var4.addAttribute(new ProfileAttribute("requestor_email", "none", (Descriptor)null));
         var4.addAttribute(new ProfileAttribute("requestor_phone", "none", (Descriptor)null));
+
         //todo replace with property
         request.setAttribute("uid", "caadmin");
         //todo replace with property

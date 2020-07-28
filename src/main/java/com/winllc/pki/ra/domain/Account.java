@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.util.AppUtil;
 import org.springframework.util.CollectionUtils;
 
@@ -18,6 +19,7 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
     private String macKey;
     @Column(unique = true)
     private String projectName;
+    private String entityBaseDn;
     private boolean enabled = true;
 
     private String securityPolicyServerProjectId;
@@ -250,6 +252,19 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
 
     public void setSecurityPolicyServerProjectId(String securityPolicyServerProjectId) {
         this.securityPolicyServerProjectId = securityPolicyServerProjectId;
+    }
+
+    public String getEntityBaseDn() {
+        return entityBaseDn;
+    }
+
+    public void setEntityBaseDn(String entityBaseDn) {
+        this.entityBaseDn = entityBaseDn;
+    }
+
+    @JsonIgnore
+    public String getMacKeyBase64(){
+        return Base64.encode(this.macKey).toString();
     }
 
     @Override

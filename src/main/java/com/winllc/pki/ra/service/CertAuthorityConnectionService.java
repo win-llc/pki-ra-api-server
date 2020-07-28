@@ -5,6 +5,7 @@ import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
+import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.validator.CertAuthorityConnectionInfoValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.ca.*;
@@ -65,6 +66,8 @@ public class CertAuthorityConnectionService {
     private CertificateRequestRepository certificateRequestRepository;
     @Autowired
     private ServerEntryRepository serverEntryRepository;
+    @Autowired
+    private ServerEntryService serverEntryService;
 
     private static final Map<String, CertAuthority> loadedCertAuthorities = new ConcurrentHashMap<>();
 
@@ -255,33 +258,16 @@ public class CertAuthorityConnectionService {
     @ResponseStatus(HttpStatus.OK)
     public String issueCertificate(@Valid @RequestBody RACertificateIssueRequest raCertificateIssueRequest) throws Exception {
 
+        if(raCertificateIssueRequest.getDnsNameList().size() == 0) throw new IllegalArgumentException("Must include at least one DNS name");
+
         //todo account shouldn't be required of EAB not required
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(raCertificateIssueRequest.getAccountKid());
         if(optionalAccount.isPresent()) {
-            X509Certificate cert = processIssueCertificate(raCertificateIssueRequest);
+            Account account = optionalAccount.get();
+            X509Certificate cert = processIssueCertificate(raCertificateIssueRequest, account);
             String pemCert = CertUtil.formatCrtFileContents(cert);
 
-            Account account = optionalAccount.get();
-
-            //todo add server entry if one does not exist
-            //todo create audit record
-            serverEntryRepository.findDistinctByFqdnEqualsAndAccount("", account);
-
-            //add as certificate request
-            CertificateRequest certificateRequest = new CertificateRequest();
-            certificateRequest.setAccount(account);
-            certificateRequest.setCsr(raCertificateIssueRequest.getCsr());
-            certificateRequest.setCertAuthorityName(raCertificateIssueRequest.getCertAuthorityName());
-            certificateRequest.setStatus("issued");
-            certificateRequest.setSubmittedOn(Timestamp.valueOf(LocalDateTime.now()));
-            certificateRequest.setIssuedCertificate(pemCert);
-            certificateRequestRepository.save(certificateRequest);
-
-            //todo consolidate this somewhere else
-            AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
-            record.setAccountKid(raCertificateIssueRequest.getAccountKid());
-            record.setSource("acme");
-            auditRecordRepository.save(record);
+            processIssuedCertificate(cert, raCertificateIssueRequest, account);
 
             return pemCert;
         }else{
@@ -289,25 +275,85 @@ public class CertAuthorityConnectionService {
         }
     }
 
-    public X509Certificate processIssueCertificate(RACertificateIssueRequest certificateRequest) throws Exception {
-//todo validation checks, probably before this, notify POCs on failure
+    public X509Certificate processIssueCertificate(RACertificateIssueRequest certificateRequest, Account account) throws Exception {
+        //todo validation checks, probably before this, notify POCs on failure
         CertAuthority certAuthority = loadedCertAuthorities.get(certificateRequest.getCertAuthorityName());
 
-        SubjectAltNames subjectAltNames = null;
-        String dnsNames = certificateRequest.getDnsNames();
-        if (StringUtils.isNotBlank(dnsNames)) {
-            subjectAltNames = new SubjectAltNames();
-            for (String dnsName : dnsNames.split(",")) {
-                subjectAltNames.addValue(SubjectAltNames.SubjAltNameType.DNS, dnsName);
-            }
+        SubjectAltNames subjectAltNames = new SubjectAltNames();
+        for (String dnsName : certificateRequest.getDnsNameList()) {
+            subjectAltNames.addValue(SubjectAltNames.SubjAltNameType.DNS, dnsName);
         }
 
-        X509Certificate cert = certAuthority.issueCertificate(certificateRequest.getCsr(), subjectAltNames);
+        String buildDn = buildDn(certificateRequest, account);
+
+        X509Certificate cert = certAuthority.issueCertificate(certificateRequest.getCsr(), buildDn, subjectAltNames);
         if (cert != null) {
             return cert;
         } else {
             throw new RAException("Could not issue certificate");
         }
+    }
+
+    private String buildDn(RACertificateIssueRequest certificateRequest, Account account){
+        String dn = "CN=";
+
+        if(StringUtils.isNotBlank(certificateRequest.getSubjectNameRequest())){
+            dn += certificateRequest.getSubjectNameRequest();
+        }else{
+            //select first fqdn
+            dn += certificateRequest.getDnsNameList().get(0);
+        }
+
+        if(StringUtils.isNotBlank(account.getEntityBaseDn())) {
+            dn += "," + account.getEntityBaseDn();
+        }
+        return dn;
+    }
+
+    public void processIssuedCertificate(X509Certificate certificate, RACertificateIssueRequest raCertificateIssueRequest, Account account)
+            throws CertificateEncodingException, RAObjectNotFoundException {
+
+        String pemCert = CertUtil.formatCrtFileContents(certificate);
+
+        ServerEntry serverEntry;
+        Optional<ServerEntry> optionalServerEntry =
+                serverEntryRepository.findDistinctByDistinguishedNameIgnoreCaseAndAccount(certificate.getSubjectDN().getName(), account);
+
+        if(optionalServerEntry.isPresent()){
+            serverEntry = optionalServerEntry.get();
+        }else{
+            String fqdn = raCertificateIssueRequest.getDnsNameList().get(0);
+
+            ServerEntryForm form = new ServerEntryForm();
+            form.setAccountId(account.getId());
+            form.setFqdn(fqdn);
+            form.setAlternateDnsValues(raCertificateIssueRequest.getDnsNameList());
+            Long serverEntryId = serverEntryService.createServerEntry(form);
+            serverEntry = serverEntryRepository.findById(serverEntryId).get();
+        }
+
+        //add as certificate request
+        CertificateRequest certificateRequest = new CertificateRequest();
+        certificateRequest.setAccount(account);
+        certificateRequest.setCsr(raCertificateIssueRequest.getCsr());
+        certificateRequest.setCertAuthorityName(raCertificateIssueRequest.getCertAuthorityName());
+        certificateRequest.setStatus("issued");
+        certificateRequest.setSubmittedOn(Timestamp.valueOf(LocalDateTime.now()));
+        certificateRequest.setIssuedCertificate(pemCert);
+        certificateRequest.setServerEntry(serverEntry);
+        CertificateRequest saved = certificateRequestRepository.save(certificateRequest);
+
+        serverEntry.setDistinguishedName(certificate.getSubjectDN().getName());
+        serverEntry.getCertificateRequests().add(saved);
+        serverEntry = serverEntryRepository.save(serverEntry);
+
+        //todo consolidate this somewhere else
+        AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
+        record.setAccountKid(raCertificateIssueRequest.getAccountKid());
+        record.setSource("acme");
+        record.setObjectClass(serverEntry.getClass().getCanonicalName());
+        record.setObjectUuid(serverEntry.getUuid().toString());
+        auditRecordRepository.save(record);
     }
 
     @PostMapping("/revokeCertificate")

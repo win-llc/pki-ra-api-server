@@ -26,10 +26,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -87,6 +89,10 @@ public class ServerEntryService {
                 entry.setDomainParent(domain);
                 entry.setFqdn(form.getFqdn());
                 entry.setHostname(form.getFqdn());
+
+                if(!CollectionUtils.isEmpty(form.getAlternateDnsValues())){
+                    entry.setAlternateDnsValues(form.getAlternateDnsValues());
+                }
 
                 entry = serverEntryRepository.save(entry);
 

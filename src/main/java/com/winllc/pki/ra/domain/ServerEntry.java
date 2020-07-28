@@ -14,6 +14,7 @@ public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
     private String hostname;
     @EntityVariableField
     private String fqdn;
+    private String distinguishedName;
     @JsonIgnore
     @ElementCollection
     private List<String> alternateDnsValues = new ArrayList<>();
@@ -121,6 +122,14 @@ public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
 
     public void setCertificateRequests(Set<CertificateRequest> certificateRequests) {
         this.certificateRequests = certificateRequests;
+    }
+
+    public String getDistinguishedName() {
+        return distinguishedName;
+    }
+
+    public void setDistinguishedName(String distinguishedName) {
+        this.distinguishedName = distinguishedName;
     }
 
     @Override

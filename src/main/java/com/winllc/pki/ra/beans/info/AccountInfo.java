@@ -12,6 +12,7 @@ public class AccountInfo extends InfoObject<Account> {
     private String macKey;
     private String macKeyBase64;
     private String projectName;
+    private String entityBaseDn;
     private boolean acmeRequireHttpValidation;
     private boolean enabled;
     private String securityPolicyServerProjectId;
@@ -27,9 +28,10 @@ public class AccountInfo extends InfoObject<Account> {
         if(loadKeys) {
             this.keyIdentifier = entity.getKeyIdentifier();
             this.macKey = entity.getMacKey();
-            this.macKeyBase64 = Base64.encode(this.macKey).toString();
+            this.macKeyBase64 = entity.getMacKeyBase64();
         }
         this.projectName = entity.getProjectName();
+        this.entityBaseDn = entity.getEntityBaseDn();
         this.enabled = entity.isEnabled();
         this.securityPolicyServerProjectId = entity.getSecurityPolicyServerProjectId();
     }
@@ -64,6 +66,14 @@ public class AccountInfo extends InfoObject<Account> {
 
     public void setProjectName(String projectName) {
         this.projectName = projectName;
+    }
+
+    public String getEntityBaseDn() {
+        return entityBaseDn;
+    }
+
+    public void setEntityBaseDn(String entityBaseDn) {
+        this.entityBaseDn = entityBaseDn;
     }
 
     public UserInfo getAccountOwner() {

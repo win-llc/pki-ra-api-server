@@ -188,7 +188,7 @@ public class CertificateRequestService {
         RACertificateIssueRequest raCertificateIssueRequest = new RACertificateIssueRequest(request.getAccount().getKeyIdentifier(),
                 request.getCsr(), String.join(",", request.getRequestedDnsNames()), request.getCertAuthorityName());
 
-        X509Certificate issuedCertificate = certAuthorityConnectionService.processIssueCertificate(raCertificateIssueRequest);
+        X509Certificate issuedCertificate = certAuthorityConnectionService.processIssueCertificate(raCertificateIssueRequest, request.getAccount());
 
         //check if any server entries with same subject exist, if so, associate this request
         //todo

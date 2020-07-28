@@ -12,6 +12,9 @@ public enum ServerSettingRequired {
     EMAIL_SERVER_FROM_ADDRESS("emailFromAddress", "Default From Address", "Email", false),
 
     ENTITY_DIRECTORY_LDAP_URL("entityDirectoryLdapUrl", "Entity Directory LDAP URL", "Entity Directory", false),
+    ENTITY_DIRECTORY_LDAP_USERNAME("entityDirectoryLdapUsername", "Username", "Entity Directory", false),
+    ENTITY_DIRECTORY_LDAP_PASSWORD("entityDirectoryLdapPassword", "Password", "Entity Directory", true),
+    ENTITY_DIRECTORY_LDAP_BASEDN("entityDirectoryLdapBaseDn", "Base DN", "Entity Directory", false),
     //OIDC_SERVER_BASE_URL("openIdServerBaseUrl", "OIDC", false),
     //OIDC_ENABLED("openIdConnectEnabled", "OIDC", false),
 

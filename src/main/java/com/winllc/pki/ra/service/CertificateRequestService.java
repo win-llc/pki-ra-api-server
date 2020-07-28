@@ -160,7 +160,7 @@ public class CertificateRequestService {
                 request.setStatus(form.getStatus());
             }
 
-            request = requestRepository.save(request);
+            request = requestRepository.findById(request.getId()).get();
             return request;
         } else {
             throw new RAObjectNotFoundException(form);
@@ -178,51 +178,15 @@ public class CertificateRequestService {
         return requests;
     }
 
-
     private void processApprovedCertRequest(CertificateRequest request) throws Exception {
-        //todo route this through CertAuthorityConnectionService
-
         SubjectAltNames sans = new SubjectAltNames();
         sans.addValues(SubjectAltNames.SubjAltNameType.DNS, request.getRequestedDnsNames());
 
         RACertificateIssueRequest raCertificateIssueRequest = new RACertificateIssueRequest(request.getAccount().getKeyIdentifier(),
-                request.getCsr(), String.join(",", request.getRequestedDnsNames()), request.getCertAuthorityName());
+                request.getCsr(), String.join(",", request.getRequestedDnsNames()), request.getCertAuthorityName(), "manual");
+        raCertificateIssueRequest.setExistingCertificateRequestId(request.getId());
 
-        X509Certificate issuedCertificate = certAuthorityConnectionService.processIssueCertificate(raCertificateIssueRequest, request.getAccount());
-
-        //check if any server entries with same subject exist, if so, associate this request
-        //todo
-        String issuedFqdn = getFqdnFromCert(issuedCertificate);
-
-        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findDistinctByFqdnEquals(issuedFqdn);
-        if (serverEntryOptional.isPresent()) {
-            ServerEntry serverEntry = serverEntryOptional.get();
-            serverEntry.getCertificateRequests().add(request);
-            serverEntryRepository.save(serverEntry);
-        }
-
-        AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
-        record.setAccountKid(raCertificateIssueRequest.getAccountKid());
-        record.setSource("manual");
-        auditRecordRepository.save(record);
-
-        String certPem = CertUtil.formatCrtFileContents(issuedCertificate);
-        request.setIssuedCertificate(certPem);
-        request.setReviewedOn(Timestamp.valueOf(LocalDateTime.now()));
-        request.setStatus("issued");
-    }
-
-    private static String getFqdnFromCert(X509Certificate issuedCertificate){
-        String certificateDn = issuedCertificate.getSubjectDN().getName();
-        String issuedFqdn = certificateDn.toLowerCase();
-
-        if(certificateDn.contains(",")){
-            issuedFqdn = issuedFqdn.substring(0, certificateDn.indexOf(",")).replace("cn=", "");
-        }
-
-        issuedFqdn = issuedFqdn.replace("cn=", "");
-
-        return issuedFqdn;
+        X509Certificate certificate = certAuthorityConnectionService.processIssueCertificate(raCertificateIssueRequest, request.getAccount());
     }
 
 }

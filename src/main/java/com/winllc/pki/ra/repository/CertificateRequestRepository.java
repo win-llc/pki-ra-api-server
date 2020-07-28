@@ -12,4 +12,5 @@ public interface CertificateRequestRepository extends BaseRepository<Certificate
 
     List<CertificateRequest> findAllByStatusEquals(String status);
     List<CertificateRequest> findAllByRequestedByEquals(String user);
+    List<CertificateRequest> findAllByPublicKeyBase64Equals(String publicKey);
 }

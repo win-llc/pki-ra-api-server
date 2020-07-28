@@ -1,8 +1,14 @@
 package com.winllc.pki.ra.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.nimbusds.jose.util.Base64;
+import com.winllc.acme.common.util.CertUtil;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
+import java.security.PublicKey;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +25,8 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
     private String status;
     @Column(length = 2000)
     private String issuedCertificate;
+    @Column(length = 1000)
+    private String publicKeyBase64;
     private String requestedBy;
     private String adminReviewer;
     @ElementCollection
@@ -46,6 +54,18 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
         if(serverEntry != null){
             serverEntry.getCertificateRequests().remove(this);
         }
+    }
+
+    @JsonIgnore
+    public void addPublicKey(PublicKey publicKey){
+        this.publicKeyBase64 = Base64.encode(publicKey.getEncoded()).toString();
+    }
+
+    @JsonIgnore
+    public void addIssuedCertificate(X509Certificate certificate) throws CertificateEncodingException {
+        String pemCert = CertUtil.formatCrtFileContents(certificate);
+        this.issuedCertificate = pemCert;
+        addPublicKey(certificate.getPublicKey());
     }
 
     public String getCsr() {
@@ -135,4 +155,14 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
     public void setServerEntry(ServerEntry serverEntry) {
         this.serverEntry = serverEntry;
     }
+
+    public String getPublicKeyBase64() {
+        return publicKeyBase64;
+    }
+
+    public void setPublicKeyBase64(String publicKeyBase64) {
+        this.publicKeyBase64 = publicKeyBase64;
+    }
+
+
 }

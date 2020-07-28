@@ -12,6 +12,8 @@ import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
+import com.winllc.pki.ra.domain.Domain;
+import com.winllc.pki.ra.domain.DomainPolicy;
 import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
@@ -69,6 +71,10 @@ class CertAuthorityConnectionServiceTest {
     private AccountRepository accountRepository;
     @Autowired
     private CertificateRequestRepository certificateRequestRepository;
+    @Autowired
+    private DomainRepository domainRepository;
+    @Autowired
+    private DomainPolicyRepository domainPolicyRepository;
 
     @BeforeEach
     @Transactional
@@ -76,9 +82,21 @@ class CertAuthorityConnectionServiceTest {
         CertAuthority mockCa = new MockCertAuthority();
         connectionService.addLoadedCertAuthority(mockCa);
 
+        Domain domain = new Domain();
+        domain.setBase("winllc-dev.com");
+        domain = domainRepository.save(domain);
+
         Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("kidtest1");
         account.setMacKey("testmac1");
+        account = accountRepository.save(account);
+
+        DomainPolicy domainPolicy = new DomainPolicy();
+        domainPolicy.setTargetDomain(domain);
+        domainPolicy.setAllowIssuance(true);
+        domainPolicy = domainPolicyRepository.save(domainPolicy);
+
+        account.getAccountDomainPolicies().add(domainPolicy);
         accountRepository.save(account);
     }
 
@@ -90,6 +108,8 @@ class CertAuthorityConnectionServiceTest {
         certificateRequestRepository.deleteAll();
         auditRecordRepository.deleteAll();
         accountRepository.deleteAll();
+        domainPolicyRepository.deleteAll();
+        domainRepository.deleteAll();;
     }
 
     @Test
@@ -169,7 +189,9 @@ class CertAuthorityConnectionServiceTest {
 
     @Test
     void issueCertificate() throws Exception {
-        RACertificateIssueRequest request = new RACertificateIssueRequest("kidtest1", testCsr, "test.winllc-dev.com", "mockca");
+
+        RACertificateIssueRequest request =
+                new RACertificateIssueRequest("kidtest1", testCsr, "test.winllc-dev.com", "mockca", "test");
 
         String s = connectionService.issueCertificate(request);
         assertTrue(s.contains("BEGIN CERTIFICATE"));
@@ -177,9 +199,11 @@ class CertAuthorityConnectionServiceTest {
 
     @Test
     void processIssueCertificate() throws Exception {
-        RACertificateIssueRequest request = new RACertificateIssueRequest("kidtest1", testCsr, "test.winllc-dev.com", "mockca");
+        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        RACertificateIssueRequest request =
+                new RACertificateIssueRequest("kidtest1", testCsr, "test.winllc-dev.com", "mockca", "test");
 
-        X509Certificate certificate = connectionService.processIssueCertificate(request);
+        X509Certificate certificate = connectionService.processIssueCertificate(request, account);
         assertNotNull(certificate);
     }
 

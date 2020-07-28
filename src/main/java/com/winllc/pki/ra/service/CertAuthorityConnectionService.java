@@ -88,6 +88,10 @@ public class CertAuthorityConnectionService {
         }
     }
 
+    public CertAuthority getLoadedCertAuthority(String name){
+        return loadedCertAuthorities.get(name);
+    }
+
     public void addLoadedCertAuthority(CertAuthority ca){
         loadedCertAuthorities.put(ca.getName(), ca);
     }
@@ -112,7 +116,7 @@ public class CertAuthorityConnectionService {
 
             loadCertAuthority(caConnection.getName());
 
-            CertAuthority ca = loadedCertAuthorities.get(caConnection.getName());
+            CertAuthority ca = getLoadedCertAuthority(caConnection.getName());
 
             Map<String, CertAuthorityConnectionProperty> propMap = connectionInfo.getProperties().stream()
                     .collect(Collectors.toMap(p -> p.getName(), p -> p));
@@ -212,7 +216,7 @@ public class CertAuthorityConnectionService {
 
     private CertAuthorityConnectionInfoForm buildForm(CertAuthorityConnectionInfo info){
         Hibernate.initialize(info.getProperties());
-        CertAuthority ca = loadedCertAuthorities.get(info.getName());
+        CertAuthority ca = getLoadedCertAuthority(info.getName());
         return new CertAuthorityConnectionInfoForm(info, ca);
     }
 
@@ -267,8 +271,6 @@ public class CertAuthorityConnectionService {
             X509Certificate cert = processIssueCertificate(raCertificateIssueRequest, account);
             String pemCert = CertUtil.formatCrtFileContents(cert);
 
-            processIssuedCertificate(cert, raCertificateIssueRequest, account);
-
             return pemCert;
         }else{
             throw new RAObjectNotFoundException(Account.class, raCertificateIssueRequest.getAccountKid());
@@ -277,7 +279,7 @@ public class CertAuthorityConnectionService {
 
     public X509Certificate processIssueCertificate(RACertificateIssueRequest certificateRequest, Account account) throws Exception {
         //todo validation checks, probably before this, notify POCs on failure
-        CertAuthority certAuthority = loadedCertAuthorities.get(certificateRequest.getCertAuthorityName());
+        CertAuthority certAuthority = getLoadedCertAuthority(certificateRequest.getCertAuthorityName());
 
         SubjectAltNames subjectAltNames = new SubjectAltNames();
         for (String dnsName : certificateRequest.getDnsNameList()) {
@@ -288,6 +290,7 @@ public class CertAuthorityConnectionService {
 
         X509Certificate cert = certAuthority.issueCertificate(certificateRequest.getCsr(), buildDn, subjectAltNames);
         if (cert != null) {
+            processIssuedCertificate(cert, certificateRequest, account);
             return cert;
         } else {
             throw new RAException("Could not issue certificate");
@@ -313,8 +316,6 @@ public class CertAuthorityConnectionService {
     public void processIssuedCertificate(X509Certificate certificate, RACertificateIssueRequest raCertificateIssueRequest, Account account)
             throws CertificateEncodingException, RAObjectNotFoundException {
 
-        String pemCert = CertUtil.formatCrtFileContents(certificate);
-
         ServerEntry serverEntry;
         Optional<ServerEntry> optionalServerEntry =
                 serverEntryRepository.findDistinctByDistinguishedNameIgnoreCaseAndAccount(certificate.getSubjectDN().getName(), account);
@@ -333,24 +334,40 @@ public class CertAuthorityConnectionService {
         }
 
         //add as certificate request
-        CertificateRequest certificateRequest = new CertificateRequest();
-        certificateRequest.setAccount(account);
-        certificateRequest.setCsr(raCertificateIssueRequest.getCsr());
+        CertificateRequest certificateRequest;
+        if(raCertificateIssueRequest.getExistingCertificateRequestId() == null) {
+            certificateRequest = new CertificateRequest();
+            certificateRequest.setAccount(account);
+            certificateRequest.setCsr(raCertificateIssueRequest.getCsr());
+            certificateRequest = certificateRequestRepository.save(certificateRequest);
+        }else{
+            Optional<CertificateRequest> optionalRequest
+                    = certificateRequestRepository.findById(raCertificateIssueRequest.getExistingCertificateRequestId());
+            if(optionalRequest.isPresent()){
+                certificateRequest = optionalRequest.get();
+            }else{
+                log.error("Expected an existing certificate request, but found none");
+                throw new RAObjectNotFoundException(CertificateRequest.class, raCertificateIssueRequest.getExistingCertificateRequestId());
+            }
+        }
+
         certificateRequest.setCertAuthorityName(raCertificateIssueRequest.getCertAuthorityName());
         certificateRequest.setStatus("issued");
         certificateRequest.setSubmittedOn(Timestamp.valueOf(LocalDateTime.now()));
-        certificateRequest.setIssuedCertificate(pemCert);
+        certificateRequest.addIssuedCertificate(certificate);
         certificateRequest.setServerEntry(serverEntry);
-        CertificateRequest saved = certificateRequestRepository.save(certificateRequest);
+        certificateRequest = certificateRequestRepository.save(certificateRequest);
+
+        //todo save public key info to certificate request for easy lookup
 
         serverEntry.setDistinguishedName(certificate.getSubjectDN().getName());
-        serverEntry.getCertificateRequests().add(saved);
+        serverEntry.getCertificateRequests().add(certificateRequest);
         serverEntry = serverEntryRepository.save(serverEntry);
 
         //todo consolidate this somewhere else
         AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
         record.setAccountKid(raCertificateIssueRequest.getAccountKid());
-        record.setSource("acme");
+        record.setSource(raCertificateIssueRequest.getSource());
         record.setObjectClass(serverEntry.getClass().getCanonicalName());
         record.setObjectUuid(serverEntry.getUuid().toString());
         auditRecordRepository.save(record);
@@ -359,7 +376,7 @@ public class CertAuthorityConnectionService {
     @PostMapping("/revokeCertificate")
     @ResponseStatus(HttpStatus.OK)
     public void revokeCertificate(@Valid @RequestBody RACertificateRevokeRequest revokeRequest) throws Exception {
-        CertAuthority certAuthority = loadedCertAuthorities.get(revokeRequest.getCertAuthorityName());
+        CertAuthority certAuthority = getLoadedCertAuthority(revokeRequest.getCertAuthorityName());
         if (certAuthority != null) {
             String serial = revokeRequest.getSerial();
             //Get serial from certificate request
@@ -401,7 +418,7 @@ public class CertAuthorityConnectionService {
     @GetMapping("/validationRules/{connectionName}")
     @ResponseStatus(HttpStatus.OK)
     public CertIssuanceValidationResponse getValidationRules(@PathVariable String connectionName) throws RAObjectNotFoundException {
-        CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
+        CertAuthority certAuthority = getLoadedCertAuthority(connectionName);
         if (certAuthority != null) {
             CertIssuanceValidationResponse response = new CertIssuanceValidationResponse();
             //todo get global validation rules from connection info
@@ -420,7 +437,7 @@ public class CertAuthorityConnectionService {
     @ResponseStatus(HttpStatus.OK)
     public CertificateDetails getCertificateStatus(@PathVariable String connectionName, @RequestParam String serial) throws Exception {
 
-        CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
+        CertAuthority certAuthority = getLoadedCertAuthority(connectionName);
         if (certAuthority != null) {
             CertificateDetails details = new CertificateDetails();
             X509Certificate cert = certAuthority.getCertificateBySerial(serial);
@@ -442,7 +459,7 @@ public class CertAuthorityConnectionService {
     @GetMapping("/trustChain/{connectionName}")
     @ResponseStatus(HttpStatus.OK)
     public String getTrustChain(@PathVariable String connectionName) throws Exception {
-        CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
+        CertAuthority certAuthority = getLoadedCertAuthority(connectionName);
 
         Certificate[] trustChain = certAuthority.getTrustChain();
 
@@ -461,7 +478,7 @@ public class CertAuthorityConnectionService {
     @PostMapping("/search/{connectionName}")
     @ResponseStatus(HttpStatus.OK)
     public List<CertificateDetails> search(@PathVariable String connectionName, @RequestBody CertSearchParam certSearchParam) {
-        CertAuthority certAuthority = loadedCertAuthorities.get(connectionName);
+        CertAuthority certAuthority = getLoadedCertAuthority(connectionName);
 
         /*
         CertSearchParam param = new CertSearchParam(CertSearchParams.CertSearchParamRelation.AND);
@@ -486,7 +503,7 @@ public class CertAuthorityConnectionService {
     }
 
     public Optional<CertAuthority> getCertAuthorityByName(String name) {
-        CertAuthority ca = loadedCertAuthorities.get(name);
+        CertAuthority ca = getLoadedCertAuthority(name);
 
         if (ca != null) {
             return Optional.of(ca);

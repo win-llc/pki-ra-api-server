@@ -82,7 +82,7 @@ public class MockCertAuthority implements CertAuthority {
     }
 
     @Override
-    public X509Certificate issueCertificate(String csr, SubjectAltNames sans) throws Exception {
+    public X509Certificate issueCertificate(String csr, String dn, SubjectAltNames sans) throws Exception {
         return CertUtil.base64ToCert(testX509Cert);
     }
 

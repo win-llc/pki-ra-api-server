@@ -8,6 +8,8 @@ import com.winllc.pki.ra.beans.info.CertificateRequestInfo;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.CertificateRequest;
+import com.winllc.pki.ra.domain.Domain;
+import com.winllc.pki.ra.domain.DomainPolicy;
 import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
@@ -83,23 +85,46 @@ class CertificateRequestServiceTest {
     private AuditRecordRepository auditRecordRepository;
     @Autowired
     private ServerEntryRepository serverEntryRepository;
-    @MockBean
+    @Autowired
     private CertAuthorityConnectionService certAuthorityConnectionService;
+    @Autowired
+    private DomainRepository domainRepository;
+    @Autowired
+    private DomainPolicyRepository domainPolicyRepository;
 
     @BeforeEach
     @Transactional
     void before() throws Exception {
-        when(certAuthorityConnectionService.processIssueCertificate(any())).thenReturn(CertUtil.base64ToCert(MockCertAuthority.testX509Cert));
+        //when(certAuthorityConnectionService.processIssueCertificate(any(),
+        //        any())).thenReturn(CertUtil.base64ToCert(MockCertAuthority.testX509Cert));
+
+        //when(certAuthorityConnectionService.getLoadedCertAuthority(any())).thenReturn(new MockCertAuthority());
+        certAuthorityConnectionService.addLoadedCertAuthority(new MockCertAuthority());
+
+        Domain domain = new Domain();
+        domain.setBase("winllc-dev.com");
+        domain = domainRepository.save(domain);
 
         Account account = Account.buildNew("Test Project");
-        account.setKeyIdentifier("testkid1");
+        account.setKeyIdentifier("kidtest1");
+        account.setMacKey("testmac1");
         account = accountRepository.save(account);
+
+        DomainPolicy domainPolicy = new DomainPolicy();
+        domainPolicy.setTargetDomain(domain);
+        domainPolicy.setAllowIssuance(true);
+        domainPolicy = domainPolicyRepository.save(domainPolicy);
+
+        account.getAccountDomainPolicies().add(domainPolicy);
+        accountRepository.save(account);
 
         CertificateRequest request = new CertificateRequest();
         request.setCsr(testCsr);
         request.setStatus("new");
         request.setRequestedBy("test@test.com");
         request.setAccount(account);
+        request.setCertAuthorityName("mockca");
+        request.setRequestedDnsNames(Collections.singletonList("test.winllc-dev.com"));
 
         certificateRequestRepository.save(request);
     }
@@ -111,6 +136,8 @@ class CertificateRequestServiceTest {
         accountRepository.deleteAll();
         auditRecordRepository.deleteAll();
         serverEntryRepository.deleteAll();
+        domainRepository.deleteAll();
+        domainPolicyRepository.deleteAll();;
     }
 
     @Test
@@ -141,7 +168,7 @@ class CertificateRequestServiceTest {
 
     @Test
     void submitRequest() throws RAObjectNotFoundException, InvalidFormException {
-        Account account = accountRepository.findByKeyIdentifierEquals("testkid1").get();
+        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
         UserDetails userDetails =
                 new org.springframework.security.core.userdetails.User("test@test.com", "", new ArrayList<>());
 

@@ -277,6 +277,13 @@ public class CertAuthorityConnectionService {
         }
     }
 
+    /**
+     * Process a certificate request sent to the RA
+     * @param certificateRequest
+     * @param account
+     * @return
+     * @throws Exception
+     */
     public X509Certificate processIssueCertificate(RACertificateIssueRequest certificateRequest, Account account) throws Exception {
         //todo validation checks, probably before this, notify POCs on failure
         CertAuthority certAuthority = getLoadedCertAuthority(certificateRequest.getCertAuthorityName());
@@ -313,6 +320,14 @@ public class CertAuthorityConnectionService {
         return dn;
     }
 
+    /**
+     * Post certificate issuance actions
+     * @param certificate
+     * @param raCertificateIssueRequest
+     * @param account
+     * @throws CertificateEncodingException
+     * @throws RAObjectNotFoundException
+     */
     public void processIssuedCertificate(X509Certificate certificate, RACertificateIssueRequest raCertificateIssueRequest, Account account)
             throws CertificateEncodingException, RAObjectNotFoundException {
 
@@ -320,6 +335,7 @@ public class CertAuthorityConnectionService {
         Optional<ServerEntry> optionalServerEntry =
                 serverEntryRepository.findDistinctByDistinguishedNameIgnoreCaseAndAccount(certificate.getSubjectDN().getName(), account);
 
+        //If server entry does not exist, create one
         if(optionalServerEntry.isPresent()){
             serverEntry = optionalServerEntry.get();
         }else{
@@ -333,7 +349,7 @@ public class CertAuthorityConnectionService {
             serverEntry = serverEntryRepository.findById(serverEntryId).get();
         }
 
-        //add as certificate request
+        //If certificate request does not exist, create one
         CertificateRequest certificateRequest;
         if(raCertificateIssueRequest.getExistingCertificateRequestId() == null) {
             certificateRequest = new CertificateRequest();
@@ -358,13 +374,10 @@ public class CertAuthorityConnectionService {
         certificateRequest.setServerEntry(serverEntry);
         certificateRequest = certificateRequestRepository.save(certificateRequest);
 
-        //todo save public key info to certificate request for easy lookup
-
         serverEntry.setDistinguishedName(certificate.getSubjectDN().getName());
         serverEntry.getCertificateRequests().add(certificateRequest);
         serverEntry = serverEntryRepository.save(serverEntry);
 
-        //todo consolidate this somewhere else
         AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
         record.setAccountKid(raCertificateIssueRequest.getAccountKid());
         record.setSource(raCertificateIssueRequest.getSource());

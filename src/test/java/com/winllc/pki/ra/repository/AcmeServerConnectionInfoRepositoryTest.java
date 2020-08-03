@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.repository;
 
-import com.winllc.pki.ra.acme.AcmeServerConnection;
+import com.winllc.pki.ra.endpoint.acme.AcmeServerConnection;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.AcmeServerConnectionInfo;
 import org.junit.jupiter.api.Test;

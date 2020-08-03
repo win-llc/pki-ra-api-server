@@ -1,4 +1,4 @@
-package com.winllc.pki.ra.acme;
+package com.winllc.pki.ra.endpoint.acme;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

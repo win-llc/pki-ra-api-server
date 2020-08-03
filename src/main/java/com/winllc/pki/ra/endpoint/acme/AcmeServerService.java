@@ -1,4 +1,4 @@
-package com.winllc.pki.ra.acme;
+package com.winllc.pki.ra.endpoint.acme;
 
 import com.winllc.acme.common.AcmeCertAuthorityType;
 import com.winllc.acme.common.CertificateAuthoritySettings;

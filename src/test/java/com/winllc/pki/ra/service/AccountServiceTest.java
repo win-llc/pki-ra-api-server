@@ -1,9 +1,9 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.DirectoryDataSettings;
-import com.winllc.pki.ra.acme.AcmeServerConnection;
-import com.winllc.pki.ra.acme.AcmeServerService;
-import com.winllc.pki.ra.acme.AcmeServerServiceImpl;
+import com.winllc.pki.ra.endpoint.acme.AcmeServerConnection;
+import com.winllc.pki.ra.endpoint.acme.AcmeServerService;
+import com.winllc.pki.ra.endpoint.acme.AcmeServerServiceImpl;
 import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.beans.form.AccountUpdateForm;
 import com.winllc.pki.ra.beans.info.AccountInfo;

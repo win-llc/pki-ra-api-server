@@ -19,15 +19,12 @@ management:
       show-details: always
 spring:
   datasource:
-    #url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
-    url: jdbc:mysql://database.winllc-dev.com/winpkira
-    #driver-class-name: org.h2.Driver
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://database.winllc-dev.com/winpkira-dev
+    driver-class-name: com.mysql.jdbc.Driver
     username: appuser
     password: P@ssW0rd
   jpa:
     open-in-view: false
-    #database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: update
   jackson:

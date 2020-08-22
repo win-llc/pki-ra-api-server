@@ -55,6 +55,9 @@ dependencies {
     // https://mvnrepository.com/artifact/org.springframework.ldap/spring-ldap-core
     compile group: 'org.springframework.ldap', name: 'spring-ldap-core', version: '2.3.3.RELEASE'
 
+    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
+    compile group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.4.4'
+
 
     runtimeOnly('org.springframework.boot:spring-boot-devtools')
 

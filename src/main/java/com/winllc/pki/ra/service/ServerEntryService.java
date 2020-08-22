@@ -299,7 +299,7 @@ public class ServerEntryService {
         if(serverEntryOptional.isPresent()) {
             ServerEntry serverEntry = serverEntryOptional.get();
 
-            Map<String, Object> attributeMap = entityDirectoryService.calculateAttributeMapForServerEntry(serverEntry);
+            Map<String, Object> attributeMap = entityDirectoryService.calculateAttributePolicyMapForServerEntry(serverEntry);
 
             return attributeMap;
         }else{

@@ -2,34 +2,53 @@ package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
+import org.springframework.ldap.odm.annotations.Attribute;
+import org.springframework.ldap.odm.annotations.Entry;
+import org.springframework.ldap.odm.annotations.Id;
+import org.springframework.ldap.odm.annotations.Transient;
+import org.springframework.ldap.support.LdapNameBuilder;
 import org.springframework.util.CollectionUtils;
 
+import javax.naming.Name;
 import javax.persistence.*;
 import java.util.*;
 
 @Entity
+@Entry(objectClasses = {"top", "untypedObject"})
 @Table(name = "server_entry")
 public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
 
+    @Id
+    @javax.persistence.Transient
+    private Name dn;
+    @Transient
     private String hostname;
+    @Attribute(name = "cn")
     @EntityVariableField
     private String fqdn;
+    @Transient
     private String distinguishedName;
     @JsonIgnore
     @ElementCollection
+    @Transient
     private List<String> alternateDnsValues = new ArrayList<>();
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name="domainParent_fk")
+    @Transient
     private Domain domainParent;
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name="account_fk")
+    @Transient
     private Account account;
     @JsonIgnore
     @OneToMany(mappedBy = "serverEntry")
+    @Transient
     private Set<CertificateRequest> certificateRequests;
+    @Transient
     private String openidClientId;
+    @Transient
     private String openidClientRedirectUrl;
 
 
@@ -130,6 +149,22 @@ public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
 
     public void setDistinguishedName(String distinguishedName) {
         this.distinguishedName = distinguishedName;
+    }
+
+    public Name getDn() {
+        return dn;
+    }
+
+    public void setDn(Name dn) {
+        this.dn = dn;
+    }
+
+    public Name buildDn(String baseDn){
+        this.dn = LdapNameBuilder.newInstance(baseDn)
+                .add("cn", fqdn)
+                .build();
+        this.distinguishedName = this.dn.toString();
+        return this.dn;
     }
 
     @Override

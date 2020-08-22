@@ -7,6 +7,7 @@ import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
 import com.winllc.pki.ra.service.SecurityPolicyService;
 import com.winllc.pki.ra.service.ServerSettingsService;
+import com.winllc.pki.ra.service.external.beans.DirectoryServerEntity;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,6 +26,8 @@ public class EntityDirectoryService {
 
     private static final Logger log = LogManager.getLogger(EntityDirectoryService.class);
 
+    String baseDn = "ou=Servers,dc=winllc-dev,dc=com";
+
     @Autowired
     private AttributePolicyGroupRepository attributePolicyGroupRepository;
     @Autowired
@@ -35,10 +38,9 @@ public class EntityDirectoryService {
     //return the applied attribute map
     @Transactional
     public Map<String, Object> applyServerEntryToDirectory(ServerEntry serverEntry){
-        //todo
 
         //apply attributes from Attribute Policy Groups
-        Map<String, Object> attributeMap = calculateAttributeMapForServerEntry(serverEntry);
+        Map<String, Object> attributeMap = calculateAttributePolicyMapForServerEntry(serverEntry);
 
         applyAttributesToServerEntry(serverEntry, attributeMap);
 
@@ -53,10 +55,17 @@ public class EntityDirectoryService {
             log.info("Attribute: "+entry.getKey() + " : " + entry.getValue());
         }
 
+        serverEntry.buildDn(baseDn);
+
+        LdapTemplate ldapTemplate = buildDirectoryLdapTemplate();
+
+        DirectoryServerEntity entity = new DirectoryServerEntity(serverEntry, ldapTemplate);
+        entity.overwriteAttributes(attributeValueMap);
+
         return true;
     }
 
-    public Map<String, Object> calculateAttributeMapForServerEntry(ServerEntry serverEntry){
+    public Map<String, Object> calculateAttributePolicyMapForServerEntry(ServerEntry serverEntry){
         Account account = serverEntry.getAccount();
         List<AttributePolicyGroup> policyGroups = attributePolicyGroupRepository.findAllByAccount(account);
 
@@ -134,7 +143,12 @@ public class EntityDirectoryService {
     private LdapTemplate buildDirectoryLdapTemplate(){
         LdapContextSource contextSource = new LdapContextSource();
         Optional<String> optionalUrl = serverSettingsService.getServerSettingValue(ServerSettingRequired.ENTITY_DIRECTORY_LDAP_URL);
+        Optional<String> optionalUsername = serverSettingsService.getServerSettingValue(ServerSettingRequired.ENTITY_DIRECTORY_LDAP_USERNAME);
+        Optional<String> optionalPassword = serverSettingsService.getServerSettingValue(ServerSettingRequired.ENTITY_DIRECTORY_LDAP_PASSWORD);
+
         optionalUrl.ifPresent(u -> contextSource.setUrl(u));
+        optionalUsername.ifPresent(u -> contextSource.setUserDn(u));
+        optionalPassword.ifPresent(u -> contextSource.setPassword(u));
 
         contextSource.afterPropertiesSet();
 

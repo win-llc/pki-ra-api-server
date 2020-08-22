@@ -16,6 +16,7 @@ import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.repository.*;
+import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,6 +69,8 @@ public class CertAuthorityConnectionService {
     private ServerEntryRepository serverEntryRepository;
     @Autowired
     private ServerEntryService serverEntryService;
+    @Autowired
+    private EntityDirectoryService entityDirectoryService;
 
     private static final Map<String, CertAuthority> loadedCertAuthorities = new ConcurrentHashMap<>();
 
@@ -377,6 +380,12 @@ public class CertAuthorityConnectionService {
         serverEntry.setDistinguishedName(certificate.getSubjectDN().getName());
         serverEntry.getCertificateRequests().add(certificateRequest);
         serverEntry = serverEntryRepository.save(serverEntry);
+
+        try {
+            entityDirectoryService.applyServerEntryToDirectory(serverEntry);
+        }catch (Exception e){
+            log.error("Could not process", e);
+        }
 
         AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
         record.setAccountKid(raCertificateIssueRequest.getAccountKid());

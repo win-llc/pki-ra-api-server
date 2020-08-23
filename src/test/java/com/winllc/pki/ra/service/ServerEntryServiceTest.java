@@ -8,6 +8,7 @@ import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.*;
+import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,8 @@ class ServerEntryServiceTest {
     private PocEntryRepository pocEntryRepository;
     @MockBean
     private KeycloakOIDCProviderConnection oidcProviderConnection;
+    @MockBean
+    private EntityDirectoryService entityDirectoryService;
 
     @BeforeEach
     @Transactional
@@ -72,6 +75,8 @@ class ServerEntryServiceTest {
 
         account.getServerEntries().add(serverEntry);
         accountRepository.save(account);
+
+        when(entityDirectoryService.applyServerEntryToDirectory(any())).thenReturn(new HashMap<>());
     }
 
     @AfterEach

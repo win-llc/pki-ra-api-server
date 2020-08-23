@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service.external.beans;
 
+import com.netscape.cms.servlet.csadmin.Cert;
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.service.AccountRequestService;
 import org.apache.logging.log4j.LogManager;
@@ -12,20 +13,30 @@ import org.springframework.util.CollectionUtils;
 import javax.naming.Name;
 import javax.naming.NamingException;
 import javax.naming.directory.*;
+import java.io.ByteArrayInputStream;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DirectoryServerEntity {
 
     private static final Logger log = LogManager.getLogger(DirectoryServerEntity.class);
 
+    private static String certificateAttribute = "userCertificate";
+    //todo externalize
+    private static int certMaxListSize = 10;
+    
     private boolean exists = false;
 
-    private ServerEntry serverEntry;
+    private final ServerEntry serverEntry;
     private final Name dn;
     private final String fqdn;
     private final LdapTemplate ldapTemplate;
 
-    private Map<String, Object> currentMap;
+    private Map<String, Attribute> currentMap;
+    private List<X509Certificate> certificates;
 
     public DirectoryServerEntity(ServerEntry serverEntry, LdapTemplate ldapTemplate) {
         this.serverEntry = serverEntry;
@@ -34,11 +45,15 @@ public class DirectoryServerEntity {
         this.ldapTemplate = ldapTemplate;
     }
 
-    //todo get schema
+    public void sync(){
+        createIfDoesNotExistAndUpdate();
+    }
+
 
     public void saveAttribute(String name, Object value){
         createIfDoesNotExistAndUpdate();
-        saveAttributeInternal(name, value);
+        Attribute attribute = new BasicAttribute(name, value);
+        saveAttributeInternal(attribute);
     }
 
     public void saveAttributes(Map<String, Object> attributes){
@@ -46,7 +61,8 @@ public class DirectoryServerEntity {
 
         if(!CollectionUtils.isEmpty(attributes)){
             attributes.forEach((k,v) -> {
-                saveAttributeInternal(k, v);
+                Attribute attribute = new BasicAttribute(k, v);
+                saveAttributeInternal(attribute);
             });
         }
     }
@@ -66,11 +82,10 @@ public class DirectoryServerEntity {
         saveAttributes(attributes);
     }
 
-    private void saveAttributeInternal(String name, Object value){
+    private void saveAttributeInternal(Attribute attribute){
 
-        Attribute attribute = new BasicAttribute(name, value);
         ModificationItem modificationItem;
-        if(currentMap.containsKey(name)){
+        if(currentMap.containsKey(attribute.getID())){
             modificationItem = new ModificationItem(DirContext.REPLACE_ATTRIBUTE, attribute);
         }else{
             modificationItem = new ModificationItem(DirContext.ADD_ATTRIBUTE, attribute);
@@ -114,16 +129,15 @@ public class DirectoryServerEntity {
         searchControls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
         searchControls.setCountLimit(1);
 
-        Map<String, Object> lookup = ldapTemplate.lookup(dn, new AttributesMapper<Map<String, Object>>() {
+        Map<String, Attribute> lookup = ldapTemplate.lookup(dn, new AttributesMapper<Map<String, Attribute>>() {
                     @Override
-                    public Map<String, Object> mapFromAttributes(Attributes attributes) throws NamingException {
-                        Map<String, Object> map = new HashMap<>();
+                    public Map<String, Attribute> mapFromAttributes(Attributes attributes) throws NamingException {
+                        Map<String, Attribute> map = new HashMap<>();
                         Iterator<String> keyIterator = attributes.getIDs().asIterator();
                         while (keyIterator.hasNext()) {
                             String key = keyIterator.next();
                             Attribute attribute = attributes.get(key);
-                            Object value = attribute.get();
-                            map.put(key, value);
+                            map.put(key, attribute);
                         }
                         return map;
                     }
@@ -143,6 +157,105 @@ public class DirectoryServerEntity {
         attrs.put(ocAttr);
         attrs.put(new BasicAttribute("cn", fqdn));
         return attrs;
+    }
+
+    public List<X509Certificate> getCertificates(){
+        syncCertificates();
+        return this.certificates;
+    }
+
+    public Optional<X509Certificate> getLatestCertificate(){
+        List<X509Certificate> list = getCertificates();
+        if(list.size() > 0){
+            return Optional.of(list.get(0));
+        }else{
+            return Optional.empty();
+        }
+    }
+
+    //todo test
+    public void addCertificate(X509Certificate certificate){
+        BasicAttribute certAttribute = new BasicAttribute(certificateAttribute);
+
+        syncCertificates();
+
+        List<X509Certificate> certsToAdd;
+        if(this.certificates.size() >= certMaxListSize){
+            List<X509Certificate> stubbedList = this.certificates.subList(0, certMaxListSize - 1);
+            certsToAdd = new ArrayList<>(stubbedList);
+        }else{
+            certsToAdd = this.certificates;
+        }
+        certsToAdd.add(certificate);
+
+        List<byte[]> encodedCerts = certsToAdd.stream()
+                .map(cert -> {
+                    try {
+                        return cert.getEncoded();
+                    } catch (CertificateEncodingException e) {
+                        log.error("Could not encode cert", e);
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        for(byte[] encoded : encodedCerts){
+            certAttribute.add(encoded);
+        }
+
+        saveAttributeInternal(certAttribute);
+    }
+
+    //todo finish this
+    private void syncCertificates(){
+        updateCurrent();
+
+        Attribute certAttribute = this.currentMap.get(certificateAttribute);
+
+        if(certAttribute != null){
+            List<CertWrapper> certList = new ArrayList<>();
+            for (int i = 0; i < certAttribute.size(); i++) {
+                try {
+                    byte[] cert = (byte[]) certAttribute.get(i);
+
+                    X509Certificate x509Cert = (X509Certificate) CertificateFactory
+                            .getInstance("X.509").generateCertificate(new ByteArrayInputStream(cert));
+                    certList.add(new CertWrapper(x509Cert));
+                }catch (Exception e){
+                    log.error("Could not get cert", e);
+                }
+            }
+            this.certificates = certList.stream()
+                    .sorted()
+                    .map(w -> w.getCertificate())
+                    .collect(Collectors.toList());
+        }else{
+            log.info("No certificate attribute");
+            this.certificates = new ArrayList<>();
+        }
+    }
+
+    private class CertWrapper implements Comparable<CertWrapper> {
+
+        X509Certificate certificate;
+        Date notAfter;
+        Date notBefore;
+
+        public CertWrapper(X509Certificate certificate) {
+            this.certificate = certificate;
+            this.notAfter = certificate.getNotAfter();
+            this.notBefore = certificate.getNotBefore();
+        }
+
+        public X509Certificate getCertificate() {
+            return certificate;
+        }
+
+        @Override
+        public int compareTo(CertWrapper o) {
+            return o.notBefore.compareTo(this.notBefore);
+        }
     }
 
 }

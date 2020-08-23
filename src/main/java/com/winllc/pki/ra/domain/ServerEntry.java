@@ -8,6 +8,7 @@ import org.springframework.ldap.odm.annotations.Id;
 import org.springframework.ldap.odm.annotations.Transient;
 import org.springframework.ldap.support.LdapNameBuilder;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.naming.Name;
 import javax.persistence.*;
@@ -160,7 +161,14 @@ public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
     }
 
     public Name buildDn(String baseDn){
-        this.dn = LdapNameBuilder.newInstance(baseDn)
+        LdapNameBuilder builder;
+        if(baseDn != null && !StringUtils.isEmpty(baseDn)){
+            builder = LdapNameBuilder.newInstance(baseDn);
+        }else{
+            builder = LdapNameBuilder.newInstance();
+        }
+
+        this.dn = builder
                 .add("cn", fqdn)
                 .build();
         this.distinguishedName = this.dn.toString();

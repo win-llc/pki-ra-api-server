@@ -41,7 +41,6 @@ public class IssuedCertificate extends UniqueEntity implements AccountOwnedEntit
         CertificateDetails details = new CertificateDetails();
         details.setStatus(this.getStatus());
         details.setIssuer(this.getIssuerDn());
-        details.setCertificateBase64(this.getIssuedCertificate());
         return details;
     }
 

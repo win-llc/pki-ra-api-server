@@ -5,6 +5,7 @@ import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 
+import javax.naming.Name;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Map;
 public interface CertAuthority {
     CertAuthorityConnectionType getType();
     String getName();
+    Name getIssuerName() throws Exception;
     CertAuthorityConnectionInfo getConnectionInfo();
     X509Certificate issueCertificate(String csr, String dn, SubjectAltNames sans) throws Exception;
     boolean revokeCertificate(String serial, int reason) throws Exception;

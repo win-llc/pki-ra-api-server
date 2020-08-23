@@ -9,6 +9,7 @@ import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
+import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
@@ -19,21 +20,28 @@ import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.mock.MockCertAuthority;
 import com.winllc.pki.ra.repository.*;
+import com.winllc.pki.ra.service.external.EntityDirectoryService;
+import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.transaction.Transactional;
 
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = AppConfig.class)
 @ActiveProfiles("test")
@@ -62,6 +70,8 @@ class CertAuthorityConnectionServiceTest {
     @Autowired
     private CertAuthorityConnectionService connectionService;
     @Autowired
+    private LoadedCertAuthorityStore certAuthorityStore;
+    @Autowired
     private CertAuthorityConnectionInfoRepository connectionInfoRepository;
     @Autowired
     private CertAuthorityConnectionPropertyRepository propertyRepository;
@@ -75,12 +85,18 @@ class CertAuthorityConnectionServiceTest {
     private DomainRepository domainRepository;
     @Autowired
     private DomainPolicyRepository domainPolicyRepository;
+    @Autowired
+    private ApplicationContext context;
+    @MockBean
+    private EntityDirectoryService entityDirectoryService;
+    @Autowired
+    private ServerEntryRepository serverEntryRepository;
 
     @BeforeEach
     @Transactional
     void before(){
         CertAuthority mockCa = new MockCertAuthority();
-        connectionService.addLoadedCertAuthority(mockCa);
+        certAuthorityStore.addLoadedCertAuthority(mockCa);
 
         Domain domain = new Domain();
         domain.setBase("winllc-dev.com");
@@ -98,6 +114,8 @@ class CertAuthorityConnectionServiceTest {
 
         account.getAccountDomainPolicies().add(domainPolicy);
         accountRepository.save(account);
+
+        when(entityDirectoryService.applyServerEntryToDirectory(any())).thenReturn(new HashMap<>());
     }
 
     @AfterEach
@@ -108,6 +126,7 @@ class CertAuthorityConnectionServiceTest {
         certificateRequestRepository.deleteAll();
         auditRecordRepository.deleteAll();
         accountRepository.deleteAll();
+        serverEntryRepository.deleteAll();
         domainPolicyRepository.deleteAll();
         domainRepository.deleteAll();;
     }
@@ -198,12 +217,15 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void processIssueCertificate() throws Exception {
         Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
         RACertificateIssueRequest request =
                 new RACertificateIssueRequest("kidtest1", testCsr, "test.winllc-dev.com", "mockca", "test");
 
-        X509Certificate certificate = connectionService.processIssueCertificate(request, account);
+        CertIssuanceTransaction transaction = new CertIssuanceTransaction(certAuthorityStore.getLoadedCertAuthority("mockca"),
+                context);
+        X509Certificate certificate = transaction.processIssueCertificate(request, account);
         assertNotNull(certificate);
     }
 
@@ -220,7 +242,7 @@ class CertAuthorityConnectionServiceTest {
     @Test
     void getCertificateStatus() throws Exception {
         CertificateDetails certDetails = connectionService.getCertificateStatus("mockca", "5");
-        assertTrue(certDetails.getCertificateBase64().contains("BEGIN"));
+        assertNotNull(certDetails.getStatus());
     }
 
     @Test
@@ -242,12 +264,6 @@ class CertAuthorityConnectionServiceTest {
     void getCertAuthorityByName() {
         Optional<CertAuthority> mockca = connectionService.getCertAuthorityByName("mockca");
         assertTrue(mockca.isPresent());
-    }
-
-    @Test
-    void getAllCertAuthorities() {
-        List<CertAuthority> allCertAuthorities = connectionService.getAllCertAuthorities();
-        assertTrue(allCertAuthorities.size() > 0);
     }
 
 }

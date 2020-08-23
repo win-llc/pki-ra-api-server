@@ -5,6 +5,7 @@ import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AttributePolicyGroup;
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
+import com.winllc.pki.ra.repository.ServerEntryRepository;
 import com.winllc.pki.ra.service.SecurityPolicyService;
 import com.winllc.pki.ra.service.ServerSettingsService;
 import com.winllc.pki.ra.service.external.beans.DirectoryServerEntity;
@@ -20,13 +21,13 @@ import javax.transaction.Transactional;
 import java.lang.reflect.Field;
 import java.util.*;
 
+import static com.winllc.pki.ra.constants.ServerSettingRequired.ENTITY_DIRECTORY_LDAP_SERVERBASEDN;
+
 @Service
 public class EntityDirectoryService {
     //todo attach to a directory, allow attribute updating and validation
 
     private static final Logger log = LogManager.getLogger(EntityDirectoryService.class);
-
-    String baseDn = "ou=Servers,dc=winllc-dev,dc=com";
 
     @Autowired
     private AttributePolicyGroupRepository attributePolicyGroupRepository;
@@ -34,6 +35,8 @@ public class EntityDirectoryService {
     private SecurityPolicyService securityPolicyService;
     @Autowired
     private ServerSettingsService serverSettingsService;
+    @Autowired
+    private ServerEntryRepository serverEntryRepository;
 
     //return the applied attribute map
     @Transactional
@@ -55,7 +58,14 @@ public class EntityDirectoryService {
             log.info("Attribute: "+entry.getKey() + " : " + entry.getValue());
         }
 
+        Optional<String> serverBaseDnOptional = serverSettingsService.getServerSettingValue(ENTITY_DIRECTORY_LDAP_SERVERBASEDN);
+        String baseDn = null;
+        if(serverBaseDnOptional.isPresent()) {
+            baseDn = serverBaseDnOptional.get();
+        }
+
         serverEntry.buildDn(baseDn);
+        serverEntry = serverEntryRepository.save(serverEntry);
 
         LdapTemplate ldapTemplate = buildDirectoryLdapTemplate();
 

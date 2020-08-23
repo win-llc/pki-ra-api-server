@@ -2,7 +2,12 @@ package com.winllc.pki.ra.ca;
 
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.springframework.ldap.support.LdapNameBuilder;
 
+import javax.naming.Name;
+import javax.naming.ldap.LdapName;
+import java.security.Principal;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
@@ -35,15 +40,25 @@ public abstract class AbstractCertAuthority implements CertAuthority {
 
     @Override
     public Certificate[] getTrustChain() throws Exception {
-        //todo iterate
-
-        //todo this should be pulled from the connection properties
-
         String trustChain = getInfo().getTrustChainBase64();
 
-        X509Certificate rootCa = CertUtil.base64ToCert(trustChain);
+        return CertUtil.trustChainStringToCertArray(trustChain);
+    }
 
-        return new Certificate[]{rootCa};
+    @Override
+    public Name getIssuerName() throws Exception {
+        Certificate[] chain = getTrustChain();
+        if(chain != null && chain.length > 0){
+            Certificate issuerCert = chain[0];
+            if(issuerCert instanceof X509Certificate){
+                Principal principal = ((X509Certificate) issuerCert).getSubjectDN();
+                return new LdapName(principal.getName());
+            }else{
+                throw new RuntimeException("Unexpected cert type: "+issuerCert.getClass().getCanonicalName());
+            }
+        }else{
+            throw new RuntimeException("Can't get Issuer name, no chain found");
+        }
     }
 
     @Override

@@ -15,6 +15,7 @@ public enum ServerSettingRequired {
     ENTITY_DIRECTORY_LDAP_USERNAME("entityDirectoryLdapUsername", "Username", "Entity Directory", false),
     ENTITY_DIRECTORY_LDAP_PASSWORD("entityDirectoryLdapPassword", "Password", "Entity Directory", true),
     ENTITY_DIRECTORY_LDAP_BASEDN("entityDirectoryLdapBaseDn", "Base DN", "Entity Directory", false),
+    ENTITY_DIRECTORY_LDAP_SERVERBASEDN("entityDirectoryLdapServerBaseDn", "Server Base DN", "Entity Directory", false),
     //OIDC_SERVER_BASE_URL("openIdServerBaseUrl", "OIDC", false),
     //OIDC_ENABLED("openIdConnectEnabled", "OIDC", false),
 

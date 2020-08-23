@@ -65,13 +65,6 @@ class EntityDirectoryServiceTest {
         policyMapForServer.put("matchName", "matchValue");
         policyMapForServer.put("nameExists", "overrideValue");
 
-        /*
-        when(securityPolicyService
-                .getSecurityPolicyMapForService(null, serverEntry.getFqdn(),
-                        account.getSecurityPolicyServerProjectId())).thenReturn(policyMapForServer);
-
-         */
-
         SecurityPolicyServerProjectDetails details = new SecurityPolicyServerProjectDetails();
         details.setProjectName("project1");
         details.setAllSecurityAttributesMap(policyMapForServer);
@@ -130,7 +123,7 @@ class EntityDirectoryServiceTest {
 
         serverEntry.setAccount(account);
 
-        Map<String, Object> appliedAttributeMap = entityDirectoryService.applyServerEntryToDirectory(serverEntry);
+        Map<String, Object> appliedAttributeMap = entityDirectoryService.calculateAttributePolicyMapForServerEntry(serverEntry);
 
         assertEquals("matchValue", appliedAttributeMap.get("apUseSecurityPolicyValue").toString());
         assertEquals("testValue", appliedAttributeMap.get("apUseValueIfSecurityNameValueMatch").toString());

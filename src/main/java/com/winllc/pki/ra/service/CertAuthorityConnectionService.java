@@ -17,11 +17,13 @@ import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
+import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +44,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.winllc.pki.ra.constants.ServerSettingRequired.ENTITY_DIRECTORY_LDAP_SERVERBASEDN;
+
 @RestController
 @RequestMapping("/ca")
 @Transactional
@@ -54,50 +58,17 @@ public class CertAuthorityConnectionService {
     @Autowired
     private CertAuthorityConnectionPropertyRepository propertyRepository;
     @Autowired
-    private EntityManagerFactory entityManagerFactory;
-    @Autowired
     private CertAuthorityConnectionInfoValidator validator;
     @Autowired
     private AuditRecordRepository auditRecordRepository;
-    @Autowired
-    private ApplicationKeystore applicationKeystore;
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
     private CertificateRequestRepository certificateRequestRepository;
     @Autowired
-    private ServerEntryRepository serverEntryRepository;
+    private ApplicationContext context;
     @Autowired
-    private ServerEntryService serverEntryService;
-    @Autowired
-    private EntityDirectoryService entityDirectoryService;
-
-    private static final Map<String, CertAuthority> loadedCertAuthorities = new ConcurrentHashMap<>();
-
-    @PostConstruct
-    private void init() {
-        for (String connectionInfoName : repository.findAllNames()) {
-            loadCertAuthority(connectionInfoName);
-        }
-    }
-
-    //Build CA object for use
-    private void loadCertAuthority(String name) {
-        Optional<CertAuthority> optionalCertAuthority = buildCertAuthority(name);
-        if (optionalCertAuthority.isPresent()) {
-            CertAuthority ca = optionalCertAuthority.get();
-
-            loadedCertAuthorities.put(ca.getName(), ca);
-        }
-    }
-
-    public CertAuthority getLoadedCertAuthority(String name){
-        return loadedCertAuthorities.get(name);
-    }
-
-    public void addLoadedCertAuthority(CertAuthority ca){
-        loadedCertAuthorities.put(ca.getName(), ca);
-    }
+    private LoadedCertAuthorityStore certAuthorityStore;
 
     //todo CertAuthorityConnectionTemplate?
 
@@ -117,9 +88,9 @@ public class CertAuthorityConnectionService {
             caConnection.setTrustChainBase64(connectionInfo.getTrustChainBase64());
             caConnection = repository.save(caConnection);
 
-            loadCertAuthority(caConnection.getName());
+            certAuthorityStore.reload();
 
-            CertAuthority ca = getLoadedCertAuthority(caConnection.getName());
+            CertAuthority ca = certAuthorityStore.getLoadedCertAuthority(caConnection.getName());
 
             Map<String, CertAuthorityConnectionProperty> propMap = connectionInfo.getProperties().stream()
                     .collect(Collectors.toMap(p -> p.getName(), p -> p));
@@ -145,7 +116,7 @@ public class CertAuthorityConnectionService {
             caConnection = repository.save(caConnection);
 
             //reload cert authority
-            loadCertAuthority(caConnection.getName());
+            certAuthorityStore.reload();
 
             return caConnection.getId();
         } else {
@@ -219,7 +190,7 @@ public class CertAuthorityConnectionService {
 
     private CertAuthorityConnectionInfoForm buildForm(CertAuthorityConnectionInfo info){
         Hibernate.initialize(info.getProperties());
-        CertAuthority ca = getLoadedCertAuthority(info.getName());
+        CertAuthority ca = certAuthorityStore.getLoadedCertAuthority(info.getName());
         return new CertAuthorityConnectionInfoForm(info, ca);
     }
 
@@ -271,7 +242,11 @@ public class CertAuthorityConnectionService {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(raCertificateIssueRequest.getAccountKid());
         if(optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
-            X509Certificate cert = processIssueCertificate(raCertificateIssueRequest, account);
+
+            CertIssuanceTransaction certIssuanceTransaction = new CertIssuanceTransaction(certAuthorityStore.getLoadedCertAuthority(
+                    raCertificateIssueRequest.getCertAuthorityName()), context);
+
+            X509Certificate cert = certIssuanceTransaction.processIssueCertificate(raCertificateIssueRequest, account);
             String pemCert = CertUtil.formatCrtFileContents(cert);
 
             return pemCert;
@@ -280,125 +255,12 @@ public class CertAuthorityConnectionService {
         }
     }
 
-    /**
-     * Process a certificate request sent to the RA
-     * @param certificateRequest
-     * @param account
-     * @return
-     * @throws Exception
-     */
-    public X509Certificate processIssueCertificate(RACertificateIssueRequest certificateRequest, Account account) throws Exception {
-        //todo validation checks, probably before this, notify POCs on failure
-        CertAuthority certAuthority = getLoadedCertAuthority(certificateRequest.getCertAuthorityName());
 
-        SubjectAltNames subjectAltNames = new SubjectAltNames();
-        for (String dnsName : certificateRequest.getDnsNameList()) {
-            subjectAltNames.addValue(SubjectAltNames.SubjAltNameType.DNS, dnsName);
-        }
-
-        String buildDn = buildDn(certificateRequest, account);
-
-        X509Certificate cert = certAuthority.issueCertificate(certificateRequest.getCsr(), buildDn, subjectAltNames);
-        if (cert != null) {
-            processIssuedCertificate(cert, certificateRequest, account);
-            return cert;
-        } else {
-            throw new RAException("Could not issue certificate");
-        }
-    }
-
-    private String buildDn(RACertificateIssueRequest certificateRequest, Account account){
-        String dn = "CN=";
-
-        if(StringUtils.isNotBlank(certificateRequest.getSubjectNameRequest())){
-            dn += certificateRequest.getSubjectNameRequest();
-        }else{
-            //select first fqdn
-            dn += certificateRequest.getDnsNameList().get(0);
-        }
-
-        if(StringUtils.isNotBlank(account.getEntityBaseDn())) {
-            dn += "," + account.getEntityBaseDn();
-        }
-        return dn;
-    }
-
-    /**
-     * Post certificate issuance actions
-     * @param certificate
-     * @param raCertificateIssueRequest
-     * @param account
-     * @throws CertificateEncodingException
-     * @throws RAObjectNotFoundException
-     */
-    public void processIssuedCertificate(X509Certificate certificate, RACertificateIssueRequest raCertificateIssueRequest, Account account)
-            throws CertificateEncodingException, RAObjectNotFoundException {
-
-        ServerEntry serverEntry;
-        Optional<ServerEntry> optionalServerEntry =
-                serverEntryRepository.findDistinctByDistinguishedNameIgnoreCaseAndAccount(certificate.getSubjectDN().getName(), account);
-
-        //If server entry does not exist, create one
-        if(optionalServerEntry.isPresent()){
-            serverEntry = optionalServerEntry.get();
-        }else{
-            String fqdn = raCertificateIssueRequest.getDnsNameList().get(0);
-
-            ServerEntryForm form = new ServerEntryForm();
-            form.setAccountId(account.getId());
-            form.setFqdn(fqdn);
-            form.setAlternateDnsValues(raCertificateIssueRequest.getDnsNameList());
-            Long serverEntryId = serverEntryService.createServerEntry(form);
-            serverEntry = serverEntryRepository.findById(serverEntryId).get();
-        }
-
-        //If certificate request does not exist, create one
-        CertificateRequest certificateRequest;
-        if(raCertificateIssueRequest.getExistingCertificateRequestId() == null) {
-            certificateRequest = new CertificateRequest();
-            certificateRequest.setAccount(account);
-            certificateRequest.setCsr(raCertificateIssueRequest.getCsr());
-            certificateRequest = certificateRequestRepository.save(certificateRequest);
-        }else{
-            Optional<CertificateRequest> optionalRequest
-                    = certificateRequestRepository.findById(raCertificateIssueRequest.getExistingCertificateRequestId());
-            if(optionalRequest.isPresent()){
-                certificateRequest = optionalRequest.get();
-            }else{
-                log.error("Expected an existing certificate request, but found none");
-                throw new RAObjectNotFoundException(CertificateRequest.class, raCertificateIssueRequest.getExistingCertificateRequestId());
-            }
-        }
-
-        certificateRequest.setCertAuthorityName(raCertificateIssueRequest.getCertAuthorityName());
-        certificateRequest.setStatus("issued");
-        certificateRequest.setSubmittedOn(Timestamp.valueOf(LocalDateTime.now()));
-        certificateRequest.addIssuedCertificate(certificate);
-        certificateRequest.setServerEntry(serverEntry);
-        certificateRequest = certificateRequestRepository.save(certificateRequest);
-
-        serverEntry.setDistinguishedName(certificate.getSubjectDN().getName());
-        serverEntry.getCertificateRequests().add(certificateRequest);
-        serverEntry = serverEntryRepository.save(serverEntry);
-
-        try {
-            entityDirectoryService.applyServerEntryToDirectory(serverEntry);
-        }catch (Exception e){
-            log.error("Could not process", e);
-        }
-
-        AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
-        record.setAccountKid(raCertificateIssueRequest.getAccountKid());
-        record.setSource(raCertificateIssueRequest.getSource());
-        record.setObjectClass(serverEntry.getClass().getCanonicalName());
-        record.setObjectUuid(serverEntry.getUuid().toString());
-        auditRecordRepository.save(record);
-    }
 
     @PostMapping("/revokeCertificate")
     @ResponseStatus(HttpStatus.OK)
     public void revokeCertificate(@Valid @RequestBody RACertificateRevokeRequest revokeRequest) throws Exception {
-        CertAuthority certAuthority = getLoadedCertAuthority(revokeRequest.getCertAuthorityName());
+        CertAuthority certAuthority = certAuthorityStore.getLoadedCertAuthority(revokeRequest.getCertAuthorityName());
         if (certAuthority != null) {
             String serial = revokeRequest.getSerial();
             //Get serial from certificate request
@@ -440,7 +302,7 @@ public class CertAuthorityConnectionService {
     @GetMapping("/validationRules/{connectionName}")
     @ResponseStatus(HttpStatus.OK)
     public CertIssuanceValidationResponse getValidationRules(@PathVariable String connectionName) throws RAObjectNotFoundException {
-        CertAuthority certAuthority = getLoadedCertAuthority(connectionName);
+        CertAuthority certAuthority = certAuthorityStore.getLoadedCertAuthority(connectionName);
         if (certAuthority != null) {
             CertIssuanceValidationResponse response = new CertIssuanceValidationResponse();
             //todo get global validation rules from connection info
@@ -459,7 +321,7 @@ public class CertAuthorityConnectionService {
     @ResponseStatus(HttpStatus.OK)
     public CertificateDetails getCertificateStatus(@PathVariable String connectionName, @RequestParam String serial) throws Exception {
 
-        CertAuthority certAuthority = getLoadedCertAuthority(connectionName);
+        CertAuthority certAuthority = certAuthorityStore.getLoadedCertAuthority(connectionName);
         if (certAuthority != null) {
             CertificateDetails details = new CertificateDetails();
             X509Certificate cert = certAuthority.getCertificateBySerial(serial);
@@ -481,7 +343,7 @@ public class CertAuthorityConnectionService {
     @GetMapping("/trustChain/{connectionName}")
     @ResponseStatus(HttpStatus.OK)
     public String getTrustChain(@PathVariable String connectionName) throws Exception {
-        CertAuthority certAuthority = getLoadedCertAuthority(connectionName);
+        CertAuthority certAuthority = certAuthorityStore.getLoadedCertAuthority(connectionName);
 
         Certificate[] trustChain = certAuthority.getTrustChain();
 
@@ -500,7 +362,7 @@ public class CertAuthorityConnectionService {
     @PostMapping("/search/{connectionName}")
     @ResponseStatus(HttpStatus.OK)
     public List<CertificateDetails> search(@PathVariable String connectionName, @RequestBody CertSearchParam certSearchParam) {
-        CertAuthority certAuthority = getLoadedCertAuthority(connectionName);
+        CertAuthority certAuthority = certAuthorityStore.getLoadedCertAuthority(connectionName);
 
         /*
         CertSearchParam param = new CertSearchParam(CertSearchParams.CertSearchParamRelation.AND);
@@ -525,7 +387,7 @@ public class CertAuthorityConnectionService {
     }
 
     public Optional<CertAuthority> getCertAuthorityByName(String name) {
-        CertAuthority ca = getLoadedCertAuthority(name);
+        CertAuthority ca = certAuthorityStore.getLoadedCertAuthority(name);
 
         if (ca != null) {
             return Optional.of(ca);
@@ -534,33 +396,4 @@ public class CertAuthorityConnectionService {
         }
     }
 
-    public List<CertAuthority> getAllCertAuthorities() {
-        return new ArrayList<>(loadedCertAuthorities.values());
-    }
-
-    @Transactional
-    public Optional<CertAuthority> buildCertAuthority(String connectionName) {
-        CertAuthority certAuthority = null;
-        Optional<CertAuthorityConnectionInfo> infoOptional = repository.findByName(connectionName);
-
-        if (infoOptional.isPresent()) {
-            CertAuthorityConnectionInfo info = infoOptional.get();
-
-            try {
-                Hibernate.initialize(info.getProperties());
-                switch (info.getType()) {
-                    case INTERNAL:
-                        certAuthority = new InternalCertAuthority(info, entityManagerFactory);
-                        break;
-                    case DOGTAG:
-                        certAuthority = new DogTagCertAuthority(info, applicationKeystore);
-                        break;
-                }
-                return Optional.of(certAuthority);
-            }catch (Exception e){
-                log.error(e);
-            }
-        }
-        return Optional.empty();
-    }
 }

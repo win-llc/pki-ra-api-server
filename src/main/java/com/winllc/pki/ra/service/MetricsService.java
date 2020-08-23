@@ -5,6 +5,7 @@ import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
 import com.winllc.pki.ra.beans.metrics.ChartMetrics;
 import com.winllc.pki.ra.ca.CertAuthority;
+import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.AuditRecord;
 import com.winllc.pki.ra.repository.AuditRecordRepository;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 public class MetricsService {
 
     @Autowired
-    private CertAuthorityConnectionService certAuthorityConnectionService;
+    private LoadedCertAuthorityStore certAuthorityStore;
     @Autowired
     private AuditRecordRepository auditRecordRepository;
 
@@ -43,7 +44,7 @@ public class MetricsService {
 
         CertSearchParam searchParam = new CertSearchParam(CertSearchParams.CertField.STATUS, "VALID", CertSearchParams.CertSearchParamRelation.EQUALS);
 
-        for(CertAuthority ca : certAuthorityConnectionService.getAllCertAuthorities()){
+        for(CertAuthority ca : certAuthorityStore.getAllCertAuthorities()){
             List<CertificateDetails> results = ca.search(searchParam);
             issuedCertsTotalMap.put(ca.getName(), results.size());
         }

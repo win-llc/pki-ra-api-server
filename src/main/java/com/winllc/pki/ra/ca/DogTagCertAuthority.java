@@ -16,17 +16,30 @@ import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.mozilla.jss.netscape.security.x509.RevocationReason;
+import org.springframework.ldap.support.LdapNameBuilder;
 
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.transform.stream.StreamSource;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.text.MessageFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class DogTagCertAuthority extends AbstractCertAuthority {
 
@@ -70,7 +83,8 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         };
 
         //Submit the request
-        CertRequestInfo val = processDogtagPostOperation(baseUrl+requestPath, certEnrollmentRequest, returnFunction, 200);
+        CertRequestInfo val = processDogtagPostOperation(baseUrl+requestPath, certEnrollmentRequest,
+                returnFunction, 200, null);
 
         if(val != null){
             if(val.getOperationResult().equalsIgnoreCase("success")){
@@ -102,7 +116,8 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
 
 
                 //Approve the request
-                processDogtagPostOperation(baseUrl+"/ca/rest/agent/certrequests/"+requestId+"/approve", certReviewResponse, approveFunction, 204);
+                processDogtagPostOperation(baseUrl+"/ca/rest/agent/certrequests/"+requestId+"/approve",
+                        certReviewResponse, approveFunction, 204, null);
 
                 Function<String, CertRequestInfo> getRequestFunction = s -> {
                     try {
@@ -135,6 +150,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
 
         request.setEncoded(CertUtil.formatCrtFileContents(certificateBySerial));
         request.setInvalidityDate(Date.from(Instant.now()));
+        request.setComments("Revoke certificate");
 
         Function<String, CertRequestInfo> process = s -> {
             try {
@@ -145,7 +161,8 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
             return null;
         };
 
-        CertRequestInfo requestInfo = processDogtagPostOperation(baseUrl + revokePath + serial + "/revoke", request, process, 200);
+        CertRequestInfo requestInfo = processDogtagPostOperation(baseUrl + revokePath + serial + "/revoke",
+                request, process, 200, null);
 
         if(requestInfo.getOperationResult().equalsIgnoreCase("success")){
             return true;
@@ -163,65 +180,75 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
     }
 
     @Override
-    public List<CertificateDetails> search(CertSearchParam params) {
+    public List<CertificateDetails> search(CertSearchParam param) {
 
         CertSearchRequest certSearchRequest = new CertSearchRequest();
 
-
-        //params.buildQuery()
-
-        //todo
-        return null;
-    }
-
-    /*
-    @Override
-    public Certificate[] getTrustChain() throws Exception {
-        //todo iterate
-
-        //todo this should be pulled from the connection properties
-
-        String trustChain = getInfo().getTrustChainBase64();
-
-        X509Certificate rootCa = CertUtil.base64ToCert(trustChain);
-
-        return new Certificate[]{rootCa};
-
-        String rootCa = "-----BEGIN CERTIFICATE-----\n" +
-                "MIIEBDCCAuygAwIBAgIBATANBgkqhkiG9w0BAQsFADBtMRMwEQYKCZImiZPyLGQB\n" +
-                "GRYDY29tMRowGAYKCZImiZPyLGQBGRYKd2lubGxjLWRldjETMBEGCgmSJomT8ixk\n" +
-                "ARkWA3BraTESMBAGCgmSJomT8ixkARkWAmNhMREwDwYDVQQDDAhXSU4gUk9PVDAe\n" +
-                "Fw0yMDA0MDQxODE3NTRaFw00MDA0MDQxODE3NTRaMG0xEzARBgoJkiaJk/IsZAEZ\n" +
-                "FgNjb20xGjAYBgoJkiaJk/IsZAEZFgp3aW5sbGMtZGV2MRMwEQYKCZImiZPyLGQB\n" +
-                "GRYDcGtpMRIwEAYKCZImiZPyLGQBGRYCY2ExETAPBgNVBAMMCFdJTiBST09UMIIB\n" +
-                "IjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt+B+eCFB412ZLI+Rkl9vRLLR\n" +
-                "M3l/5xSUNeqj8rV6GAIv2JUSjD2by3o/52pncPJnc1iOCzxe79GXb1bXD6QJdNCJ\n" +
-                "nDaUq585owtpBNFO+wl5cdtblmJaJJapuiM5xeis9E60ENulM3EKDanjtudWN62r\n" +
-                "bGJxJ9m/LILt3x0wPad3Vsw/RA7bi66kxodBunioM9mc/4tlRE/GcVyYupfWYGh4\n" +
-                "GHffH+q5HVHVn/NNpYWPtbddXgoihzuIOG6rIm2J+8nywO3i2zMZU7EFfWtUXPwn\n" +
-                "ZqcGbp6UdbujctCYbcGP17KZgw6mbPnseS5kwlnkpjlvmZGdTS2D+MN0PR4aQQID\n" +
-                "AQABo4GuMIGrMB8GA1UdIwQYMBaAFEYSFL8wPwK+4wfccifXK1pyFHG7MA8GA1Ud\n" +
-                "EwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgHGMB0GA1UdDgQWBBRGEhS/MD8CvuMH\n" +
-                "3HIn1ytachRxuzBIBggrBgEFBQcBAQQ8MDowOAYIKwYBBQUHMAGGLGh0dHA6Ly9k\n" +
-                "b2d0YWctY2Eud2lubGxjLWRldi5jb206ODA4MC9jYS9vY3NwMA0GCSqGSIb3DQEB\n" +
-                "CwUAA4IBAQCHUoQsQV3c+0tg7fL5E51HDB/sNJFQ/JPd93PJAq5KSWIdx3GjjkNb\n" +
-                "bg2xonZz8x9A0M4WBODkTOX5DHrfnEK4I91yAezppKytKKGdx8258wVN1MV/kMdb\n" +
-                "vGpWI4TrA/yzjZVOrDnJiBFPxGoep4ESnOEVP72oY92903KcytDKMbeFbTHSqZFl\n" +
-                "O8t3TnqemWAK+q4CiNcRNKpLGRT2YPDFyKK1gIv0WSMnHSL4Nn0vIQnFEZgd/MIe\n" +
-                "1iqwYSpQUEyzUMUUSVtb3aAGmxuPKN4p2hIpB+5KdU08vCt1W8kga+6szPb7umUg\n" +
-                "w4cVuU8Kktg9dX8yDu4nr5KIh7s/Iog9\n" +
-                "-----END CERTIFICATE-----";
-
-        try {
-            X509Certificate cert = CertUtil.base64ToCert(rootCa);
-            return Collections.singletonList(cert).toArray(new Certificate[0]);
-        }catch (Exception e){
-            e.printStackTrace();
+        switch (param.getField()){
+            case SERIAL:
+                certSearchRequest.setSerialFrom(param.getValue());
+                certSearchRequest.setSerialTo(param.getValue());
+                break;
+            case ISSUER:
+                certSearchRequest.setIssuerDN(param.getValue());
+                break;
+            case STATUS:
+                certSearchRequest.setStatus(param.getValue());
+                break;
+            case SUBJECT:
+                LdapName ldapName = LdapNameBuilder
+                        .newInstance(param.getValue())
+                        .build();
+                Rdn cnRdn = ldapName.getRdn(0);
+                String cn = cnRdn.getValue().toString();
+                certSearchRequest.setCommonName(cn);
+                certSearchRequest.setSubjectInUse(true);
+                break;
         }
-        return new Certificate[0];
+
+        Function<String, CertDataInfos> process = s -> {
+            try {
+                XMLStreamReader streamReader = XMLInputFactory.newFactory().createXMLStreamReader(new StringReader(s));
+
+                JAXBContext jaxbContext     = JAXBContext.newInstance( CertDataInfos.class );
+                Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+                return (CertDataInfos) jaxbUnmarshaller.unmarshal(streamReader);
+            } catch (Exception e) {
+                log.error("Could not unmarshal xml", e);
+            }
+            return null;
+        };
+
+        List<CertificateDetails> certificateDetailsList = new ArrayList<>();
+        try {
+            //todo dynamic
+            Map<String, String> urlParams = new HashMap<>();
+            urlParams.put("start", "0");
+            urlParams.put("size", "10");
+
+            CertDataInfos certDataInfos = processDogtagPostOperation(baseUrl + searchPath, certSearchRequest,
+                    process, 200, urlParams);
+
+            if(certDataInfos.getEntries() != null){
+                certificateDetailsList = certDataInfos.getEntries().stream()
+                        .map(c -> convertCertDataInfo(c))
+                        .collect(Collectors.toList());
+            }
+        } catch (Exception e) {
+            log.error("Could not parse search results", e);
+        }
+
+        return certificateDetailsList;
     }
 
-     */
+    private CertificateDetails convertCertDataInfo(CertDataInfo certDataInfo){
+        CertificateDetails details = new CertificateDetails();
+        details.setSerial(certDataInfo.getID().toHexString());
+        details.setIssuer(certDataInfo.getIssuerDN());
+        details.setSubject(certDataInfo.getSubjectDN());
+        details.setStatus(certDataInfo.getStatus());
+        return details;
+    }
 
     @Override
     public X509Certificate getCertificateBySerial(String serial) throws Exception {
@@ -252,18 +279,38 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
         return processDogtagOperation(httpGet, processFunction, 200);
     }
 
-    private <T> T processDogtagPostOperation(String url, Object request, Function<String, T> processFunction, int expectedStatus) throws Exception {
+    private <T> T processDogtagPostOperation(String url, Object request, Function<String, T> processFunction,
+                                             int expectedStatus, Map<String, String> urlParams) throws Exception {
         String postXml = "";
         if(request instanceof CertEnrollmentRequest){
             postXml = ((CertEnrollmentRequest) request).toXML();
         }else{
-            postXml = request.toString();
+            //Create JAXB Context
+            JAXBContext jaxbContext = JAXBContext.newInstance(request.getClass());
+            //Create Marshaller
+            Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+            //Required formatting??
+            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            //Print XML String to Console
+            StringWriter sw = new StringWriter();
+            //Write XML to StringWriter
+            jaxbMarshaller.marshal(request, sw);
+            //Verify XML Content
+            postXml = sw.toString();
         }
 
-        HttpPost approvePost = new HttpPost(url);
+        URIBuilder uriBuilder = new URIBuilder(url);
+        if(urlParams != null){
+            for(Map.Entry<String, String> paramEntry : urlParams.entrySet()){
+                uriBuilder.setParameter(paramEntry.getKey(), paramEntry.getValue());
+            }
+        }
+
+        HttpPost approvePost = new HttpPost(uriBuilder.build());
         approvePost.setHeader("Accept", "application/xml");
         approvePost.setHeader("Content-type", "application/xml");
         approvePost.setEntity(new StringEntity(postXml));
+
         return processDogtagOperation(approvePost, processFunction, expectedStatus);
     }
 

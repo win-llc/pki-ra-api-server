@@ -8,16 +8,19 @@ import com.winllc.pki.ra.beans.form.CertificateRequestForm;
 import com.winllc.pki.ra.beans.info.CertificateRequestInfo;
 import com.winllc.pki.ra.beans.validator.CertRequestFormValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
+import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.*;
+import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -43,13 +46,11 @@ public class CertificateRequestService {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
-    private AuditRecordRepository auditRecordRepository;
-    @Autowired
-    private CertAuthorityConnectionService certAuthorityConnectionService;
-    @Autowired
-    private ServerEntryRepository serverEntryRepository;
+    private LoadedCertAuthorityStore certAuthorityStore;
     @Autowired
     private CertRequestFormValidator formValidator;
+    @Autowired
+    private ApplicationContext context;
 
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)
@@ -186,7 +187,11 @@ public class CertificateRequestService {
                 request.getCsr(), String.join(",", request.getRequestedDnsNames()), request.getCertAuthorityName(), "manual");
         raCertificateIssueRequest.setExistingCertificateRequestId(request.getId());
 
-        X509Certificate certificate = certAuthorityConnectionService.processIssueCertificate(raCertificateIssueRequest, request.getAccount());
+        CertIssuanceTransaction certIssuanceTransaction =
+                new CertIssuanceTransaction(certAuthorityStore.getLoadedCertAuthority(
+                raCertificateIssueRequest.getCertAuthorityName()), context);
+
+        X509Certificate certificate = certIssuanceTransaction.processIssueCertificate(raCertificateIssueRequest, request.getAccount());
     }
 
 }

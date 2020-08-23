@@ -5,6 +5,7 @@ import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.CertificateRequestForm;
 import com.winllc.pki.ra.beans.info.CertificateRequestInfo;
+import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.CertificateRequest;
@@ -15,6 +16,7 @@ import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.mock.MockCertAuthority;
 import com.winllc.pki.ra.repository.*;
+import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,7 @@ import javax.transaction.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -86,20 +89,18 @@ class CertificateRequestServiceTest {
     @Autowired
     private ServerEntryRepository serverEntryRepository;
     @Autowired
-    private CertAuthorityConnectionService certAuthorityConnectionService;
+    private LoadedCertAuthorityStore certAuthorityStore;
     @Autowired
     private DomainRepository domainRepository;
     @Autowired
     private DomainPolicyRepository domainPolicyRepository;
+    @MockBean
+    private EntityDirectoryService entityDirectoryService;
 
     @BeforeEach
     @Transactional
     void before() throws Exception {
-        //when(certAuthorityConnectionService.processIssueCertificate(any(),
-        //        any())).thenReturn(CertUtil.base64ToCert(MockCertAuthority.testX509Cert));
-
-        //when(certAuthorityConnectionService.getLoadedCertAuthority(any())).thenReturn(new MockCertAuthority());
-        certAuthorityConnectionService.addLoadedCertAuthority(new MockCertAuthority());
+        certAuthorityStore.addLoadedCertAuthority(new MockCertAuthority());
 
         Domain domain = new Domain();
         domain.setBase("winllc-dev.com");
@@ -127,6 +128,7 @@ class CertificateRequestServiceTest {
         request.setRequestedDnsNames(Collections.singletonList("test.winllc-dev.com"));
 
         certificateRequestRepository.save(request);
+        when(entityDirectoryService.applyServerEntryToDirectory(any())).thenReturn(new HashMap<>());
     }
 
     @AfterEach

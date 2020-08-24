@@ -1,12 +1,9 @@
 package com.winllc.pki.ra.keystore;
 
-import com.winllc.pki.ra.service.AccountRestrictionService;
+import com.winllc.pki.ra.config.ApplicationKeystoreProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -24,13 +21,8 @@ public class ApplicationKeystore {
 
     private static final Logger log = LogManager.getLogger(ApplicationKeystore.class);
 
-
-    @Value("${app-keystore.location}")
-    private String keystoreLocation;
-    @Value("${app-keystore.password}")
-    private String keystorePassword;
-    @Value("${app-keystore.type}")
-    private String keystoreType;
+    @Autowired
+    private ApplicationKeystoreProperties configuration;
 
     private KeyStore ks;
 
@@ -39,22 +31,22 @@ public class ApplicationKeystore {
         //Resource resource = resourceLoader.getResource(keystoreLocation);
         //InputStream input = resource.getInputStream();
 
-        InputStream is = new FileInputStream(keystoreLocation);
+        InputStream is = new FileInputStream(configuration.getLocation());
 
-        ks = KeyStore.getInstance(keystoreType);
-        ks.load(is, keystorePassword.toCharArray());
+        ks = KeyStore.getInstance(configuration.getType());
+        ks.load(is, configuration.getPassword().toCharArray());
     }
 
     private void persist(){
-        try(FileOutputStream fos = new FileOutputStream(keystoreLocation);){
-            ks.store(fos, keystorePassword.toCharArray());
+        try(FileOutputStream fos = new FileOutputStream(configuration.getLocation());){
+            ks.store(fos, configuration.getPassword().toCharArray());
         } catch (Exception e) {
             log.error("Could not save keystore", e);
         }
     }
 
     public void addKey(KeyEntryWrapper keyEntryWrapper) throws KeyStoreException {
-        ks.setKeyEntry(keyEntryWrapper.getAlias(), keyEntryWrapper.getKey(), keystorePassword.toCharArray(),
+        ks.setKeyEntry(keyEntryWrapper.getAlias(), keyEntryWrapper.getKey(), configuration.getPassword().toCharArray(),
                 new Certificate[]{keyEntryWrapper.getCertificate()});
         persist();
     }
@@ -64,7 +56,7 @@ public class ApplicationKeystore {
 
         KeyEntryWrapper currentKeyEntry = getKeyEntry(keyEntryWrapper.getAlias());
         ks.setKeyEntry(keyEntryWrapper.getAlias(), currentKeyEntry.getKey(),
-                keystorePassword.toCharArray(), new Certificate[]{keyEntryWrapper.getCertificate()});
+                configuration.getPassword().toCharArray(), new Certificate[]{keyEntryWrapper.getCertificate()});
         persist();
     }
 
@@ -96,7 +88,7 @@ public class ApplicationKeystore {
     }
 
     public Key getKey(String alias) throws UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException {
-        return ks.getKey(alias, keystorePassword.toCharArray());
+        return ks.getKey(alias, configuration.getPassword().toCharArray());
     }
 
     public Certificate getCertificate(String alias) throws KeyStoreException {
@@ -149,6 +141,6 @@ public class ApplicationKeystore {
     }
 
     public String getKeystorePassword() {
-        return keystorePassword;
+        return configuration.getPassword();
     }
 }

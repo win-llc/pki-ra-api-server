@@ -59,15 +59,14 @@ server:
     enabled: false
     trust-store: /ssl/trust.jk
     trust-store-password: password
-keycloak:
-  admin-interface:
-    server-base-url: 'https://keycloak.winllc-dev.com/auth'
-    realm: dev
-    client-id: win-pki-ra-client
-    client-secret: 4f6e55f4-1d4c-4f84-8564-0e2fd4194eea
-    client-username: dave
-    client-password: pass
-    custom-client-scope: pki-app
+keycloak-admin-interface:
+  server-base-url: 'https://keycloak.winllc-dev.com/auth'
+  realm: dev
+  client-id: win-pki-ra-client
+  client-secret: 4f6e55f4-1d4c-4f84-8564-0e2fd4194eea
+  client-username: dave
+  client-password: pass
+  custom-client-scope: pki-app
 authentication:
   jwt-required-audience: pki-ra-client-public
 external-services:

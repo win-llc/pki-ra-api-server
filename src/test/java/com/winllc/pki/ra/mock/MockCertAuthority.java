@@ -99,7 +99,7 @@ public class MockCertAuthority implements CertAuthority {
 
     @Override
     public String getCertificateStatus(String serial) {
-        return null;
+        return "VALID";
     }
 
     @Override

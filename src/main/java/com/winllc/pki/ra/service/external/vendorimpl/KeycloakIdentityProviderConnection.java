@@ -1,11 +1,11 @@
 package com.winllc.pki.ra.service.external.vendorimpl;
 
+import com.winllc.pki.ra.config.KeycloakProperties;
 import com.winllc.pki.ra.service.external.IdentityProviderConnection;
 import com.winllc.pki.ra.service.external.beans.IdentityExternal;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -16,8 +16,8 @@ public class KeycloakIdentityProviderConnection implements IdentityProviderConne
 
     @Autowired
     private Keycloak keycloak;
-    @Value("${keycloak.admin-interface.realm}")
-    private String realm;
+    @Autowired
+    private KeycloakProperties keycloakConfiguration;
 
     @Override
     public String getConnectionName() {
@@ -26,7 +26,7 @@ public class KeycloakIdentityProviderConnection implements IdentityProviderConne
 
     @Override
     public Optional<IdentityExternal> findByUid(String uid) {
-        List<UserRepresentation> search = keycloak.realm(realm)
+        List<UserRepresentation> search = keycloak.realm(keycloakConfiguration.getRealm())
                 .users().search(uid);
 
 
@@ -41,7 +41,7 @@ public class KeycloakIdentityProviderConnection implements IdentityProviderConne
 
          */
 
-        List<UserRepresentation> search = keycloak.realm(realm)
+        List<UserRepresentation> search = keycloak.realm(keycloakConfiguration.getRealm())
                 .users().search(email);
 
         if(search.size() > 0){

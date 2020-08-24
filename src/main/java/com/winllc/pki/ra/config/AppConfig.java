@@ -6,7 +6,7 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
@@ -14,6 +14,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -38,21 +39,8 @@ import java.security.NoSuchAlgorithmException;
 @EnableJpaAuditing
 public class AppConfig {
 
-    @Value("${keycloak.admin-interface.server-base-url}")
-    private String serverBaseUrl;
-    //private String serverUrlAuth = serverBaseUrl+"/auth";
-    @Value("${keycloak.admin-interface.realm}")
-    private String realm;
-    @Value("${keycloak.admin-interface.client-id}")
-    private String clientId;
-    @Value("${keycloak.admin-interface.client-secret}")
-    private String clientSecret;
-    @Value("${keycloak.admin-interface.custom-client-scope}")
-    private String customClientScope;
-    @Value("${keycloak.admin-interface.client-username}")
-    private String username;
-    @Value("${keycloak.admin-interface.client-password}")
-    private String password;
+    @Autowired
+    private KeycloakProperties keycloakConfiguration;
 
     static {
         javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
@@ -84,6 +72,7 @@ public class AppConfig {
 
 
     @Bean(destroyMethod = "close")
+    @DependsOn(value = "keycloakProperties")
     public Keycloak keycloak() throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
 
         /*
@@ -100,12 +89,12 @@ public class AppConfig {
                 .build();
 
         KeycloakBuilder keycloak = KeycloakBuilder.builder()
-                .realm(realm)
-                .clientId(clientId)
-                .username(username)
-                .password(password)
-                .serverUrl(serverBaseUrl)
-                .clientSecret(clientSecret)
+                .realm(keycloakConfiguration.getRealm())
+                .clientId(keycloakConfiguration.getClientId())
+                .username(keycloakConfiguration.getClientUsername())
+                .password(keycloakConfiguration.getClientPassword())
+                .serverUrl(keycloakConfiguration.getServerBaseUrl())
+                .clientSecret(keycloakConfiguration.getClientSecret())
                 .resteasyClient(client);
         return keycloak.build();
     }

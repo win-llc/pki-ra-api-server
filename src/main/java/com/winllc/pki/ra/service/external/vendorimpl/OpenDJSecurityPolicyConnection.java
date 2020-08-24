@@ -1,9 +1,9 @@
 package com.winllc.pki.ra.service.external.vendorimpl;
 
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.pki.ra.config.PolicyServerProperties;
 import com.winllc.pki.ra.service.external.SecurityPolicyConnection;
 import com.winllc.pki.ra.service.external.SecurityPolicyServerProjectDetails;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
@@ -14,22 +14,14 @@ import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
-import java.time.LocalDate;
 import java.util.*;
 
 @Component
 //todo should be loaded as a bean
 public class OpenDJSecurityPolicyConnection implements SecurityPolicyConnection {
 
-    //todo replace with dynamic
-    @Value("${policy-server.ldap-url}")
-    private String ldapUrl;
-    @Value("${policy-server.ldap-username}")
-    private String ldapUsername;
-    @Value("${policy-server.ldap-password}")
-    private String ldapPassword;
-    @Value("${policy-server.ldap-base-dn}")
-    private String ldapBaseDn;
+    @Autowired
+    private PolicyServerProperties policyServerConfiguration;
 
     private final String[] projectEntryAttributeLdapClass = {"top", "document"};
 
@@ -84,10 +76,10 @@ public class OpenDJSecurityPolicyConnection implements SecurityPolicyConnection 
     private LdapTemplate buildLdapTemplate(){
         LdapContextSource contextSource = new LdapContextSource();
 
-        contextSource.setUrl(ldapUrl);
-        contextSource.setBase(ldapBaseDn);
-        contextSource.setUserDn(ldapUsername);
-        contextSource.setPassword(ldapPassword);
+        contextSource.setUrl(policyServerConfiguration.getLdapUrl());
+        contextSource.setBase(policyServerConfiguration.getLdapBaseDn());
+        contextSource.setUserDn(policyServerConfiguration.getLdapUsername());
+        contextSource.setPassword(policyServerConfiguration.getLdapPassword());
         contextSource.afterPropertiesSet();
 
         return new LdapTemplate(contextSource);

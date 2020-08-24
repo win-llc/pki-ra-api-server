@@ -1,10 +1,10 @@
 package com.winllc.pki.ra.service.external.vendorimpl;
 
 import com.winllc.pki.ra.beans.OIDCClientDetails;
+import com.winllc.pki.ra.config.KeycloakProperties;
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
-import com.winllc.pki.ra.repository.ServerSettingsRepository;
 import com.winllc.pki.ra.service.external.OIDCProviderConnection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,7 +13,6 @@ import org.keycloak.admin.client.resource.ClientResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.core.Response;
@@ -24,19 +23,13 @@ public class KeycloakOIDCProviderConnection implements OIDCProviderConnection {
 
     private static final Logger log = LogManager.getLogger(KeycloakOIDCProviderConnection.class);
 
-    @Value("${keycloak.admin-interface.server-base-url}")
-    private String serverBaseUrl;
-    @Value("${keycloak.admin-interface.realm}")
-    private String realm;
-    @Value("${keycloak.admin-interface.custom-client-scope}")
-    private String customClientScope;
 
     @Autowired
     private Keycloak keycloak;
     @Autowired
-    private ServerEntryRepository serverEntryRepository;
+    private KeycloakProperties keycloakConfiguration;
     @Autowired
-    private ServerSettingsRepository serverSettingsRepository;
+    private ServerEntryRepository serverEntryRepository;
 
     /*
     {
@@ -155,7 +148,7 @@ public class KeycloakOIDCProviderConnection implements OIDCProviderConnection {
         clientScopes.add("profile");
         clientScopes.add("roles");
         clientScopes.add("email");
-        clientScopes.add(customClientScope);
+        clientScopes.add(keycloakConfiguration.getCustomClientScope());
 
         client.setDefaultClientScopes(clientScopes);
 
@@ -174,7 +167,7 @@ public class KeycloakOIDCProviderConnection implements OIDCProviderConnection {
         client.setAccess(access);
 
         Response response =
-                keycloak.realm(realm)
+                keycloak.realm(keycloakConfiguration.getRealm())
                         .clients().create(client);
 
         int status = response.getStatus();
@@ -211,7 +204,7 @@ public class KeycloakOIDCProviderConnection implements OIDCProviderConnection {
         if(optionalServerEntry.isPresent()) {
             serverEntry = optionalServerEntry.get();
 
-            keycloak.realm(realm)
+            keycloak.realm(keycloakConfiguration.getRealm())
                     .clients().get(serverEntry.getOpenidClientId())
                     .remove();
 
@@ -228,13 +221,14 @@ public class KeycloakOIDCProviderConnection implements OIDCProviderConnection {
     @Override
     public OIDCClientDetails getClient(ServerEntry serverEntry) {
         log.info("Getting client for: "+serverEntry.getFqdn());
-        String oidcProviderMetadataURL = serverBaseUrl+"/realms/"+realm+"/.well-known/openid-configuration";
+        String oidcProviderMetadataURL = keycloakConfiguration.getServerBaseUrl()
+                +"/realms/"+keycloakConfiguration.getRealm()+"/.well-known/openid-configuration";
 
         OIDCClientDetails clientDetails = new OIDCClientDetails();
         clientDetails.setOidcProviderMetadataUrlValue(oidcProviderMetadataURL);
         clientDetails.setOidcRedirectUriValue("https://"+serverEntry.getFqdn()+"/*");
 
-        ClientResource clientResource = keycloak.realm(realm)
+        ClientResource clientResource = keycloak.realm(keycloakConfiguration.getRealm())
                 .clients().get(serverEntry.getOpenidClientId());
 
         ClientRepresentation clientRepresentation = clientResource.toRepresentation();

@@ -44,23 +44,15 @@ public class AccountRequestService {
 
     @PostMapping("/submit")
     @ResponseStatus(HttpStatus.CREATED)
-    public Long createAccountRequest(@Valid @RequestBody AccountRequestForm form) throws RAObjectNotFoundException{
-        //todo should not be required to be in user repo
-        //Optional<IdentityExternal> optionalIdentityExternal = identityProviderService.findByEmail(form.getAccountOwnerEmail());
-        //Optional<User> userOptional = userRepository.findOneByUsername(form.getAccountOwnerEmail());
-        //if(userOptional.isPresent()){
-            //User user = userOptional.get();
+    public Long createAccountRequest(@Valid @RequestBody AccountRequestForm form) {
+        log.info("Account request: "+form);
+        AccountRequest accountRequest = AccountRequest.createNew();
+        accountRequest.setAccountOwnerEmail(form.getAccountOwnerEmail());
+        accountRequest.setProjectName(form.getProjectName());
+        accountRequest.setSecurityPolicyServerProjectId(form.getSecurityPolicyProjectId());
 
-            AccountRequest accountRequest = AccountRequest.createNew();
-            accountRequest.setAccountOwnerEmail(form.getAccountOwnerEmail());
-            accountRequest.setProjectName(form.getProjectName());
-            accountRequest.setSecurityPolicyServerProjectId(form.getSecurityPolicyProjectId());
-
-            accountRequest = accountRequestRepository.save(accountRequest);
-            return accountRequest.getId();
-        //}else{
-        //    throw new RAObjectNotFoundException(User.class, form.getAccountOwnerEmail());
-        //}
+        accountRequest = accountRequestRepository.save(accountRequest);
+        return accountRequest.getId();
     }
 
     @PostMapping("/update")

@@ -21,24 +21,12 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
     private String projectName;
     private String entityBaseDn;
     private boolean enabled = true;
-
     private String securityPolicyServerProjectId;
+    private boolean allowHostnameIssuance = true;
 
     @JsonIgnore
     @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<PocEntry> pocs;
-    /*
-    @JsonIgnore
-    @ManyToMany(cascade = {
-            CascadeType.PERSIST,
-            CascadeType.MERGE
-    })
-    @JoinTable(name = "account_domain",
-            joinColumns = @JoinColumn(name = "account_id"),
-            inverseJoinColumns = @JoinColumn(name = "domain_id")
-    )
-    private Set<Domain> canIssueDomains;
-     */
 
     @ElementCollection
     @JsonIgnore
@@ -95,15 +83,6 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
                 serverEntry.setAccount(null);
             }
         }
-
-        /*
-        Set<Domain> domains = getCanIssueDomains();
-        if(!CollectionUtils.isEmpty(domains)){
-            for(Domain domain : domains){
-                domain.getCanIssueAccounts().remove(this);
-            }
-        }
-         */
 
         Set<PocEntry> pocEntries = getPocs();
         if(!CollectionUtils.isEmpty(pocEntries)){
@@ -167,17 +146,6 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
     public void setPocs(Set<PocEntry> pocs) {
         this.pocs = pocs;
     }
-
-    /*
-    public Set<Domain> getCanIssueDomains() {
-        if(canIssueDomains == null) canIssueDomains = new HashSet<>();
-        return canIssueDomains;
-    }
-
-    public void setCanIssueDomains(Set<Domain> canIssueDomains) {
-        this.canIssueDomains = canIssueDomains;
-    }
-     */
 
     public Set<String> getPreAuthorizationIdentifiers() {
         return preAuthorizationIdentifiers;
@@ -265,6 +233,14 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
     @JsonIgnore
     public String getMacKeyBase64(){
         return Base64.encode(this.macKey).toString();
+    }
+
+    public boolean isAllowHostnameIssuance() {
+        return allowHostnameIssuance;
+    }
+
+    public void setAllowHostnameIssuance(boolean allowHostnameIssuance) {
+        this.allowHostnameIssuance = allowHostnameIssuance;
     }
 
     @Override

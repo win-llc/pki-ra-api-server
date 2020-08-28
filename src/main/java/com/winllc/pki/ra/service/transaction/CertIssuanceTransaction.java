@@ -34,11 +34,10 @@ import java.util.Optional;
 
 import static com.winllc.pki.ra.constants.ServerSettingRequired.ENTITY_DIRECTORY_LDAP_SERVERBASEDN;
 
-public class CertIssuanceTransaction {
+public class CertIssuanceTransaction extends CertTransaction {
 
     private static final Logger log = LogManager.getLogger(CertAuthorityConnectionService.class);
 
-    private final CertAuthority certAuthority;
     private final ServerSettingsService serverSettingsService;
     private final ServerEntryService serverEntryService;
     private final ServerEntryRepository serverEntryRepository;
@@ -47,7 +46,7 @@ public class CertIssuanceTransaction {
     private final AuditRecordRepository auditRecordRepository;
 
     public CertIssuanceTransaction(CertAuthority certAuthority, ApplicationContext context) {
-        this.certAuthority = certAuthority;
+        super(certAuthority);
         this.serverSettingsService = context.getBean(ServerSettingsService.class);
         this.serverEntryService = context.getBean(ServerEntryService.class);
         this.serverEntryRepository = context.getBean(ServerEntryRepository.class);
@@ -64,6 +63,11 @@ public class CertIssuanceTransaction {
      * @throws Exception
      */
     @Transactional
+    public X509Certificate processIssueCertificate(RACertificateIssueRequest certificateRequest) throws Exception {
+        return processIssueCertificate(certificateRequest, null);
+    }
+
+    @Transactional
     public X509Certificate processIssueCertificate(RACertificateIssueRequest certificateRequest, Account account) throws Exception {
         //todo validation checks, probably before this, notify POCs on failure
         SubjectAltNames subjectAltNames = new SubjectAltNames();
@@ -75,7 +79,11 @@ public class CertIssuanceTransaction {
 
         X509Certificate cert = certAuthority.issueCertificate(certificateRequest.getCsr(), buildDn, subjectAltNames);
         if (cert != null) {
-            processIssuedCertificate(cert, certificateRequest, account);
+            if(account != null) {
+                processIssuedCertificate(cert, certificateRequest, account);
+            }else{
+                log.info("Anonymous cert issued: "+cert.getSubjectDN());
+            }
             return cert;
         } else {
             throw new RAException("Could not issue certificate");

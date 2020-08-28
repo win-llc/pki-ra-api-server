@@ -116,10 +116,9 @@ public class ApplicationKeystoreManagerService {
      */
 
 
-    //todo generate key and save it to keystore
     public void createKey(String alias) throws Exception {
         Optional<KeyEntryWrapper> wrapperOptional = getKeyByAlias(alias);
-        if(!wrapperOptional.isPresent()) {
+        if(wrapperOptional.isEmpty()) {
             KeyPair keyPair = CertUtil.generateRSAKeyPair();
             X509Certificate certificate = CertUtil.generateSelfSignedCertificate(keyPair,
                     "SHA256withRSA", "cn=" + alias, 365);

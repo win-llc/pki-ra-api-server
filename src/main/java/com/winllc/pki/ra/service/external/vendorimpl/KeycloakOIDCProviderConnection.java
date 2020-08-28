@@ -10,14 +10,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.ClientResource;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.RolesResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.core.Response;
 import java.util.*;
 
+//good reference: https://gist.github.com/thomasdarimont/c4e739c5a319cf78a4cff3b87173a84b
 @Component
 public class KeycloakOIDCProviderConnection implements OIDCProviderConnection {
 
@@ -30,7 +35,8 @@ public class KeycloakOIDCProviderConnection implements OIDCProviderConnection {
     private KeycloakProperties keycloakConfiguration;
     @Autowired
     private ServerEntryRepository serverEntryRepository;
-
+    @Value("${permissions.front-end-client-oidc-client}")
+    private String frontEndOidcClientId;
     /*
     {
    "id":"3006acaf-7869-44bb-8841-737bb5964a29",
@@ -238,6 +244,25 @@ public class KeycloakOIDCProviderConnection implements OIDCProviderConnection {
         clientDetails.setOidcSecretValue(secret.getValue());
 
         return clientDetails;
+    }
+
+    public List<RoleRepresentation> getClientRoles(){
+       return getRolesForClientId(keycloakConfiguration.getClientId());
+    }
+
+    public List<RoleRepresentation> getFrontendClientRoles(){
+        return getRolesForClientId(frontEndOidcClientId);
+    }
+
+    private List<RoleRepresentation> getRolesForClientId(String clientId){
+        RealmResource realmResource = keycloak.realm(keycloakConfiguration.getRealm());
+
+        ClientRepresentation appClient = realmResource.clients() //
+                .findByClientId(clientId).get(0);
+
+        RolesResource roles = realmResource.clients().get(appClient.getId()).roles();
+
+        return roles.list();
     }
 
     @Override

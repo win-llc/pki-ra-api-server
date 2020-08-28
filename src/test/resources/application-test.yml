@@ -90,6 +90,7 @@ web-ui:
   uri-templates:
     account-created: /account/edit/{0}
 permissions:
+  front-end-client-oidc-client: pki-ra-client-public
   available:
     - super_admin
     - add_domain

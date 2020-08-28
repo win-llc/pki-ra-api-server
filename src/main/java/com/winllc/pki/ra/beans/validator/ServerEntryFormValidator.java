@@ -3,6 +3,10 @@ package com.winllc.pki.ra.beans.validator;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import org.springframework.util.CollectionUtils;
 
+import java.util.regex.Pattern;
+
+import static com.winllc.pki.ra.constants.ValidationRegex.FQDN_VALIDATION_REGEX;
+
 public class ServerEntryFormValidator implements FormValidator<ServerEntryForm> {
 
     public ValidationResponse validate(ServerEntryForm form, boolean editMode){
@@ -17,7 +21,7 @@ public class ServerEntryFormValidator implements FormValidator<ServerEntryForm> 
     }
 
     private boolean isValidServerName(String fqdn){
-        //todo
-        return true;
+        Pattern fqdnPattern = Pattern.compile(FQDN_VALIDATION_REGEX);
+        return fqdnPattern.matcher(fqdn).matches();
     }
 }

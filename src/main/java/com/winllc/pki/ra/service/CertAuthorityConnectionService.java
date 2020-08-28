@@ -18,6 +18,7 @@ import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
+import com.winllc.pki.ra.service.transaction.CertRevocationTransaction;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,9 +70,6 @@ public class CertAuthorityConnectionService {
     private ApplicationContext context;
     @Autowired
     private LoadedCertAuthorityStore certAuthorityStore;
-
-    //todo CertAuthorityConnectionTemplate?
-
 
     @PostMapping("/api/info/create")
     @ResponseStatus(HttpStatus.CREATED)
@@ -129,8 +127,6 @@ public class CertAuthorityConnectionService {
     @ResponseStatus(HttpStatus.OK)
     public CertAuthorityConnectionInfoForm updateConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm form)
             throws RAException {
-        //todo validate
-
         ValidationResponse validationResponse = validator.validate(form, true);
 
         if(validationResponse.isValid()) {
@@ -238,64 +234,34 @@ public class CertAuthorityConnectionService {
 
         if(raCertificateIssueRequest.getDnsNameList().size() == 0) throw new IllegalArgumentException("Must include at least one DNS name");
 
-        //todo account shouldn't be required of EAB not required
+        CertIssuanceTransaction certIssuanceTransaction = new CertIssuanceTransaction(certAuthorityStore.getLoadedCertAuthority(
+                raCertificateIssueRequest.getCertAuthorityName()), context);
+
+        X509Certificate cert;
+
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(raCertificateIssueRequest.getAccountKid());
         if(optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
 
-            CertIssuanceTransaction certIssuanceTransaction = new CertIssuanceTransaction(certAuthorityStore.getLoadedCertAuthority(
-                    raCertificateIssueRequest.getCertAuthorityName()), context);
-
-            X509Certificate cert = certIssuanceTransaction.processIssueCertificate(raCertificateIssueRequest, account);
-            String pemCert = CertUtil.formatCrtFileContents(cert);
-
-            return pemCert;
+            cert = certIssuanceTransaction.processIssueCertificate(raCertificateIssueRequest, account);
         }else{
-            throw new RAObjectNotFoundException(Account.class, raCertificateIssueRequest.getAccountKid());
+            cert = certIssuanceTransaction.processIssueCertificate(raCertificateIssueRequest);
         }
+
+        return CertUtil.formatCrtFileContents(cert);
     }
-
-
 
     @PostMapping("/revokeCertificate")
     @ResponseStatus(HttpStatus.OK)
     public void revokeCertificate(@Valid @RequestBody RACertificateRevokeRequest revokeRequest) throws Exception {
         CertAuthority certAuthority = certAuthorityStore.getLoadedCertAuthority(revokeRequest.getCertAuthorityName());
         if (certAuthority != null) {
-            String serial = revokeRequest.getSerial();
-            //Get serial from certificate request
-            if(StringUtils.isBlank(serial)){
-                serial = getSerialFromRequest(revokeRequest);
-            }
 
-            if(StringUtils.isBlank(serial)) throw new Exception("Request ID and Serial can't both be null");
+            CertRevocationTransaction revocationTransaction = new CertRevocationTransaction(certAuthority, context);
+            revocationTransaction.processRevokeCertificate(revokeRequest);
 
-            boolean revoked = certAuthority.revokeCertificate(serial, revokeRequest.getReason());
-            if (revoked) {
-                //todo consolidate this somewhere else
-                AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_REVOKED);
-                //todo get account KID and add to record
-                auditRecordRepository.save(record);
-            } else {
-                throw new RAException("Could not revoke cert on Cert Authority");
-            }
         } else {
             throw new RAObjectNotFoundException(CertAuthority.class, revokeRequest.getCertAuthorityName());
-        }
-    }
-
-    private String getSerialFromRequest(RACertificateRevokeRequest revokeRequest) throws RAException, CertificateException, IOException {
-        Optional<CertificateRequest> optionalCertificateRequest = certificateRequestRepository.findById(revokeRequest.getRequestId());
-        if(optionalCertificateRequest.isPresent()){
-            CertificateRequest certificateRequest = optionalCertificateRequest.get();
-            if(StringUtils.isNotBlank(certificateRequest.getIssuedCertificate())){
-                X509Certificate x509Certificate = CertUtil.base64ToCert(certificateRequest.getIssuedCertificate());
-                return x509Certificate.getSerialNumber().toString();
-            }else{
-                throw new RAException("No certificate in request, most likely not issued yet");
-            }
-        }else{
-            throw new RAObjectNotFoundException(CertificateRequest.class, revokeRequest.getRequestId());
         }
     }
 

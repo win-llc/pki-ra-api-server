@@ -60,8 +60,6 @@ public class AccountService {
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public Long createNewAccount(@Valid @RequestBody AccountRequest form) {
-        //TODO return both to account holder for entry into ACME client
-
         Account account = Account.buildNew(form.getProjectName());
 
         account = save(account);
@@ -88,7 +86,6 @@ public class AccountService {
         List<AccountInfo> accountInfoList = new ArrayList<>();
         for (Account account : filtered) {
             AccountInfo info = buildAccountInfo(account);
-
 
             //todo fix this section
             AcmeServerService service = acmeServerManagementService.getAcmeServerServiceByName("winllc").get();

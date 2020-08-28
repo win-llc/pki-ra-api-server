@@ -14,9 +14,6 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
     private String type;
     private String trustChainBase64;
     private String baseUrl;
-    private String issuePath;
-    private String revokePath;
-    private String searchPath;
     private Set<CertAuthorityConnectionProperty> properties;
     private String authKeyAlias;
 
@@ -84,30 +81,6 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
 
     public void setTrustChainBase64(String trustChainBase64) {
         this.trustChainBase64 = trustChainBase64;
-    }
-
-    public String getIssuePath() {
-        return issuePath;
-    }
-
-    public void setIssuePath(String issuePath) {
-        this.issuePath = issuePath;
-    }
-
-    public String getRevokePath() {
-        return revokePath;
-    }
-
-    public void setRevokePath(String revokePath) {
-        this.revokePath = revokePath;
-    }
-
-    public String getSearchPath() {
-        return searchPath;
-    }
-
-    public void setSearchPath(String searchPath) {
-        this.searchPath = searchPath;
     }
 
     public Set<CertAuthorityConnectionProperty> getProperties() {

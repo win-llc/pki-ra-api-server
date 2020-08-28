@@ -40,7 +40,15 @@ public class AccountRequestForm extends ValidForm<AccountRequest> {
 
     @Override
     protected void processIsValid() {
-        System.out.println();
+
     }
 
+    @Override
+    public String toString() {
+        return "AccountRequestForm{" +
+                "accountOwnerEmail='" + accountOwnerEmail + '\'' +
+                ", projectName='" + projectName + '\'' +
+                ", securityPolicyProjectId='" + securityPolicyProjectId + '\'' +
+                "} " + super.toString();
+    }
 }

@@ -50,9 +50,11 @@ public class AcmeServerManagementService {
             load(info);
         }
 
-        //todo remove this
-        AcmeServerConnectionInfo info = new AcmeServerConnectionInfo(winraAcmeServerName, winraAcmeServerUrl);
-        load(info);
+        //load default, if exists
+        if(StringUtils.isNoneBlank(winraAcmeServerName, winraAcmeServerUrl)) {
+            AcmeServerConnectionInfo info = new AcmeServerConnectionInfo(winraAcmeServerName, winraAcmeServerUrl);
+            load(info);
+        }
     }
 
     private void load(AcmeServerConnectionInfo connectionInfo){

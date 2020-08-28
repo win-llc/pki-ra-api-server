@@ -5,6 +5,7 @@ import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.DomainPolicy;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainPolicyRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
@@ -112,5 +113,21 @@ class DomainPolicyServiceTest {
 
         account = accountRepository.findById(account.getId()).get();
         assertEquals(0, account.getDomainIssuanceRestrictions().size());
+    }
+
+    @Test
+    void updateForType() throws RAObjectNotFoundException {
+        Domain domain = domainRepository.findDistinctByBaseEquals("test.com").get();
+
+        DomainPolicy domainPolicy = new DomainPolicy();
+        domainPolicy.setAllowIssuance(true);
+        domainPolicy.setTargetDomain(domain);
+
+        domainPolicy = restrictionRepository.save(domainPolicy);
+
+        DomainPolicyForm form = new DomainPolicyForm(domainPolicy);
+        form.setAllowIssuance(false);
+        DomainPolicyForm updatedForm = restrictionService.updateForType(form);
+        assertFalse(updatedForm.isAllowIssuance());
     }
 }

@@ -173,7 +173,6 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
 
     @Override
     public String getCertificateStatus(String serial) throws Exception {
-        //todo
         CertData certData = getCertDataBySerial(serial);
 
         return certData.getStatus();
@@ -221,10 +220,14 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
 
         List<CertificateDetails> certificateDetailsList = new ArrayList<>();
         try {
-            //todo dynamic
-            Map<String, String> urlParams = new HashMap<>();
-            urlParams.put("start", "0");
-            urlParams.put("size", "10");
+
+            Map<String, String> urlParams = null;
+            if(param.isPaginated()) {
+                urlParams = new HashMap<>();
+                Integer start = param.getPage()*param.getPageSize();
+                urlParams.put("start", start.toString());
+                urlParams.put("size", ""+param.getPageSize());
+            }
 
             CertDataInfos certDataInfos = processDogtagPostOperation(baseUrl + searchPath, certSearchRequest,
                     process, 200, urlParams);

@@ -21,23 +21,6 @@ public class CertAuthorityTypeService {
     @Autowired
     private CertAuthorityTypeRepository repository;
 
-    //@PostConstruct
-    private void init(){
-        Optional<CertAuthorityType> typeOptional = repository.findDistinctByName("winllc");
-        if(!typeOptional.isPresent()) {
-            CertAuthorityType type = new CertAuthorityType();
-            type.setName("winllc");
-            repository.save(type);
-        }
-
-        typeOptional = repository.findDistinctByName("internal");
-        if(!typeOptional.isPresent()) {
-            CertAuthorityType type2 = new CertAuthorityType();
-            type2.setName("internal");
-            repository.save(type2);
-        }
-    }
-
     @Transactional
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)

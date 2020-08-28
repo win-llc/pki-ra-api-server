@@ -63,8 +63,7 @@ public class AttributePolicyService {
         if(policyGroupOptional.isPresent()){
             AttributePolicyGroup apg = policyGroupOptional.get();
             Hibernate.initialize(apg.getAttributePolicies());
-            AttributePolicyGroupForm form = new AttributePolicyGroupForm(apg);
-            return form;
+            return new AttributePolicyGroupForm(apg);
         }else{
             throw new RAObjectNotFoundException(AttributePolicyGroup.class, id);
         }

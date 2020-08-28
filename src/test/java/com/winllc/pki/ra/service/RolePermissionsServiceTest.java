@@ -14,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import javax.transaction.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -75,5 +76,20 @@ class RolePermissionsServiceTest {
 
         List<RolePermission> admin = rolePermissionsService.getAllForRole("ADMIN");
         assertEquals(1, admin.size());
+    }
+
+    @Test
+    void updateAllRolePermissions() {
+        List<RolePermission> rolePermissions = new ArrayList<>();
+        RolePermission rp1 = new RolePermission();
+        rp1.setRoleName("ADMIN");
+        rp1.setPermission("add");
+        rolePermissions.add(rp1);
+
+        RolePermission rp2 = new RolePermission("USER", "view");
+        rolePermissions.add(rp2);
+
+        List<RolePermission> updated = rolePermissionsService.updateAllRolePermissions(rolePermissions);
+        assertEquals(2, updated.size());
     }
 }

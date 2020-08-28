@@ -25,6 +25,10 @@ public class OpenDJSecurityPolicyConnection implements SecurityPolicyConnection 
 
     private final String[] projectEntryAttributeLdapClass = {"top", "document"};
 
+    public OpenDJSecurityPolicyConnection(PolicyServerProperties policyServerProperties){
+        this.policyServerConfiguration = policyServerProperties;
+    }
+
     @Override
     public Map<String, String> getSecurityPolicyMapForService(String fqdn, String projectId) {
         //todo

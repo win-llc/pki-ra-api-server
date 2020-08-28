@@ -1,9 +1,12 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.form.RolePermissionsForm;
+import com.winllc.pki.ra.config.KeycloakProperties;
 import com.winllc.pki.ra.config.PermissionProperties;
 import com.winllc.pki.ra.domain.RolePermission;
 import com.winllc.pki.ra.repository.RolePermissionRepository;
+import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
+import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
@@ -20,12 +23,22 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/roles")
 public class RolePermissionsService {
-    //todo add permissions to roles
 
     @Autowired
     private PermissionProperties permissionProperties;
     @Autowired
     private RolePermissionRepository rolePermissionRepository;
+    @Autowired
+    private KeycloakOIDCProviderConnection oidcProviderConnection;
+
+    @GetMapping("/validRoles")
+    @ResponseStatus(HttpStatus.OK)
+    public List<String> getValidRoles(){
+        List<RoleRepresentation> clientRoles = oidcProviderConnection.getFrontendClientRoles();
+        return clientRoles.stream()
+                .map(r -> r.getName())
+                .collect(Collectors.toList());
+    }
 
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)

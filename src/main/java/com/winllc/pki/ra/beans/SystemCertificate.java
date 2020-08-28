@@ -14,9 +14,16 @@ public class SystemCertificate {
     private CertAuthority certAuthority;
 
 
+    public void revoke(int reason) throws Exception {
+        certAuthority.revokeCertificate(x509Certificate.getSerialNumber().toString(), reason);
+    }
+
     private void sync(){
-        CertSearchParam searchParam = new CertSearchParam(CertSearchParams.CertField.SERIAL, x509Certificate.getSerialNumber().toString(),
-                CertSearchParams.CertSearchParamRelation.EQUALS);
+        CertSearchParam param = CertSearchParam.createNew()
+                .field(CertSearchParams.CertField.SERIAL)
+                .value(x509Certificate.getSerialNumber().toString())
+                .relation(CertSearchParams.CertSearchParamRelation.EQUALS);
+
         //certAuthority.search();
     }
 }

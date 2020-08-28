@@ -54,19 +54,19 @@ public class ValidationService {
             Map<String, DomainPolicy> restrictionMap = account.getAccountDomainPolicies().stream()
                     .collect(Collectors.toMap(r -> r.getTargetDomain().getBase(), r -> r));
 
-            //TODO fix this
             for (DomainPolicy domainPolicy : accountDomainPolicies) {
                 Domain domain = domainPolicy.getTargetDomain();
 
                 CertIssuanceValidationRule validationRule = new CertIssuanceValidationRule();
                 validationRule.setBaseDomainName(domain.getBase());
-                validationRule.setAllowHostnameIssuance(true);
+                validationRule.setAllowHostnameIssuance(account.isAllowHostnameIssuance());
                 validationRule.setIdentifierType("dns");
 
                 //If restrictions exist for this domain on the account, apply restrictions
                 if(restrictionMap.containsKey(domain.getBase())){
                     DomainPolicy restriction = restrictionMap.get(domain.getBase());
                     validationRule.setRequireHttpChallenge(restriction.isAcmeRequireHttpValidation());
+                    validationRule.setRequireDnsChallenge(restriction.isAcmeRequireDnsValidation());
                     validationRule.setAllowIssuance(restriction.isAllowIssuance());
                 }else{
                     validationRule.setAllowIssuance(true);

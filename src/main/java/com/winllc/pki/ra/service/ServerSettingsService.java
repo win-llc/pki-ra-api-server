@@ -26,19 +26,9 @@ public class ServerSettingsService {
     @Autowired
     private ServerSettingsRepository repository;
 
-    //todo remove this, replaced with SeverSettingsRequired enum
-    private String[] defaultProperties = new String[]{
-            "emailServer", "emailServerPort", "emailFromAddress",
-            "openIdConnectEnabled", "openIdConnectServerBaseUrl", "openIdConnectRealm", "openIdConnectClientId",
-            "openIdConnectClientSecret", "openIdConnectClientUserName", "openIdConnectClientPassword", "openIdConnectClientScope"
-    };
 
     @PostConstruct
     private void postConstruct(){
-        //for(String defaultProperty : defaultProperties){
-        //    addSetting(new ServerSettings(defaultProperty));
-        //}
-
         Stream.of(ServerSettingRequired.values())
                 .forEach(s -> addSetting(new ServerSettings(s.getSettingName())));
     }

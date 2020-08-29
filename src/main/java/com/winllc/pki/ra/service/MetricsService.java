@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -31,12 +32,22 @@ public class MetricsService {
     @Autowired
     private AuditRecordRepository auditRecordRepository;
 
+    //todo generic audit record search
+    public void auditSearch(AuditRecordType type, Timestamp notBefore, Timestamp notAfter){
+        List<AuditRecord> allByTypeEqualsAndTimestampAfterAndTimestampBefore
+                = auditRecordRepository.findAllByTypeEqualsAndTimestampAfterAndTimestampBefore(type, notBefore, notAfter);
+
+        Map<LocalDate, List<AuditRecord>> collect = allByTypeEqualsAndTimestampAfterAndTimestampBefore.stream()
+                .collect(Collectors.groupingBy(a -> {
+                    return a.getTimestamp().toLocalDateTime().toLocalDate();
+                }));
+    }
+
     @GetMapping("/totalAccounts")
     public ResponseEntity<?> getTotalAccounts(){
         //todo
         return null;
     }
-
 
     @GetMapping("/issuedCertificatesCount")
     public ResponseEntity<?> getIssuedCertificatesCount(){

@@ -10,10 +10,12 @@ import com.winllc.acme.common.ra.RAAccountValidationResponse;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.DomainPolicy;
+import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
+import com.winllc.pki.ra.repository.ServerEntryRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
@@ -34,7 +36,7 @@ public class ValidationService {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
-    private DomainRepository domainRepository;
+    private ServerEntryRepository serverEntryRepository;
     @Autowired
     private AccountRestrictionService accountRestrictionService;
 
@@ -96,9 +98,14 @@ public class ValidationService {
 
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
-            Hibernate.initialize(account.getPreAuthorizationIdentifiers());
 
-            return account.getPreAuthorizationIdentifiers();
+            List<ServerEntry> allByAccount = serverEntryRepository.findAllByAccount(account);
+            Set<String> preAuthzIdentifiers = allByAccount.stream()
+                    .filter(s -> s.getAcmeAllowPreAuthz())
+                    .map(s -> s.getFqdn())
+                    .collect(Collectors.toSet());
+
+            return preAuthzIdentifiers;
         } else {
             throw new RAObjectNotFoundException(Account.class, kid);
         }

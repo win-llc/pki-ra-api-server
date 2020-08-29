@@ -11,12 +11,14 @@ import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.DomainPolicy;
+import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.mock.MockUtil;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainPolicyRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
+import com.winllc.pki.ra.repository.ServerEntryRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +49,8 @@ class ValidationServiceTest {
     private DomainRepository domainRepository;
     @Autowired
     private DomainPolicyRepository domainPolicyRepository;
+    @Autowired
+    private ServerEntryRepository serverEntryRepository;
 
     private static String testMacKey;
 
@@ -61,7 +65,16 @@ class ValidationServiceTest {
         Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("kidtest1");
         account.setMacKey(testMacKey);
-        account.setPreAuthorizationIdentifiers(Collections.singleton("test.winllc-dev.com"));
+        account = accountRepository.save(account);
+
+        ServerEntry serverEntry = ServerEntry.buildNew();
+        serverEntry.setFqdn("test.winllc-dev.com");
+        serverEntry.setAcmeAllowPreAuthz(true);
+        serverEntry.setAccount(account);
+
+        serverEntry = serverEntryRepository.save(serverEntry);
+
+        account.getServerEntries().add(serverEntry);
         account = accountRepository.save(account);
 
         Domain domain = new Domain();

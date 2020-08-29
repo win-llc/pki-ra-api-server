@@ -19,6 +19,8 @@ import java.util.*;
 @Table(name = "server_entry")
 public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
 
+    //allow pre-authz tracking per account
+
     @Id
     @javax.persistence.Transient
     private Name dn;
@@ -51,6 +53,8 @@ public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
     private String openidClientId;
     @Transient
     private String openidClientRedirectUrl;
+    @Transient
+    private Boolean acmeAllowPreAuthz;
 
 
     public static ServerEntry buildNew(){
@@ -150,6 +154,14 @@ public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
 
     public void setDistinguishedName(String distinguishedName) {
         this.distinguishedName = distinguishedName;
+    }
+
+    public Boolean getAcmeAllowPreAuthz() {
+        return acmeAllowPreAuthz;
+    }
+
+    public void setAcmeAllowPreAuthz(Boolean acmeAllowPreAuthz) {
+        this.acmeAllowPreAuthz = acmeAllowPreAuthz;
     }
 
     public Name getDn() {

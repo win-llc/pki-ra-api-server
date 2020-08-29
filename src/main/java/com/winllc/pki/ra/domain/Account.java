@@ -28,9 +28,6 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
     @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<PocEntry> pocs;
 
-    @ElementCollection
-    @JsonIgnore
-    private Set<String> preAuthorizationIdentifiers;
     @JsonIgnore
     @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<AccountRestriction> accountRestrictions;
@@ -145,14 +142,6 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
 
     public void setPocs(Set<PocEntry> pocs) {
         this.pocs = pocs;
-    }
-
-    public Set<String> getPreAuthorizationIdentifiers() {
-        return preAuthorizationIdentifiers;
-    }
-
-    public void setPreAuthorizationIdentifiers(Set<String> preAuthorizationIdentifiers) {
-        this.preAuthorizationIdentifiers = preAuthorizationIdentifiers;
     }
 
     public Set<AccountRestriction> getAccountRestrictions() {

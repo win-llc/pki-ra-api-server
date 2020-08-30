@@ -7,6 +7,7 @@ import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
+import com.winllc.pki.ra.constants.CertificateStatus;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 
 import javax.naming.Name;
@@ -98,8 +99,8 @@ public class MockCertAuthority implements CertAuthority {
     }
 
     @Override
-    public String getCertificateStatus(String serial) {
-        return "VALID";
+    public CertificateStatus getCertificateStatus(String serial) {
+        return CertificateStatus.VALID;
     }
 
     @Override

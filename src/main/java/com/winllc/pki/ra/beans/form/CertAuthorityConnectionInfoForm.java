@@ -4,6 +4,8 @@ import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.ConnectionProperty;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionProperty;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.validator.routines.UrlValidator;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -22,7 +24,11 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
 
     @Override
     protected void processIsValid() {
+        UrlValidator urlValidator = new UrlValidator();
 
+        if(StringUtils.isNotBlank(baseUrl) && !urlValidator.isValid(baseUrl)){
+            getErrors().put("baseUrlInvalid", "Invalid base URL: "+baseUrl);
+        }
     }
 
     public CertAuthorityConnectionInfoForm(CertAuthorityConnectionInfo info, CertAuthority ca) {

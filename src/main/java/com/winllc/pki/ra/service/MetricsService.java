@@ -3,7 +3,10 @@ package com.winllc.pki.ra.service;
 import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
+import com.winllc.pki.ra.beans.metrics.AuditMetricRequest;
+import com.winllc.pki.ra.beans.metrics.AuditMetricResponse;
 import com.winllc.pki.ra.beans.metrics.ChartMetrics;
+import com.winllc.pki.ra.beans.metrics.DailyAuditMetric;
 import com.winllc.pki.ra.ca.CertAuthority;
 import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.constants.AuditRecordType;
@@ -11,36 +14,79 @@ import com.winllc.pki.ra.domain.AuditRecord;
 import com.winllc.pki.ra.repository.AuditRecordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/metrics")
 public class MetricsService {
+
+    private static final String dtfPattern = "dd/MM/yyyy";
+    private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern(dtfPattern);
 
     @Autowired
     private LoadedCertAuthorityStore certAuthorityStore;
     @Autowired
     private AuditRecordRepository auditRecordRepository;
 
-    //todo generic audit record search
-    public void auditSearch(AuditRecordType type, Timestamp notBefore, Timestamp notAfter){
+    @GetMapping("/auditRecordTypes")
+    public List<String> auditRecordTypes(){
+        return Stream.of(AuditRecordType.values())
+                .map(r -> r.name())
+                .collect(Collectors.toList());
+    }
+
+    @PostMapping("/auditSearch")
+    public AuditMetricResponse auditSearch(@RequestBody AuditMetricRequest auditMetricRequest){
+
+        AuditRecordType type = AuditRecordType.valueOf(auditMetricRequest.getAuditRecordType());
+        LocalDate fromDateTime = LocalDate.parse(auditMetricRequest.getDateFrom(), dtf);
+        LocalDate toDateTime = LocalDate.parse(auditMetricRequest.getDateTo(), dtf);
+
         List<AuditRecord> allByTypeEqualsAndTimestampAfterAndTimestampBefore
-                = auditRecordRepository.findAllByTypeEqualsAndTimestampAfterAndTimestampBefore(type, notBefore, notAfter);
+                = auditRecordRepository.findAllByTypeEqualsAndTimestampAfterAndTimestampBefore(type,
+                Timestamp.valueOf(fromDateTime.atStartOfDay()), Timestamp.valueOf(toDateTime.atStartOfDay()));
 
         Map<LocalDate, List<AuditRecord>> collect = allByTypeEqualsAndTimestampAfterAndTimestampBefore.stream()
                 .collect(Collectors.groupingBy(a -> {
                     return a.getTimestamp().toLocalDateTime().toLocalDate();
                 }));
+
+        List<LocalDate> allDates = new LinkedList<>();
+        LocalDate ldIterate = fromDateTime;
+        while(ldIterate.isBefore(toDateTime) || ldIterate.equals(toDateTime)){
+            allDates.add(ldIterate);
+            ldIterate = ldIterate.plusDays(1);
+        }
+
+        List<DailyAuditMetric> auditMetricsDaily = allDates.stream()
+                .map(d -> {
+                    List<AuditRecord> records = new ArrayList<>();
+                    if(collect.containsKey(d)){
+                        records = collect.get(d);
+                    }
+
+                    DailyAuditMetric dailyAuditMetric = new DailyAuditMetric();
+                    dailyAuditMetric.setDate(d.format(dtf));
+                    dailyAuditMetric.setRecordsTotal(records.size());
+                    if(auditMetricRequest.getReturnFullAuditRecords()) {
+                        dailyAuditMetric.setAuditRecords(records);
+                    }
+                    return dailyAuditMetric;
+
+                }).collect(Collectors.toList());
+
+        AuditMetricResponse response = new AuditMetricResponse();
+        response.setDateFormat(dtfPattern);
+        response.setAuditMetrics(auditMetricsDaily);
+        return response;
     }
 
     @GetMapping("/totalAccounts")

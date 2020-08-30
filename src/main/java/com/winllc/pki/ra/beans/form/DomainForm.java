@@ -5,6 +5,7 @@ import com.winllc.pki.ra.domain.Domain;
 import javax.validation.constraints.NotEmpty;
 import java.util.regex.Pattern;
 
+import static com.winllc.pki.ra.constants.ValidationRegex.FQDN_VALIDATION_PATTERN;
 import static com.winllc.pki.ra.constants.ValidationRegex.FQDN_VALIDATION_REGEX;
 
 public class DomainForm extends ValidForm<Domain> {
@@ -32,8 +33,7 @@ public class DomainForm extends ValidForm<Domain> {
 
     @Override
     protected void processIsValid() {
-        Pattern fqdnPattern = Pattern.compile(FQDN_VALIDATION_REGEX);
-        if(!fqdnPattern.matcher(base).matches()){
+        if(!FQDN_VALIDATION_PATTERN.matcher(base).matches()){
             getErrors().put("invalidBase", "Invalid base");
         }
     }

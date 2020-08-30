@@ -75,6 +75,8 @@ dependencies {
     compile group: 'org.jboss.resteasy', name: 'resteasy-atom-provider', version: '3.6.2.Final'
     // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
     compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
+    // https://mvnrepository.com/artifact/commons-validator/commons-validator
+    compile group: 'commons-validator', name: 'commons-validator', version: '1.7'
 
 
     // https://mvnrepository.com/artifact/mysql/mysql-connector-java

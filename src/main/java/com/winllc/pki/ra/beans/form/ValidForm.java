@@ -21,7 +21,9 @@ public abstract class ValidForm<T extends AbstractPersistable<Long>> extends Inf
     }
 
     protected ValidForm() {
-        setClazz((Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
+        try {
+            setClazz((Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
+        }catch (ClassCastException e){ }
     }
 
     public boolean isAccountLinkedForm(){

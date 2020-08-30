@@ -10,6 +10,7 @@ import com.winllc.pki.ra.beans.validator.CertAuthorityConnectionInfoValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.ca.*;
 import com.winllc.pki.ra.constants.AuditRecordType;
+import com.winllc.pki.ra.constants.CertificateStatus;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAException;
@@ -292,9 +293,9 @@ public class CertAuthorityConnectionService {
             CertificateDetails details = new CertificateDetails();
             X509Certificate cert = certAuthority.getCertificateBySerial(serial);
             if (cert != null) {
-                String status = certAuthority.getCertificateStatus(serial);
+                CertificateStatus status = certAuthority.getCertificateStatus(serial);
                 details.setCertificateBase64(CertUtil.formatCrtFileContents(cert));
-                details.setStatus(status);
+                details.setStatus(status.name());
                 details.setSerial(serial);
 
                 return details;

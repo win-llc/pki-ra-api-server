@@ -6,6 +6,7 @@ import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.SqlCertSearchConverter;
 import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.util.CertUtil;
+import com.winllc.pki.ra.constants.CertificateStatus;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.domain.IssuedCertificate;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
@@ -89,17 +90,17 @@ public class InternalCertAuthority extends AbstractCertAuthority {
     }
 
     @Override
-    public String getCertificateStatus(String serial) {
+    public CertificateStatus getCertificateStatus(String serial) throws Exception {
         X509Certificate certificateBySerial = getCertificateBySerial(serial);
         if(certificateBySerial != null){
             if(isCertificateRevoked(serial)){
-                return "revoked";
+                return CertificateStatus.REVOKED;
             }else{
-                return "valid";
+                return CertificateStatus.VALID;
             }
         }
 
-        return "unknown";
+        throw new Exception("Could not determine cert status");
     }
 
     @Override

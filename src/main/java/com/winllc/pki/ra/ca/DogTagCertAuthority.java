@@ -11,6 +11,7 @@ import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.acme.common.util.HttpCommandUtil;
+import com.winllc.pki.ra.constants.CertificateStatus;
 import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import org.apache.http.client.methods.HttpGet;
@@ -172,10 +173,31 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
     }
 
     @Override
-    public String getCertificateStatus(String serial) throws Exception {
+    public CertificateStatus getCertificateStatus(String serial) throws Exception {
         CertData certData = getCertDataBySerial(serial);
 
-        return certData.getStatus();
+        CertificateStatus certificateStatus = null;
+        String status = certData.getStatus();
+        switch (status){
+            case "VALID":
+                certificateStatus = CertificateStatus.VALID;
+                break;
+            case "REVOKED":
+                certificateStatus = CertificateStatus.REVOKED;
+                break;
+            case "EXPIRED":
+                certificateStatus = CertificateStatus.EXPIRED;
+                break;
+            case "REVOKED_EXPIRED":
+                certificateStatus = CertificateStatus.REVOKED_EXPIRED;
+                break;
+        }
+
+        if(certificateStatus != null){
+            return certificateStatus;
+        }else{
+            throw new Exception("Certificate Status not recognized: "+status);
+        }
     }
 
     @Override
@@ -224,7 +246,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
             Map<String, String> urlParams = null;
             if(param.isPaginated()) {
                 urlParams = new HashMap<>();
-                Integer start = param.getPage()*param.getPageSize();
+                Integer start = param.getPage() * param.getPageSize();
                 urlParams.put("start", start.toString());
                 urlParams.put("size", ""+param.getPageSize());
             }
@@ -270,8 +292,7 @@ public class DogTagCertAuthority extends AbstractCertAuthority {
             return null;
         };
 
-        CertData certData = processDogtagGetOperation(baseUrl + MessageFormat.format(retrieveCert, serial), getCertFunction);
-        return certData;
+        return processDogtagGetOperation(baseUrl + MessageFormat.format(retrieveCert, serial), getCertFunction);
     }
 
 

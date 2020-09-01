@@ -3,6 +3,7 @@ package com.winllc.pki.ra.service;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.util.Base64;
 import com.nimbusds.jose.util.Base64URL;
 import com.winllc.acme.common.CertIssuanceValidationResponse;
 import com.winllc.acme.common.CertIssuanceValidationRule;
@@ -18,6 +19,7 @@ import com.winllc.pki.ra.repository.DomainRepository;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.crypto.macs.HMac;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -180,7 +182,14 @@ public class ValidationService {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(accountId);
         if(optionalAccount.isPresent()){
             Account account = optionalAccount.get();
-            if(account.getMacKeyBase64().contentEquals(password)){
+
+            Base64 accountMacKeyBase64 = new Base64(account.getMacKeyBase64());
+            byte[] decodedMacKey = accountMacKeyBase64.decode();
+
+            Base64 passwordBase64 = new Base64(password);
+            byte[] decodedPassword = passwordBase64.decode();
+
+            if(Arrays.equals(decodedPassword, decodedMacKey)){
                 response.setValid(true);
             }else{
                 response.setMessage("AccountId and password combo failed");

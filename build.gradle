@@ -32,17 +32,23 @@ configurations {
             if (proj1 != null && proj1.buildFile.exists()) {
                 substitute module('com.winllc.acme.common:acme-common') with project(':acme-common')
             }
+
+            def proj2 = findProject(":acme-common")
+            if (proj2 != null && proj2.buildFile.exists()) {
+                substitute module('com.winllc.pki.plugins.dogtag:dogtag-ca-plugin') with project(':dogtag-ca-plugin')
+            }
         }
     }
 }
 
 dependencies {
     compile group: 'com.winllc.acme.common', name: 'acme-common', version: '1.0-SNAPSHOT'
+    compile group: 'com.winllc.pki.plugins.dogtag', name: 'dogtag-ca-plugin', version: '1.0-SNAPSHOT'
 
-    implementation name: 'pki-ca'
-    implementation name: 'pki-certsrv'
-    implementation name: 'pki-cms'
-    implementation name: 'jss4'
+    //implementation name: 'pki-ca'
+    //implementation name: 'pki-certsrv'
+    //implementation name: 'pki-cms'
+    //implementation name: 'jss4'
 
     implementation('org.springframework.boot:spring-boot-starter-actuator')
     implementation('org.springframework.boot:spring-boot-starter-data-jpa')

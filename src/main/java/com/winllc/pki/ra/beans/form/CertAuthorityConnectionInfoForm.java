@@ -1,9 +1,9 @@
 package com.winllc.pki.ra.beans.form;
 
-import com.winllc.pki.ra.ca.CertAuthority;
-import com.winllc.pki.ra.ca.ConnectionProperty;
-import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
-import com.winllc.pki.ra.domain.CertAuthorityConnectionProperty;
+import com.winllc.acme.common.ca.CertAuthority;
+import com.winllc.acme.common.ca.ConnectionProperty;
+import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
+import com.winllc.acme.common.domain.CertAuthorityConnectionProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 
@@ -13,7 +13,7 @@ import java.util.Set;
 public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConnectionInfo> {
 
     private String name;
-    private String type;
+    private String certAuthorityClassName;
     private String trustChainBase64;
     private String baseUrl;
     private Set<CertAuthorityConnectionProperty> properties;
@@ -34,7 +34,7 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
     public CertAuthorityConnectionInfoForm(CertAuthorityConnectionInfo info, CertAuthority ca) {
         super(info);
         this.name = info.getName();
-        this.type = info.getType().name();
+        this.certAuthorityClassName = info.getCertAuthorityClassName();
         this.properties = info.getProperties();
         this.baseUrl = info.getBaseUrl();
         this.trustChainBase64 = info.getTrustChainBase64();
@@ -44,7 +44,7 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
 
     private void addRequiredPropertyPlaceholders(CertAuthority ca){
         if(properties == null) properties = new HashSet<>();
-        for(ConnectionProperty connectionProperty : ca.getType().getRequiredProperties()){
+        for(ConnectionProperty connectionProperty : ca.getRequiredProperties()){
             String requiredProp = connectionProperty.getName();
             boolean containsProp = this.properties.stream()
                     .anyMatch(p -> p.getName().equals(requiredProp));
@@ -65,12 +65,12 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
         this.name = name;
     }
 
-    public String getType() {
-        return type;
+    public String getCertAuthorityClassName() {
+        return certAuthorityClassName;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setCertAuthorityClassName(String certAuthorityClassName) {
+        this.certAuthorityClassName = certAuthorityClassName;
     }
 
     public String getBaseUrl() {

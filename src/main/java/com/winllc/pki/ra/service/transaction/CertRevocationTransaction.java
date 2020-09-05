@@ -2,7 +2,7 @@ package com.winllc.pki.ra.service.transaction;
 
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
-import com.winllc.pki.ra.ca.CertAuthority;
+import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.AuditRecord;
 import com.winllc.pki.ra.domain.CertificateRequest;

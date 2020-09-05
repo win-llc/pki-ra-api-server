@@ -1,5 +1,7 @@
 package com.winllc.pki.ra.ca;
 
+import com.winllc.acme.common.ca.ConnectionProperty;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

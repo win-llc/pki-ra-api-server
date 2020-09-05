@@ -34,7 +34,7 @@ import java.security.NoSuchAlgorithmException;
         }
 )
 @ComponentScan("com.winllc.pki.ra")
-@EntityScan("com.winllc.pki.ra.domain")
+@EntityScan({"com.winllc.pki.ra.domain", "com.winllc.acme.common.domain"})
 @EnableJpaRepositories(basePackages = "com.winllc.pki.ra.repository")
 @EnableTransactionManagement
 @EnableJpaAuditing

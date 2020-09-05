@@ -7,7 +7,7 @@ import com.winllc.pki.ra.beans.metrics.AuditMetricRequest;
 import com.winllc.pki.ra.beans.metrics.AuditMetricResponse;
 import com.winllc.pki.ra.beans.metrics.ChartMetrics;
 import com.winllc.pki.ra.beans.metrics.DailyAuditMetric;
-import com.winllc.pki.ra.ca.CertAuthority;
+import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.AuditRecord;

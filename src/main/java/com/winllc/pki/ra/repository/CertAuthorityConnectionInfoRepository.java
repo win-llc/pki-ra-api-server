@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.repository;
 
-import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
+import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 

@@ -1,26 +1,25 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.*;
+import com.winllc.acme.common.ca.CertAuthority;
+import com.winllc.acme.common.ca.ConnectionProperty;
+import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
+import com.winllc.acme.common.domain.CertAuthorityConnectionProperty;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
-import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.validator.CertAuthorityConnectionInfoValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.ca.*;
-import com.winllc.pki.ra.constants.AuditRecordType;
-import com.winllc.pki.ra.constants.CertificateStatus;
+import com.winllc.acme.common.contants.CertificateStatus;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.repository.*;
-import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
 import com.winllc.pki.ra.service.transaction.CertRevocationTransaction;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
@@ -30,23 +29,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.PostConstruct;
-import javax.persistence.EntityManagerFactory;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import java.io.IOException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static com.winllc.pki.ra.constants.ServerSettingRequired.ENTITY_DIRECTORY_LDAP_SERVERBASEDN;
 
 @RestController
 @RequestMapping("/ca")
@@ -81,7 +71,7 @@ public class CertAuthorityConnectionService {
         if (validationResponse.isValid()) {
             CertAuthorityConnectionInfo caConnection = new CertAuthorityConnectionInfo();
             caConnection.setName(connectionInfo.getName());
-            caConnection.setType(CertAuthorityConnectionType.valueOf(connectionInfo.getType()));
+            caConnection.setCertAuthorityClassName(connectionInfo.getCertAuthorityClassName());
             caConnection.setBaseUrl(connectionInfo.getBaseUrl());
             caConnection.setAuthKeyAlias(connectionInfo.getAuthKeyAlias());
             caConnection.setTrustChainBase64(connectionInfo.getTrustChainBase64());
@@ -96,7 +86,7 @@ public class CertAuthorityConnectionService {
 
             //Create the required settings for the connection, will be filled in on edit screen
             Set<CertAuthorityConnectionProperty> props = new HashSet<>();
-            for(ConnectionProperty connectionProperty : ca.getType().getRequiredProperties()){
+            for(ConnectionProperty connectionProperty : ca.getRequiredProperties()){
                 CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
                 prop.setName(connectionProperty.getName());
 

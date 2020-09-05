@@ -2,13 +2,11 @@ package com.winllc.pki.ra.beans;
 
 import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertSearchParams;
-import com.winllc.pki.ra.ca.CertAuthority;
-import com.winllc.pki.ra.service.transaction.CertTransaction;
+import com.winllc.acme.common.ca.CertAuthority;
 
 import javax.naming.InvalidNameException;
 import javax.naming.Name;
 import javax.naming.ldap.LdapName;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
 //todo flesh this out, cert interaction should be at object level

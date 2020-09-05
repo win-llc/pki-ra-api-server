@@ -2,3 +2,6 @@ rootProject.name = 'PKI Registration Authority'
 
 include ":acme-common"
 project(":acme-common").projectDir = file("../acme-common")
+
+include ":dogtag-ca-plugin"
+project(":dogtag-ca-plugin").projectDir = file("../win-ra-dogtag-ca-plugin")

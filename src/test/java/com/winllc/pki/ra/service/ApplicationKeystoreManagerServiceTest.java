@@ -1,7 +1,5 @@
 package com.winllc.pki.ra.service;
 
-import com.netscape.cms.servlet.csadmin.Cert;
-import com.winllc.acme.common.SubjectAltName;
 import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.AppKeyStoreEntryForm;

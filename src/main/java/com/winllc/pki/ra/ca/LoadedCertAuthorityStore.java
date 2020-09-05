@@ -1,45 +1,43 @@
 package com.winllc.pki.ra.ca;
 
-import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
+import com.winllc.acme.common.ca.CertAuthority;
+import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.repository.CertAuthorityConnectionInfoRepository;
-import com.winllc.pki.ra.service.external.beans.DirectoryServerEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import javax.persistence.EntityManagerFactory;
 import javax.transaction.Transactional;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.lang.reflect.Constructor;
+import java.security.KeyStore;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 public class LoadedCertAuthorityStore implements InitializingBean {
 
+
     private static final Logger log = LogManager.getLogger(LoadedCertAuthorityStore.class);
 
-    private final Map<String, CertAuthority> loadedCertAuthorities = new ConcurrentHashMap<>();
+    private Map<String, CertAuthority> loadedCertAuthorities = new ConcurrentHashMap<>();
 
     private final CertAuthorityConnectionInfoRepository repository;
     private final ApplicationKeystore applicationKeystore;
-    private final EntityManagerFactory entityManagerFactory;
 
     public LoadedCertAuthorityStore(ApplicationContext applicationContext){
         this.repository = applicationContext.getBean(CertAuthorityConnectionInfoRepository.class);
         this.applicationKeystore = applicationContext.getBean(ApplicationKeystore.class);
-        this.entityManagerFactory = applicationContext.getBean(EntityManagerFactory.class);
     }
 
     public void reload() {
+        loadedCertAuthorities = new ConcurrentHashMap<>();
         for (String connectionInfoName : repository.findAllNames()) {
             loadCertAuthority(connectionInfoName);
         }
@@ -65,7 +63,6 @@ public class LoadedCertAuthorityStore implements InitializingBean {
 
     @Transactional
     public Optional<CertAuthority> buildCertAuthority(String connectionName) {
-        CertAuthority certAuthority = null;
         Optional<CertAuthorityConnectionInfo> infoOptional = repository.findByName(connectionName);
 
         if (infoOptional.isPresent()) {
@@ -73,15 +70,19 @@ public class LoadedCertAuthorityStore implements InitializingBean {
 
             try {
                 Hibernate.initialize(info.getProperties());
-                switch (info.getType()) {
-                    case INTERNAL:
-                        certAuthority = new InternalCertAuthority(info, entityManagerFactory);
-                        break;
-                    case DOGTAG:
-                        certAuthority = new DogTagCertAuthority(info, applicationKeystore);
-                        break;
+
+                String certAuthorityClassName = info.getCertAuthorityClassName();
+                Class<?> clazz = Class.forName(certAuthorityClassName);
+                Constructor<?> ctor = clazz.getConstructor(CertAuthorityConnectionInfo.class, KeyStore.class, String.class);
+                Object object = ctor.newInstance(new Object[] { info, applicationKeystore.getKeyStore(),
+                        applicationKeystore.getKeystorePassword() });
+
+                if(object instanceof CertAuthority){
+                    CertAuthority ca = (CertAuthority) object;
+                    return Optional.of(ca);
+                }else{
+                    log.error("Could not load cert authority, not a CertAuthority" + info.getName());
                 }
-                return Optional.of(certAuthority);
             }catch (Exception e){
                 log.error(e);
             }

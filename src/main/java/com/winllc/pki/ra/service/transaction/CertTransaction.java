@@ -1,7 +1,6 @@
 package com.winllc.pki.ra.service.transaction;
 
-import com.winllc.pki.ra.ca.CertAuthority;
-import org.springframework.context.ApplicationContext;
+import com.winllc.acme.common.ca.CertAuthority;
 
 public abstract class CertTransaction {
 

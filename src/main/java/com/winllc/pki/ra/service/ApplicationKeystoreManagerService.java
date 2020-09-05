@@ -13,8 +13,6 @@ import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.provider.X509CertificateObject;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-import org.mozilla.jss.netscape.security.x509.X509CertImpl;
-import org.mozilla.jss.netscape.security.x509.X509CertInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -57,8 +55,10 @@ public class ApplicationKeystoreManagerService {
             KeyEntryWrapper keyEntry = optionalEntry.get();
             AppKeyStoreEntryForm form = new AppKeyStoreEntryForm(keyEntry);
 
-            X509CertInfo certImpl = new X509CertInfo(((X509Certificate) keyEntry.getCertificate()).getTBSCertificate());
-            form.setCurrentCertDetails(certImpl.toString());
+            //todo add back
+            form.setCurrentCertDetails((keyEntry.getCertificate()).toString());
+            //X509CertInfo certImpl = new X509CertInfo(((X509Certificate) keyEntry.getCertificate()).getTBSCertificate());
+            //form.setCurrentCertDetails(certImpl.toString());
 
             return form;
         }else{

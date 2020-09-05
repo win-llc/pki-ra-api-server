@@ -2,7 +2,7 @@ package com.winllc.pki.ra.repository;
 
 import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
 import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
+import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class CertAuthorityConnectionInfoRepositoryTest {
     void before(){
         CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
         info.setName("test");
-        info.setType(CertAuthorityConnectionType.INTERNAL);
+        //info.setType(CertAuthorityConnectionType.INTERNAL);
 
         repository.save(info);
     }

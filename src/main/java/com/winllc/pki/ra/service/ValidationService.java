@@ -174,8 +174,7 @@ public class ValidationService {
 
     @PostMapping("/account/validateCredentials")
     public RAAccountValidationResponse validateAccountCredentials(@RequestParam("accountId") String accountId,
-                                                                  @RequestParam("password") String password) throws RAObjectNotFoundException {
-
+                                                                  @RequestParam("password") String password) {
         RAAccountValidationResponse response = new RAAccountValidationResponse();
         response.setValid(false);
 
@@ -195,6 +194,7 @@ public class ValidationService {
                 response.setMessage("AccountId and password combo failed");
             }
         }else{
+            log.error("Could not find account: "+accountId);
             response.setMessage("No account found");
         }
         return response;

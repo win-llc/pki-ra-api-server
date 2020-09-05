@@ -7,17 +7,18 @@ import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
-import com.winllc.pki.ra.ca.CertAuthority;
+import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
 import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.CertAuthorityConnectionInfo;
+import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.DomainPolicy;
 import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import com.winllc.pki.ra.mock.MockAbstractCertAuthority;
 import com.winllc.pki.ra.mock.MockCertAuthority;
 import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
@@ -134,8 +135,9 @@ class CertAuthorityConnectionServiceTest {
     @Test
     void createConnectionInfo() throws InvalidFormException {
         CertAuthorityConnectionInfoForm form = new CertAuthorityConnectionInfoForm();
-        form.setName("test1");
-        form.setType(CertAuthorityConnectionType.INTERNAL.toString());
+        form.setName("mockca");
+        form.setCertAuthorityClassName(MockAbstractCertAuthority.class.getCanonicalName());
+        //form.setType(CertAuthorityConnectionType.INTERNAL.toString());
 
         Long connectionInfo = connectionService.createConnectionInfo(form);
         assertTrue(connectionInfo > 0);
@@ -144,7 +146,7 @@ class CertAuthorityConnectionServiceTest {
     @Test
     void updateConnectionInfo() throws InvalidFormException, RAException {
         CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
-        info.setType(CertAuthorityConnectionType.INTERNAL);
+        //info.setType(CertAuthorityConnectionType.INTERNAL);
         info.setName("mockca");
         info = connectionInfoRepository.save(info);
 
@@ -158,7 +160,7 @@ class CertAuthorityConnectionServiceTest {
     @Test
     void getConnectionInfoByName() throws RAObjectNotFoundException {
         CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
-        info.setType(CertAuthorityConnectionType.INTERNAL);
+        //info.setType(CertAuthorityConnectionType.INTERNAL);
         info.setName("mockca");
         info = connectionInfoRepository.save(info);
 
@@ -169,7 +171,7 @@ class CertAuthorityConnectionServiceTest {
     @Test
     void getConnectionInfoById() throws RAObjectNotFoundException {
         CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
-        info.setType(CertAuthorityConnectionType.INTERNAL);
+        //info.setType(CertAuthorityConnectionType.INTERNAL);
         info.setName("mockca");
         info = connectionInfoRepository.save(info);
 
@@ -180,7 +182,7 @@ class CertAuthorityConnectionServiceTest {
     @Test
     void getAllConnectionInfo() {
         CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
-        info.setType(CertAuthorityConnectionType.INTERNAL);
+       //info.setType(CertAuthorityConnectionType.INTERNAL);
         info.setName("mockca");
         info = connectionInfoRepository.save(info);
 
@@ -191,7 +193,7 @@ class CertAuthorityConnectionServiceTest {
     @Test
     void deleteInfo() {
         CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
-        info.setType(CertAuthorityConnectionType.INTERNAL);
+        //info.setType(CertAuthorityConnectionType.INTERNAL);
         info.setName("mockca");
         info = connectionInfoRepository.save(info);
 

@@ -4,21 +4,24 @@ import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.SubjectAltNames;
-import com.winllc.acme.common.ca.ConnectionProperty;
-import com.winllc.acme.common.util.CertUtil;
+import com.winllc.acme.common.ca.AbstractCertAuthority;
 import com.winllc.acme.common.ca.CertAuthority;
-import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
+import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.contants.CertificateStatus;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
+import com.winllc.acme.common.util.CertUtil;
 
 import javax.naming.Name;
 import java.io.IOException;
+import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public class MockCertAuthority implements CertAuthority {
+public class MockAbstractCertAuthority extends AbstractCertAuthority {
 
     public static final String testX509Cert = "-----BEGIN CERTIFICATE-----\n" +
             "MIID1DCCArygAwIBAgIBJTANBgkqhkiG9w0BAQsFADBtMRMwEQYKCZImiZPyLGQB\n" +
@@ -68,6 +71,10 @@ public class MockCertAuthority implements CertAuthority {
             "1iqwYSpQUEyzUMUUSVtb3aAGmxuPKN4p2hIpB+5KdU08vCt1W8kga+6szPb7umUg\n" +
             "w4cVuU8Kktg9dX8yDu4nr5KIh7s/Iog9\n" +
             "-----END CERTIFICATE-----";
+
+    public MockAbstractCertAuthority(CertAuthorityConnectionInfo info, KeyStore applicationKeystore, String keystorePassword) {
+        super(info, applicationKeystore, keystorePassword);
+    }
 
     @Override
     public List<ConnectionProperty> getRequiredProperties() {

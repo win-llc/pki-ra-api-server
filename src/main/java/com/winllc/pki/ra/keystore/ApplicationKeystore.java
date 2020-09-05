@@ -21,10 +21,13 @@ public class ApplicationKeystore {
 
     private static final Logger log = LogManager.getLogger(ApplicationKeystore.class);
 
-    @Autowired
-    private ApplicationKeystoreProperties configuration;
+    private final ApplicationKeystoreProperties configuration;
 
     private KeyStore ks;
+
+    public ApplicationKeystore(ApplicationKeystoreProperties configuration) {
+        this.configuration = configuration;
+    }
 
     @PostConstruct
     private void load() throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException {

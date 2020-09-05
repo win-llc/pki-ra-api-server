@@ -1,6 +1,5 @@
 package com.winllc.pki.ra.service.external.beans;
 
-import com.netscape.cms.servlet.csadmin.Cert;
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.service.AccountRequestService;
 import org.apache.logging.log4j.LogManager;

@@ -8,7 +8,6 @@ import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.acme.common.ca.CertAuthority;
-import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
 import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
@@ -136,7 +135,7 @@ class CertAuthorityConnectionServiceTest {
     void createConnectionInfo() throws InvalidFormException {
         CertAuthorityConnectionInfoForm form = new CertAuthorityConnectionInfoForm();
         form.setName("mockca");
-        form.setCertAuthorityClassName(MockAbstractCertAuthority.class.getCanonicalName());
+        form.setType(MockAbstractCertAuthority.class.getCanonicalName());
         //form.setType(CertAuthorityConnectionType.INTERNAL.toString());
 
         Long connectionInfo = connectionService.createConnectionInfo(form);
@@ -205,7 +204,7 @@ class CertAuthorityConnectionServiceTest {
     @Test
     void getTypes() {
         List<String> types = connectionService.getTypes();
-        assertEquals(CertAuthorityConnectionType.values().length, types.size());
+        assertTrue(types.size() > 0);
     }
 
     @Test

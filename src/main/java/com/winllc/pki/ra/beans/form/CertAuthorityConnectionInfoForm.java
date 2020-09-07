@@ -7,13 +7,15 @@ import com.winllc.acme.common.domain.CertAuthorityConnectionProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 
+import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConnectionInfo> {
 
     private String name;
-    private String certAuthorityClassName;
+    private String type;
     private String trustChainBase64;
     private String baseUrl;
     private Set<CertAuthorityConnectionProperty> properties;
@@ -34,27 +36,41 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
     public CertAuthorityConnectionInfoForm(CertAuthorityConnectionInfo info, CertAuthority ca) {
         super(info);
         this.name = info.getName();
-        this.certAuthorityClassName = info.getCertAuthorityClassName();
+        this.type = info.getCertAuthorityClassName();
         this.properties = info.getProperties();
         this.baseUrl = info.getBaseUrl();
         this.trustChainBase64 = info.getTrustChainBase64();
         this.authKeyAlias = info.getAuthKeyAlias();
-        addRequiredPropertyPlaceholders(ca);
+        try {
+            addRequiredPropertyPlaceholders(ca);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private void addRequiredPropertyPlaceholders(CertAuthority ca){
+    private void addRequiredPropertyPlaceholders(CertAuthority ca) throws Exception{
         if(properties == null) properties = new HashSet<>();
-        for(ConnectionProperty connectionProperty : ca.getRequiredProperties()){
-            String requiredProp = connectionProperty.getName();
-            boolean containsProp = this.properties.stream()
-                    .anyMatch(p -> p.getName().equals(requiredProp));
-            if(!containsProp){
-                CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
-                prop.setName(requiredProp);
-                prop.setValue("");
-                this.properties.add(prop);
+
+        //get required properties for the implemented CA type
+        Method m = Class.forName(ca.getClass().getName()).getMethod("getRequiredProperties");
+        Object result = m.invoke(null);
+
+        if(result instanceof List){
+            List<ConnectionProperty> properties = (List<ConnectionProperty>) result;
+            for(ConnectionProperty connectionProperty : properties){
+                String requiredProp = connectionProperty.getName();
+                boolean containsProp = this.properties.stream()
+                        .anyMatch(p -> p.getName().equals(requiredProp));
+                if(!containsProp){
+                    CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
+                    prop.setName(requiredProp);
+                    prop.setValue("");
+                    this.properties.add(prop);
+                }
             }
         }
+
+
     }
 
     public String getName() {
@@ -65,12 +81,12 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
         this.name = name;
     }
 
-    public String getCertAuthorityClassName() {
-        return certAuthorityClassName;
+    public String getType() {
+        return type;
     }
 
-    public void setCertAuthorityClassName(String certAuthorityClassName) {
-        this.certAuthorityClassName = certAuthorityClassName;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getBaseUrl() {

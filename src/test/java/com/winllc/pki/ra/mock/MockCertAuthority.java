@@ -7,7 +7,6 @@ import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.acme.common.ca.CertAuthority;
-import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
 import com.winllc.acme.common.contants.CertificateStatus;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 
@@ -69,14 +68,19 @@ public class MockCertAuthority implements CertAuthority {
             "w4cVuU8Kktg9dX8yDu4nr5KIh7s/Iog9\n" +
             "-----END CERTIFICATE-----";
 
-    @Override
-    public List<ConnectionProperty> getRequiredProperties() {
+
+    public static List<ConnectionProperty> getRequiredProperties() {
         return new ArrayList<>();
     }
 
     @Override
     public String getName() {
         return "mockca";
+    }
+
+    @Override
+    public String getType() {
+        return "MOCK";
     }
 
     @Override

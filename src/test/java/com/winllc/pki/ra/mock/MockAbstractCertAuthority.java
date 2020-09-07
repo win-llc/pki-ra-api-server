@@ -76,14 +76,19 @@ public class MockAbstractCertAuthority extends AbstractCertAuthority {
         super(info, applicationKeystore, keystorePassword);
     }
 
-    @Override
-    public List<ConnectionProperty> getRequiredProperties() {
+
+    public static List<ConnectionProperty> getRequiredProperties() {
         return new ArrayList<>();
     }
 
     @Override
     public String getName() {
         return "mockca";
+    }
+
+    @Override
+    public String getType() {
+        return "MOCK";
     }
 
     @Override

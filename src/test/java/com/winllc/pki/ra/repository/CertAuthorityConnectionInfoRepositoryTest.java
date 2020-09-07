@@ -1,6 +1,5 @@
 package com.winllc.pki.ra.repository;
 
-import com.winllc.pki.ra.ca.CertAuthorityConnectionType;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import org.junit.jupiter.api.AfterEach;

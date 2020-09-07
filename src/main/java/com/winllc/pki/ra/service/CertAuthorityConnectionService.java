@@ -8,6 +8,7 @@ import com.winllc.acme.common.domain.CertAuthorityConnectionProperty;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
+import com.winllc.pki.plugins.dogtag.DogTagCertAuthority;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.pki.ra.beans.validator.CertAuthorityConnectionInfoValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
@@ -20,6 +21,7 @@ import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
 import com.winllc.pki.ra.service.transaction.CertRevocationTransaction;
+import io.github.classgraph.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
@@ -31,6 +33,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
@@ -45,22 +49,24 @@ public class CertAuthorityConnectionService {
 
     private static final Logger log = LogManager.getLogger(CertAuthorityConnectionService.class);
 
-    @Autowired
-    private CertAuthorityConnectionInfoRepository repository;
-    @Autowired
-    private CertAuthorityConnectionPropertyRepository propertyRepository;
-    @Autowired
-    private CertAuthorityConnectionInfoValidator validator;
-    @Autowired
-    private AuditRecordRepository auditRecordRepository;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private CertificateRequestRepository certificateRequestRepository;
-    @Autowired
-    private ApplicationContext context;
-    @Autowired
-    private LoadedCertAuthorityStore certAuthorityStore;
+    private final CertAuthorityConnectionInfoRepository repository;
+    private final CertAuthorityConnectionPropertyRepository propertyRepository;
+    private final CertAuthorityConnectionInfoValidator validator;
+    private final AccountRepository accountRepository;
+    private final ApplicationContext context;
+    private final LoadedCertAuthorityStore certAuthorityStore;
+
+    public CertAuthorityConnectionService(CertAuthorityConnectionInfoRepository repository,
+                                          CertAuthorityConnectionPropertyRepository propertyRepository,
+                                          CertAuthorityConnectionInfoValidator validator, AccountRepository accountRepository,
+                                          ApplicationContext context, LoadedCertAuthorityStore certAuthorityStore) {
+        this.repository = repository;
+        this.propertyRepository = propertyRepository;
+        this.validator = validator;
+        this.accountRepository = accountRepository;
+        this.context = context;
+        this.certAuthorityStore = certAuthorityStore;
+    }
 
     @PostMapping("/api/info/create")
     @ResponseStatus(HttpStatus.CREATED)
@@ -71,7 +77,7 @@ public class CertAuthorityConnectionService {
         if (validationResponse.isValid()) {
             CertAuthorityConnectionInfo caConnection = new CertAuthorityConnectionInfo();
             caConnection.setName(connectionInfo.getName());
-            caConnection.setCertAuthorityClassName(connectionInfo.getCertAuthorityClassName());
+            caConnection.setCertAuthorityClassName(connectionInfo.getType());
             caConnection.setBaseUrl(connectionInfo.getBaseUrl());
             caConnection.setAuthKeyAlias(connectionInfo.getAuthKeyAlias());
             caConnection.setTrustChainBase64(connectionInfo.getTrustChainBase64());
@@ -86,7 +92,7 @@ public class CertAuthorityConnectionService {
 
             //Create the required settings for the connection, will be filled in on edit screen
             Set<CertAuthorityConnectionProperty> props = new HashSet<>();
-            for(ConnectionProperty connectionProperty : ca.getRequiredProperties()){
+            for(ConnectionProperty connectionProperty : CertAuthority.getRequiredProperties()){
                 CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
                 prop.setName(connectionProperty.getName());
 
@@ -198,15 +204,54 @@ public class CertAuthorityConnectionService {
     @GetMapping("/api/info/getTypes")
     @ResponseStatus(HttpStatus.OK)
     public List<String> getTypes() {
+
+
+        return getCaOptions();
+/*
         List<String> certAuthorityTypes = Stream.of(CertAuthorityConnectionType.values())
                 .map(v -> v.name())
                 .collect(Collectors.toList());
 
         return certAuthorityTypes;
+
+ */
+    }
+
+    private List<String> getCaOptions(){
+        String pkg = "com.winllc.pki.plugins";
+        try (ScanResult scanResult = new ClassGraph().enableAllInfo().acceptPackages(pkg)
+                .scan()) {
+            ClassInfoList widgetClasses = scanResult
+                    .getClassesImplementing("com.winllc.acme.common.ca.CertAuthority");
+
+            List<ClassInfo> classInfoList = widgetClasses.stream()
+                    .filter(ci -> !ci.isAbstract())
+                    .collect(Collectors.toList());
+            List<String> caClassNames = classInfoList.stream()
+                    .map(ci -> ci.getName())
+                    .collect(Collectors.toList());
+            // ...
+            return caClassNames;
+        }
     }
 
     @GetMapping("/api/info/getRequiredPropertiesForType/{connectionType}")
-    public List<ConnectionProperty> getRequiredPropertiesForType(@PathVariable String connectionType) throws RAObjectNotFoundException {
+    public List<ConnectionProperty> getRequiredPropertiesForType(@PathVariable String connectionType)
+            throws RAObjectNotFoundException, InvocationTargetException, IllegalAccessException,
+            ClassNotFoundException, NoSuchMethodException {
+
+        //todo clean this up
+        Method m = Class.forName(connectionType).getMethod("getRequiredProperties");
+        Object result = m.invoke(null);
+
+        if(result instanceof List){
+            log.info("Found a list");
+            return (List<ConnectionProperty>) result;
+        }
+
+        return new ArrayList<>();
+
+        /*
         Optional<CertAuthorityConnectionType> typeOptional = Stream.of(CertAuthorityConnectionType.values())
                 .filter(v -> v.name().equalsIgnoreCase(connectionType))
                 .findFirst();
@@ -217,7 +262,10 @@ public class CertAuthorityConnectionService {
         }else{
             throw new RAObjectNotFoundException(CertAuthorityConnectionType.class, connectionType);
         }
+
+         */
     }
+
 
     @PostMapping("/issueCertificate")
     @ResponseStatus(HttpStatus.OK)

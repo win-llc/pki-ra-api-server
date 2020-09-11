@@ -1,12 +1,15 @@
 package com.winllc.pki.ra.service.transaction;
 
 import com.winllc.acme.common.ca.CertAuthority;
+import org.springframework.context.ApplicationContext;
 
 public abstract class CertTransaction {
 
-    protected CertAuthority certAuthority;
+    protected final CertAuthority certAuthority;
+    protected final ApplicationContext context;
 
-    protected CertTransaction(CertAuthority certAuthority){
+    protected CertTransaction(CertAuthority certAuthority, ApplicationContext context){
         this.certAuthority = certAuthority;
+        this.context = context;
     }
 }

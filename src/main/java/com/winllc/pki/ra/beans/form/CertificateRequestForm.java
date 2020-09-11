@@ -4,14 +4,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.winllc.acme.common.SubjectAltName;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.domain.CertificateRequest;
+import com.winllc.pki.ra.util.FormValidationUtil;
 import org.springframework.util.CollectionUtils;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
-import static com.winllc.pki.ra.constants.ValidationRegex.FQDN_VALIDATION_REGEX;
 
 public class CertificateRequestForm extends ValidForm<CertificateRequest> {
 
@@ -75,10 +74,9 @@ public class CertificateRequestForm extends ValidForm<CertificateRequest> {
 
         //Validate fqdns
         if(!CollectionUtils.isEmpty(requestedDnsNames)){
-            Pattern fqdnPattern = Pattern.compile(FQDN_VALIDATION_REGEX);
             List<String> errorFqdns = new ArrayList<>();
             for(SubjectAltName san : requestedDnsNames){
-                if(!fqdnPattern.matcher(san.getValue()).matches()){
+                if(!FormValidationUtil.isValidFqdn(san.getValue())){
                     errorFqdns.add(san.getValue());
                 }
             }

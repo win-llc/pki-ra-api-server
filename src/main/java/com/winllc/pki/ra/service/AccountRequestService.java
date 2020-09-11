@@ -23,8 +23,11 @@ public class AccountRequestService {
 
     private static final Logger log = LogManager.getLogger(AccountRequestService.class);
 
-    @Autowired
-    private AccountRequestRepository accountRequestRepository;
+    private final AccountRequestRepository accountRequestRepository;
+
+    public AccountRequestService(AccountRequestRepository accountRequestRepository) {
+        this.accountRequestRepository = accountRequestRepository;
+    }
 
 
     @GetMapping("/all")

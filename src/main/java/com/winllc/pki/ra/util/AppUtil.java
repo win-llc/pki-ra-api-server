@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.util;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -23,10 +24,10 @@ public class AppUtil {
         new Random().nextBytes(array);
 
         String randomString
-                = new String(array, Charset.forName("UTF-8"));
+                = new String(array, StandardCharsets.UTF_8);
 
         // Create a StringBuffer to store the result
-        StringBuffer r = new StringBuffer();
+        StringBuilder r = new StringBuilder();
 
         // Append first 20 alphanumeric characters
         // from the generated random String into the result
@@ -48,17 +49,4 @@ public class AppUtil {
         return r.toString();
     }
 
-    private static String generateRandomString(int length){
-        try {
-            Random random = ThreadLocalRandom.current();
-            byte[] r = new byte[length]; //Means 2048 bit
-            random.nextBytes(r);
-            String s = new String(r);
-            return s;
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
-        return "";
-    }
 }

@@ -1,9 +1,5 @@
 package com.winllc.pki.ra.config;
 
-import com.winllc.pki.ra.util.CustomJacksonProvider;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.jboss.resteasy.client.jaxrs.ResteasyClient;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -18,14 +14,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import javax.annotation.PostConstruct;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 
 @SpringBootApplication(
         exclude = {
@@ -73,13 +64,6 @@ public class AppConfig {
     @DependsOn(value = "keycloakProperties")
     public Keycloak keycloak() {
 
-        ResteasyClient client = new ResteasyClientBuilder()
-                .connectionPoolSize(10)
-                .hostnameVerifier(NoopHostnameVerifier.INSTANCE)
-                .register(new CustomJacksonProvider())
-                .build();
-
-
         KeycloakBuilder keycloak = KeycloakBuilder.builder() //
                 .serverUrl(keycloakConfiguration.getServerBaseUrl()) //
                 .realm(keycloakConfiguration.getRealm()) //
@@ -89,6 +73,17 @@ public class AppConfig {
                 .username(keycloakConfiguration.getClientUsername()) //
                 .password(keycloakConfiguration.getClientPassword());
         return keycloak.build();
+    }
+
+    @Bean("taskExecutor")
+    public ThreadPoolTaskExecutor taskExecutor(){
+
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(50);
+        executor.initialize();
+
+        return executor;
     }
 
 }

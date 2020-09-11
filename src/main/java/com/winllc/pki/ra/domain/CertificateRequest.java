@@ -25,6 +25,7 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
     private String status;
     @Column(length = 2000)
     private String issuedCertificate;
+    private String issuedCertificateSerial;
     @Column(length = 1000)
     private String publicKeyBase64;
     private String requestedBy;
@@ -63,9 +64,9 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
 
     @JsonIgnore
     public void addIssuedCertificate(X509Certificate certificate) throws CertificateEncodingException {
-        String pemCert = CertUtil.formatCrtFileContents(certificate);
-        this.issuedCertificate = pemCert;
+        this.issuedCertificate = CertUtil.formatCrtFileContents(certificate);
         addPublicKey(certificate.getPublicKey());
+        setIssuedCertificateSerial(certificate.getSerialNumber().toString());
     }
 
     public String getCsr() {
@@ -114,6 +115,14 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
 
     public void setIssuedCertificate(String issuedCertificate) {
         this.issuedCertificate = issuedCertificate;
+    }
+
+    public String getIssuedCertificateSerial() {
+        return issuedCertificateSerial;
+    }
+
+    public void setIssuedCertificateSerial(String issuedCertificateSerial) {
+        this.issuedCertificateSerial = issuedCertificateSerial;
     }
 
     public String getRequestedBy() {

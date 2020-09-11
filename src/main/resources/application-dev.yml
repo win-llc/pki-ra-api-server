@@ -75,9 +75,9 @@ external-services:
     enabled-connection-names: identity-keycloak
 
 policy-server:
-  ldap-url: ldap://directory.winllc-dev.com:389
+  ldap-url: ldap://192.168.1.45:2389
   ldap-username: cn=Directory Manager
-  ldap-password: P@ssW0rd
+  ldap-password: secretsecret
   ldap-base-dn: dc=winllc-dev,dc=com
 
 web-ui:

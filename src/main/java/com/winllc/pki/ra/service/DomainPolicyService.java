@@ -157,16 +157,4 @@ public class DomainPolicyService {
         }
     }
 
-    //todo
-    private DomainPolicyForm buildForm(DomainPolicy domainPolicy){
-        Domain domain = domainPolicy.getTargetDomain();
-        DomainPolicyForm form = new DomainPolicyForm(domainPolicy);
-        if(!CollectionUtils.isEmpty(domain.getSubDomains())){
-            for(Domain subDomain : domain.getSubDomains()){
-                //DomainPolicyForm temp = buildForm(subDomain);
-                //form.getSubDomainForms().add(temp);
-            }
-        }
-        return form;
-    }
 }

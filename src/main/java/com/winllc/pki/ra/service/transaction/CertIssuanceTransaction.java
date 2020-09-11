@@ -5,10 +5,7 @@ import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.pki.ra.constants.AuditRecordType;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AuditRecord;
-import com.winllc.pki.ra.domain.CertificateRequest;
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AuditRecordRepository;
@@ -18,6 +15,7 @@ import com.winllc.pki.ra.service.CertAuthorityConnectionService;
 import com.winllc.pki.ra.service.ServerEntryService;
 import com.winllc.pki.ra.service.ServerSettingsService;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
+import com.winllc.pki.ra.util.FormValidationUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,7 +42,7 @@ public class CertIssuanceTransaction extends CertTransaction {
     private final AuditRecordRepository auditRecordRepository;
 
     public CertIssuanceTransaction(CertAuthority certAuthority, ApplicationContext context) {
-        super(certAuthority);
+        super(certAuthority, context);
         this.serverSettingsService = context.getBean(ServerSettingsService.class);
         this.serverEntryService = context.getBean(ServerEntryService.class);
         this.serverEntryRepository = context.getBean(ServerEntryRepository.class);
@@ -56,7 +54,6 @@ public class CertIssuanceTransaction extends CertTransaction {
     /**
      * Process a certificate request sent to the RA
      * @param certificateRequest
-     * @param account
      * @return
      * @throws Exception
      */
@@ -70,22 +67,32 @@ public class CertIssuanceTransaction extends CertTransaction {
         //todo validation checks, probably before this, notify POCs on failure
         SubjectAltNames subjectAltNames = new SubjectAltNames();
         for (String dnsName : certificateRequest.getDnsNameList()) {
-            subjectAltNames.addValue(SubjectAltNames.SubjAltNameType.DNS, dnsName);
+            if(FormValidationUtil.isValidFqdn(dnsName)) {
+                subjectAltNames.addValue(SubjectAltNames.SubjAltNameType.DNS, dnsName);
+            }else{
+                log.error("Will not add invalid fqdn: "+dnsName);
+            }
         }
 
         String buildDn = buildDn(certificateRequest);
 
-        X509Certificate cert = certAuthority.issueCertificate(certificateRequest.getCsr(), buildDn, subjectAltNames);
-        if (cert != null) {
-            if(account != null) {
-                processIssuedCertificate(cert, certificateRequest, account);
-            }else{
-                log.info("Anonymous cert issued: "+cert.getSubjectDN());
+        SystemActionRunner runner = SystemActionRunner.build(this.context);
+
+        ThrowingSupplier<X509Certificate, Exception> action = () -> {
+            X509Certificate cert = certAuthority.issueCertificate(certificateRequest.getCsr(), buildDn, subjectAltNames);
+            if (cert != null) {
+                if(account != null) {
+                    processIssuedCertificate(cert, certificateRequest, account);
+                }else{
+                    log.info("Anonymous cert issued: "+cert.getSubjectDN());
+                }
+                return cert;
+            } else {
+                throw new RAException("Could not issue certificate");
             }
-            return cert;
-        } else {
-            throw new RAException("Could not issue certificate");
-        }
+        };
+
+        return runner.execute(action);
     }
 
     private String buildDn(RACertificateIssueRequest certificateRequest){
@@ -114,7 +121,8 @@ public class CertIssuanceTransaction extends CertTransaction {
      * @throws CertificateEncodingException
      * @throws RAObjectNotFoundException
      */
-    private void processIssuedCertificate(X509Certificate certificate, RACertificateIssueRequest raCertificateIssueRequest, Account account)
+    private void processIssuedCertificate(X509Certificate certificate, RACertificateIssueRequest raCertificateIssueRequest,
+                                          Account account)
             throws CertificateEncodingException, RAObjectNotFoundException {
 
         ServerEntry serverEntry;
@@ -171,11 +179,9 @@ public class CertIssuanceTransaction extends CertTransaction {
             log.error("Could not process", e);
         }
 
-        AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED);
-        record.setAccountKid(raCertificateIssueRequest.getAccountKid());
-        record.setSource(raCertificateIssueRequest.getSource());
-        record.setObjectClass(serverEntry.getClass().getCanonicalName());
-        record.setObjectUuid(serverEntry.getUuid().toString());
+        AuditRecord record = AuditRecord.buildNew(AuditRecordType.CERTIFICATE_ISSUED, serverEntry)
+                .addAccountKid(raCertificateIssueRequest.getAccountKid())
+                .addSource(raCertificateIssueRequest.getSource());
         auditRecordRepository.save(record);
     }
 }

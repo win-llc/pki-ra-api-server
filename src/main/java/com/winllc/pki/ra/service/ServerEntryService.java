@@ -42,19 +42,24 @@ public class ServerEntryService {
 
     private static final Logger log = LogManager.getLogger(ServerEntryService.class);
 
-    @Autowired
-    private ServerEntryRepository serverEntryRepository;
-    @Autowired
-    private AccountRepository accountRepository;
+    private final ServerEntryRepository serverEntryRepository;
+    private final AccountRepository accountRepository;
     //todo replace with OIDCProviderService
-    @Autowired
-    private KeycloakOIDCProviderConnection oidcProviderConnection;
-    @Autowired
-    private PocEntryRepository pocEntryRepository;
-    @Autowired
-    private EntityDirectoryService entityDirectoryService;
-    @Autowired
-    private AuditRecordService auditRecordService;
+    private final KeycloakOIDCProviderConnection oidcProviderConnection;
+    private final PocEntryRepository pocEntryRepository;
+    private final EntityDirectoryService entityDirectoryService;
+    private final AuditRecordService auditRecordService;
+
+    public ServerEntryService(ServerEntryRepository serverEntryRepository, AccountRepository accountRepository,
+                              KeycloakOIDCProviderConnection oidcProviderConnection, PocEntryRepository pocEntryRepository,
+                              EntityDirectoryService entityDirectoryService, AuditRecordService auditRecordService) {
+        this.serverEntryRepository = serverEntryRepository;
+        this.accountRepository = accountRepository;
+        this.oidcProviderConnection = oidcProviderConnection;
+        this.pocEntryRepository = pocEntryRepository;
+        this.entityDirectoryService = entityDirectoryService;
+        this.auditRecordService = auditRecordService;
+    }
 
 
     @GetMapping("/variableFields")

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @Transactional
@@ -15,4 +16,5 @@ public interface CertificateRequestRepository extends BaseRepository<Certificate
     List<CertificateRequest> findAllByRequestedByEquals(String user);
     List<CertificateRequest> findAllByPublicKeyBase64Equals(String publicKey);
     List<CertificateRequest> findAllByServerEntry(ServerEntry serverEntry);
+    Optional<CertificateRequest> findDistinctByIssuedCertificateSerialAndCertAuthorityName(String serial, String caName);
 }

@@ -57,6 +57,7 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-oauth2-resource-server')
     implementation('org.springframework.boot:spring-boot-starter-hateoas')
     implementation('org.springframework.boot:spring-boot-configuration-processor')
+    implementation('org.springframework.boot:spring-boot-starter-mail')
 
     // https://mvnrepository.com/artifact/org.springframework.ldap/spring-ldap-core
     compile group: 'org.springframework.ldap', name: 'spring-ldap-core', version: '2.3.3.RELEASE'

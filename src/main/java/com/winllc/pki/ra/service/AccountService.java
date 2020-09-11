@@ -38,16 +38,21 @@ public class AccountService {
 
     static String macKey = "2798044239550a105ef8ba7f187c3c0b657dda5a1aa9500dd0956d943bd4e94501961bf84ecc3578c90aa09b5578b5d313a744e48fe7ecf60d20f0ae6d3ebc5e";
 
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private PocEntryRepository pocEntryRepository;
-    @Autowired
-    private AuditRecordService auditRecordService;
-    @Autowired
-    private AccountRestrictionRepository accountRestrictionRepository;
-    @Autowired
-    private AcmeServerManagementService acmeServerManagementService;
+    private final AccountRepository accountRepository;
+    private final PocEntryRepository pocEntryRepository;
+    private final AuditRecordService auditRecordService;
+    private final AccountRestrictionRepository accountRestrictionRepository;
+    private final AcmeServerManagementService acmeServerManagementService;
+
+    public AccountService(AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
+                          AuditRecordService auditRecordService, AccountRestrictionRepository accountRestrictionRepository,
+                          AcmeServerManagementService acmeServerManagementService) {
+        this.accountRepository = accountRepository;
+        this.pocEntryRepository = pocEntryRepository;
+        this.auditRecordService = auditRecordService;
+        this.accountRestrictionRepository = accountRestrictionRepository;
+        this.acmeServerManagementService = acmeServerManagementService;
+    }
 
 
     @Transactional

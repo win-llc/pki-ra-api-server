@@ -70,7 +70,9 @@ public class MockCertAuthority implements CertAuthority {
 
 
     public static List<ConnectionProperty> getRequiredProperties() {
-        return new ArrayList<>();
+        ConnectionProperty connectionProperty = ConnectionProperty.build();
+        connectionProperty.setName("TEST");
+        return Collections.singletonList(connectionProperty);
     }
 
     @Override

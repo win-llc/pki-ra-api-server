@@ -24,12 +24,15 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/roles")
 public class RolePermissionsService {
 
-    @Autowired
-    private PermissionProperties permissionProperties;
-    @Autowired
-    private RolePermissionRepository rolePermissionRepository;
-    @Autowired
-    private KeycloakOIDCProviderConnection oidcProviderConnection;
+    private final PermissionProperties permissionProperties;
+    private final RolePermissionRepository rolePermissionRepository;
+    private final KeycloakOIDCProviderConnection oidcProviderConnection;
+
+    public RolePermissionsService(PermissionProperties permissionProperties, RolePermissionRepository rolePermissionRepository, KeycloakOIDCProviderConnection oidcProviderConnection) {
+        this.permissionProperties = permissionProperties;
+        this.rolePermissionRepository = rolePermissionRepository;
+        this.oidcProviderConnection = oidcProviderConnection;
+    }
 
     @GetMapping("/validRoles")
     @ResponseStatus(HttpStatus.OK)
@@ -88,7 +91,6 @@ public class RolePermissionsService {
                     rolePermissionRepository.save(rolePermission);
                 }
             }
-
         }
 
         return rolePermissionRepository.findAll();

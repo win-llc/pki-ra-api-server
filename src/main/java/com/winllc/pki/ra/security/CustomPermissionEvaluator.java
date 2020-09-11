@@ -18,16 +18,21 @@ import java.util.stream.Collectors;
 @Component
 public class CustomPermissionEvaluator implements PermissionEvaluator {
 
-    @Autowired
-    private AccountRestrictionRepository accountRestrictionRepository;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private CertificateRequestRepository certificateRequestRepository;
-    @Autowired
-    private PocEntryRepository pocEntryRepository;
-    @Autowired
-    private ServerEntryRepository serverEntryRepository;
+    private final AccountRestrictionRepository accountRestrictionRepository;
+    private final AccountRepository accountRepository;
+    private final CertificateRequestRepository certificateRequestRepository;
+    private final PocEntryRepository pocEntryRepository;
+    private final ServerEntryRepository serverEntryRepository;
+
+    public CustomPermissionEvaluator(AccountRestrictionRepository accountRestrictionRepository,
+                                     AccountRepository accountRepository, CertificateRequestRepository certificateRequestRepository,
+                                     PocEntryRepository pocEntryRepository, ServerEntryRepository serverEntryRepository) {
+        this.accountRestrictionRepository = accountRestrictionRepository;
+        this.accountRepository = accountRepository;
+        this.certificateRequestRepository = certificateRequestRepository;
+        this.pocEntryRepository = pocEntryRepository;
+        this.serverEntryRepository = serverEntryRepository;
+    }
 
     @Override
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {

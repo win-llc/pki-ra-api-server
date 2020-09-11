@@ -41,16 +41,24 @@ public class CertificateRequestService {
 
     private static final Logger log = LogManager.getLogger(CertificateRequestService.class);
 
-    @Autowired
-    private CertificateRequestRepository requestRepository;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private LoadedCertAuthorityStore certAuthorityStore;
-    @Autowired
-    private CertRequestFormValidator formValidator;
-    @Autowired
-    private ApplicationContext context;
+    private final CertificateRequestRepository requestRepository;
+    private final AccountRepository accountRepository;
+    private final LoadedCertAuthorityStore certAuthorityStore;
+    private final CertRequestFormValidator formValidator;
+    private final ApplicationContext context;
+
+    public CertificateRequestService(CertificateRequestRepository requestRepository, AccountRepository accountRepository, LoadedCertAuthorityStore certAuthorityStore, CertRequestFormValidator formValidator, ApplicationContext context) {
+        this.requestRepository = requestRepository;
+        this.accountRepository = accountRepository;
+        this.certAuthorityStore = certAuthorityStore;
+        this.formValidator = formValidator;
+        this.context = context;
+    }
+
+    public Optional<CertificateRequest> findCertificateRequestWithCertificate(X509Certificate certificate, String caName){
+        return requestRepository
+                .findDistinctByIssuedCertificateSerialAndCertAuthorityName(certificate.getSerialNumber().toString(), caName);
+    }
 
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)

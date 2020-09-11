@@ -31,10 +31,13 @@ public class MetricsService {
     private static final String dtfPattern = "dd/MM/yyyy";
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern(dtfPattern);
 
-    @Autowired
-    private LoadedCertAuthorityStore certAuthorityStore;
-    @Autowired
-    private AuditRecordRepository auditRecordRepository;
+    private final LoadedCertAuthorityStore certAuthorityStore;
+    private final AuditRecordRepository auditRecordRepository;
+
+    public MetricsService(LoadedCertAuthorityStore certAuthorityStore, AuditRecordRepository auditRecordRepository) {
+        this.certAuthorityStore = certAuthorityStore;
+        this.auditRecordRepository = auditRecordRepository;
+    }
 
     @GetMapping("/auditRecordTypes")
     public List<String> auditRecordTypes(){

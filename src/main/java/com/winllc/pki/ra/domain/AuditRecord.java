@@ -39,6 +39,16 @@ public class AuditRecord extends AbstractPersistable<Long> {
         return auditRecord;
     }
 
+    public AuditRecord addAccountKid(String accountKid){
+        this.setAccountKid(accountKid);
+        return this;
+    }
+
+    public AuditRecord addSource(String source){
+        this.setSource(source);
+        return this;
+    }
+
     public AuditRecordType getType() {
         return type;
     }

@@ -1,12 +1,11 @@
 package com.winllc.pki.ra.beans.form;
 
 import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.pki.ra.util.FormValidationUtil;
 import org.springframework.util.CollectionUtils;
 
 import javax.validation.constraints.NotEmpty;
 import java.util.List;
-
-import static com.winllc.pki.ra.constants.ValidationRegex.FQDN_VALIDATION_PATTERN;
 
 public class ServerEntryForm extends ValidForm<ServerEntry> {
 
@@ -20,13 +19,14 @@ public class ServerEntryForm extends ValidForm<ServerEntry> {
 
     @Override
     protected void processIsValid() {
-        if(!FQDN_VALIDATION_PATTERN.matcher(fqdn).matches()){
+
+        if(!FormValidationUtil.isValidFqdn(fqdn)){
             getErrors().put("invalidFqdn", "Invalid fqdn: "+fqdn);
         }
 
         if(!CollectionUtils.isEmpty(alternateDnsValues)){
             for(String altDns : alternateDnsValues){
-                if(!FQDN_VALIDATION_PATTERN.matcher(altDns).matches()){
+                if(!FormValidationUtil.isValidFqdn(altDns)){
                     getErrors().put("invalidAltDns", "Invalid Alt DNS: "+altDns);
                 }
             }

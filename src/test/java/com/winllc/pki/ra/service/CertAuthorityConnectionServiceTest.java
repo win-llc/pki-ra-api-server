@@ -3,6 +3,7 @@ package com.winllc.pki.ra.service;
 import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
+import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
@@ -205,6 +206,13 @@ class CertAuthorityConnectionServiceTest {
     void getTypes() {
         List<String> types = connectionService.getTypes();
         assertTrue(types.size() > 0);
+    }
+
+    @Test
+    void getRequiredPropertiesForType() throws Exception {
+        List<ConnectionProperty> requiredPropertiesForType
+                = connectionService.getRequiredPropertiesForType(MockCertAuthority.class.getName());
+        assertEquals(1, requiredPropertiesForType.size());
     }
 
     @Test

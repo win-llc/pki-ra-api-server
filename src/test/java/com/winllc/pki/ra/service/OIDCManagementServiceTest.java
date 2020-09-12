@@ -17,11 +17,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.transaction.Transactional;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,10 +29,10 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = AppConfig.class)
 @ActiveProfiles("test")
-class ServerEntryServiceTest {
+class OIDCManagementServiceTest {
 
     @Autowired
-    private ServerEntryService serverEntryService;
+    private OIDCManagementService oidcManagementService;
     @Autowired
     private ServerEntryRepository serverEntryRepository;
     @Autowired
@@ -71,7 +71,7 @@ class ServerEntryServiceTest {
         account = accountRepository.save(account);
 
         ServerEntry serverEntry = ServerEntry.buildNew();
-        serverEntry.setFqdn("test.winllc-dev.com");
+        serverEntry.setFqdn("test2.winllc-dev.com");
         serverEntry.setAccount(account);
         serverEntry.setDomainParent(domain);
         serverEntry = serverEntryRepository.save(serverEntry);
@@ -92,64 +92,40 @@ class ServerEntryServiceTest {
     }
 
     @Test
-    void createServerEntry() throws RAObjectNotFoundException {
-        Account account = accountRepository.findAll().get(0);
-        ServerEntryForm serverEntryForm = new ServerEntryForm();
-        serverEntryForm.setFqdn("test2.winllc-dev.com");
-        serverEntryForm.setAccountId(account.getId());
+    @Transactional
+    void enableForOIDConnect() throws Exception {
+        ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test2.winllc-dev.com").get();
+        when(oidcProviderConnection.createClient(any())).thenReturn(serverEntry);
 
-        serverEntryService.createServerEntry(serverEntryForm);
-
-        Optional<ServerEntry> distinctByFqdnEquals = serverEntryRepository.findDistinctByFqdnEquals("test2.winllc-dev.com");
-        assertTrue(distinctByFqdnEquals.isPresent());
+        ServerEntryForm form = new ServerEntryForm();
+        form.setId(serverEntry.getId());
+        ServerEntryInfo serverEntryInfo = oidcManagementService.enableForOIDConnect(form);
+        assertNotNull(serverEntryInfo);
     }
 
     @Test
     @Transactional
-    void updateServerEntry() throws RAException {
-        ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
-        ServerEntryForm form = new ServerEntryForm(serverEntry);
+    void disableForOIDConnect() throws RAException {
+        ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test2.winllc-dev.com").get();
+        when(oidcProviderConnection.deleteClient(any())).thenReturn(serverEntry);
 
-        assertEquals(0, serverEntry.getAlternateDnsValues().size());
-
-        form.setAlternateDnsValues(Collections.singletonList("tester.winllc-dev.com"));
-
-        serverEntryService.updateServerEntry(form);
-
-        serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
-        assertEquals(1, serverEntry.getAlternateDnsValues().size());
+        ServerEntryForm form = new ServerEntryForm();
+        form.setId(serverEntry.getId());
+        ServerEntryInfo serverEntryInfo = oidcManagementService.disableForOIDConnect(form);
+        assertNotNull(serverEntryInfo);
     }
 
     @Test
-    void getServerEntry() throws RAObjectNotFoundException {
-        ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
-        ServerEntryInfo info = serverEntryService.getServerEntry(serverEntry.getId());
-        assertEquals("test.winllc-dev.com", info.getFqdn());
-    }
+    void buildDeploymentPackage() throws RAObjectNotFoundException {
+        ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test2.winllc-dev.com").get();
 
-    @Test
-    void getAllServerEntriesForAccount() {
-        Account account = accountRepository.findAll().get(0);
-        List<ServerEntry> allServerEntriesForAccount = serverEntryService.getAllServerEntriesForAccount(account.getId());
-        assertEquals(1, allServerEntriesForAccount.size());
-    }
+        OIDCClientDetails oidcClientDetails = new OIDCClientDetails();
+        when(oidcProviderConnection.getClient(any())).thenReturn(oidcClientDetails);
 
-    @Test
-    void getAllServerEntriesForUser() throws RAObjectNotFoundException {
-        UserDetails userDetails =
-                new org.springframework.security.core.userdetails.User("test@test.com", "", new ArrayList<>());
-        List<ServerEntryInfo> allServerEntriesForUser = serverEntryService.getAllServerEntriesForUser(userDetails);
-        assertEquals(1, allServerEntriesForUser.size());
-    }
+        ServerEntryForm form = new ServerEntryForm();
+        form.setId(serverEntry.getId());
 
-
-    @Test
-    void deleteServerEntry() throws RAException {
-        ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
-        assertNotNull(serverEntry);
-
-        serverEntryService.deleteServerEntry(serverEntry.getId());
-
-        assertEquals(0, serverEntryRepository.findAll().size());
+        List<String> strings = oidcManagementService.buildDeploymentPackage(form);
+        assertTrue(strings.size() > 0);
     }
 }

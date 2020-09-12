@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.SubjectAltNames;
+import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
@@ -26,6 +27,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.InvalidNameException;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.security.cert.X509Certificate;
@@ -55,9 +57,24 @@ public class CertificateRequestService {
         this.context = context;
     }
 
-    public Optional<CertificateRequest> findCertificateRequestWithCertificate(X509Certificate certificate, String caName){
-        return requestRepository
-                .findDistinctByIssuedCertificateSerialAndCertAuthorityName(certificate.getSerialNumber().toString(), caName);
+    public Optional<CertificateRequest> findCertificateRequestWithCertificate(X509Certificate certificate){
+
+        try {
+            Optional<CertAuthority> optionalCertAuthority
+                    = certAuthorityStore.getLoadedCertAuthorityByIssuerDN(certificate.getIssuerDN());
+
+            if(optionalCertAuthority.isPresent()){
+                CertAuthority certAuthority = optionalCertAuthority.get();
+                String foundCa = certAuthority.getName();
+                return requestRepository
+                        .findDistinctByIssuedCertificateSerialAndCertAuthorityName(
+                                certificate.getSerialNumber().toString(), foundCa);
+            }
+        } catch (InvalidNameException e) {
+            log.error("Could not find CA", e);
+        }
+
+        return Optional.empty();
     }
 
     @GetMapping("/all")

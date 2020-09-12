@@ -7,6 +7,7 @@ import com.winllc.pki.ra.domain.RolePermission;
 import com.winllc.pki.ra.repository.RolePermissionRepository;
 import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
@@ -14,10 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -40,6 +38,15 @@ public class RolePermissionsService {
         List<RoleRepresentation> clientRoles = oidcProviderConnection.getFrontendClientRoles();
         return clientRoles.stream()
                 .map(r -> r.getName())
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/usersInRole/{roleName}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<String> getUsersInRole(@PathVariable String roleName){
+        Set<UserRepresentation> frontendUsersForRole = oidcProviderConnection.getFrontendUsersForRole(roleName);
+        return frontendUsersForRole.stream()
+                .map(r -> r.getEmail())
                 .collect(Collectors.toList());
     }
 

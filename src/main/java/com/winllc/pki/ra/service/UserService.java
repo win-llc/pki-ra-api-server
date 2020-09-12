@@ -16,8 +16,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/user")
 public class UserService {
 
-    @Autowired
-    private KeycloakIdentityProviderConnection keycloakService;
+    private final KeycloakIdentityProviderConnection keycloakService;
+
+    public UserService(KeycloakIdentityProviderConnection keycloakService) {
+        this.keycloakService = keycloakService;
+    }
 
 
     @GetMapping("/profile")

@@ -14,10 +14,13 @@ import java.util.Optional;
 @Component
 public class KeycloakIdentityProviderConnection implements IdentityProviderConnection {
 
-    @Autowired
-    private Keycloak keycloak;
-    @Autowired
-    private KeycloakProperties keycloakConfiguration;
+    private final Keycloak keycloak;
+    private final KeycloakProperties keycloakConfiguration;
+
+    public KeycloakIdentityProviderConnection(Keycloak keycloak, KeycloakProperties keycloakConfiguration) {
+        this.keycloak = keycloak;
+        this.keycloakConfiguration = keycloakConfiguration;
+    }
 
     @Override
     public String getConnectionName() {

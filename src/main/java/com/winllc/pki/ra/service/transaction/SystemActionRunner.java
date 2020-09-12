@@ -8,6 +8,7 @@ import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.util.EmailUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -15,7 +16,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 public class SystemActionRunner {
@@ -58,19 +59,23 @@ public class SystemActionRunner {
     }
 
     public SystemActionRunner createNotificationForAccountPocs(Notification notification, Account account){
+
+        addAccountPocsForNotification(account);
+        this.notification = notification;
+        return this;
+    }
+
+    private void addAccountPocsForNotification(Account account){
         PocEntryRepository repository = context.getBean(PocEntryRepository.class);
         List<PocEntry> accountPocs = repository.findAllByAccount(account);
-
         if(!CollectionUtils.isEmpty(accountPocs)){
             List<String> emails = accountPocs.stream()
                     .map(p -> p.getEmail())
                     .collect(Collectors.toList());
             this.notificationEmails = emails;
         }
-
-        this.notification = notification;
-        return this;
     }
+
 
 
     public SystemActionRunner sendNotification(){
@@ -78,9 +83,29 @@ public class SystemActionRunner {
         return this;
     }
 
+    public <T, E extends Exception> Future<T> executeAsync(ThrowingSupplier<T, E> action){
+        ThreadPoolTaskExecutor executor = context.getBean("taskExecutor", ThreadPoolTaskExecutor.class);
+
+        return executor.submit(() -> {
+           return execute(action);
+        });
+    }
+
     public <T, E extends Exception> T execute(ThrowingSupplier<T, E> action) throws Exception {
         T result = action.get();
 
+        if(result instanceof AccountOwnedEntity){
+            AccountOwnedEntity entity = (AccountOwnedEntity) result;
+            Hibernate.initialize(entity.getAccount());
+            Account account = entity.getAccount();
+            addAccountPocsForNotification(account);
+        }
+
+        execute();
+        return result;
+    }
+
+    public void execute() {
         if(this.auditRecord != null){
             AuditRecordRepository repository = context.getBean(AuditRecordRepository.class);
 
@@ -116,7 +141,5 @@ public class SystemActionRunner {
                 }
             }
         }
-
-        return result;
     }
 }

@@ -15,6 +15,7 @@ import org.keycloak.admin.client.resource.RolesResource;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -263,6 +264,18 @@ public class KeycloakOIDCProviderConnection implements OIDCProviderConnection {
         RolesResource roles = realmResource.clients().get(appClient.getId()).roles();
 
         return roles.list();
+    }
+
+    public Set<UserRepresentation> getFrontendUsersForRole(String roleName){
+        RealmResource realmResource = keycloak.realm(keycloakConfiguration.getRealm());
+
+        ClientRepresentation appClient = realmResource.clients() //
+                .findByClientId(frontEndOidcClientId).get(0);
+
+        return realmResource.clients().get(appClient.getId())
+                .roles()
+                .get(roleName)
+                .getRoleUserMembers();
     }
 
     @Override

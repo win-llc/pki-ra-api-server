@@ -34,6 +34,7 @@ public class Notification extends AbstractPersistable<Long> {
 
     public static Notification buildNew(String forUserName){
         Notification notification = buildNew();
+        notification.setForUserNames(forUserName);
         notification.setCreated(Timestamp.valueOf(LocalDateTime.now()));
         return notification;
     }

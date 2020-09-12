@@ -66,19 +66,6 @@ public class NotificationService {
         }
     }
 
-    public void sendNotificationToAccountPocs(Notification notification, Account account){
-        Optional<Account> optionalAccount = accountRepository.findById(account.getId());
-        if(optionalAccount.isPresent()){
-            Account loadedAccount = optionalAccount.get();
-            Set<PocEntry> pocs = loadedAccount.getPocs();
-
-            for(PocEntry pocEntry : pocs){
-
-            }
-        }else{
-            log.debug("Could not find notification: "+notification.getId());
-        }
-    }
 
     public void sendNotificationEmail(Notification notification) {
 

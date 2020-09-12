@@ -92,7 +92,25 @@ public class CertIssuanceTransaction extends CertTransaction {
             }
         };
 
-        return runner.execute(action);
+        X509Certificate cert = runner.execute(action);
+
+        ThrowingSupplier<X509Certificate, Exception> postProcessAction = () -> {
+            if (cert != null) {
+                if(account != null) {
+                    processIssuedCertificate(cert, certificateRequest, account);
+                }else{
+                    log.info("Anonymous cert issued: "+cert.getSubjectDN());
+                }
+                return cert;
+            } else {
+                throw new RAException("Could not issue certificate");
+            }
+        };
+
+        SystemActionRunner postProcessRunner = SystemActionRunner.build(this.context);
+        postProcessRunner.executeAsync(postProcessAction);
+
+        return cert;
     }
 
     private String buildDn(RACertificateIssueRequest certificateRequest){

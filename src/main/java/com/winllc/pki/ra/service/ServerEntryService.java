@@ -18,11 +18,13 @@ import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
+import com.winllc.pki.ra.service.transaction.SystemActionRunner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -38,7 +40,7 @@ import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/serverEntry")
-public class ServerEntryService {
+public class ServerEntryService extends AbstractService {
 
     private static final Logger log = LogManager.getLogger(ServerEntryService.class);
 
@@ -50,9 +52,11 @@ public class ServerEntryService {
     private final EntityDirectoryService entityDirectoryService;
     private final AuditRecordService auditRecordService;
 
-    public ServerEntryService(ServerEntryRepository serverEntryRepository, AccountRepository accountRepository,
+    public ServerEntryService(ApplicationContext context,
+                              ServerEntryRepository serverEntryRepository, AccountRepository accountRepository,
                               KeycloakOIDCProviderConnection oidcProviderConnection, PocEntryRepository pocEntryRepository,
                               EntityDirectoryService entityDirectoryService, AuditRecordService auditRecordService) {
+        super(context);
         this.serverEntryRepository = serverEntryRepository;
         this.accountRepository = accountRepository;
         this.oidcProviderConnection = oidcProviderConnection;
@@ -101,7 +105,12 @@ public class ServerEntryService {
 
                 entry = serverEntryRepository.save(entry);
 
-                auditRecordService.save(AuditRecord.buildNew(AuditRecordType.SERVER_ENTRY_ADDED, entry));
+                SystemActionRunner.build(context)
+                        .createAuditRecord(AuditRecordType.SERVER_ENTRY_ADDED, entry)
+                        .createNotificationForAccountPocs(Notification.buildNew()
+                                .addMessage("Server Entry added: "+entry.getFqdn()), account)
+                        .sendNotification()
+                        .execute();
 
                 //apply attributes to external directory
                 entityDirectoryService.applyServerEntryToDirectory(entry);
@@ -140,11 +149,12 @@ public class ServerEntryService {
 
                 serverEntry = serverEntryRepository.save(serverEntry);
 
-                try {
-                    auditRecordService.save(AuditRecord.buildNew(AuditRecordType.SERVER_ENTRY_UPDATED, serverEntry));
-                }catch (Exception e){
-                    log.error("Unable to create audit record", e);
-                }
+                SystemActionRunner.build(context)
+                        .createAuditRecord(AuditRecordType.SERVER_ENTRY_UPDATED, serverEntry)
+                        .createNotificationForAccountPocs(Notification.buildNew()
+                                .addMessage("Server Entry updated: "+serverEntry.getFqdn()), serverEntry.getAccount())
+                        .sendNotification()
+                        .execute();
 
                 //apply attributes to external directory
                 entityDirectoryService.applyServerEntryToDirectory(serverEntry);
@@ -202,79 +212,7 @@ public class ServerEntryService {
         return entries;
     }
 
-    @PostMapping("/enableForOIDConnect")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional
-    public ServerEntryInfo enableForOIDConnect(@RequestBody ServerEntryForm form) throws RAException {
-        //todo
 
-        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(form.getId());
-        if(serverEntryOptional.isPresent()){
-            ServerEntry serverEntry = serverEntryOptional.get();
-
-            try {
-                //todo generify
-                serverEntry = oidcProviderConnection.createClient(serverEntry);
-
-                if(serverEntry != null){
-                    serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
-                    Hibernate.initialize(serverEntry.getAlternateDnsValues());
-                    serverEntry = serverEntryRepository.save(serverEntry);
-
-                    return entryToInfo(serverEntry);
-                }else{
-                    throw new RAException("Could not create OIDC client");
-                }
-            } catch (Exception e) {
-                throw new RAException(e.getMessage());
-            }
-        }else{
-            throw new RAObjectNotFoundException(form);
-        }
-    }
-
-    @PostMapping("/disableForOIDConnect")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional
-    public ServerEntryInfo disableForOIDConnect(@RequestBody ServerEntryForm form) throws RAException {
-        //todo
-
-        Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(form.getId());
-
-        if(optionalServerEntry.isPresent()){
-            ServerEntry serverEntry = optionalServerEntry.get();
-            serverEntry = oidcProviderConnection.deleteClient(serverEntry);
-            if(serverEntry != null){
-                return entryToInfo(serverEntry);
-            }else {
-                throw new RAException("Did not delete the OIDC client");
-            }
-
-        }else{
-            throw new RAObjectNotFoundException(form);
-        }
-
-    }
-
-    @PostMapping("/buildDeploymentPackage")
-    @ResponseStatus(HttpStatus.OK)
-    public List<String> buildDeploymentPackage(@RequestBody ServerEntryForm form) throws RAObjectNotFoundException {
-
-        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(form.getId());
-        if(serverEntryOptional.isPresent()) {
-            ServerEntry serverEntry = serverEntryOptional.get();
-            Optional<Account> optionalAccount = accountRepository.findById(serverEntry.getAccount().getId());
-            if(optionalAccount.isPresent()){
-                Account account = optionalAccount.get();
-                ServerEntryDockerDeploymentFile deploymentFile = buildDeploymentFile(serverEntry, account);
-                return deploymentFile.buildContent();
-            }else{
-                throw new RAObjectNotFoundException(Account.class, serverEntry.getAccount().getId());
-            }
-        }else{
-            throw new RAObjectNotFoundException(form);
-        }
-    }
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -314,26 +252,8 @@ public class ServerEntryService {
 
     private ServerEntryInfo entryToInfo(ServerEntry entry){
         Hibernate.initialize(entry.getAlternateDnsValues());
-        ServerEntryInfo serverEntryInfo = new ServerEntryInfo(entry);
-        return serverEntryInfo;
+        return new ServerEntryInfo(entry);
     }
 
-    private ServerEntryDockerDeploymentFile buildDeploymentFile(ServerEntry serverEntry, Account account){
-        AcmeClientDetails acmeClientDetails = new AcmeClientDetails();
-        acmeClientDetails.setAcmeEabHmacKeyValue(Base64.encode(account.getMacKey()).toString());
-        acmeClientDetails.setAcmeKidValue(account.getKeyIdentifier());
-        //todo make dynamic
-        acmeClientDetails.setAcmeServerValue("http://192.168.1.202:8181/acme/directory");
 
-        OIDCClientDetails oidcClientDetails = oidcProviderConnection.getClient(serverEntry);
-
-        ServerEntryDockerDeploymentFile dockerDeploymentFile = new ServerEntryDockerDeploymentFile();
-        dockerDeploymentFile.setAcmeClientDetails(acmeClientDetails);
-        dockerDeploymentFile.setOidcClientDetails(oidcClientDetails);
-        //todo make dynamic
-        //dockerDeploymentFile.setProxyAddressValue("http://192.168.1.13:8282/test");
-        dockerDeploymentFile.setProxyAddressValue(serverEntry.getOpenidClientRedirectUrl());
-        dockerDeploymentFile.setServerNameValue(serverEntry.getFqdn());
-        return dockerDeploymentFile;
-    }
 }

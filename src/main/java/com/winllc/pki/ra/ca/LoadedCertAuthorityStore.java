@@ -12,10 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import javax.naming.InvalidNameException;
+import javax.naming.Name;
+import javax.naming.ldap.LdapName;
 import javax.persistence.EntityManagerFactory;
 import javax.transaction.Transactional;
 import java.lang.reflect.Constructor;
 import java.security.KeyStore;
+import java.security.Principal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -55,6 +59,20 @@ public class LoadedCertAuthorityStore implements InitializingBean {
 
     public CertAuthority getLoadedCertAuthority(String name){
         return loadedCertAuthorities.get(name);
+    }
+
+    public Optional<CertAuthority> getLoadedCertAuthorityByIssuerDN(Principal principal)
+            throws InvalidNameException {
+        Name ldapName = new LdapName(principal.getName());
+        return getAllCertAuthorities().stream()
+                .filter(c -> {
+                    try {
+                        return c.getIssuerName().equals(ldapName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return false;
+                }).findFirst();
     }
 
     public void addLoadedCertAuthority(CertAuthority ca){

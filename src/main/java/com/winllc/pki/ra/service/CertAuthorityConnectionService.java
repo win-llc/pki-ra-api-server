@@ -85,8 +85,6 @@ public class CertAuthorityConnectionService {
 
             certAuthorityStore.reload();
 
-            CertAuthority ca = certAuthorityStore.getLoadedCertAuthority(caConnection.getName());
-
             Map<String, CertAuthorityConnectionProperty> propMap = connectionInfo.getProperties().stream()
                     .collect(Collectors.toMap(p -> p.getName(), p -> p));
 
@@ -218,11 +216,12 @@ public class CertAuthorityConnectionService {
     }
 
     private List<String> getCaOptions(){
+        //todo externalize
         String pkg = "com.winllc.pki.plugins";
         try (ScanResult scanResult = new ClassGraph().enableAllInfo().acceptPackages(pkg)
                 .scan()) {
             ClassInfoList widgetClasses = scanResult
-                    .getClassesImplementing("com.winllc.acme.common.ca.CertAuthority");
+                    .getClassesImplementing(CertAuthority.class.getCanonicalName());
 
             List<ClassInfo> classInfoList = widgetClasses.stream()
                     .filter(ci -> !ci.isAbstract())

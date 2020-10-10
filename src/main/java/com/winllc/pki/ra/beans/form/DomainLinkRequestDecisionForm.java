@@ -1,6 +1,6 @@
-package com.winllc.pki.ra.beans;
+package com.winllc.pki.ra.beans.form;
 
-public class DomainLinkRequestDecision {
+public class DomainLinkRequestDecisionForm {
     private Long requestId;
     private String status;
 

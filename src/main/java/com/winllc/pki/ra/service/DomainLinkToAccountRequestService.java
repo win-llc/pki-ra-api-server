@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.beans.DomainLinkRequestDecision;
+import com.winllc.pki.ra.beans.form.DomainLinkRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.DomainLinkToAccountRequestForm;
 import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.beans.info.DomainInfo;
@@ -12,6 +12,8 @@ import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.service.transaction.SystemActionRunner;
+import com.winllc.pki.ra.service.validators.DomainLinkRequestDecisionValidator;
+import com.winllc.pki.ra.service.validators.DomainLinkToAccountRequestValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -38,17 +41,32 @@ public class DomainLinkToAccountRequestService extends AbstractService {
     private final AccountRepository accountRepository;
     private final PocEntryRepository pocEntryRepository;
     private final DomainPolicyRepository domainPolicyRepository;
+    private final DomainLinkToAccountRequestValidator domainLinkToAccountRequestValidator;
+    private final DomainLinkRequestDecisionValidator domainLinkRequestDecisionValidator;
 
     public DomainLinkToAccountRequestService(ApplicationContext context, DomainRepository domainRepository,
                                              DomainLinkToAccountRequestRepository requestRepository,
                                              AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
-                                             DomainPolicyRepository domainPolicyRepository) {
+                                             DomainPolicyRepository domainPolicyRepository,
+                                             DomainLinkToAccountRequestValidator domainLinkToAccountRequestValidator, DomainLinkRequestDecisionValidator domainLinkRequestDecisionValidator) {
         super(context);
         this.domainRepository = domainRepository;
         this.requestRepository = requestRepository;
         this.accountRepository = accountRepository;
         this.pocEntryRepository = pocEntryRepository;
         this.domainPolicyRepository = domainPolicyRepository;
+        this.domainLinkToAccountRequestValidator = domainLinkToAccountRequestValidator;
+        this.domainLinkRequestDecisionValidator = domainLinkRequestDecisionValidator;
+    }
+
+    @InitBinder("domainLinkToAccountRequestForm")
+    public void initBinder(WebDataBinder binder) {
+        binder.setValidator(domainLinkToAccountRequestValidator);
+    }
+
+    @InitBinder("domainLinkRequestDecisionForm")
+    public void initDecisionBinder(WebDataBinder binder) {
+        binder.setValidator(domainLinkRequestDecisionValidator);
     }
 
     @Transactional
@@ -141,7 +159,7 @@ public class DomainLinkToAccountRequestService extends AbstractService {
     @Transactional
     @PostMapping("/linkAccount/update")
     @ResponseStatus(HttpStatus.OK)
-    public DomainLinkToAccountRequest domainRequestDecision(@Valid @RequestBody DomainLinkRequestDecision decision) throws RAException {
+    public DomainLinkToAccountRequest domainRequestDecision(@Valid @RequestBody DomainLinkRequestDecisionForm decision) throws RAException {
         Optional<DomainLinkToAccountRequest> optionalDomainLinkToAccountRequest = requestRepository.findById(decision.getRequestId());
         if (optionalDomainLinkToAccountRequest.isPresent()) {
             DomainLinkToAccountRequest request = optionalDomainLinkToAccountRequest.get();

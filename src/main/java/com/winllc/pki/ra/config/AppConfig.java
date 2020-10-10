@@ -16,6 +16,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 
 @SpringBootApplication(
@@ -24,6 +29,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
                 MongoDataAutoConfiguration.class
         }
 )
+@EnableSwagger2
 @ComponentScan("com.winllc.pki.ra")
 @EntityScan({"com.winllc.pki.ra.domain", "com.winllc.acme.common.domain"})
 @EnableJpaRepositories(basePackages = "com.winllc.pki.ra.repository")
@@ -84,6 +90,15 @@ public class AppConfig {
         executor.initialize();
 
         return executor;
+    }
+
+    @Bean
+    public Docket api() {
+        return new Docket(DocumentationType.SWAGGER_2)
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("com.winllc.pki.ra"))
+                //.paths(PathSelectors.any())
+                .build();
     }
 
 }

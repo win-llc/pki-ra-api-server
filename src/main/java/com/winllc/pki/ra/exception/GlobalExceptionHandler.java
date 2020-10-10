@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
@@ -28,6 +29,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         Map<String, String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
+                .filter(Objects::nonNull)
                 .collect(Collectors.toMap(x -> x.getField(), x -> x.getDefaultMessage()));
 
         body.put("errors", errors);

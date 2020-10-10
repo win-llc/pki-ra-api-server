@@ -8,12 +8,14 @@ import com.winllc.pki.ra.domain.AccountRestriction;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AccountRestrictionRepository;
+import com.winllc.pki.ra.service.validators.AccountRestrictionValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -33,10 +35,21 @@ public class AccountRestrictionService {
 
     private static final Logger log = LogManager.getLogger(AccountRestrictionService.class);
 
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private AccountRestrictionRepository accountRestrictionRepository;
+    private final AccountRepository accountRepository;
+    private final AccountRestrictionRepository accountRestrictionRepository;
+    private final AccountRestrictionValidator accountRestrictionValidator;
+
+    public AccountRestrictionService(AccountRepository accountRepository,
+                                     AccountRestrictionRepository accountRestrictionRepository, AccountRestrictionValidator accountRestrictionValidator) {
+        this.accountRepository = accountRepository;
+        this.accountRestrictionRepository = accountRestrictionRepository;
+        this.accountRestrictionValidator = accountRestrictionValidator;
+    }
+
+    @InitBinder("accountRestrictionForm")
+    public void initAccountRequestUpdateBinder(WebDataBinder binder) {
+        binder.setValidator(accountRestrictionValidator);
+    }
 
     @GetMapping("/types")
     @ResponseStatus(HttpStatus.OK)

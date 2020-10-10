@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.pki.ra.beans.form.AttributePolicyGroupForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
@@ -15,9 +16,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;
 import java.util.Collections;
@@ -25,11 +28,16 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = AppConfig.class)
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 class AttributePolicyServiceTest {
 
+    @Autowired
+    private MockMvc mockMvc;
     @Autowired
     private AttributePolicyService attributePolicyService;
     @Autowired
@@ -107,7 +115,7 @@ class AttributePolicyServiceTest {
 
     @Test
     @Transactional
-    void createGroupPolicyGroup() throws RAObjectNotFoundException {
+    void createGroupPolicyGroup() throws Exception {
         Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals("kidtest1");
         AttributePolicyGroupForm form = new AttributePolicyGroupForm();
         form.setAccountId(optionalAccount.get().getId());
@@ -131,11 +139,20 @@ class AttributePolicyServiceTest {
 
         Optional<AttributePolicyGroup> apg = attributePolicyGroupRepository.findById(apgId);
         assertEquals(2, apg.get().getAttributePolicies().size());
+
+        dynamicAttribute.setUseSecurityAttributeValueIfNameExists(true);
+        dynamicAttribute.setUseValueIfSecurityAttributeNameValueExists(true);
+        String badJson = new ObjectMapper().writeValueAsString(form);
+        mockMvc.perform(
+                post("/api/attributePolicy/group/create")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(409));
     }
 
     @Test
     @Transactional
-    void updateGroupPolicyGroup() throws RAObjectNotFoundException {
+    void updateGroupPolicyGroup() throws Exception {
         Optional<AttributePolicyGroup> optionalGroup = attributePolicyGroupRepository.findDistinctByName("Test Group");
         AttributePolicyGroup group = optionalGroup.get();
 
@@ -157,6 +174,14 @@ class AttributePolicyServiceTest {
         }
 
         assertTrue(found);
+
+        changePolicy.setAttributeName("");
+        String badJson = new ObjectMapper().writeValueAsString(form);
+        mockMvc.perform(
+                post("/api/attributePolicy/group/update")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(409));
     }
 
     @Test

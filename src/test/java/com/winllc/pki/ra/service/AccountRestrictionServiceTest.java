@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.pki.ra.beans.form.AccountRestrictionForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.constants.AccountRestrictionAction;
@@ -13,9 +14,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
@@ -26,13 +29,18 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = AppConfig.class)
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 class AccountRestrictionServiceTest {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
+    @Autowired
+    private MockMvc mockMvc;
     @Autowired
     private AccountRestrictionService accountRestrictionService;
     @Autowired
@@ -93,6 +101,14 @@ class AccountRestrictionServiceTest {
         accountRestrictionForm.setDueBy(formatter.format(LocalDateTime.now().plusDays(3)));
         Long id = accountRestrictionService.create(accountRestrictionForm);
         assertNotNull(id);
+
+        accountRestrictionForm.setAction("badaction");
+        String badJson = new ObjectMapper().writeValueAsString(accountRestrictionForm);
+        mockMvc.perform(
+                post("/api/accountRestriction/create")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 
     @Test
@@ -111,6 +127,14 @@ class AccountRestrictionServiceTest {
 
         AccountRestriction accountRestriction = accountRestrictionService.update(accountRestrictionForm);
         assertEquals(accountRestriction.getAction(), AccountRestrictionAction.ENABLE_ACCOUNT);
+
+        accountRestrictionForm.setAction("bad");
+        String badJson = new ObjectMapper().writeValueAsString(accountRestrictionForm);
+        mockMvc.perform(
+                post("/api/accountRestriction/update")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.winllc.pki.ra.beans.form.AppKeyStoreEntryForm;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.keystore.KeyEntryWrapper;
+import com.winllc.pki.ra.service.validators.AppKeyStoreEntryValidator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,8 +17,10 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.*;
@@ -33,8 +36,20 @@ public class ApplicationKeystoreManagerService {
 
     private static final Logger log = LogManager.getLogger(ApplicationKeystoreManagerService.class);
 
-    @Autowired
-    private ApplicationKeystore applicationKeystore;
+    private final ApplicationKeystore applicationKeystore;
+
+    private final AppKeyStoreEntryValidator appKeyStoreEntryValidator;
+
+    public ApplicationKeystoreManagerService(ApplicationKeystore applicationKeystore,
+                                             AppKeyStoreEntryValidator appKeyStoreEntryValidator) {
+        this.applicationKeystore = applicationKeystore;
+        this.appKeyStoreEntryValidator = appKeyStoreEntryValidator;
+    }
+
+    @InitBinder("appKeystoreEntryForm")
+    public void initAppKeystoreEntryBinder(WebDataBinder binder) {
+        binder.setValidator(appKeyStoreEntryValidator);
+    }
 
     /*
     REST METHODS
@@ -68,15 +83,14 @@ public class ApplicationKeystoreManagerService {
 
     @PostMapping("/addEntry")
     @ResponseStatus(HttpStatus.CREATED)
-    public String addEntry(@RequestBody AppKeyStoreEntryForm form)
+    public String addEntry(@Valid @RequestBody AppKeyStoreEntryForm form)
             throws Exception {
         String alias = form.getAlias();
         createKey(alias);
         log.info("Key and self-signed cert added to keystore: "+alias);
 
         if(form.isGenerateCsr()){
-            String csr = generateCsrForEntry(alias);
-            return csr;
+            return generateCsrForEntry(alias);
         }else{
             return "";
         }
@@ -84,7 +98,7 @@ public class ApplicationKeystoreManagerService {
 
     @PostMapping("/addSignedCertAndChainToEntry")
     @ResponseStatus(HttpStatus.OK)
-    public void addSignedCertAndChainToEntry(@RequestBody AppKeyStoreEntryForm form)
+    public void addSignedCertAndChainToEntry(@Valid @RequestBody AppKeyStoreEntryForm form)
             throws Exception {
         KeyEntryWrapper wrapper = new KeyEntryWrapper();
         wrapper.setAlias(form.getAlias());
@@ -102,7 +116,7 @@ public class ApplicationKeystoreManagerService {
 
     @PostMapping("/createCsrForEntry")
     @ResponseStatus(HttpStatus.OK)
-    public String createCsrForEntry(@RequestBody AppKeyStoreEntryForm form) throws Exception {
+    public String createCsrForEntry(@Valid @RequestBody AppKeyStoreEntryForm form) throws Exception {
         return generateCsrForEntry(form.getAlias());
     }
 

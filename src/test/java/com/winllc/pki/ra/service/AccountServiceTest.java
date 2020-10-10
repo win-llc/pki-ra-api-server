@@ -1,6 +1,9 @@
 package com.winllc.pki.ra.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.acme.common.DirectoryDataSettings;
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.endpoint.acme.AcmeServerConnection;
 import com.winllc.pki.ra.endpoint.acme.AcmeServerService;
 import com.winllc.pki.ra.endpoint.acme.AcmeServerServiceImpl;
@@ -18,10 +21,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;
 import java.util.*;
@@ -29,11 +34,16 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = AppConfig.class)
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 class AccountServiceTest {
 
+    @Autowired
+    private MockMvc mockMvc;
     @Autowired
     private AccountService accountService;
     @Autowired
@@ -66,12 +76,20 @@ class AccountServiceTest {
     }
 
     @Test
-    void createNewAccount() {
-        AccountRequest accountRequest = new AccountRequest();
+    void createNewAccount() throws Exception {
+        AccountRequestForm accountRequest = new AccountRequestForm();
         accountRequest.setProjectName("Test Project 3");
 
         Long id = accountService.createNewAccount(accountRequest);
         assertTrue(id > 0);
+
+        accountRequest.setAccountOwnerEmail("bademail");
+        String badJson = new ObjectMapper().writeValueAsString(accountRequest);
+        mockMvc.perform(
+                post("/api/account/create")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 
     @Test
@@ -107,6 +125,18 @@ class AccountServiceTest {
 
         AccountInfo accountInfo = accountService.updateAccount(form);
         assertEquals(1, accountInfo.getPocs().size());
+
+        PocFormEntry pocEntry = new PocFormEntry();
+        pocEntry.setEmail("bademail");
+
+        form.setPocEmails(Collections.singletonList(pocEntry));
+
+        String badJson = new ObjectMapper().writeValueAsString(form);
+        mockMvc.perform(
+                post("/api/account/update")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 
     @Test

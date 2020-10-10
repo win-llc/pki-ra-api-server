@@ -73,7 +73,7 @@ public class MockAbstractCertAuthority extends AbstractCertAuthority {
             "-----END CERTIFICATE-----";
 
     public MockAbstractCertAuthority(CertAuthorityConnectionInfo info, KeyStore applicationKeystore, String keystorePassword) {
-        super(info, applicationKeystore, keystorePassword);
+        super(info, null, applicationKeystore, keystorePassword);
     }
 
 

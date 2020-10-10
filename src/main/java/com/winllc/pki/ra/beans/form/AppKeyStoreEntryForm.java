@@ -4,12 +4,14 @@ import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.keystore.KeyEntryWrapper;
 import org.apache.commons.lang.StringUtils;
 
+import javax.validation.constraints.NotEmpty;
 import java.io.IOException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 
 public class AppKeyStoreEntryForm extends ValidForm {
 
+    @NotEmpty
     private String alias;
     private boolean generateCsr = false;
     private String currentCertificate;

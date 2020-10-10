@@ -5,11 +5,16 @@ import com.winllc.pki.ra.beans.form.AccountRequestUpdateForm;
 import com.winllc.pki.ra.domain.AccountRequest;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRequestRepository;
+import com.winllc.pki.ra.service.validators.AccountRequestUpdateValidator;
+import com.winllc.pki.ra.service.validators.AccountRequestValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -25,10 +30,26 @@ public class AccountRequestService {
 
     private final AccountRequestRepository accountRequestRepository;
 
-    public AccountRequestService(AccountRequestRepository accountRequestRepository) {
+    private final AccountRequestValidator accountRequestValidator;
+    private final AccountRequestUpdateValidator accountRequestUpdateValidator;
+
+    public AccountRequestService(AccountRequestRepository accountRequestRepository,
+                                 AccountRequestValidator accountRequestValidator,
+                                 AccountRequestUpdateValidator accountRequestUpdateValidator) {
         this.accountRequestRepository = accountRequestRepository;
+        this.accountRequestValidator = accountRequestValidator;
+        this.accountRequestUpdateValidator = accountRequestUpdateValidator;
     }
 
+    @InitBinder("accountRequestForm")
+    public void initAccountRequestBinder(WebDataBinder binder) {
+        binder.setValidator(accountRequestValidator);
+    }
+
+    @InitBinder("accountRequestUpdateForm")
+    public void initAccountRequestUpdateBinder(WebDataBinder binder) {
+        binder.setValidator(accountRequestUpdateValidator);
+    }
 
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)
@@ -52,7 +73,7 @@ public class AccountRequestService {
         AccountRequest accountRequest = AccountRequest.createNew();
         accountRequest.setAccountOwnerEmail(form.getAccountOwnerEmail());
         accountRequest.setProjectName(form.getProjectName());
-        accountRequest.setSecurityPolicyServerProjectId(form.getSecurityPolicyProjectId());
+        accountRequest.setSecurityPolicyServerProjectId(form.getSecurityPolicyServerProjectId());
 
         accountRequest = accountRequestRepository.save(accountRequest);
         return accountRequest.getId();
@@ -69,8 +90,6 @@ public class AccountRequestService {
                 accountRequest.approve();
             }else if(form.getState().contentEquals("reject")){
                 accountRequest.reject();
-            }else{
-                return ResponseEntity.badRequest().build();
             }
 
             accountRequest = accountRequestRepository.save(accountRequest);

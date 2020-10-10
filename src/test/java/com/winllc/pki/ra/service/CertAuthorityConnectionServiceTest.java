@@ -1,9 +1,11 @@
 package com.winllc.pki.ra.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.ca.ConnectionProperty;
+import com.winllc.acme.common.domain.CertAuthorityConnectionProperty;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
@@ -27,15 +29,18 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;
 
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -43,9 +48,12 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = AppConfig.class)
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 class CertAuthorityConnectionServiceTest {
 
     private final String testCsr =
@@ -67,7 +75,8 @@ class CertAuthorityConnectionServiceTest {
                     "zkzJN+9CSiuL7eXJKoZbbYF/3EnlCKCFx+u//WfqbAsdBJL9s+FB7crUBdMgT0UY\n" +
                     "RTJb2gZMJXwJ8vCPugoK9g";
 
-
+    @Autowired
+    private MockMvc mockMvc;
     @Autowired
     private CertAuthorityConnectionService connectionService;
     @Autowired
@@ -133,7 +142,7 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
-    void createConnectionInfo() throws InvalidFormException {
+    void createConnectionInfo() throws Exception {
         CertAuthorityConnectionInfoForm form = new CertAuthorityConnectionInfoForm();
         form.setName("mockca");
         form.setType(MockAbstractCertAuthority.class.getCanonicalName());
@@ -141,10 +150,18 @@ class CertAuthorityConnectionServiceTest {
 
         Long connectionInfo = connectionService.createConnectionInfo(form);
         assertTrue(connectionInfo > 0);
+
+        form.setBaseUrl("invalidurl");
+        String badJson = new ObjectMapper().writeValueAsString(form);
+        mockMvc.perform(
+                post("/ca/api/info/create")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 
     @Test
-    void updateConnectionInfo() throws InvalidFormException, RAException {
+    void updateConnectionInfo() throws Exception {
         CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
         //info.setType(CertAuthorityConnectionType.INTERNAL);
         info.setName("mockca");
@@ -155,6 +172,18 @@ class CertAuthorityConnectionServiceTest {
         form.setId(info.getId());
         CertAuthorityConnectionInfoForm certAuthorityConnectionInfoForm = connectionService.updateConnectionInfo(form);
         assertEquals("http://newurl", certAuthorityConnectionInfoForm.getBaseUrl());
+
+        CertAuthorityConnectionProperty property = new CertAuthorityConnectionProperty();
+        property.setName("");
+        property.setValue("val");
+
+        form.setProperties(Collections.singleton(property));
+        String badJson = new ObjectMapper().writeValueAsString(form);
+        mockMvc.perform(
+                post("/ca/api/info/update")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(409));
     }
 
     @Test

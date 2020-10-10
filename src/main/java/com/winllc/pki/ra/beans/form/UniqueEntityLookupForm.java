@@ -1,9 +1,12 @@
 package com.winllc.pki.ra.beans.form;
 
+import javax.validation.constraints.NotEmpty;
 import java.util.UUID;
 
 public class UniqueEntityLookupForm {
+    @NotEmpty
     private String objectClass;
+    @NotEmpty
     private String objectUuid;
 
 

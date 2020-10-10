@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.acme.common.SubjectAltName;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
@@ -21,10 +22,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;
 
@@ -36,9 +39,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = AppConfig.class)
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 class CertificateRequestServiceTest {
 
     private final String testCsr =
@@ -78,6 +84,8 @@ class CertificateRequestServiceTest {
             "FdOUg6b53ONKhTy6BglmCd+0t5+aW46MOBgZ\n" +
             "-----END CERTIFICATE REQUEST-----";
 
+    @Autowired
+    private MockMvc mockMvc;
     @Autowired
     private CertificateRequestService certificateRequestService;
     @Autowired
@@ -169,7 +177,7 @@ class CertificateRequestServiceTest {
     }
 
     @Test
-    void submitRequest() throws RAObjectNotFoundException, InvalidFormException {
+    void submitRequest() throws Exception {
         Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
         UserDetails userDetails =
                 new org.springframework.security.core.userdetails.User("test@test.com", "", new ArrayList<>());
@@ -185,6 +193,15 @@ class CertificateRequestServiceTest {
         form.setRequestedDnsNames(Collections.singletonList(san));
         Long aLong = certificateRequestService.submitRequest(form, userDetails);
         assertTrue(aLong > 0);
+
+        form.setAccountId(0L);
+        form.setCsr("badcsr");
+        String badJson = new ObjectMapper().writeValueAsString(form);
+        mockMvc.perform(
+                post("/api/certificateRequest/submit")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 
     @Test
@@ -195,7 +212,7 @@ class CertificateRequestServiceTest {
     }
 
     @Test
-    void reviewRequest() throws RAException {
+    void reviewRequest() throws Exception {
         CertificateRequest request = certificateRequestRepository.findAll().get(0);
         CertificateRequestDecisionForm form = new CertificateRequestDecisionForm();
         form.setRequestId(request.getId());
@@ -203,6 +220,14 @@ class CertificateRequestServiceTest {
 
         request = certificateRequestService.reviewRequest(form);
         assertEquals("issued", request.getStatus());
+
+        form.setStatus("invalid");
+        String badJson = new ObjectMapper().writeValueAsString(form);
+        mockMvc.perform(
+                post("/api/certificateRequest/decision")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 
     @Test

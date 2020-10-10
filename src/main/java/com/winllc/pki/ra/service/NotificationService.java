@@ -23,14 +23,10 @@ public class NotificationService {
 
     private static final Logger log = LogManager.getLogger(NotificationService.class);
 
-    @Autowired
-    private EmailUtil emailUtil;
     private final NotificationRepository notificationRepository;
-    private final AccountRepository accountRepository;
 
-    public NotificationService(NotificationRepository notificationRepository, AccountRepository accountRepository) {
+    public NotificationService(NotificationRepository notificationRepository) {
         this.notificationRepository = notificationRepository;
-        this.accountRepository = accountRepository;
     }
 
     //todo all user level notifications (manifested with emails) must go through this
@@ -66,18 +62,6 @@ public class NotificationService {
         }
     }
 
-
-    public void sendNotificationEmail(Notification notification) {
-
-        for(String userName : notification.getUserNamesAsList()) {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(userName);
-            //message.setSubject();
-
-
-            emailUtil.sendEmail(message);
-        }
-    }
 
     private boolean checkNotificationBelongsToUser(Notification notification, Authentication authentication){
         String currentUserName = authentication.getName();

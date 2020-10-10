@@ -1,4 +1,10 @@
 debug: false
+
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: false
+    path: /v2/api-docs
+
 app-keystore:
   location: /ssl/dogtag-ca-admin-with-chain.pfx
   password: P@ssW0rd

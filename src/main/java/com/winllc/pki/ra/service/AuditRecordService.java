@@ -13,14 +13,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/auditRecord")
 public class AuditRecordService {
 
-    @Autowired
-    private AuditRecordRepository repository;
+    private final AuditRecordRepository repository;
+
+    public AuditRecordService(AuditRecordRepository repository) {
+        this.repository = repository;
+    }
 
     public void save(AuditRecord auditRecord){
         repository.save(auditRecord);
@@ -37,18 +41,12 @@ public class AuditRecordService {
     @ResponseStatus(HttpStatus.OK)
     public Page<AuditRecord> getAll(Pageable pageable){
 
-        Page<AuditRecord> all = repository.findAll(pageable);
-        return all;
+        return repository.findAll(pageable);
     }
 
     @PostMapping("/forEntity")
     @ResponseStatus(HttpStatus.OK)
-    public Page<AuditRecord> getRecordsForEntity(@RequestBody UniqueEntityLookupForm lookupForm, Pageable pageable){
-        if(StringUtils.isNotBlank(lookupForm.getObjectClass()) && StringUtils.isNotBlank(lookupForm.getObjectUuid())){
-
-            return repository.findAllByObjectClassAndObjectUuid(lookupForm.getObjectClass(), lookupForm.getObjectUuid(), pageable);
-        }else{
-            throw new IllegalArgumentException("Must contain ObjectClass and ObjectUUID");
-        }
+    public Page<AuditRecord> getRecordsForEntity(@Valid @RequestBody UniqueEntityLookupForm lookupForm, Pageable pageable){
+        return repository.findAllByObjectClassAndObjectUuid(lookupForm.getObjectClass(), lookupForm.getObjectUuid(), pageable);
     }
 }

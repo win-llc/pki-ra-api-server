@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.pki.ra.beans.ServerSettingsGroup;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.ServerSettings;
@@ -9,8 +10,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;
 
@@ -18,11 +21,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = AppConfig.class)
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 class ServerSettingsServiceTest {
 
+    @Autowired
+    private MockMvc mockMvc;
     @Autowired
     private ServerSettingsService serverSettingsService;
     @Autowired
@@ -50,20 +58,42 @@ class ServerSettingsServiceTest {
     }
 
     @Test
-    void updateSettings() {
+    void updateSettings() throws Exception {
         ServerSettings serverSettings = serverSettingsRepository.findAll().get(0);
         serverSettings.setValue("value2");
         ServerSettings serverSettings1 = serverSettingsService.updateSettings(serverSettings);
         assertEquals("value2", serverSettings1.getValue());
+
+        /*
+        serverSettings.setProperty("");
+        String badJson = new ObjectMapper().writeValueAsString(serverSettings);
+        mockMvc.perform(
+                post("/api/settings/update")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
+
+         */
     }
 
     @Test
-    void updateAllSettings() {
+    void updateAllSettings() throws Exception {
         ServerSettings serverSettings = serverSettingsRepository.findAll().get(0);
         List<ServerSettings> settings = new ArrayList<>();
         settings.add(serverSettings);
         List<ServerSettingsGroup> serverSettingsGroups = serverSettingsService.updateAllSettings(settings);
         assertTrue(serverSettingsGroups.size() > 0);
+
+        /*
+        serverSettings.setProperty("");
+        String badJson = new ObjectMapper().writeValueAsString(settings);
+        mockMvc.perform(
+                post("/api/settings/updateAll")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
+
+         */
     }
 
     @Test

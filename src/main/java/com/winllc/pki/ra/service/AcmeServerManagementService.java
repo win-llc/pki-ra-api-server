@@ -37,10 +37,14 @@ public class AcmeServerManagementService {
     private String winraAcmeServerUrl;
     @Value("${win-ra.acme-server-name}")
     private String winraAcmeServerName;
-    @Autowired
-    private AcmeServerConnectionInfoRepository connectionInfoRepository;
+
+    private final AcmeServerConnectionInfoRepository connectionInfoRepository;
 
     private Map<String, AcmeServerServiceImpl> services;
+
+    public AcmeServerManagementService(AcmeServerConnectionInfoRepository connectionInfoRepository) {
+        this.connectionInfoRepository = connectionInfoRepository;
+    }
 
     @PostConstruct
     private void postConstruct(){

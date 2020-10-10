@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.AccountRequestUpdateForm;
 import com.winllc.pki.ra.config.AppConfig;
@@ -12,19 +13,28 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;
 import java.util.List;
 
 import static org.springframework.test.util.AssertionErrors.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @SpringBootTest(classes = AppConfig.class)
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 class AccountRequestServiceTest {
 
+    @Autowired
+    private MockMvc mockMvc;
     @Autowired
     private AccountRequestService accountRequestService;
     @Autowired
@@ -49,7 +59,7 @@ class AccountRequestServiceTest {
     }
 
     @Test
-    void findAll() {
+    void findAll() throws Exception {
         AccountRequest accountRequest = new AccountRequest();
         accountRequest.setAccountOwnerEmail("test@test.com");
         accountRequest.setProjectName("New Project");
@@ -58,10 +68,15 @@ class AccountRequestServiceTest {
 
         List<AccountRequest> all = accountRequestService.findAll();
         assertTrue("Response null check", all.size() == 1);
+
+        mockMvc.perform(
+                get("/api/account/request/all"))
+                .andExpect(status().is(200))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("New Project")));
     }
 
     @Test
-    void findPending() throws RAObjectNotFoundException {
+    void findPending() throws Exception {
         AccountRequest accountRequest = new AccountRequest();
         accountRequest.setAccountOwnerEmail("test@test.com");
         accountRequest.setProjectName("New Project");
@@ -75,10 +90,15 @@ class AccountRequestServiceTest {
 
         List<AccountRequest> all = accountRequestService.findPending();
         assertTrue("Response null check", all.size() == 2);
+
+        mockMvc.perform(
+                get("/api/account/request/pending"))
+                .andExpect(status().is(200))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("New Project")));
     }
 
     @Test
-    void createAccountRequest() throws RAObjectNotFoundException {
+    void createAccountRequest() throws Exception {
         AccountRequestForm form = new AccountRequestForm();
         form.setAccountOwnerEmail("test@test.com");
         form.setProjectName("project1");
@@ -86,10 +106,27 @@ class AccountRequestServiceTest {
 
         AccountRequest accountRequest = accountRequestService.findById(id);
         assertNotNull("Account Request null check", accountRequest);
+
+        String json = new ObjectMapper().writeValueAsString(form);
+
+        mockMvc.perform(
+                post("/api/account/request/submit")
+                        .contentType("application/json")
+                        .content(json))
+                .andExpect(status().is(201));
+
+        form.setAccountOwnerEmail("bademail");
+        String badJson = new ObjectMapper().writeValueAsString(form);
+
+        mockMvc.perform(
+                post("/api/account/request/submit")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 
     @Test
-    void accountRequestUpdate() throws RAObjectNotFoundException {
+    void accountRequestUpdate() throws Exception {
         AccountRequest accountRequest = new AccountRequest();
         accountRequest.setAccountOwnerEmail("test@test.com");
         accountRequest.setProjectName("New Project");
@@ -104,6 +141,14 @@ class AccountRequestServiceTest {
 
         accountRequest = accountRequestRepository.findAll().get(0);
         assertTrue("Account update check", accountRequest.getState().contentEquals("approve"));
+
+        form.setState("badstate");
+        String badJson = new ObjectMapper().writeValueAsString(form);
+        mockMvc.perform(
+                post("/api/account/request/update")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 
     @Test

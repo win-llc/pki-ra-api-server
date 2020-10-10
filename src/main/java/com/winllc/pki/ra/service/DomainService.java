@@ -5,11 +5,13 @@ import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.DomainRepository;
+import com.winllc.pki.ra.service.validators.DomainValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -23,8 +25,18 @@ public class DomainService {
 
     private static final Logger log = LogManager.getLogger(DomainService.class);
 
-    @Autowired
-    private DomainRepository domainRepository;
+    private final DomainRepository domainRepository;
+    private final DomainValidator domainValidator;
+
+    public DomainService(DomainRepository domainRepository, DomainValidator domainValidator) {
+        this.domainRepository = domainRepository;
+        this.domainValidator = domainValidator;
+    }
+
+    @InitBinder("domainForm")
+    public void initBinder(WebDataBinder binder) {
+        binder.setValidator(domainValidator);
+    }
 
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)

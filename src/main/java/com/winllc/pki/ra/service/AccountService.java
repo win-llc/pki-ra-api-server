@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.DirectoryDataSettings;
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.endpoint.acme.AcmeServerService;
 import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.beans.form.AccountUpdateForm;
@@ -13,13 +14,18 @@ import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.*;
+import com.winllc.pki.ra.service.transaction.SystemActionRunner;
+import com.winllc.pki.ra.service.validators.AccountRequestValidator;
+import com.winllc.pki.ra.service.validators.AccountUpdateValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -32,42 +38,52 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/account")
-public class AccountService {
+public class AccountService extends AbstractService {
 
     private static final Logger log = LogManager.getLogger(AccountService.class);
-
-    static String macKey = "2798044239550a105ef8ba7f187c3c0b657dda5a1aa9500dd0956d943bd4e94501961bf84ecc3578c90aa09b5578b5d313a744e48fe7ecf60d20f0ae6d3ebc5e";
 
     private final AccountRepository accountRepository;
     private final PocEntryRepository pocEntryRepository;
     private final AuditRecordService auditRecordService;
     private final AccountRestrictionRepository accountRestrictionRepository;
     private final AcmeServerManagementService acmeServerManagementService;
+    private final AccountRequestValidator accountRequestValidator;
+    private final AccountUpdateValidator accountUpdateValidator;
 
     public AccountService(AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
                           AuditRecordService auditRecordService, AccountRestrictionRepository accountRestrictionRepository,
-                          AcmeServerManagementService acmeServerManagementService) {
+                          AcmeServerManagementService acmeServerManagementService, ApplicationContext applicationContext,
+                          AccountRequestValidator accountRequestValidator, AccountUpdateValidator accountUpdateValidator) {
+        super(applicationContext);
         this.accountRepository = accountRepository;
         this.pocEntryRepository = pocEntryRepository;
         this.auditRecordService = auditRecordService;
         this.accountRestrictionRepository = accountRestrictionRepository;
         this.acmeServerManagementService = acmeServerManagementService;
+        this.accountRequestValidator = accountRequestValidator;
+        this.accountUpdateValidator = accountUpdateValidator;
     }
 
+    @InitBinder("accountRequestForm")
+    public void initAccountRequestBinder(WebDataBinder binder) {
+        binder.setValidator(accountRequestValidator);
+    }
 
-    @Transactional
-    public Account save(Account account) {
-        Account saved = accountRepository.save(account);
-        auditRecordService.save(AuditRecord.buildNew(AuditRecordType.ACCOUNT_ADDED, saved));
-        return saved;
+    @InitBinder("accountUpdateForm")
+    public void initAccountUpdateBinder(WebDataBinder binder) {
+        binder.setValidator(accountUpdateValidator);
     }
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public Long createNewAccount(@Valid @RequestBody AccountRequest form) {
+    public Long createNewAccount(@Valid @RequestBody AccountRequestForm form) {
         Account account = Account.buildNew(form.getProjectName());
 
-        account = save(account);
+        account = accountRepository.save(account);
+
+        SystemActionRunner.build(context)
+                .createAuditRecord(AuditRecordType.ACCOUNT_ADDED, account)
+                .execute();
 
         return account.getId();
     }
@@ -118,45 +134,41 @@ public class AccountService {
     @Transactional
     @ResponseStatus(HttpStatus.OK)
     public AccountInfo updateAccount(@Valid @RequestBody AccountUpdateForm form) throws Exception {
-        if (form.isValid()) {
-            Optional<Account> optionalAccount = accountRepository.findById(form.getId());
-            if (optionalAccount.isPresent()) {
-                Account account = optionalAccount.get();
+        Optional<Account> optionalAccount = accountRepository.findById(form.getId());
+        if (optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
 
-                Map<String, PocEntry> existingPocMap = pocEntryRepository.findAllByAccount(account).stream()
-                        .collect(Collectors.toMap(p -> p.getEmail(), p -> p));
+            Map<String, PocEntry> existingPocMap = pocEntryRepository.findAllByAccount(account).stream()
+                    .collect(Collectors.toMap(p -> p.getEmail(), p -> p));
 
-                List<String> emailsToRemove = existingPocMap.values()
-                        .stream().filter(p -> !form.getPocEmails().contains(new PocFormEntry(p.getEmail())))
-                        .map(e -> e.getEmail())
-                        .collect(Collectors.toList());
+            List<String> emailsToRemove = existingPocMap.values()
+                    .stream().filter(p -> !form.getPocEmails().contains(new PocFormEntry(p.getEmail())))
+                    .map(e -> e.getEmail())
+                    .collect(Collectors.toList());
 
-                for (PocFormEntry email : form.getPocEmails()) {
+            for (PocFormEntry email : form.getPocEmails()) {
 
-                    //Only create entry if POC email does not exist
-                    if (existingPocMap.get(email.getEmail()) == null) {
+                //Only create entry if POC email does not exist
+                if (existingPocMap.get(email.getEmail()) == null) {
 
-                        PocEntry pocEntry = new PocEntry();
-                        pocEntry.setEnabled(true);
-                        pocEntry.setEmail(email.getEmail());
-                        pocEntry.setAddedOn(Timestamp.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
-                        pocEntry.setAccount(account);
-                        pocEntry = pocEntryRepository.save(pocEntry);
+                    PocEntry pocEntry = new PocEntry();
+                    pocEntry.setEnabled(true);
+                    pocEntry.setEmail(email.getEmail());
+                    pocEntry.setAddedOn(Timestamp.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
+                    pocEntry.setAccount(account);
+                    pocEntry = pocEntryRepository.save(pocEntry);
 
-                        account.getPocs().add(pocEntry);
-                    }
+                    account.getPocs().add(pocEntry);
                 }
-
-                account.getPocs().removeIf(p -> emailsToRemove.contains(p.getEmail()));
-                pocEntryRepository.deleteAllByEmailInAndAccountEquals(emailsToRemove, account);
-
-                account = accountRepository.save(account);
-                return buildAccountInfo(account);
-            } else {
-                throw new Exception("Could not find account with ID: " + form.getId());
             }
+
+            account.getPocs().removeIf(p -> emailsToRemove.contains(p.getEmail()));
+            pocEntryRepository.deleteAllByEmailInAndAccountEquals(emailsToRemove, account);
+
+            account = accountRepository.save(account);
+            return buildAccountInfo(account);
         } else {
-            throw new InvalidFormException(form);
+            throw new RAObjectNotFoundException(Account.class, form.getId());
         }
     }
 
@@ -240,13 +252,13 @@ public class AccountService {
 
         Optional<Account> optionalAccount = accountRepository.findById(id);
 
-        if(optionalAccount.isPresent()) {
+        if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
             accountRepository.delete(account);
 
             auditRecordService.save(AuditRecord.buildNew(AuditRecordType.ACCOUNT_REMOVED, account));
-        }else{
-            log.debug("Did not delete Account, ID not found: "+id);
+        } else {
+            log.debug("Did not delete Account, ID not found: " + id);
         }
     }
 
@@ -276,15 +288,6 @@ public class AccountService {
         accountInfo.setPocs(new ArrayList<>(userSet));
 
         return accountInfo;
-    }
-
-
-    private List<AccountRestriction> getAllNotCompletedAccountRestrictions(Account account) {
-        return accountRestrictionRepository.findAllByAccountAndCompleted(account, false);
-    }
-
-    private List<AccountRestriction> getAllNotCompletedAndOverdueAccountRestrictions(Account account) {
-        return accountRestrictionRepository.findAllByAccountAndDueByBeforeAndCompletedEquals(account, Timestamp.valueOf(LocalDateTime.now()), false);
     }
 
 }

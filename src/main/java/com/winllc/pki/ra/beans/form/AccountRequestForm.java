@@ -12,7 +12,7 @@ public class AccountRequestForm extends ValidForm<AccountRequest> {
     private String accountOwnerEmail;
     @NotEmpty(message = "Project Name must not be empty")
     private String projectName;
-    private String securityPolicyProjectId;
+    private String securityPolicyServerProjectId;
 
     public String getAccountOwnerEmail() {
         return accountOwnerEmail;
@@ -30,12 +30,12 @@ public class AccountRequestForm extends ValidForm<AccountRequest> {
         this.projectName = projectName;
     }
 
-    public String getSecurityPolicyProjectId() {
-        return securityPolicyProjectId;
+    public String getSecurityPolicyServerProjectId() {
+        return securityPolicyServerProjectId;
     }
 
-    public void setSecurityPolicyProjectId(String securityPolicyProjectId) {
-        this.securityPolicyProjectId = securityPolicyProjectId;
+    public void setSecurityPolicyServerProjectId(String securityPolicyServerProjectId) {
+        this.securityPolicyServerProjectId = securityPolicyServerProjectId;
     }
 
     @Override
@@ -48,7 +48,7 @@ public class AccountRequestForm extends ValidForm<AccountRequest> {
         return "AccountRequestForm{" +
                 "accountOwnerEmail='" + accountOwnerEmail + '\'' +
                 ", projectName='" + projectName + '\'' +
-                ", securityPolicyProjectId='" + securityPolicyProjectId + '\'' +
+                ", securityPolicyProjectId='" + securityPolicyServerProjectId + '\'' +
                 "} " + super.toString();
     }
 }

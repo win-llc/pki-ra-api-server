@@ -17,6 +17,8 @@ import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
+import com.winllc.pki.ra.service.validators.CertificateRequestDecisionValidator;
+import com.winllc.pki.ra.service.validators.CertificateRequestValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
@@ -25,6 +27,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.naming.InvalidNameException;
@@ -39,7 +42,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/certificateRequest")
-public class CertificateRequestService {
+public class CertificateRequestService extends AbstractService {
 
     private static final Logger log = LogManager.getLogger(CertificateRequestService.class);
 
@@ -47,14 +50,31 @@ public class CertificateRequestService {
     private final AccountRepository accountRepository;
     private final LoadedCertAuthorityStore certAuthorityStore;
     private final CertRequestFormValidator formValidator;
-    private final ApplicationContext context;
+    private final CertificateRequestValidator certificateRequestValidator;
+    private final CertificateRequestDecisionValidator certificateRequestDecisionValidator;
 
-    public CertificateRequestService(CertificateRequestRepository requestRepository, AccountRepository accountRepository, LoadedCertAuthorityStore certAuthorityStore, CertRequestFormValidator formValidator, ApplicationContext context) {
+    public CertificateRequestService(CertificateRequestRepository requestRepository,
+                                     AccountRepository accountRepository, LoadedCertAuthorityStore certAuthorityStore,
+                                     CertRequestFormValidator formValidator, ApplicationContext context,
+                                     CertificateRequestValidator certificateRequestValidator,
+                                     CertificateRequestDecisionValidator certificateRequestDecisionValidator) {
+        super(context);
         this.requestRepository = requestRepository;
         this.accountRepository = accountRepository;
         this.certAuthorityStore = certAuthorityStore;
         this.formValidator = formValidator;
-        this.context = context;
+        this.certificateRequestValidator = certificateRequestValidator;
+        this.certificateRequestDecisionValidator = certificateRequestDecisionValidator;
+    }
+
+    @InitBinder("certificateRequestForm")
+    public void initBinder(WebDataBinder binder) {
+        binder.setValidator(certificateRequestValidator);
+    }
+
+    @InitBinder("certificateRequestDecisionForm")
+    public void initDecisionBinder(WebDataBinder binder) {
+        binder.setValidator(certificateRequestDecisionValidator);
     }
 
     public Optional<CertificateRequest> findCertificateRequestWithCertificate(X509Certificate certificate){
@@ -80,8 +100,7 @@ public class CertificateRequestService {
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)
     public List<CertificateRequest> getAll() {
-        List<CertificateRequest> requests = requestRepository.findAll();
-        return requests;
+        return requestRepository.findAll();
     }
 
     @GetMapping("/allWithStatus/{status}")

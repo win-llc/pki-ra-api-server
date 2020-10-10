@@ -1,39 +1,33 @@
 package com.winllc.pki.ra.service;
 
-import com.nimbusds.jose.util.Base64;
-import com.winllc.pki.ra.beans.AcmeClientDetails;
-import com.winllc.pki.ra.beans.OIDCClientDetails;
-import com.winllc.pki.ra.beans.ServerEntryDockerDeploymentFile;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
-import com.winllc.pki.ra.beans.validator.ServerEntryFormValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.DomainRepository;
 import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
 import com.winllc.pki.ra.service.transaction.SystemActionRunner;
+import com.winllc.pki.ra.service.validators.ServerEntryValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -50,21 +44,25 @@ public class ServerEntryService extends AbstractService {
     private final KeycloakOIDCProviderConnection oidcProviderConnection;
     private final PocEntryRepository pocEntryRepository;
     private final EntityDirectoryService entityDirectoryService;
-    private final AuditRecordService auditRecordService;
+    private final ServerEntryValidator serverEntryValidator;
 
     public ServerEntryService(ApplicationContext context,
                               ServerEntryRepository serverEntryRepository, AccountRepository accountRepository,
                               KeycloakOIDCProviderConnection oidcProviderConnection, PocEntryRepository pocEntryRepository,
-                              EntityDirectoryService entityDirectoryService, AuditRecordService auditRecordService) {
+                              EntityDirectoryService entityDirectoryService, ServerEntryValidator serverEntryValidator) {
         super(context);
         this.serverEntryRepository = serverEntryRepository;
         this.accountRepository = accountRepository;
         this.oidcProviderConnection = oidcProviderConnection;
         this.pocEntryRepository = pocEntryRepository;
         this.entityDirectoryService = entityDirectoryService;
-        this.auditRecordService = auditRecordService;
+        this.serverEntryValidator = serverEntryValidator;
     }
 
+    @InitBinder("serverEntryForm")
+    public void initBinder(WebDataBinder binder) {
+        binder.setValidator(serverEntryValidator);
+    }
 
     @GetMapping("/variableFields")
     @ResponseStatus(HttpStatus.OK)
@@ -139,32 +137,27 @@ public class ServerEntryService extends AbstractService {
         if(optionalServerEntry.isPresent()){
             ServerEntry serverEntry = optionalServerEntry.get();
 
-            ValidationResponse validationResponse = new ServerEntryFormValidator().validate(form, true);
-            if(validationResponse.isValid()){
-                serverEntry.setAlternateDnsValues(form.getAlternateDnsValues());
-                serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
+            serverEntry.setAlternateDnsValues(form.getAlternateDnsValues());
+            serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
 
-                List<String> alternateDnsValues = new ArrayList<>(serverEntry.getAlternateDnsValues());
-                serverEntry.setAlternateDnsValues(alternateDnsValues);
+            List<String> alternateDnsValues = new ArrayList<>(serverEntry.getAlternateDnsValues());
+            serverEntry.setAlternateDnsValues(alternateDnsValues);
 
-                serverEntry = serverEntryRepository.save(serverEntry);
+            serverEntry = serverEntryRepository.save(serverEntry);
 
-                SystemActionRunner.build(context)
-                        .createAuditRecord(AuditRecordType.SERVER_ENTRY_UPDATED, serverEntry)
-                        .createNotificationForAccountPocs(Notification.buildNew()
-                                .addMessage("Server Entry updated: "+serverEntry.getFqdn()), serverEntry.getAccount())
-                        .sendNotification()
-                        .execute();
+            SystemActionRunner.build(context)
+                    .createAuditRecord(AuditRecordType.SERVER_ENTRY_UPDATED, serverEntry)
+                    .createNotificationForAccountPocs(Notification.buildNew()
+                            .addMessage("Server Entry updated: "+serverEntry.getFqdn()), serverEntry.getAccount())
+                    .sendNotification()
+                    .execute();
 
-                //apply attributes to external directory
-                entityDirectoryService.applyServerEntryToDirectory(serverEntry);
+            //apply attributes to external directory
+            entityDirectoryService.applyServerEntryToDirectory(serverEntry);
 
-                return entryToInfo(serverEntry);
-            }else{
-                throw new RAException("Invalid Server Entry form");
-            }
+            return entryToInfo(serverEntry);
         }else{
-            throw new RAObjectNotFoundException(form);
+            throw new RAException("Invalid Server Entry form");
         }
     }
 
@@ -228,7 +221,10 @@ public class ServerEntryService extends AbstractService {
             }
 
             serverEntryRepository.deleteById(id);
-            auditRecordService.save(AuditRecord.buildNew(AuditRecordType.SERVER_ENTRY_REMOVED, serverEntry));
+
+            SystemActionRunner.build(context)
+                    .createAuditRecord(AuditRecordType.SERVER_ENTRY_REMOVED, serverEntry)
+                    .execute();
         }else{
             throw new RAObjectNotFoundException(ServerEntry.class, id);
         }

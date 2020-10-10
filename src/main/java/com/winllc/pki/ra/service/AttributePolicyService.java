@@ -8,6 +8,7 @@ import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
 import com.winllc.pki.ra.repository.AttributePolicyRepository;
 import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.service.external.SecurityPolicyConnection;
+import com.winllc.pki.ra.service.validators.AttributePolicyGroupValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -29,18 +31,30 @@ public class AttributePolicyService {
 
     private static final Logger log = LogManager.getLogger(AttributePolicyService.class);
 
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private PocEntryRepository pocEntryRepository;
-    @Autowired
-    private AttributePolicyGroupRepository attributePolicyGroupRepository;
-    @Autowired
-    private AttributePolicyRepository attributePolicyRepository;
+    private final AccountRepository accountRepository;
+    private final PocEntryRepository pocEntryRepository;
+    private final AttributePolicyGroupRepository attributePolicyGroupRepository;
+    private final AttributePolicyRepository attributePolicyRepository;
     //todo integrate this with attribute policy
-    @Autowired
-    private SecurityPolicyService securityPolicyService;
+    private final SecurityPolicyService securityPolicyService;
+    private final AttributePolicyGroupValidator attributePolicyGroupValidator;
 
+    public AttributePolicyService(AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
+                                  AttributePolicyGroupRepository attributePolicyGroupRepository,
+                                  AttributePolicyRepository attributePolicyRepository, SecurityPolicyService securityPolicyService,
+                                  AttributePolicyGroupValidator attributePolicyGroupValidator) {
+        this.accountRepository = accountRepository;
+        this.pocEntryRepository = pocEntryRepository;
+        this.attributePolicyGroupRepository = attributePolicyGroupRepository;
+        this.attributePolicyRepository = attributePolicyRepository;
+        this.securityPolicyService = securityPolicyService;
+        this.attributePolicyGroupValidator = attributePolicyGroupValidator;
+    }
+
+    @InitBinder("attributePolicyGroupForm")
+    public void initAppKeystoreEntryBinder(WebDataBinder binder) {
+        binder.setValidator(attributePolicyGroupValidator);
+    }
 
     @GetMapping("/policyService/connectionNames")
     @ResponseStatus(HttpStatus.OK)

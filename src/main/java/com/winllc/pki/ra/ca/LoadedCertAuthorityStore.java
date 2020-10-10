@@ -27,15 +27,16 @@ import java.util.concurrent.atomic.AtomicReference;
 @Component
 public class LoadedCertAuthorityStore implements InitializingBean {
 
-
     private static final Logger log = LogManager.getLogger(LoadedCertAuthorityStore.class);
 
     private Map<String, CertAuthority> loadedCertAuthorities = new ConcurrentHashMap<>();
 
+    private final ApplicationContext applicationContext;
     private final CertAuthorityConnectionInfoRepository repository;
     private final ApplicationKeystore applicationKeystore;
 
     public LoadedCertAuthorityStore(ApplicationContext applicationContext){
+        this.applicationContext = applicationContext;
         this.repository = applicationContext.getBean(CertAuthorityConnectionInfoRepository.class);
         this.applicationKeystore = applicationContext.getBean(ApplicationKeystore.class);
     }
@@ -91,8 +92,9 @@ public class LoadedCertAuthorityStore implements InitializingBean {
 
                 String certAuthorityClassName = info.getCertAuthorityClassName();
                 Class<?> clazz = Class.forName(certAuthorityClassName);
-                Constructor<?> ctor = clazz.getConstructor(CertAuthorityConnectionInfo.class, KeyStore.class, String.class);
-                Object object = ctor.newInstance(new Object[] { info, applicationKeystore.getKeyStore(),
+                Constructor<?> ctor = clazz.getConstructor(CertAuthorityConnectionInfo.class, ApplicationContext.class,
+                        KeyStore.class, String.class);
+                Object object = ctor.newInstance(new Object[] { info, applicationContext, applicationKeystore.getKeyStore(),
                         applicationKeystore.getKeystorePassword() });
 
                 if(object instanceof CertAuthority){

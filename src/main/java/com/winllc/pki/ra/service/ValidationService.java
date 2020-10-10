@@ -35,12 +35,16 @@ public class ValidationService {
 
     private static final Logger log = LogManager.getLogger(ValidationService.class);
 
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private ServerEntryRepository serverEntryRepository;
-    @Autowired
-    private AccountRestrictionService accountRestrictionService;
+    private final AccountRepository accountRepository;
+    private final ServerEntryRepository serverEntryRepository;
+    private final AccountRestrictionService accountRestrictionService;
+
+    public ValidationService(AccountRepository accountRepository, ServerEntryRepository serverEntryRepository,
+                             AccountRestrictionService accountRestrictionService) {
+        this.accountRepository = accountRepository;
+        this.serverEntryRepository = serverEntryRepository;
+        this.accountRestrictionService = accountRestrictionService;
+    }
 
     @PostMapping("/rules/{kid}")
     @ResponseStatus(HttpStatus.OK)

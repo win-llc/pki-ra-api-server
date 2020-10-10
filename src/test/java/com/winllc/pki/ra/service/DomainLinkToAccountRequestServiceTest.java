@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.beans.DomainLinkRequestDecision;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.winllc.pki.ra.beans.form.DomainLinkRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.DomainLinkToAccountRequestForm;
 import com.winllc.pki.ra.beans.info.DomainLinkToAccountRequestInfo;
 import com.winllc.pki.ra.config.AppConfig;
@@ -13,21 +14,27 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = AppConfig.class)
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 class DomainLinkToAccountRequestServiceTest {
 
+    @Autowired
+    private MockMvc mockMvc;
     @Autowired
     private DomainLinkToAccountRequestService linkToAccountRequestService;
     @Autowired
@@ -96,7 +103,7 @@ class DomainLinkToAccountRequestServiceTest {
     }
 
     @Test
-    void createDomainRequest() throws NotAuthorizedException, RAObjectNotFoundException {
+    void createDomainRequest() throws Exception {
         Account account = accountRepository.findAll().get(0);
         Domain domain = domainRepository.findAll().get(0);
 
@@ -109,14 +116,23 @@ class DomainLinkToAccountRequestServiceTest {
 
         Long domainRequest = linkToAccountRequestService.createDomainRequest(form, userDetails);
         assertTrue(domainRequest > 0);
+
+        form.setAccountId(0L);
+        form.setRequestedDomainIds(Collections.singletonList(0L));
+        String badJson = new ObjectMapper().writeValueAsString(form);
+        mockMvc.perform(
+                post("/api/domain/request/linkAccount/create")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 
     @Test
     @Transactional
-    void domainRequestDecision() throws RAException {
+    void domainRequestDecision() throws Exception {
         DomainLinkToAccountRequest request = requestRepository.findAll().get(0);
 
-        DomainLinkRequestDecision decision = new DomainLinkRequestDecision();
+        DomainLinkRequestDecisionForm decision = new DomainLinkRequestDecisionForm();
         decision.setRequestId(request.getId());
         decision.setStatus("approve");
         linkToAccountRequestService.domainRequestDecision(decision);
@@ -125,5 +141,13 @@ class DomainLinkToAccountRequestServiceTest {
         Set<DomainPolicy> canIssueDomains = account.getAccountDomainPolicies();
         boolean canIssue = canIssueDomains.stream().anyMatch(d -> d.getTargetDomain().getBase().contentEquals("winllc-dev.com"));
         assertTrue(canIssue);
+
+        decision.setStatus("bad");
+        String badJson = new ObjectMapper().writeValueAsString(decision);
+        mockMvc.perform(
+                post("/api/domain/request/linkAccount/update")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 }

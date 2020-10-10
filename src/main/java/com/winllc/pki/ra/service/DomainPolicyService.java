@@ -23,12 +23,16 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/domainPolicy")
 public class DomainPolicyService {
 
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private DomainRepository domainRepository;
-    @Autowired
-    private DomainPolicyRepository restrictionRepository;
+    private final AccountRepository accountRepository;
+    private final DomainRepository domainRepository;
+    private final DomainPolicyRepository restrictionRepository;
+
+    public DomainPolicyService(AccountRepository accountRepository, DomainRepository domainRepository,
+                               DomainPolicyRepository restrictionRepository) {
+        this.accountRepository = accountRepository;
+        this.domainRepository = domainRepository;
+        this.restrictionRepository = restrictionRepository;
+    }
 
     @GetMapping("/byType/{type}/{id}")
     @Transactional
@@ -125,7 +129,6 @@ public class DomainPolicyService {
     }
 
     private DomainCertIssuanceRestrictionHolder getTargetObject(String type, Long targetId) throws Exception {
-        List<DomainPolicy> restrictions = new ArrayList<>();
         DomainCertIssuanceRestrictionHolder holder = null;
         switch (type){
             case "account":

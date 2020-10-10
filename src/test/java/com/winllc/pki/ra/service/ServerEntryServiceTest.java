@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.pki.ra.beans.OIDCClientDetails;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
@@ -15,10 +16,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;
 import java.util.*;
@@ -26,11 +29,16 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = AppConfig.class)
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 class ServerEntryServiceTest {
 
+    @Autowired
+    private MockMvc mockMvc;
     @Autowired
     private ServerEntryService serverEntryService;
     @Autowired
@@ -92,7 +100,7 @@ class ServerEntryServiceTest {
     }
 
     @Test
-    void createServerEntry() throws RAObjectNotFoundException {
+    void createServerEntry() throws Exception {
         Account account = accountRepository.findAll().get(0);
         ServerEntryForm serverEntryForm = new ServerEntryForm();
         serverEntryForm.setFqdn("test2.winllc-dev.com");
@@ -102,11 +110,19 @@ class ServerEntryServiceTest {
 
         Optional<ServerEntry> distinctByFqdnEquals = serverEntryRepository.findDistinctByFqdnEquals("test2.winllc-dev.com");
         assertTrue(distinctByFqdnEquals.isPresent());
+
+        serverEntryForm.setFqdn("inva lid");
+        String badJson = new ObjectMapper().writeValueAsString(serverEntryForm);
+        mockMvc.perform(
+                post("/api/serverEntry/create")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 
     @Test
     @Transactional
-    void updateServerEntry() throws RAException {
+    void updateServerEntry() throws Exception {
         ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
         ServerEntryForm form = new ServerEntryForm(serverEntry);
 
@@ -118,6 +134,14 @@ class ServerEntryServiceTest {
 
         serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
         assertEquals(1, serverEntry.getAlternateDnsValues().size());
+
+        form.setAccountId(0L);
+        String badJson = new ObjectMapper().writeValueAsString(form);
+        mockMvc.perform(
+                post("/api/serverEntry/update")
+                        .contentType("application/json")
+                        .content(badJson))
+                .andExpect(status().is(400));
     }
 
     @Test

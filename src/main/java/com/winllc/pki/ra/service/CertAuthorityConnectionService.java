@@ -8,9 +8,7 @@ import com.winllc.acme.common.domain.CertAuthorityConnectionProperty;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
-import com.winllc.pki.plugins.dogtag.DogTagCertAuthority;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
-import com.winllc.pki.ra.beans.validator.CertAuthorityConnectionInfoValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.ca.*;
 import com.winllc.acme.common.contants.CertificateStatus;
@@ -21,14 +19,15 @@ import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
 import com.winllc.pki.ra.service.transaction.CertRevocationTransaction;
+import com.winllc.pki.ra.service.validators.CertAuthorityConnectionInfoValidator;
 import io.github.classgraph.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -40,81 +39,80 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/ca")
 @Transactional
-public class CertAuthorityConnectionService {
+public class CertAuthorityConnectionService extends AbstractService {
 
     private static final Logger log = LogManager.getLogger(CertAuthorityConnectionService.class);
 
     private final CertAuthorityConnectionInfoRepository repository;
     private final CertAuthorityConnectionPropertyRepository propertyRepository;
-    private final CertAuthorityConnectionInfoValidator validator;
     private final AccountRepository accountRepository;
-    private final ApplicationContext context;
     private final LoadedCertAuthorityStore certAuthorityStore;
+    private final CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator;
 
     public CertAuthorityConnectionService(CertAuthorityConnectionInfoRepository repository,
                                           CertAuthorityConnectionPropertyRepository propertyRepository,
-                                          CertAuthorityConnectionInfoValidator validator, AccountRepository accountRepository,
-                                          ApplicationContext context, LoadedCertAuthorityStore certAuthorityStore) {
+                                          AccountRepository accountRepository,
+                                          ApplicationContext context, LoadedCertAuthorityStore certAuthorityStore,
+                                          CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator) {
+        super(context);
         this.repository = repository;
         this.propertyRepository = propertyRepository;
-        this.validator = validator;
         this.accountRepository = accountRepository;
-        this.context = context;
         this.certAuthorityStore = certAuthorityStore;
+        this.certAuthorityConnectionInfoValidator = certAuthorityConnectionInfoValidator;
+    }
+
+    @InitBinder("certAuthorityConnectionInfoForm")
+    public void initAppKeystoreEntryBinder(WebDataBinder binder) {
+        binder.setValidator(certAuthorityConnectionInfoValidator);
     }
 
     @PostMapping("/api/info/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public Long createConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm connectionInfo) throws InvalidFormException {
+    public Long createConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm connectionInfo) {
         //todo allow required inputs on form before submitting here
-        ValidationResponse validationResponse = validator.validate(connectionInfo, false);
 
-        if (validationResponse.isValid()) {
-            CertAuthorityConnectionInfo caConnection = new CertAuthorityConnectionInfo();
-            caConnection.setName(connectionInfo.getName());
-            caConnection.setCertAuthorityClassName(connectionInfo.getType());
-            caConnection.setBaseUrl(connectionInfo.getBaseUrl());
-            caConnection.setAuthKeyAlias(connectionInfo.getAuthKeyAlias());
-            caConnection.setTrustChainBase64(connectionInfo.getTrustChainBase64());
-            caConnection = repository.save(caConnection);
+        CertAuthorityConnectionInfo caConnection = new CertAuthorityConnectionInfo();
+        caConnection.setName(connectionInfo.getName());
+        caConnection.setCertAuthorityClassName(connectionInfo.getType());
+        caConnection.setBaseUrl(connectionInfo.getBaseUrl());
+        caConnection.setAuthKeyAlias(connectionInfo.getAuthKeyAlias());
+        caConnection.setTrustChainBase64(connectionInfo.getTrustChainBase64());
+        caConnection = repository.save(caConnection);
 
-            certAuthorityStore.reload();
+        certAuthorityStore.reload();
 
-            Map<String, CertAuthorityConnectionProperty> propMap = connectionInfo.getProperties().stream()
-                    .collect(Collectors.toMap(p -> p.getName(), p -> p));
+        Map<String, CertAuthorityConnectionProperty> propMap = connectionInfo.getProperties().stream()
+                .collect(Collectors.toMap(p -> p.getName(), p -> p));
 
-            //Create the required settings for the connection, will be filled in on edit screen
-            Set<CertAuthorityConnectionProperty> props = new HashSet<>();
-            for(ConnectionProperty connectionProperty : CertAuthority.getRequiredProperties()){
-                CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
-                prop.setName(connectionProperty.getName());
+        //Create the required settings for the connection, will be filled in on edit screen
+        Set<CertAuthorityConnectionProperty> props = new HashSet<>();
+        for(ConnectionProperty connectionProperty : CertAuthority.getRequiredProperties()){
+            CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
+            prop.setName(connectionProperty.getName());
 
-                if(propMap.containsKey(connectionProperty.getName())){
-                    prop.setValue(propMap.get(connectionProperty.getName()).getValue());
-                }else {
-                    prop.setValue("");
-                }
-
-                prop.setCertAuthorityConnectionInfo(caConnection);
-                prop = propertyRepository.save(prop);
-                props.add(prop);
+            if(propMap.containsKey(connectionProperty.getName())){
+                prop.setValue(propMap.get(connectionProperty.getName()).getValue());
+            }else {
+                prop.setValue("");
             }
 
-            caConnection.setProperties(props);
-            caConnection = repository.save(caConnection);
-
-            //reload cert authority
-            certAuthorityStore.reload();
-
-            return caConnection.getId();
-        } else {
-            throw new InvalidFormException(connectionInfo);
+            prop.setCertAuthorityConnectionInfo(caConnection);
+            prop = propertyRepository.save(prop);
+            props.add(prop);
         }
+
+        caConnection.setProperties(props);
+        caConnection = repository.save(caConnection);
+
+        //reload cert authority
+        certAuthorityStore.reload();
+
+        return caConnection.getId();
     }
 
     @Transactional
@@ -122,35 +120,30 @@ public class CertAuthorityConnectionService {
     @ResponseStatus(HttpStatus.OK)
     public CertAuthorityConnectionInfoForm updateConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm form)
             throws RAException {
-        ValidationResponse validationResponse = validator.validate(form, true);
 
-        if(validationResponse.isValid()) {
+        Optional<CertAuthorityConnectionInfo> optionalInfo = repository.findById(form.getId());
+        if (optionalInfo.isPresent()) {
+            final CertAuthorityConnectionInfo info = optionalInfo.get();
 
-            Optional<CertAuthorityConnectionInfo> optionalInfo = repository.findById(form.getId());
-            if (optionalInfo.isPresent()) {
-                final CertAuthorityConnectionInfo info = optionalInfo.get();
-
-                Set<CertAuthorityConnectionProperty> props = new HashSet<>();
-                if(!CollectionUtils.isEmpty(form.getProperties())){
-                    for(CertAuthorityConnectionProperty prop : form.getProperties()){
-                        prop.setCertAuthorityConnectionInfo(info);
-                        prop = propertyRepository.save(prop);
-                        props.add(prop);
-                    }
+            Set<CertAuthorityConnectionProperty> props = new HashSet<>();
+            if(!CollectionUtils.isEmpty(form.getProperties())){
+                for(CertAuthorityConnectionProperty prop : form.getProperties()){
+                    prop.setCertAuthorityConnectionInfo(info);
+                    prop = propertyRepository.save(prop);
+                    props.add(prop);
                 }
-                info.setProperties(props);
-                info.setBaseUrl(form.getBaseUrl());
-                info.setAuthKeyAlias(form.getAuthKeyAlias());
-                info.setTrustChainBase64(form.getTrustChainBase64());
-
-                CertAuthorityConnectionInfo info2 = repository.save(info);
-                return buildForm(info2);
-            }else{
-                throw new RAObjectNotFoundException(CertAuthorityConnectionInfo.class, form.getId());
             }
+            info.setProperties(props);
+            info.setBaseUrl(form.getBaseUrl());
+            info.setAuthKeyAlias(form.getAuthKeyAlias());
+            info.setTrustChainBase64(form.getTrustChainBase64());
+
+            CertAuthorityConnectionInfo info2 = repository.save(info);
+            return buildForm(info2);
         }else{
-            throw new InvalidFormException(form);
+            throw new RAObjectNotFoundException(CertAuthorityConnectionInfo.class, form.getId());
         }
+
     }
 
     @GetMapping("/api/info/byName/{name}")
@@ -203,16 +196,7 @@ public class CertAuthorityConnectionService {
     @ResponseStatus(HttpStatus.OK)
     public List<String> getTypes() {
 
-
         return getCaOptions();
-/*
-        List<String> certAuthorityTypes = Stream.of(CertAuthorityConnectionType.values())
-                .map(v -> v.name())
-                .collect(Collectors.toList());
-
-        return certAuthorityTypes;
-
- */
     }
 
     private List<String> getCaOptions(){
@@ -236,7 +220,7 @@ public class CertAuthorityConnectionService {
 
     @GetMapping("/api/info/getRequiredPropertiesForType/{connectionType}")
     public List<ConnectionProperty> getRequiredPropertiesForType(@PathVariable String connectionType)
-            throws RAObjectNotFoundException, InvocationTargetException, IllegalAccessException,
+            throws InvocationTargetException, IllegalAccessException,
             ClassNotFoundException, NoSuchMethodException {
 
         //todo clean this up

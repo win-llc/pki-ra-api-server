@@ -9,6 +9,8 @@ import com.winllc.acme.common.util.CertUtil;
 import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.contants.CertificateStatus;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
 
 import javax.naming.Name;
 import java.io.IOException;
@@ -137,4 +139,8 @@ public class MockCertAuthority implements CertAuthority {
     }
 
 
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
+    }
 }

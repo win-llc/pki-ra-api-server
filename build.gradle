@@ -11,9 +11,6 @@ version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
-    flatDir {
-        dirs 'lib'
-    }
 
     maven {
         url "http://util.winllc-dev.com:8081/repository/win-llc/"
@@ -33,10 +30,13 @@ configurations {
                 substitute module('com.winllc.acme.common:acme-common') with project(':acme-common')
             }
 
+
             def proj2 = findProject(":dogtag-ca-plugin")
             if (proj2 != null && proj2.buildFile.exists()) {
                 substitute module('com.winllc.pki.plugins.dogtag:dogtag-ca-plugin') with project(':dogtag-ca-plugin')
             }
+
+
         }
     }
 }
@@ -45,10 +45,13 @@ dependencies {
     compile group: 'com.winllc.acme.common', name: 'acme-common', version: '1.0-SNAPSHOT'
     compile group: 'com.winllc.pki.plugins.dogtag', name: 'dogtag-ca-plugin', version: '1.0-SNAPSHOT'
 
+/*
     implementation name: 'pki-ca'
     implementation name: 'pki-certsrv'
     implementation name: 'pki-cms'
     implementation name: 'jss4'
+
+ */
 
     implementation('org.springframework.boot:spring-boot-starter-actuator')
     implementation('org.springframework.boot:spring-boot-starter-data-jpa')
@@ -68,6 +71,9 @@ dependencies {
     // https://mvnrepository.com/artifact/io.github.classgraph/classgraph
     compile group: 'io.github.classgraph', name: 'classgraph', version: '4.8.89'
 
+    // https://mvnrepository.com/artifact/io.springfox/springfox-boot-starter
+    compile group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
+    //compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '3.0.0'
 
     runtimeOnly('org.springframework.boot:spring-boot-devtools')
     annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-configuration-processor'

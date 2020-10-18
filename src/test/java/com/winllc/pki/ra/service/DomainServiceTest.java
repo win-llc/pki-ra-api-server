@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -68,6 +69,7 @@ class DomainServiceTest {
 
     @Test
     @Transactional
+    @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void getDomainById() throws RAObjectNotFoundException {
         Domain domain = domainRepository.findAll().get(0);
         DomainInfo domainById = domainService.getDomainById(domain.getId());
@@ -92,6 +94,7 @@ class DomainServiceTest {
 
     @Test
     @Transactional
+    @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void createDomain() throws Exception {
         DomainForm form = new DomainForm("test.com");
 
@@ -117,6 +120,7 @@ class DomainServiceTest {
     }
 
     @Test
+    @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void updateDomain() throws Exception {
         Domain domain = domainRepository.findAll().get(0);
         DomainForm form = new DomainForm(domain);
@@ -133,6 +137,7 @@ class DomainServiceTest {
     }
 
     @Test
+    @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void deleteDomain() {
         Domain domain = domainRepository.findAll().get(0);
         assertNotNull(domain);

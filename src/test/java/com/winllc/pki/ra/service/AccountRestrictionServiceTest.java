@@ -76,6 +76,7 @@ class AccountRestrictionServiceTest {
     }
 
     @Test
+    @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void getById() throws RAObjectNotFoundException {
         Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
 
@@ -92,6 +93,7 @@ class AccountRestrictionServiceTest {
     }
 
     @Test
+    @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void create() throws Exception {
         Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
 
@@ -138,6 +140,7 @@ class AccountRestrictionServiceTest {
     }
 
     @Test
+    @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void delete() {
         Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
 

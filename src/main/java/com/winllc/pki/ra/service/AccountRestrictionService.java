@@ -63,6 +63,7 @@ public class AccountRestrictionService {
         return Arrays.asList(AccountRestrictionAction.values());
     }
 
+    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.AccountRestriction', 'view_account_restriction')")
     @GetMapping("/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
     public AccountRestrictionForm getById(@PathVariable Long id) throws RAObjectNotFoundException {
@@ -76,6 +77,7 @@ public class AccountRestrictionService {
         }
     }
 
+    @PreAuthorize("hasPermission(#form, 'add_account_restriction')")
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public Long create(@Valid @RequestBody AccountRestrictionForm form) throws Exception {
@@ -117,6 +119,7 @@ public class AccountRestrictionService {
         }
     }
 
+    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.AccountRestriction', 'delete_account_restriction')")
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void delete(@PathVariable Long id){

@@ -8,6 +8,7 @@ import com.winllc.pki.ra.repository.TermsOfServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -18,12 +19,16 @@ import java.util.Optional;
 @RestController
 public class TermsOfServiceManagementService {
 
-    @Autowired
-    private TermsOfServiceRepository repository;
-    @Autowired
-    private AcmeServerManagementService acmeServerManagementService;
+    private final TermsOfServiceRepository repository;
+    private final AcmeServerManagementService acmeServerManagementService;
     @Value("${server.base-url}")
     private String serverBaseUrl;
+
+    public TermsOfServiceManagementService(TermsOfServiceRepository repository,
+                                           AcmeServerManagementService acmeServerManagementService) {
+        this.repository = repository;
+        this.acmeServerManagementService = acmeServerManagementService;
+    }
 
     @GetMapping("/api/tos/all")
     @ResponseStatus(HttpStatus.OK)
@@ -109,6 +114,7 @@ public class TermsOfServiceManagementService {
         }
     }
 
+    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.TermsOfService', 'delete_tos')")
     @DeleteMapping("/api/tos/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void delete(@PathVariable Long id){

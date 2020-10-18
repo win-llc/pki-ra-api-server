@@ -25,6 +25,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -153,6 +154,7 @@ class AccountServiceTest {
     }
 
     @Test
+    @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void findById() throws RAObjectNotFoundException {
         Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
         AccountInfo byId = accountService.findById(account.getId());
@@ -160,6 +162,7 @@ class AccountServiceTest {
     }
 
     @Test
+    @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void findInfoById() throws RAObjectNotFoundException {
         Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
         AccountInfo infoById = accountService.findInfoById(account.getId());

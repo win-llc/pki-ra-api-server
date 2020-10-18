@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,6 +53,7 @@ public class DomainService {
         return domainRepository.findAllByBaseContains(search);
     }
 
+    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.Domain', 'view_domain')")
     @GetMapping("/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
@@ -65,6 +67,7 @@ public class DomainService {
         }
     }
 
+    @PreAuthorize("hasPermission(#form, 'add_domain')")
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
@@ -95,6 +98,7 @@ public class DomainService {
         return domain.getId();
     }
 
+    @PreAuthorize("hasPermission(#form, 'update_domain')")
     @PostMapping("/update")
     @ResponseStatus(HttpStatus.OK)
     public Domain updateDomain(@Valid @RequestBody DomainForm form) throws RAObjectNotFoundException{
@@ -109,6 +113,7 @@ public class DomainService {
         }
     }
 
+    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.Domain', 'delete_domain')")
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void deleteDomain(@PathVariable Long id){

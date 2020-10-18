@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
@@ -181,6 +182,7 @@ public class AccountService extends AbstractService {
         return accounts;
     }
 
+    //todo haspermission
     @GetMapping("/findByKeyIdentifier/{kid}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
@@ -196,6 +198,7 @@ public class AccountService extends AbstractService {
         }
     }
 
+    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.Account', 'view_account')")
     @GetMapping("/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
@@ -212,6 +215,7 @@ public class AccountService extends AbstractService {
         }
     }
 
+    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.Account', 'view_account')")
     @GetMapping("/info/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional

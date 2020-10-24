@@ -3,6 +3,7 @@ package com.winllc.pki.ra.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.util.AppUtil;
+import org.springframework.ldap.odm.annotations.Transient;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
@@ -13,16 +14,21 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "account")
-public class Account extends UniqueEntity implements AccountOwnedEntity, DomainCertIssuanceRestrictionHolder {
+public class Account extends AuthCredentialHolder implements AccountOwnedEntity, DomainCertIssuanceRestrictionHolder {
     @Column(unique = true)
     private String keyIdentifier;
-    private String macKey;
+    //private String macKey;
     @Column(unique = true)
     private String projectName;
     private String entityBaseDn;
     private boolean enabled = true;
     private String securityPolicyServerProjectId;
     private boolean allowHostnameIssuance = true;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "parentEntity", fetch = FetchType.EAGER)
+    @Transient
+    private Set<AuthCredential> authCredentials;
 
     @JsonIgnore
     @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
@@ -53,17 +59,15 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
         Account account = new Account();
         account.setUuid(UUID.randomUUID());
 
-        String macKey = AppUtil.generate256BitString();
+        //String macKey = AppUtil.generate256BitString();
         String keyIdentifier = AppUtil.generate20BitString();
 
         account.setKeyIdentifier(keyIdentifier);
-        account.setMacKey(macKey);
+        //account.setMacKey(macKey);
         account.setProjectName(projectName);
 
         return account;
     }
-
-    public Account(){}
 
     @PreRemove
     private void preRemove(){
@@ -101,6 +105,12 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
                 group.setAccount(null);
             }
         }
+
+        if(!CollectionUtils.isEmpty(authCredentials)){
+            for(AuthCredential credential : authCredentials){
+                credential.setParentEntity(null);
+            }
+        }
     }
 
     public String getKeyIdentifier() {
@@ -109,14 +119,6 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
 
     public void setKeyIdentifier(String keyIdentifier) {
         this.keyIdentifier = keyIdentifier;
-    }
-
-    public String getMacKey() {
-        return macKey;
-    }
-
-    public void setMacKey(String macKey) {
-        this.macKey = macKey;
     }
 
     public String getProjectName() {
@@ -219,10 +221,10 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
         this.entityBaseDn = entityBaseDn;
     }
 
-    @JsonIgnore
-    public String getMacKeyBase64(){
-        return Base64.encode(this.macKey).toString();
-    }
+    //@JsonIgnore
+    //public String getMacKeyBase64(){
+    //    return Base64.encode(this.macKey).toString();
+    //}
 
     public boolean isAllowHostnameIssuance() {
         return allowHostnameIssuance;
@@ -233,19 +235,28 @@ public class Account extends UniqueEntity implements AccountOwnedEntity, DomainC
     }
 
     @Override
+    public Set<AuthCredential> getAuthCredentials() {
+        if(authCredentials == null) authCredentials = new HashSet<>();
+        return authCredentials;
+    }
+
+    public void setAuthCredentials(Set<AuthCredential> authCredentials) {
+        this.authCredentials = authCredentials;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         Account account = (Account) o;
         return Objects.equals(keyIdentifier, account.keyIdentifier) &&
-                Objects.equals(macKey, account.macKey) &&
                 Objects.equals(projectName, account.projectName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), keyIdentifier, macKey, projectName);
+        return Objects.hash(super.hashCode(), keyIdentifier, projectName);
     }
 
     @Override

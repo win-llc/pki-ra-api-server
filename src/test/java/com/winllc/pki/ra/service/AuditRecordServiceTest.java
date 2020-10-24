@@ -48,7 +48,7 @@ class AuditRecordServiceTest {
     void before(){
         Account account = Account.buildNew("Test Project 3");
         account.setKeyIdentifier("kidtest1");
-        account.setMacKey("testmac1");
+        //account.setMacKey("testmac1");
         account = accountRepository.save(account);
 
         PocEntry pocEntry = PocEntry.buildNew("test@test.com", account);

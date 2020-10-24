@@ -63,7 +63,7 @@ class ServerEntryServiceTest {
     void before(){
         Account account = Account.buildNew("Test Project 3");
         account.setKeyIdentifier("kidtest1");
-        account.setMacKey("testmac1");
+        //account.setMacKey("testmac1");
         account = accountRepository.save(account);
 
         PocEntry pocEntry = PocEntry.buildNew("test@test.com", account);
@@ -93,8 +93,8 @@ class ServerEntryServiceTest {
     @AfterEach
     @Transactional
     void after(){
-        domainRepository.deleteAll();
         serverEntryRepository.deleteAll();
+        domainRepository.deleteAll();
         accountRepository.deleteAll();
         pocEntryRepository.deleteAll();
     }
@@ -118,6 +118,20 @@ class ServerEntryServiceTest {
                         .contentType("application/json")
                         .content(badJson))
                 .andExpect(status().is(400));
+    }
+
+    @Test
+    @Transactional
+    void getLatestAuthCredential() throws RAObjectNotFoundException {
+        Account account = accountRepository.findAll().get(0);
+        ServerEntryForm serverEntryForm = new ServerEntryForm();
+        serverEntryForm.setFqdn("test2.winllc-dev.com");
+        serverEntryForm.setAccountId(account.getId());
+
+        Long serverId = serverEntryService.createServerEntry(serverEntryForm);
+
+        AuthCredential latestAuthCredential = serverEntryService.getLatestAuthCredential(serverId);
+        assertTrue(latestAuthCredential.getMacKey().length() > 0);
     }
 
     @Test

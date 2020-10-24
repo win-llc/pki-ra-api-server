@@ -8,6 +8,7 @@ import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
+import com.winllc.pki.ra.repository.AuthCredentialRepository;
 import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
@@ -18,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -45,11 +47,13 @@ public class ServerEntryService extends AbstractService {
     private final PocEntryRepository pocEntryRepository;
     private final EntityDirectoryService entityDirectoryService;
     private final ServerEntryValidator serverEntryValidator;
+    private final AuthCredentialRepository authCredentialRepository;
 
     public ServerEntryService(ApplicationContext context,
                               ServerEntryRepository serverEntryRepository, AccountRepository accountRepository,
                               KeycloakOIDCProviderConnection oidcProviderConnection, PocEntryRepository pocEntryRepository,
-                              EntityDirectoryService entityDirectoryService, ServerEntryValidator serverEntryValidator) {
+                              EntityDirectoryService entityDirectoryService, ServerEntryValidator serverEntryValidator,
+                              AuthCredentialRepository authCredentialRepository) {
         super(context);
         this.serverEntryRepository = serverEntryRepository;
         this.accountRepository = accountRepository;
@@ -57,6 +61,7 @@ public class ServerEntryService extends AbstractService {
         this.pocEntryRepository = pocEntryRepository;
         this.entityDirectoryService = entityDirectoryService;
         this.serverEntryValidator = serverEntryValidator;
+        this.authCredentialRepository = authCredentialRepository;
     }
 
     @InitBinder("serverEntryForm")
@@ -103,6 +108,8 @@ public class ServerEntryService extends AbstractService {
 
                 entry = serverEntryRepository.save(entry);
 
+                entry = addNewAuthCredentialToEntry(entry);
+
                 SystemActionRunner.build(context)
                         .createAuditRecord(AuditRecordType.SERVER_ENTRY_ADDED, entry)
                         .createNotificationForAccountPocs(Notification.buildNew()
@@ -123,6 +130,15 @@ public class ServerEntryService extends AbstractService {
             throw new RAObjectNotFoundException(Account.class, form.getAccountId());
         }
 
+    }
+
+    public ServerEntry addNewAuthCredentialToEntry(ServerEntry serverEntry){
+        AuthCredential authCredential = AuthCredential.buildNew(serverEntry);
+
+        authCredential = authCredentialRepository.save(authCredential);
+
+        serverEntry.getAuthCredentials().add(authCredential);
+        return serverEntryRepository.save(serverEntry);
     }
 
     @PostMapping("/update")
@@ -171,6 +187,27 @@ public class ServerEntryService extends AbstractService {
             ServerEntry entry = entryOptional.get();
 
             return entryToInfo(entry);
+        }else{
+            throw new RAObjectNotFoundException(ServerEntry.class, id);
+        }
+    }
+
+    @GetMapping("/latestAuthCredential/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public AuthCredential getLatestAuthCredential(@PathVariable Long id) throws RAObjectNotFoundException {
+        Optional<ServerEntry> entryOptional = serverEntryRepository.findById(id);
+
+        if(entryOptional.isPresent()){
+            ServerEntry entry = entryOptional.get();
+
+            Optional<AuthCredential> optionalAuthCredential = entry.getLatestAuthCredential();
+            if(optionalAuthCredential.isPresent()){
+                return optionalAuthCredential.get();
+            }else{
+                log.error("No credential for server: "+id);
+                throw new RAObjectNotFoundException(AuthCredential.class, id);
+            }
         }else{
             throw new RAObjectNotFoundException(ServerEntry.class, id);
         }

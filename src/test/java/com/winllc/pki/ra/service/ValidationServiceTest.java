@@ -3,15 +3,14 @@ package com.winllc.pki.ra.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.winllc.acme.common.CertIssuanceValidationResponse;
 import com.winllc.acme.common.model.AcmeJWSObject;
 import com.winllc.acme.common.model.requestresponse.ExternalAccountBinding;
 import com.winllc.acme.common.util.SecurityUtil;
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.DomainPolicy;
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.mock.MockUtil;
@@ -29,12 +28,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import javax.crypto.SecretKey;
 import javax.transaction.Transactional;
 
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static com.winllc.pki.ra.mock.MockUtil.hmacJwk;
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,6 +51,8 @@ class ValidationServiceTest {
     private ValidationService validationService;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private AccountService accountService;
     @Autowired
     private DomainRepository domainRepository;
     @Autowired
@@ -67,9 +70,15 @@ class ValidationServiceTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew("Test Project");
+
+        AccountRequestForm form = new AccountRequestForm();
+        form.setProjectName("Test Project");
+
+        Long accountId = accountService.createNewAccount(form);
+
+        Account account = accountRepository.findById(accountId).get();
         account.setKeyIdentifier("kidtest1");
-        account.setMacKey(testMacKey);
+        //account.setMacKey(testMacKey);
         account = accountRepository.save(account);
 
         ServerEntry serverEntry = ServerEntry.buildNew();
@@ -101,21 +110,30 @@ class ValidationServiceTest {
     }
 
     @Test
+    @Transactional
     void getAccountValidationRules() throws RAObjectNotFoundException {
-        CertIssuanceValidationResponse validationResponse = validationService.getAccountValidationRules("kidtest1");
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
+        AuthCredential authCredential = account.getLatestAuthCredential().get();
+
+        CertIssuanceValidationResponse validationResponse = validationService.getAccountValidationRules(authCredential.getKeyIdentifier());
         assertEquals(1, validationResponse.getCertIssuanceValidationRules().size());
     }
 
     @Test
+    @Transactional
     void getAccountPreAuthorizedIdentifiers() throws RAObjectNotFoundException {
         Set<String> preAuthz = validationService.getAccountPreAuthorizedIdentifiers("kidtest1");
         assertEquals(1, preAuthz.size());
     }
 
     @Test
+    @Transactional
     void verifyExternalAccountBinding() throws JOSEException, JsonProcessingException, ParseException, RAException {
         com.winllc.acme.common.model.requestresponse.AccountRequest accountRequest =
                 new com.winllc.acme.common.model.requestresponse.AccountRequest();
+
+        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        AuthCredential authCredential = account.getAuthCredentials().toArray(new AuthCredential[0])[0];
 
         JWSHeader.Builder builder = new JWSHeader.Builder(JWSAlgorithm.HS256)
                 .jwk(hmacJwk.toPublicJWK());
@@ -124,7 +142,7 @@ class ValidationServiceTest {
 
         Payload payload = new Payload(MockUtil.rsaJWK.toJSONObject());
 
-        JWSSigner signer = new MACSigner(testMacKey);
+        JWSSigner signer = new MACSigner(authCredential.getMacKey());
         JWSObject testObj = new JWSObject(builder.build(), payload);
         testObj.sign(signer);
 
@@ -133,15 +151,19 @@ class ValidationServiceTest {
         accountRequest.setExternalAccountBinding(eab);
 
         AcmeJWSObject acmeJWSObject = MockUtil.buildCustomAcmeJwsObject(accountRequest, "https://example.com/acme/new-account");
-        Boolean validated = validationService.verifyExternalAccountBinding(testMacKey, "kidtest1",
+        Boolean validated = validationService.verifyExternalAccountBinding(authCredential.getMacKey(), authCredential.getKeyIdentifier(),
                 testObj.serialize(), acmeJWSObject.serialize());
 
         assertTrue(validated);
     }
 
     @Test
-    void getCanIssueDomains() throws RAObjectNotFoundException {
-        List<String> testkid1 = validationService.getCanIssueDomains("kidtest1");
+    @Transactional
+    void getCanIssueDomains() throws Exception {
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
+        AuthCredential authCredential = account.getLatestAuthCredential().get();
+
+        List<String> testkid1 = validationService.getCanIssueDomains(authCredential.getKeyIdentifier());
         assertEquals(1, testkid1.size());
     }
 }

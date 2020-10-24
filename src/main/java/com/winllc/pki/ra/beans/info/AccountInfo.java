@@ -2,9 +2,11 @@ package com.winllc.pki.ra.beans.info;
 
 import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.domain.Account;
+import com.winllc.pki.ra.domain.AuthCredential;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class AccountInfo extends InfoObject<Account> {
 
@@ -26,9 +28,13 @@ public class AccountInfo extends InfoObject<Account> {
     public AccountInfo(Account entity, boolean loadKeys) {
         super(entity);
         if(loadKeys) {
-            this.keyIdentifier = entity.getKeyIdentifier();
-            this.macKey = entity.getMacKey();
-            this.macKeyBase64 = entity.getMacKeyBase64();
+            Optional<AuthCredential> optionalCredential = entity.getLatestAuthCredential();
+            if(optionalCredential.isPresent()){
+                AuthCredential authCredential = optionalCredential.get();
+                this.keyIdentifier = authCredential.getKeyIdentifier();
+                this.macKey = authCredential.getMacKey();
+                this.macKeyBase64 = authCredential.getMacKeyBase64();
+            }
         }
         this.projectName = entity.getProjectName();
         this.entityBaseDn = entity.getEntityBaseDn();

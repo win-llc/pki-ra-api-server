@@ -47,7 +47,7 @@ class AccountRequestServiceTest {
     void init(){
         Account account = Account.buildNew("Test Project 2");
         account.setKeyIdentifier("kidtest1");
-        account.setMacKey("testmac1");
+        //account.setMacKey("testmac1");
         accountRepository.save(account);
     }
 

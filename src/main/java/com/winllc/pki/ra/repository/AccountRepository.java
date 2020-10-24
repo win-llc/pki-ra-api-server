@@ -13,6 +13,7 @@ import java.util.Optional;
 @Transactional
 public interface AccountRepository extends BaseRepository<Account> {
 
+    Optional<Account> findDistinctByProjectName(String projectName);
     Optional<Account> findByKeyIdentifierEquals(String kid);
     List<Account> findAllByPocsIn(Collection<PocEntry> pocEntries);
     List<Account> findAllByPocsContaining(PocEntry poc);

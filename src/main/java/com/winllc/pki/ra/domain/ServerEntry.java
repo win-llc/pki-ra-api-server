@@ -17,7 +17,7 @@ import java.util.*;
 @Entity
 @Entry(objectClasses = {"top", "untypedObject"})
 @Table(name = "server_entry")
-public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
+public class ServerEntry extends AuthCredentialHolder implements AccountOwnedEntity {
 
     //allow pre-authz tracking per account
 
@@ -49,6 +49,10 @@ public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
     @OneToMany(mappedBy = "serverEntry")
     @Transient
     private Set<CertificateRequest> certificateRequests;
+    @JsonIgnore
+    @OneToMany(mappedBy = "parentEntity")
+    @Transient
+    private Set<AuthCredential> authCredentials;
     @Transient
     private String openidClientId;
     @Transient
@@ -79,6 +83,12 @@ public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
         if(!CollectionUtils.isEmpty(certificateRequests)){
             for(CertificateRequest request : certificateRequests){
                 request.setServerEntry(null);
+            }
+        }
+
+        if(!CollectionUtils.isEmpty(authCredentials)){
+            for(AuthCredential credential : authCredentials){
+                credential.setParentEntity(null);
             }
         }
     }
@@ -162,6 +172,15 @@ public class ServerEntry extends UniqueEntity implements AccountOwnedEntity {
 
     public void setAcmeAllowPreAuthz(Boolean acmeAllowPreAuthz) {
         this.acmeAllowPreAuthz = acmeAllowPreAuthz;
+    }
+
+    public Set<AuthCredential> getAuthCredentials() {
+        if(authCredentials == null) authCredentials = new HashSet<>();
+        return authCredentials;
+    }
+
+    public void setAuthCredentials(Set<AuthCredential> authCredentials) {
+        this.authCredentials = authCredentials;
     }
 
     public Name getDn() {

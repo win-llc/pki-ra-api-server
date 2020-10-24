@@ -8,13 +8,11 @@ import com.nimbusds.jose.util.Base64URL;
 import com.winllc.acme.common.CertIssuanceValidationResponse;
 import com.winllc.acme.common.CertIssuanceValidationRule;
 import com.winllc.acme.common.ra.RAAccountValidationResponse;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.DomainPolicy;
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
+import com.winllc.pki.ra.repository.AuthCredentialRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
 import org.apache.logging.log4j.LogManager;
@@ -25,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import javax.swing.text.html.Option;
 import javax.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,22 +37,24 @@ public class ValidationService {
     private final AccountRepository accountRepository;
     private final ServerEntryRepository serverEntryRepository;
     private final AccountRestrictionService accountRestrictionService;
+    private final AuthCredentialRepository authCredentialRepository;
 
     public ValidationService(AccountRepository accountRepository, ServerEntryRepository serverEntryRepository,
-                             AccountRestrictionService accountRestrictionService) {
+                             AccountRestrictionService accountRestrictionService, AuthCredentialRepository authCredentialRepository) {
         this.accountRepository = accountRepository;
         this.serverEntryRepository = serverEntryRepository;
         this.accountRestrictionService = accountRestrictionService;
+        this.authCredentialRepository = authCredentialRepository;
     }
 
     @PostMapping("/rules/{kid}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public CertIssuanceValidationResponse getAccountValidationRules(@PathVariable String kid) throws RAObjectNotFoundException {
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
-
-        if (optionalAccount.isPresent()) {
+        Optional<Account> optionalAccount = getAssociatedAccount(kid);
+        if(optionalAccount.isPresent()){
             Account account = optionalAccount.get();
+
             Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
 
             List<CertIssuanceValidationRule> validationRules = new ArrayList<>();
@@ -120,20 +121,27 @@ public class ValidationService {
     @PostMapping("/account/verify")
     @ResponseStatus(HttpStatus.OK)
     public Boolean verifyExternalAccountBinding(@RequestParam String macKey, @RequestParam String keyIdentifier,
-                                                          @RequestParam String jwsObject, @RequestParam String accountObject) throws RAException {
+                                                          @RequestParam String jwsObject, @RequestParam String accountObject)
+            throws RAException {
         Base64URL macKeyBase64 = new Base64URL(macKey);
 
         log.info("MAC Key: " + macKeyBase64.toString());
         log.info("Key Identifier: " + keyIdentifier);
 
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(keyIdentifier);
+        Optional<AuthCredential> optionalCredential = authCredentialRepository.findDistinctByKeyIdentifier(keyIdentifier);
 
-        if (optionalAccount.isPresent()) {
-            Account account = optionalAccount.get();
+        if (optionalCredential.isPresent()) {
+            AuthCredential authCredential = optionalCredential.get();
+            //todo check expiration
+            if(!authCredential.getValid()){
+                log.info("Credential presented is not valid");
+                return false;
+            }
+
             try {
                 JWSObject jwsObjectParsed = JWSObject.parse(jwsObject);
                 JWSObject accountJWSParsed = JWSObject.parse(accountObject);
-                JWSSigner signer = new MACSigner(account.getMacKey());
+                JWSSigner signer = new MACSigner(authCredential.getMacKey());
 
                 JWSObject testObj = new JWSObject(jwsObjectParsed.getHeader(), jwsObjectParsed.getPayload());
                 testObj.sign(signer);
@@ -159,9 +167,10 @@ public class ValidationService {
     @GetMapping("/account/getCanIssueDomains/{kid}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public List<String> getCanIssueDomains(@PathVariable String kid) throws RAObjectNotFoundException {
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
-        if (optionalAccount.isPresent()) {
+    public List<String> getCanIssueDomains(@PathVariable String kid) throws Exception {
+
+        Optional<Account> optionalAccount = getAssociatedAccount(kid);
+        if(optionalAccount.isPresent()){
             Account account = optionalAccount.get();
             Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
             List<String> domainList = accountDomainPolicies
@@ -171,7 +180,7 @@ public class ValidationService {
                     .collect(Collectors.toList());
 
             return domainList;
-        } else {
+        }else{
             throw new RAObjectNotFoundException(Account.class, kid);
         }
     }
@@ -182,11 +191,13 @@ public class ValidationService {
         RAAccountValidationResponse response = new RAAccountValidationResponse();
         response.setValid(false);
 
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(accountId);
-        if(optionalAccount.isPresent()){
-            Account account = optionalAccount.get();
+        Optional<AuthCredential> optionalCredential = authCredentialRepository.findDistinctByKeyIdentifier(accountId);
 
-            Base64 accountMacKeyBase64 = new Base64(account.getMacKeyBase64());
+        //Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(accountId);
+        if(optionalCredential.isPresent()){
+            AuthCredential authCredential = optionalCredential.get();
+
+            Base64 accountMacKeyBase64 = new Base64(authCredential.getMacKeyBase64());
             byte[] decodedMacKey = accountMacKeyBase64.decode();
 
             Base64 passwordBase64 = new Base64(password);
@@ -202,5 +213,24 @@ public class ValidationService {
             response.setMessage("No account found");
         }
         return response;
+    }
+
+    private Optional<Account> getAssociatedAccount(String kid) throws RAObjectNotFoundException {
+        Optional<AuthCredential> optionalAuthCredential = authCredentialRepository.findDistinctByKeyIdentifier(kid);
+
+        if(optionalAuthCredential.isPresent()){
+            AuthCredential authCredential = optionalAuthCredential.get();
+            AuthCredentialHolder holder = authCredential.getParentEntity();
+
+            if(holder instanceof Account){
+                Account account = (Account) holder;
+                return Optional.of(account);
+            }else{
+                //todo handler server entry
+                return Optional.empty();
+            }
+        }else{
+            throw new RAObjectNotFoundException(AuthCredential.class, kid);
+        }
     }
 }

@@ -19,6 +19,7 @@ import com.winllc.pki.ra.service.validators.AccountRequestValidator;
 import com.winllc.pki.ra.service.validators.AccountUpdateValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.sql.Timestamp;
@@ -46,23 +48,24 @@ public class AccountService extends AbstractService {
     private final AccountRepository accountRepository;
     private final PocEntryRepository pocEntryRepository;
     private final AuditRecordService auditRecordService;
-    private final AccountRestrictionRepository accountRestrictionRepository;
     private final AcmeServerManagementService acmeServerManagementService;
     private final AccountRequestValidator accountRequestValidator;
     private final AccountUpdateValidator accountUpdateValidator;
+    private final AuthCredentialRepository authCredentialRepository;
 
     public AccountService(AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
-                          AuditRecordService auditRecordService, AccountRestrictionRepository accountRestrictionRepository,
+                          AuditRecordService auditRecordService,
                           AcmeServerManagementService acmeServerManagementService, ApplicationContext applicationContext,
-                          AccountRequestValidator accountRequestValidator, AccountUpdateValidator accountUpdateValidator) {
+                          AccountRequestValidator accountRequestValidator, AccountUpdateValidator accountUpdateValidator,
+                          AuthCredentialRepository authCredentialRepository) {
         super(applicationContext);
         this.accountRepository = accountRepository;
         this.pocEntryRepository = pocEntryRepository;
         this.auditRecordService = auditRecordService;
-        this.accountRestrictionRepository = accountRestrictionRepository;
         this.acmeServerManagementService = acmeServerManagementService;
         this.accountRequestValidator = accountRequestValidator;
         this.accountUpdateValidator = accountUpdateValidator;
+        this.authCredentialRepository = authCredentialRepository;
     }
 
     @InitBinder("accountRequestForm")
@@ -75,6 +78,20 @@ public class AccountService extends AbstractService {
         binder.setValidator(accountUpdateValidator);
     }
 
+    @PostConstruct
+    @Transactional
+    public void init(){
+        //if account does not have at least one AuthCred, add one
+        for(Account account : accountRepository.findAll()){
+            //Hibernate.initialize(account.getAuthCredentials());
+            List<AuthCredential> credentials = authCredentialRepository.findAllByParentEntity(account);
+            if(credentials.size() == 0){
+                log.info("Account did not have an AuthCredential, adding: "+account.getProjectName());
+                addNewAuthCredentialToEntry(account);
+            }
+        }
+    }
+
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public Long createNewAccount(@Valid @RequestBody AccountRequestForm form) {
@@ -82,11 +99,23 @@ public class AccountService extends AbstractService {
 
         account = accountRepository.save(account);
 
+        account = addNewAuthCredentialToEntry(account);
+
         SystemActionRunner.build(context)
                 .createAuditRecord(AuditRecordType.ACCOUNT_ADDED, account)
                 .execute();
 
         return account.getId();
+    }
+
+    public Account addNewAuthCredentialToEntry(Account account){
+        AuthCredential authCredential = AuthCredential.buildNew(account);
+
+        authCredential = authCredentialRepository.save(authCredential);
+
+        Hibernate.initialize(account.getAuthCredentials());
+        account.getAuthCredentials().add(authCredential);
+        return accountRepository.save(account);
     }
 
     @GetMapping("/myAccounts")
@@ -175,6 +204,7 @@ public class AccountService extends AbstractService {
 
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)
+    @Transactional
     public List<Account> getAll(@AuthenticationPrincipal UserDetails raUser) {
         log.info("RAUser: " + raUser.getUsername());
         List<Account> accounts = accountRepository.findAll();
@@ -233,12 +263,12 @@ public class AccountService extends AbstractService {
         }
     }
 
-    @GetMapping("/getAccountPocs/{kid}")
+    @GetMapping("/getAccountPocs/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public List<UserInfo> getAccountPocs(@PathVariable String kid) throws RAObjectNotFoundException {
+    public List<UserInfo> getAccountPocs(@PathVariable Long id) throws RAObjectNotFoundException {
 
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
+        Optional<Account> optionalAccount = accountRepository.findById(id);
 
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
@@ -246,7 +276,7 @@ public class AccountService extends AbstractService {
 
             return accountInfo.getPocs();
         } else {
-            throw new RAObjectNotFoundException(Account.class, kid);
+            throw new RAObjectNotFoundException(Account.class, id);
         }
     }
 

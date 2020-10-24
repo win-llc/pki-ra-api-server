@@ -59,7 +59,7 @@ class AccountServiceTest {
     void before(){
         Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("kidtest1");
-        account.setMacKey("testmac1");
+        //account.setMacKey("testmac1");
         account = accountRepository.save(account);
 
         PocEntry pocEntry = new PocEntry();
@@ -77,12 +77,17 @@ class AccountServiceTest {
     }
 
     @Test
+    @Transactional
     void createNewAccount() throws Exception {
         AccountRequestForm accountRequest = new AccountRequestForm();
         accountRequest.setProjectName("Test Project 3");
 
         Long id = accountService.createNewAccount(accountRequest);
         assertTrue(id > 0);
+
+        Account account = accountRepository.findById(id).get();
+
+        assertEquals(1, account.getAuthCredentials().size());
 
         accountRequest.setAccountOwnerEmail("bademail");
         String badJson = new ObjectMapper().writeValueAsString(accountRequest);
@@ -180,9 +185,9 @@ class AccountServiceTest {
         pocEntry = pocEntryRepository.save(pocEntry);
 
         account.getPocs().add(pocEntry);
-        accountRepository.save(account);
+        account = accountRepository.save(account);
 
-        List<UserInfo> kidtest1 = accountService.getAccountPocs("kidtest1");
+        List<UserInfo> kidtest1 = accountService.getAccountPocs(account.getId());
         assertEquals(2, kidtest1.size());
     }
 

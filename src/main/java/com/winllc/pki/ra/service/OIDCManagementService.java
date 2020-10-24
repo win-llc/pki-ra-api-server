@@ -7,6 +7,7 @@ import com.winllc.pki.ra.beans.ServerEntryDockerDeploymentFile;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
 import com.winllc.pki.ra.domain.Account;
+import com.winllc.pki.ra.domain.AuthCredential;
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
@@ -109,23 +110,31 @@ public class OIDCManagementService {
         }
     }
 
-    private ServerEntryDockerDeploymentFile buildDeploymentFile(ServerEntry serverEntry, Account account){
-        AcmeClientDetails acmeClientDetails = new AcmeClientDetails();
-        acmeClientDetails.setAcmeEabHmacKeyValue(Base64.encode(account.getMacKey()).toString());
-        acmeClientDetails.setAcmeKidValue(account.getKeyIdentifier());
-        //todo make dynamic
-        acmeClientDetails.setAcmeServerValue("http://192.168.1.202:8181/acme/directory");
+    private ServerEntryDockerDeploymentFile buildDeploymentFile(ServerEntry serverEntry, Account account) throws RAObjectNotFoundException {
+        Optional<AuthCredential> optionalAuthCredential = serverEntry.getLatestAuthCredential();
 
-        OIDCClientDetails oidcClientDetails = oidcProviderConnection.getClient(serverEntry);
+        if(optionalAuthCredential.isPresent()) {
+            AuthCredential authCredential = optionalAuthCredential.get();
 
-        ServerEntryDockerDeploymentFile dockerDeploymentFile = new ServerEntryDockerDeploymentFile();
-        dockerDeploymentFile.setAcmeClientDetails(acmeClientDetails);
-        dockerDeploymentFile.setOidcClientDetails(oidcClientDetails);
-        //todo make dynamic
-        //dockerDeploymentFile.setProxyAddressValue("http://192.168.1.13:8282/test");
-        dockerDeploymentFile.setProxyAddressValue(serverEntry.getOpenidClientRedirectUrl());
-        dockerDeploymentFile.setServerNameValue(serverEntry.getFqdn());
-        return dockerDeploymentFile;
+            AcmeClientDetails acmeClientDetails = new AcmeClientDetails();
+            acmeClientDetails.setAcmeEabHmacKeyValue(authCredential.getMacKeyBase64());
+            acmeClientDetails.setAcmeKidValue(authCredential.getKeyIdentifier());
+            //todo make dynamic
+            acmeClientDetails.setAcmeServerValue("http://192.168.1.202:8181/acme/directory");
+
+            OIDCClientDetails oidcClientDetails = oidcProviderConnection.getClient(serverEntry);
+
+            ServerEntryDockerDeploymentFile dockerDeploymentFile = new ServerEntryDockerDeploymentFile();
+            dockerDeploymentFile.setAcmeClientDetails(acmeClientDetails);
+            dockerDeploymentFile.setOidcClientDetails(oidcClientDetails);
+            //todo make dynamic
+            //dockerDeploymentFile.setProxyAddressValue("http://192.168.1.13:8282/test");
+            dockerDeploymentFile.setProxyAddressValue(serverEntry.getOpenidClientRedirectUrl());
+            dockerDeploymentFile.setServerNameValue(serverEntry.getFqdn());
+            return dockerDeploymentFile;
+        }else{
+            throw new RAObjectNotFoundException(AuthCredential.class, "For Server Entry: "+serverEntry.getId());
+        }
     }
 
     private ServerEntryInfo entryToInfo(ServerEntry entry){

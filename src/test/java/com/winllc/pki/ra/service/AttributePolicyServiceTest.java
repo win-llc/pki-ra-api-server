@@ -53,7 +53,7 @@ class AttributePolicyServiceTest {
     void beforeEach(){
         Account account = Account.buildNew("Test Project");
         account.setKeyIdentifier("kidtest1");
-        account.setMacKey("testmac1");
+        //account.setMacKey("testmac1");
         account = accountRepository.save(account);
 
         PocEntry pocEntry = new PocEntry();

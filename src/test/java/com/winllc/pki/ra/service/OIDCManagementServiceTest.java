@@ -41,6 +41,8 @@ class OIDCManagementServiceTest {
     @Autowired
     private ServerEntryRepository serverEntryRepository;
     @Autowired
+    private ServerEntryService serverEntryService;
+    @Autowired
     private AccountRepository accountRepository;
     @Autowired
     private DomainRepository domainRepository;
@@ -57,10 +59,10 @@ class OIDCManagementServiceTest {
 
     @BeforeEach
     @Transactional
-    void before(){
+    void before() throws RAObjectNotFoundException {
         Account account = Account.buildNew("Test Project 3");
         account.setKeyIdentifier("kidtest1");
-        account.setMacKey("testmac1");
+        //account.setMacKey("testmac1");
         account = accountRepository.save(account);
 
         PocEntry pocEntry = PocEntry.buildNew("test@test.com", account);
@@ -75,11 +77,12 @@ class OIDCManagementServiceTest {
         account.getAccountDomainPolicies().add(domainPolicy);
         account = accountRepository.save(account);
 
-        ServerEntry serverEntry = ServerEntry.buildNew();
-        serverEntry.setFqdn("test2.winllc-dev.com");
-        serverEntry.setAccount(account);
-        serverEntry.setDomainParent(domain);
-        serverEntry = serverEntryRepository.save(serverEntry);
+        ServerEntryForm form = new ServerEntryForm();
+        form.setAccountId(account.getId());
+        form.setFqdn("test2.winllc-dev.com");
+
+        Long savedId = serverEntryService.createServerEntry(form);
+        ServerEntry serverEntry = serverEntryRepository.findById(savedId).get();
 
         account.getServerEntries().add(serverEntry);
         accountRepository.save(account);
@@ -121,6 +124,7 @@ class OIDCManagementServiceTest {
     }
 
     @Test
+    @Transactional
     void buildDeploymentPackage() throws RAObjectNotFoundException {
         ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test2.winllc-dev.com").get();
 

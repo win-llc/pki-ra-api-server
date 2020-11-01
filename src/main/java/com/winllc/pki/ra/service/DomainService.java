@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/domain")
@@ -37,6 +39,13 @@ public class DomainService {
     @InitBinder("domainForm")
     public void initBinder(WebDataBinder binder) {
         binder.setValidator(domainValidator);
+    }
+
+    @GetMapping("/options")
+    public Map<Long, String> options(){
+        List<Domain> all = domainRepository.findAll();
+        return all.stream()
+                .collect(Collectors.toMap(d -> d.getId(), d -> d.getBase()));
     }
 
     @GetMapping("/all")

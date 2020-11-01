@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.util.AppUtil;
 import org.springframework.data.jpa.domain.AbstractPersistable;
@@ -7,6 +8,7 @@ import org.springframework.data.jpa.domain.AbstractPersistable;
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Entity
 @Table(name = "auth_credential")
@@ -43,6 +45,15 @@ public class AuthCredential extends AbstractPersistable<Long> implements Compara
     private void preRemove(){
         if(parentEntity != null) {
             parentEntity.getAuthCredentials().remove(this);
+        }
+    }
+
+    @JsonIgnore
+    public <T extends AuthCredentialHolder> Optional<T> getParentEntityByType(Class<T> clazz){
+        if(getParentEntity().getClass().isAssignableFrom(clazz)){
+            return Optional.of((T) getParentEntity());
+        }else{
+            return Optional.empty();
         }
     }
 

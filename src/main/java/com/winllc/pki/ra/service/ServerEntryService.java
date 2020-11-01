@@ -222,6 +222,16 @@ public class ServerEntryService extends AbstractService {
         return allByAccountId;
     }
 
+    @GetMapping("/all")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public List<ServerEntryInfo> getAll(){
+        List<ServerEntryInfo> infoList = serverEntryRepository.findAll()
+                .stream().map(i -> entryToInfo(i))
+                .collect(Collectors.toList());
+        return infoList;
+    }
+
     @GetMapping("/allForUser")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
@@ -232,9 +242,7 @@ public class ServerEntryService extends AbstractService {
         List<ServerEntryInfo> entries = new ArrayList<>();
         for(Account account : allByAccountUsersContains) {
             List<ServerEntryInfo> temp = serverEntryRepository.findAllByAccountId(account.getId())
-                    .stream().map(i -> {
-                        return entryToInfo(i);
-                    })
+                    .stream().map(i -> entryToInfo(i))
                     .collect(Collectors.toList());
             entries.addAll(temp);
         }

@@ -32,6 +32,19 @@ public class RolePermissionsService {
         this.oidcProviderConnection = oidcProviderConnection;
     }
 
+    @GetMapping("/permissions/options")
+    public Map<String, String> optionsPermissions(){
+        return permissionProperties.getAvailable().stream()
+                .collect(Collectors.toMap(d -> d, d -> d));
+    }
+
+    @GetMapping("/roles/options")
+    public Map<String, String> optionsRoles(){
+        List<RoleRepresentation> frontendClientRoles = oidcProviderConnection.getFrontendClientRoles();
+        return frontendClientRoles.stream()
+                .collect(Collectors.toMap(d -> d.getName(), d -> d.getName()));
+    }
+
     @GetMapping("/validRoles")
     @ResponseStatus(HttpStatus.OK)
     public List<String> getValidRoles(){

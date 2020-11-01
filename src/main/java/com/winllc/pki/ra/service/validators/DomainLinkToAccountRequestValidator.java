@@ -4,12 +4,14 @@ import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertificateRequestForm;
 import com.winllc.pki.ra.beans.form.DomainLinkToAccountRequestForm;
 import com.winllc.pki.ra.domain.Account;
+import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
@@ -41,9 +43,16 @@ public class DomainLinkToAccountRequestValidator implements Validator {
             errors.rejectValue("accountId", "domainLinkToAccountRequest.invalidAccountId");
         }
 
+        if(CollectionUtils.isEmpty(form.getRequestedDomainIds())){
+            errors.rejectValue("requestedDomainIds", "domainLinkToAccountRequest.emptyDomainIds");
+        }
+
         List<Long> requestedDomainIds = form.getRequestedDomainIds();
         for(Long domainId : requestedDomainIds){
-
+            Optional<Domain> optionalDomain = domainRepository.findById(domainId);
+            if(optionalAccount.isEmpty()){
+                errors.rejectValue("requestedDomainIds", "domainLinkToAccountRequest.invalidDomainId");
+            }
         }
     }
 }

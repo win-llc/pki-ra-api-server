@@ -5,6 +5,7 @@ import com.winllc.pki.ra.constants.AccountRestrictionAction;
 import com.winllc.pki.ra.constants.AccountRestrictionType;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AccountRestriction;
+import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AccountRestrictionRepository;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -49,6 +51,18 @@ public class AccountRestrictionService {
     @InitBinder("accountRestrictionForm")
     public void initAccountRequestUpdateBinder(WebDataBinder binder) {
         binder.setValidator(accountRestrictionValidator);
+    }
+
+    @GetMapping("/types/options")
+    public Map<String, String> optionsTypes(){
+        return Arrays.asList(AccountRestrictionType.values()).stream()
+                .collect(Collectors.toMap(d -> d.toString(), d -> d.toString()));
+    }
+
+    @GetMapping("/actions/options")
+    public Map<String, String> optionsActions(){
+        return Arrays.asList(AccountRestrictionAction.values()).stream()
+                .collect(Collectors.toMap(d -> d.toString(), d -> d.toString()));
     }
 
     @GetMapping("/types")

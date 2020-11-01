@@ -235,6 +235,7 @@ public class CertificateRequestService extends AbstractService {
                 new CertIssuanceTransaction(certAuthorityStore.getLoadedCertAuthority(
                 raCertificateIssueRequest.getCertAuthorityName()), context);
 
+        //todo broken for manual when custom SAN with no server entry submitted
         X509Certificate certificate = certIssuanceTransaction.processIssueCertificate(raCertificateIssueRequest, request.getAccount());
     }
 

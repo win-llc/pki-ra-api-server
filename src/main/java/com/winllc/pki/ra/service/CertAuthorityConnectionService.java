@@ -12,6 +12,7 @@ import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.ca.*;
 import com.winllc.acme.common.contants.CertificateStatus;
+import com.winllc.pki.ra.constants.AccountRestrictionType;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAException;
@@ -181,9 +182,14 @@ public class CertAuthorityConnectionService extends AbstractService {
     @GetMapping("/api/info/all")
     @ResponseStatus(HttpStatus.OK)
     public List<CertAuthorityConnectionInfo> getAllConnectionInfo() {
-        List<CertAuthorityConnectionInfo> list = repository.findAll();
 
-        return list;
+        return repository.findAll();
+    }
+
+    @GetMapping("/info/options")
+    public Map<Long, String> optionsInfo(){
+        return repository.findAll().stream()
+                .collect(Collectors.toMap(d -> d.getId(), d -> d.getName()));
     }
 
     @DeleteMapping("/api/info/delete/{id}")

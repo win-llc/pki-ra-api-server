@@ -1,12 +1,17 @@
 package com.winllc.pki.ra.keystore;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.security.Key;
 import java.security.cert.Certificate;
 
 public class KeyEntryWrapper {
     private String alias;
+    @JsonIgnore
     private Key key;
+    @JsonIgnore
     private Certificate certificate;
+    @JsonIgnore
     private Certificate[] chain;
 
     public String getAlias() {

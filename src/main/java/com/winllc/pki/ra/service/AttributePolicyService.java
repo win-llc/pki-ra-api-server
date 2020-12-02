@@ -83,6 +83,17 @@ public class AttributePolicyService {
         }
     }
 
+    @GetMapping("/group/all")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public List<AttributePolicyGroupForm> allAttributePolicyGroups(){
+        List<AttributePolicyGroup> accountPolicyGroups = attributePolicyGroupRepository.findAll();
+        List<AttributePolicyGroupForm> forms = accountPolicyGroups.stream()
+                .map(apg -> new AttributePolicyGroupForm(apg))
+                .collect(Collectors.toList());
+        return forms;
+    }
+
     @GetMapping("/group/my")
     @ResponseStatus(HttpStatus.OK)
     @Transactional

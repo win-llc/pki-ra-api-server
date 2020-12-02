@@ -32,5 +32,8 @@ class DomainPolicyRepositoryTest {
 
         List<DomainPolicy> allByTargetDomainEquals = domainPolicyRepository.findAllByTargetDomainEquals(domain);
         assertEquals(1, allByTargetDomainEquals.size());
+
+        domainPolicyRepository.deleteAll();
+        domainRepository.deleteAll();
     }
 }

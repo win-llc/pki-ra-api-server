@@ -62,6 +62,12 @@ public class ApplicationKeystoreManagerService {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/all")
+    @ResponseStatus(HttpStatus.OK)
+    public List<KeyEntryWrapper> allEntries() throws KeyStoreException {
+        return new ArrayList<>(getAll());
+    }
+
     @GetMapping("/getEntryByAlias/{alias}")
     @ResponseStatus(HttpStatus.OK)
     public AppKeyStoreEntryForm getEntry(@PathVariable String alias) throws RAObjectNotFoundException, CertificateException, IOException {

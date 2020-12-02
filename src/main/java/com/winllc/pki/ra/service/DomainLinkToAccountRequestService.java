@@ -19,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
@@ -95,6 +96,21 @@ public class DomainLinkToAccountRequestService extends AbstractService {
         return infoList;
     }
 
+    @Transactional
+    @GetMapping("/my")
+    @ResponseStatus(HttpStatus.OK)
+    public List<DomainLinkToAccountRequestInfo> getMyRequests(Authentication authentication) {
+
+        List<Account> userAccounts = accountRepository.findAllByPocsEmailEquals(authentication.getName());
+        List<DomainLinkToAccountRequest> requests = requestRepository.findAllByAccountIdIn(userAccounts.stream().map(a -> a.getId()).collect(Collectors.toList()));
+
+        List<DomainLinkToAccountRequestInfo> infoList = requests.stream()
+                .map(d -> buildInfo(d))
+                .collect(Collectors.toList());
+
+        return infoList;
+    }
+
     @GetMapping("/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
     public DomainLinkToAccountRequest getById(@PathVariable Long id) throws RAObjectNotFoundException {
@@ -102,6 +118,20 @@ public class DomainLinkToAccountRequestService extends AbstractService {
 
         if (requestOptional.isPresent()) {
             return requestOptional.get();
+        } else {
+            throw new RAObjectNotFoundException(DomainLinkToAccountRequest.class, id);
+        }
+    }
+
+    @Transactional
+    @GetMapping("/infoById/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public DomainLinkToAccountRequestInfo getInfoById(@PathVariable Long id) throws RAObjectNotFoundException {
+        Optional<DomainLinkToAccountRequest> requestOptional = requestRepository.findById(id);
+
+        if (requestOptional.isPresent()) {
+            DomainLinkToAccountRequestInfo info = buildInfo(requestOptional.get());
+            return info;
         } else {
             throw new RAObjectNotFoundException(DomainLinkToAccountRequest.class, id);
         }

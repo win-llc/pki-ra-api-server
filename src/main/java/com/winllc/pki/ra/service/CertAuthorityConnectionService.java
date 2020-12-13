@@ -25,12 +25,15 @@ import io.github.classgraph.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.lang.reflect.InvocationTargetException;
@@ -53,6 +56,8 @@ public class CertAuthorityConnectionService extends AbstractService {
     private final AccountRepository accountRepository;
     private final LoadedCertAuthorityStore certAuthorityStore;
     private final CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator;
+    @Autowired
+    private AuthCredentialService authCredentialService;
 
     public CertAuthorityConnectionService(CertAuthorityConnectionInfoRepository repository,
                                           CertAuthorityConnectionPropertyRepository propertyRepository,
@@ -267,7 +272,7 @@ public class CertAuthorityConnectionService extends AbstractService {
 
         X509Certificate cert;
 
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(raCertificateIssueRequest.getAccountKid());
+        Optional<Account> optionalAccount = authCredentialService.getAssociatedAccount(raCertificateIssueRequest.getAccountKid());
         if(optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
 
@@ -388,6 +393,21 @@ public class CertAuthorityConnectionService extends AbstractService {
         } else {
             return Optional.empty();
         }
+    }
+
+    public Optional<CertAuthority> getCertAuthorityByIssuerDn(String issuerDn) throws InvalidNameException {
+        LdapName issuerName = new LdapName(issuerDn);
+
+        return certAuthorityStore.getAllCertAuthorities()
+                .stream()
+                .filter(ca -> {
+                    try {
+                        return ca.getIssuerName().equals(issuerName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return false;
+                }).findFirst();
     }
 
 }

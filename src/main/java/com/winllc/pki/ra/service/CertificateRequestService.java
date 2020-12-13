@@ -53,6 +53,9 @@ public class CertificateRequestService extends AbstractService {
     private final CertificateRequestValidator certificateRequestValidator;
     private final CertificateRequestDecisionValidator certificateRequestDecisionValidator;
 
+    @Autowired
+    private AuthCredentialService authCredentialService;
+
     public CertificateRequestService(CertificateRequestRepository requestRepository,
                                      AccountRepository accountRepository, LoadedCertAuthorityStore certAuthorityStore,
                                      CertRequestFormValidator formValidator, ApplicationContext context,

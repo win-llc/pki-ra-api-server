@@ -7,14 +7,13 @@ import com.nimbusds.jose.util.Base64;
 import com.nimbusds.jose.util.Base64URL;
 import com.winllc.acme.common.CertIssuanceValidationResponse;
 import com.winllc.acme.common.CertIssuanceValidationRule;
+import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ra.RAAccountValidationResponse;
+import com.winllc.pki.ra.beans.form.CertificateValidationForm;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.AuthCredentialRepository;
-import com.winllc.pki.ra.repository.DomainRepository;
-import com.winllc.pki.ra.repository.ServerEntryRepository;
+import com.winllc.pki.ra.repository.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.crypto.macs.HMac;
@@ -23,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.InvalidNameException;
 import javax.swing.text.html.Option;
 import javax.transaction.Transactional;
 import java.util.*;
@@ -38,6 +38,12 @@ public class ValidationService {
     private final ServerEntryRepository serverEntryRepository;
     private final AccountRestrictionService accountRestrictionService;
     private final AuthCredentialRepository authCredentialRepository;
+    @Autowired
+    private CertificateRequestRepository certificateRequestRepository;
+    @Autowired
+    private CertAuthorityConnectionService certAuthorityConnectionService;
+    @Autowired
+    private AuthCredentialService authCredentialService;
 
     public ValidationService(AccountRepository accountRepository, ServerEntryRepository serverEntryRepository,
                              AccountRestrictionService accountRestrictionService, AuthCredentialRepository authCredentialRepository) {
@@ -51,7 +57,7 @@ public class ValidationService {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public CertIssuanceValidationResponse getAccountValidationRules(@PathVariable String kid) throws RAObjectNotFoundException {
-        Optional<Account> optionalAccount = getAssociatedAccount(kid);
+        Optional<Account> optionalAccount = authCredentialService.getAssociatedAccount(kid);
         if(optionalAccount.isPresent()){
             Account account = optionalAccount.get();
 
@@ -101,7 +107,7 @@ public class ValidationService {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public Set<String> getAccountPreAuthorizedIdentifiers(@PathVariable String kid) throws RAObjectNotFoundException {
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
+        Optional<Account> optionalAccount = authCredentialService.getAssociatedAccount(kid);
 
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
@@ -169,7 +175,7 @@ public class ValidationService {
     @Transactional
     public List<String> getCanIssueDomains(@PathVariable String kid) throws Exception {
 
-        Optional<Account> optionalAccount = getAssociatedAccount(kid);
+        Optional<Account> optionalAccount = authCredentialService.getAssociatedAccount(kid);
         if(optionalAccount.isPresent()){
             Account account = optionalAccount.get();
             Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
@@ -215,22 +221,34 @@ public class ValidationService {
         return response;
     }
 
-    private Optional<Account> getAssociatedAccount(String kid) throws RAObjectNotFoundException {
-        Optional<AuthCredential> optionalAuthCredential = authCredentialRepository.findDistinctByKeyIdentifier(kid);
+    @Transactional
+    @PostMapping("/account/validateServer")
+    public RAAccountValidationResponse validateServerReEnrollment(@RequestBody CertificateValidationForm form)
+            throws RAObjectNotFoundException, InvalidNameException {
 
-        if(optionalAuthCredential.isPresent()){
-            AuthCredential authCredential = optionalAuthCredential.get();
-            AuthCredentialHolder holder = authCredential.getParentEntity();
+        Optional<CertAuthority> optionalCa = certAuthorityConnectionService.getCertAuthorityByIssuerDn(form.getIssuerDn());
+        if(optionalCa.isPresent()) {
+            Optional<CertificateRequest> optionalCertificate
+                    = certificateRequestRepository.findDistinctByIssuedCertificateSerialAndCertAuthorityName(
+                            form.getSerial(), optionalCa.get().getName());
 
-            if(holder instanceof Account){
-                Account account = (Account) holder;
-                return Optional.of(account);
-            }else{
-                //todo handler server entry
-                return Optional.empty();
+            if (optionalCertificate.isPresent()) {
+                CertificateRequest certificate = optionalCertificate.get();
+                Account account = certificate.getAccount();
+
+                Optional<AuthCredential> latestCredential = authCredentialService.getLatestAuthCredentialForAccount(account);
+
+                RAAccountValidationResponse response = new RAAccountValidationResponse();
+                response.setAccountId(latestCredential.get().getKeyIdentifier());
+                response.setValid(true);
+
+                return response;
+            } else {
+                throw new RAObjectNotFoundException(CertificateRequest.class, form.getSerial() + " " + form.getIssuerDn());
             }
         }else{
-            throw new RAObjectNotFoundException(AuthCredential.class, kid);
+            throw new RAObjectNotFoundException(CertAuthority.class, form.getIssuerDn());
         }
     }
+
 }

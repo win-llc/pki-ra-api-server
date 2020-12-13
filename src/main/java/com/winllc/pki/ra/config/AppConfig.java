@@ -16,6 +16,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.spi.DocumentationType;
@@ -30,6 +31,8 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
         }
 )
 @EnableSwagger2
+//@EnableOpenApi
+//@EnableWebMvc
 @ComponentScan("com.winllc.pki.ra")
 @EntityScan({"com.winllc.pki.ra.domain", "com.winllc.acme.common.domain"})
 @EnableJpaRepositories(basePackages = "com.winllc.pki.ra.repository")
@@ -95,6 +98,7 @@ public class AppConfig {
     @Bean
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
+                .groupName("winllc-ra-api")
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("com.winllc.pki.ra"))
                 //.paths(PathSelectors.any())

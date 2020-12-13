@@ -52,6 +52,8 @@ public class AccountService extends AbstractService {
     private final AccountRequestValidator accountRequestValidator;
     private final AccountUpdateValidator accountUpdateValidator;
     private final AuthCredentialRepository authCredentialRepository;
+    @Autowired
+    private AuthCredentialService authCredentialService;
 
     public AccountService(AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
                           AuditRecordService auditRecordService,
@@ -218,7 +220,7 @@ public class AccountService extends AbstractService {
     @Transactional
     public AccountInfo findByKeyIdentifier(@PathVariable String kid) throws RAObjectNotFoundException {
 
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(kid);
+        Optional<Account> optionalAccount = authCredentialService.getAssociatedAccount(kid);
 
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();

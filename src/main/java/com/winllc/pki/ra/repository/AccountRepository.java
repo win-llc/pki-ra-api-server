@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface AccountRepository extends BaseRepository<Account> {
 
     Optional<Account> findDistinctByProjectName(String projectName);
-    Optional<Account> findByKeyIdentifierEquals(String kid);
+    //Optional<Account> findByKeyIdentifierEquals(String kid);
     List<Account> findAllByPocsIn(Collection<PocEntry> pocEntries);
     List<Account> findAllByPocsContaining(PocEntry poc);
     List<Account> findAllByPocsEmailEquals(String email);

@@ -118,4 +118,8 @@ public class LoadedCertAuthorityStore implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         reload();
     }
+
+    public Map<String, CertAuthority> getLoadedCertAuthorities() {
+        return loadedCertAuthorities;
+    }
 }

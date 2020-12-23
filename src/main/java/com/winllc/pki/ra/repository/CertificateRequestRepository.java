@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface CertificateRequestRepository extends BaseRepository<CertificateRequest> {
 
     List<CertificateRequest> findAllByStatusEquals(String status);
+    Integer countAllByStatusEquals(String status);
     List<CertificateRequest> findAllByRequestedByEquals(String user);
     List<CertificateRequest> findAllByPublicKeyBase64Equals(String publicKey);
     List<CertificateRequest> findAllByServerEntry(ServerEntry serverEntry);

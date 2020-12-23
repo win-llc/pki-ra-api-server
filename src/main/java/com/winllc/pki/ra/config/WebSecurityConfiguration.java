@@ -35,7 +35,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private final OAuth2ResourceServerProperties oAuth2ResourceServerProperties;
 
-    private SecurityProperties securityProperties;
+    private final SecurityProperties securityProperties;
 
     private final RAUserDetailsService raUserDetailsService;
 

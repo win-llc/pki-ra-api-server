@@ -31,7 +31,7 @@ public class NotificationService {
 
     //todo all user level notifications (manifested with emails) must go through this
 
-    @GetMapping("/forCurrentUser}")
+    @GetMapping("/forCurrentUser")
     public List<Notification> getCurrentNotificationsForUser(Authentication authentication){
         return notificationRepository.findAllByForUserNamesLike(authentication.getName());
     }

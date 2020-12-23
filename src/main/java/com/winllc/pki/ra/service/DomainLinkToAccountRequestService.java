@@ -96,6 +96,12 @@ public class DomainLinkToAccountRequestService extends AbstractService {
         return infoList;
     }
 
+    @GetMapping("/new/count")
+    @ResponseStatus(HttpStatus.OK)
+    public Integer findByStatusCount(){
+        return requestRepository.countAllByStatusEquals("new");
+    }
+
     @Transactional
     @GetMapping("/my")
     @ResponseStatus(HttpStatus.OK)

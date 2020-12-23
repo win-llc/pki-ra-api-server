@@ -65,6 +65,11 @@ public class AccountRequestService {
         return accountRequests;
     }
 
+    @GetMapping("/pending/count")
+    @ResponseStatus(HttpStatus.OK)
+    public Integer findPendingCount(){
+        return accountRequestRepository.countAllByStateEquals("new");
+    }
 
     @PostMapping("/submit")
     @ResponseStatus(HttpStatus.CREATED)

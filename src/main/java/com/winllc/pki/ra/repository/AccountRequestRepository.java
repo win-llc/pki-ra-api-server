@@ -11,5 +11,5 @@ import java.util.List;
 public interface AccountRequestRepository extends BaseRepository<AccountRequest> {
 
     List<AccountRequest> findAllByStateEquals(String state);
-
+    Integer countAllByStateEquals(String state);
 }

@@ -117,6 +117,12 @@ public class CertificateRequestService extends AbstractService {
         return requests;
     }
 
+    @GetMapping("/allWithStatus/{status}/count")
+    @ResponseStatus(HttpStatus.OK)
+    public Integer findByStatusCount(@PathVariable String status){
+        return requestRepository.countAllByStatusEquals(status);
+    }
+
     @GetMapping("/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
     public CertificateRequestInfo byId(@PathVariable Long id) throws RAObjectNotFoundException {

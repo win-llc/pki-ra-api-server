@@ -35,7 +35,11 @@ public class AuditRecord extends AbstractPersistable<Long> {
     public static AuditRecord buildNew(AuditRecordType type, UniqueEntity uniqueEntity){
         AuditRecord auditRecord = buildNew(type);
         auditRecord.setObjectClass(uniqueEntity.getClass().getCanonicalName());
-        auditRecord.setObjectUuid(uniqueEntity.getUuid().toString());
+        if(uniqueEntity.getUuid() != null) {
+            auditRecord.setObjectUuid(uniqueEntity.getUuid().toString());
+        }else{
+            auditRecord.setObjectUuid("none");
+        }
         return auditRecord;
     }
 

@@ -79,7 +79,7 @@ public class CertAuthorityConnectionService extends AbstractService {
 
     @PostMapping("/api/info/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public Long createConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm connectionInfo) {
+    public Long createConnectionInfo(@Valid @RequestBody CertAuthorityConnectionInfoForm connectionInfo) throws Exception {
         //todo allow required inputs on form before submitting here
 
         CertAuthorityConnectionInfo caConnection = new CertAuthorityConnectionInfo();
@@ -96,8 +96,9 @@ public class CertAuthorityConnectionService extends AbstractService {
                 .collect(Collectors.toMap(p -> p.getName(), p -> p));
 
         //Create the required settings for the connection, will be filled in on edit screen
+        List<ConnectionProperty> propertiesForClass = getPropertiesForClass(Class.forName(connectionInfo.getType()));
         Set<CertAuthorityConnectionProperty> props = new HashSet<>();
-        for(ConnectionProperty connectionProperty : CertAuthority.getRequiredProperties()){
+        for(ConnectionProperty connectionProperty : propertiesForClass){
             CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
             prop.setName(connectionProperty.getName());
 
@@ -231,11 +232,13 @@ public class CertAuthorityConnectionService extends AbstractService {
 
     @GetMapping("/api/info/getRequiredPropertiesForType/{connectionType}")
     public List<ConnectionProperty> getRequiredPropertiesForType(@PathVariable String connectionType)
-            throws InvocationTargetException, IllegalAccessException,
-            ClassNotFoundException, NoSuchMethodException {
+            throws Exception {
 
-        //todo clean this up
-        Method m = Class.forName(connectionType).getMethod("getRequiredProperties");
+        return getPropertiesForClass(Class.forName(connectionType));
+    }
+
+    private List<ConnectionProperty> getPropertiesForClass(Class caClass) throws Exception {
+        Method m = caClass.getMethod("getRequiredProperties");
         Object result = m.invoke(null);
 
         if(result instanceof List){
@@ -244,20 +247,6 @@ public class CertAuthorityConnectionService extends AbstractService {
         }
 
         return new ArrayList<>();
-
-        /*
-        Optional<CertAuthorityConnectionType> typeOptional = Stream.of(CertAuthorityConnectionType.values())
-                .filter(v -> v.name().equalsIgnoreCase(connectionType))
-                .findFirst();
-
-        if(typeOptional.isPresent()){
-            CertAuthorityConnectionType type = typeOptional.get();
-            return type.getRequiredProperties();
-        }else{
-            throw new RAObjectNotFoundException(CertAuthorityConnectionType.class, connectionType);
-        }
-
-         */
     }
 
 

@@ -161,7 +161,7 @@ public class CertificateRequestService extends AbstractService {
             certificateRequest.setCertAuthorityName(form.getCertAuthorityName());
             certificateRequest.setRequestedDnsNames(form.getRequestedDnsNames().stream()
                     .map(d -> d.getValue())
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.joining(",")));
 
             Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
 
@@ -234,7 +234,7 @@ public class CertificateRequestService extends AbstractService {
 
     private void processApprovedCertRequest(CertificateRequest request) throws Exception {
         SubjectAltNames sans = new SubjectAltNames();
-        sans.addValues(SubjectAltNames.SubjAltNameType.DNS, request.getRequestedDnsNames());
+        sans.addValues(SubjectAltNames.SubjAltNameType.DNS, request.getRequestedDnsNamesAsSet());
 
         RACertificateIssueRequest raCertificateIssueRequest = new RACertificateIssueRequest(request.getAccount().getKeyIdentifier(),
                 request.getCsr(), String.join(",", request.getRequestedDnsNames()), request.getCertAuthorityName(), "manual");

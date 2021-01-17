@@ -9,12 +9,14 @@ import com.winllc.acme.common.domain.CertAuthorityConnectionProperty;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
+import com.winllc.pki.ra.domain.AuthCredential;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.DomainPolicy;
 import com.winllc.pki.ra.exception.InvalidFormException;
@@ -25,6 +27,7 @@ import com.winllc.pki.ra.mock.MockCertAuthority;
 import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -90,6 +93,8 @@ class CertAuthorityConnectionServiceTest {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
+    private AccountService accountService;
+    @Autowired
     private CertificateRequestRepository certificateRequestRepository;
     @Autowired
     private DomainRepository domainRepository;
@@ -101,6 +106,8 @@ class CertAuthorityConnectionServiceTest {
     private EntityDirectoryService entityDirectoryService;
     @Autowired
     private ServerEntryRepository serverEntryRepository;
+    @Autowired
+    private AuthCredentialService authCredentialService;
 
     @BeforeEach
     @Transactional
@@ -112,16 +119,17 @@ class CertAuthorityConnectionServiceTest {
         domain.setBase("winllc-dev.com");
         domain = domainRepository.save(domain);
 
-        Account account = Account.buildNew("Test Project");
-        account.setKeyIdentifier("kidtest1");
-        //account.setMacKey("testmac1");
-        account = accountRepository.save(account);
+        AccountRequestForm form = new AccountRequestForm();
+        form.setProjectName("Test Project");
+        Long id = accountService.createNewAccount(form);
+        Account account = accountRepository.findById(id).get();
 
         DomainPolicy domainPolicy = new DomainPolicy();
         domainPolicy.setTargetDomain(domain);
         domainPolicy.setAllowIssuance(true);
         domainPolicy = domainPolicyRepository.save(domainPolicy);
 
+        Hibernate.initialize(account.getAccountDomainPolicies());
         account.getAccountDomainPolicies().add(domainPolicy);
         accountRepository.save(account);
 
@@ -142,6 +150,7 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void createConnectionInfo() throws Exception {
         CertAuthorityConnectionInfoForm form = new CertAuthorityConnectionInfoForm();
         form.setName("mockca");
@@ -161,6 +170,7 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void updateConnectionInfo() throws Exception {
         CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
         //info.setType(CertAuthorityConnectionType.INTERNAL);
@@ -187,6 +197,7 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void getConnectionInfoByName() throws RAObjectNotFoundException {
         CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
         //info.setType(CertAuthorityConnectionType.INTERNAL);
@@ -198,6 +209,7 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void getConnectionInfoById() throws RAObjectNotFoundException {
         CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
         //info.setType(CertAuthorityConnectionType.INTERNAL);
@@ -209,6 +221,7 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void getAllConnectionInfo() {
         CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
        //info.setType(CertAuthorityConnectionType.INTERNAL);
@@ -220,6 +233,7 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void deleteInfo() {
         CertAuthorityConnectionInfo info = new CertAuthorityConnectionInfo();
         //info.setType(CertAuthorityConnectionType.INTERNAL);
@@ -232,12 +246,14 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void getTypes() {
         List<String> types = connectionService.getTypes();
         assertTrue(types.size() > 0);
     }
 
     @Test
+    @Transactional
     void getRequiredPropertiesForType() throws Exception {
         List<ConnectionProperty> requiredPropertiesForType
                 = connectionService.getRequiredPropertiesForType(MockCertAuthority.class.getName());
@@ -245,10 +261,14 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void issueCertificate() throws Exception {
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
+        Optional<AuthCredential> latestAuthCredentialForAccount = authCredentialService.getLatestAuthCredentialForAccount(account);
 
         RACertificateIssueRequest request =
-                new RACertificateIssueRequest("kidtest1", testCsr, "test.winllc-dev.com", "mockca", "test");
+                new RACertificateIssueRequest(latestAuthCredentialForAccount.get().getKeyIdentifier(),
+                        testCsr, "test.winllc-dev.com", "mockca", "test");
 
         String s = connectionService.issueCertificate(request);
         assertTrue(s.contains("BEGIN CERTIFICATE"));
@@ -257,7 +277,7 @@ class CertAuthorityConnectionServiceTest {
     @Test
     @Transactional
     void processIssueCertificate() throws Exception {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         RACertificateIssueRequest request =
                 new RACertificateIssueRequest("kidtest1", testCsr, "test.winllc-dev.com", "mockca", "test");
 
@@ -268,6 +288,7 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void revokeCertificate() throws Exception {
         RACertificateRevokeRequest revokeRequest = new RACertificateRevokeRequest();
         revokeRequest.setReason(1);
@@ -278,12 +299,14 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void getCertificateStatus() throws Exception {
         CertificateDetails certDetails = connectionService.getCertificateStatus("mockca", "5");
         assertNotNull(certDetails.getStatus());
     }
 
     @Test
+    @Transactional
     void getTrustChain() throws Exception {
         String trustChain = connectionService.getTrustChain("mockca");
         Certificate[] certificates = CertUtil.trustChainStringToCertArray(trustChain);
@@ -291,6 +314,7 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void search() {
         CertSearchParam searchParam = new CertSearchParam(CertSearchParams.CertField.SUBJECT, "test.winllc-dev.com",
                 CertSearchParams.CertSearchParamRelation.EQUALS);
@@ -299,6 +323,7 @@ class CertAuthorityConnectionServiceTest {
     }
 
     @Test
+    @Transactional
     void getCertAuthorityByName() {
         Optional<CertAuthority> mockca = connectionService.getCertAuthorityByName("mockca");
         assertTrue(mockca.isPresent());

@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.repository;
 
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
@@ -32,15 +33,17 @@ class DomainRepositoryTest {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
+    private AccountService accountService;
+    @Autowired
     private DomainPolicyRepository domainPolicyRepository;
 
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew("Test Name");
-        account.setKeyIdentifier("testkid1");
-
-        accountRepository.save(account);
+        AccountRequestForm form = new AccountRequestForm();
+        form.setProjectName("Test Project");
+        Long id = accountService.createNewAccount(form);
+        Account account = accountRepository.findById(id).get();
 
         Domain domain1 = new Domain();
         domain1.setBase("test8.winllc-dev.com");

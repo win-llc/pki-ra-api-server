@@ -5,6 +5,7 @@ import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
 import com.winllc.pki.ra.repository.AttributePolicyRepository;
+import com.winllc.pki.ra.service.AccountService;
 import com.winllc.pki.ra.service.SecurityPolicyService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +35,8 @@ class EntityDirectoryServiceTest {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
+    private AccountService accountService;
+    @Autowired
     private AttributePolicyRepository attributePolicyRepository;
     @Autowired
     private AttributePolicyGroupRepository attributePolicyGroupRepository;
@@ -56,7 +59,7 @@ class EntityDirectoryServiceTest {
     @Test
     @Transactional
     void applyServerEntryToDirectory() throws Exception {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project 2").get();
 
         ServerEntry serverEntry = ServerEntry.buildNew();
         serverEntry.setFqdn("test.winllc-dev.com");

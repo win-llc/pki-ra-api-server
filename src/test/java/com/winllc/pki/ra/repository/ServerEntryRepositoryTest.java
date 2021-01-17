@@ -1,8 +1,10 @@
 package com.winllc.pki.ra.repository;
 
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.pki.ra.service.AccountService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,13 +27,16 @@ class ServerEntryRepositoryTest {
     private ServerEntryRepository serverEntryRepository;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private AccountService accountService;
 
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew("Test Project");
-        account.setKeyIdentifier("testkid1");
-        account = accountRepository.save(account);
+        AccountRequestForm form = new AccountRequestForm();
+        form.setProjectName("Test Project");
+        Long id = accountService.createNewAccount(form);
+        Account account = accountRepository.findById(id).get();
 
         ServerEntry serverEntry = ServerEntry.buildNew();
         serverEntry.setAccount(account);
@@ -50,28 +55,32 @@ class ServerEntryRepositoryTest {
     }
 
     @Test
+    @Transactional
     void findDistinctByFqdnEquals() {
         Optional<ServerEntry> optionalServer = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com");
         assertTrue(optionalServer.isPresent());
     }
 
     @Test
+    @Transactional
     void findAllByAccount() {
-        Account account = accountRepository.findByKeyIdentifierEquals("testkid1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         List<ServerEntry> allByAccount = serverEntryRepository.findAllByAccount(account);
         assertEquals(1, allByAccount.size());
     }
 
     @Test
+    @Transactional
     void findAllByAccountId() {
-        Account account = accountRepository.findByKeyIdentifierEquals("testkid1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         List<ServerEntry> allByAccount = serverEntryRepository.findAllByAccountId(account.getId());
         assertEquals(1, allByAccount.size());
     }
 
     @Test
+    @Transactional
     void findDistinctByFqdnEqualsAndAccount() {
-        Account account = accountRepository.findByKeyIdentifierEquals("testkid1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         Optional<ServerEntry> distinctByFqdnEqualsAndAccount = serverEntryRepository.findDistinctByFqdnEqualsAndAccount("test.winllc-dev.com", account);
         assertTrue(distinctByFqdnEqualsAndAccount.isPresent());
     }

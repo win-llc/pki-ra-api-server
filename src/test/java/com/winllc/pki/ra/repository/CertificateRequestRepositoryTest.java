@@ -1,8 +1,10 @@
 package com.winllc.pki.ra.repository;
 
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.CertificateRequest;
+import com.winllc.pki.ra.service.AccountService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,13 +26,16 @@ class CertificateRequestRepositoryTest {
     private CertificateRequestRepository requestRepository;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private AccountService accountService;
 
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew("Test Project");
-        account.setKeyIdentifier("testkid1");
-        account = accountRepository.save(account);
+        AccountRequestForm form = new AccountRequestForm();
+        form.setProjectName("Test Project");
+        Long id = accountService.createNewAccount(form);
+        Account account = accountRepository.findById(id).get();
         
         CertificateRequest request = new CertificateRequest();
         request.setAccount(account);

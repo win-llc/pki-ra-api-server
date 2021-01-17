@@ -6,8 +6,10 @@ import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
+import com.winllc.pki.ra.domain.CachedCertificate;
 import com.winllc.pki.ra.domain.CertificateRequest;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import com.winllc.pki.ra.repository.CachedCertificateRepository;
 import com.winllc.pki.ra.repository.CertificateRequestRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.transaction.Transactional;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/search")
@@ -32,12 +37,21 @@ public class SearchService {
     private LoadedCertAuthorityStore certAuthorityStore;
     @Autowired
     private CertificateRequestRepository certificateRequestRepository;
+    @Autowired
+    private CachedCertificateRepository cachedCertificateRepository;
 
     @GetMapping("/certificates")
     public List<CertificateDetails> searchCertificates(@RequestParam String search){
 
         List<CertificateDetails> details = new ArrayList<>();
         if(StringUtils.isNotEmpty(search) && search.length() > 2) {
+
+            List<CachedCertificate> found = cachedCertificateRepository.findAllByDnContainsIgnoreCase(search);
+            return found.stream()
+                    .sorted()
+                    .map(c -> cachedToDetails(c))
+                    .collect(Collectors.toList());
+            /*
             CertSearchParam param = new CertSearchParam(CertSearchParams.CertField.SUBJECT,
                     search, CertSearchParams.CertSearchParamRelation.CONTAINS);
 
@@ -50,7 +64,21 @@ public class SearchService {
 
                 details.addAll(results);
             }
+
+             */
         }
+        return details;
+    }
+
+    private CertificateDetails cachedToDetails(CachedCertificate cachedCertificate){
+        CertificateDetails details = new CertificateDetails();
+        details.setValidFrom(cachedCertificate.getValidFrom().toLocalDateTime().atZone(ZoneId.systemDefault()));
+        details.setValidTo(cachedCertificate.getValidTo().toInstant().atZone(ZoneId.systemDefault()));
+        details.setIssuer(cachedCertificate.getIssuer());
+        details.setSerial(cachedCertificate.getSerial().toString());
+        details.setSubject(cachedCertificate.getDn());
+        details.setCaName(cachedCertificate.getCaName());
+
         return details;
     }
 

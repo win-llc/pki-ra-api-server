@@ -51,7 +51,7 @@ class AccountRepositoryTest {
 
     @Test
     void findByKeyIdentifierEquals() {
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals("kidtest1");
+        Optional<Account> optionalAccount = accountRepository.findDistinctByProjectName("Test Project");
         assertTrue(optionalAccount.isPresent());
     }
 

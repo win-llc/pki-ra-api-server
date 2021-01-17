@@ -12,6 +12,7 @@ import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.AuditRecord;
 import com.winllc.pki.ra.repository.AuditRecordRepository;
+import com.winllc.pki.ra.repository.CachedCertificateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,11 +30,12 @@ import java.util.stream.Stream;
 @RequestMapping("/api/metrics")
 public class MetricsService {
 
-    private static final String dtfPattern = "dd/MM/yyyy";
-    private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern(dtfPattern);
+    private static final String dtfPattern = "MM/dd/yyyy";
+    private static final DateTimeFormatter dtf = DateTimeFormatter.ISO_ZONED_DATE_TIME;
 
     private final LoadedCertAuthorityStore certAuthorityStore;
     private final AuditRecordRepository auditRecordRepository;
+
 
     public MetricsService(LoadedCertAuthorityStore certAuthorityStore, AuditRecordRepository auditRecordRepository) {
         this.certAuthorityStore = certAuthorityStore;
@@ -77,7 +80,8 @@ public class MetricsService {
                     }
 
                     DailyAuditMetric dailyAuditMetric = new DailyAuditMetric();
-                    dailyAuditMetric.setDate(d.format(dtf));
+                    dailyAuditMetric.setDate(d.atStartOfDay(ZoneId.systemDefault())
+                            .format(DateTimeFormatter.ofPattern(dtfPattern)));
                     dailyAuditMetric.setRecordsTotal(records.size());
                     if(auditMetricRequest.getReturnFullAuditRecords()) {
                         dailyAuditMetric.setAuditRecords(records);
@@ -91,6 +95,7 @@ public class MetricsService {
         response.setAuditMetrics(auditMetricsDaily);
         return response;
     }
+
 
     @GetMapping("/totalAccounts")
     public ResponseEntity<?> getTotalAccounts(){

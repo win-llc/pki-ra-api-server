@@ -10,5 +10,6 @@ import java.util.List;
 @Transactional
 public interface NotificationRepository extends BaseRepository<Notification> {
 
-    List<Notification> findAllByForUserNamesLike(String userName);
+    List<Notification> findAllByForUserNamesLikeAndNotificationRead(String userName, boolean read);
+    Integer countAllByForUserNamesLikeAndNotificationRead(String userName, boolean read);
 }

@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.AccountRestrictionForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.constants.AccountRestrictionAction;
@@ -47,13 +48,15 @@ class AccountRestrictionServiceTest {
     private AccountRestrictionRepository accountRestrictionRepository;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private AccountService accountService;
 
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew("Test Project 2");
-        account.setKeyIdentifier("kidtest1");
-        accountRepository.save(account);
+        AccountRequestForm form = new AccountRequestForm();
+        form.setProjectName("Test Project 2");
+        accountService.createNewAccount(form);
     }
 
     @AfterEach
@@ -78,7 +81,7 @@ class AccountRestrictionServiceTest {
     @Test
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void getById() throws RAObjectNotFoundException {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project 2").get();
 
         AccountRestriction accountRestriction = new AccountRestriction();
         accountRestriction.setAccount(account);
@@ -95,7 +98,7 @@ class AccountRestrictionServiceTest {
     @Test
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void create() throws Exception {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project 2").get();
 
         AccountRestrictionForm accountRestrictionForm = new AccountRestrictionForm();
         accountRestrictionForm.setAccountId(account.getId());
@@ -116,7 +119,7 @@ class AccountRestrictionServiceTest {
     @Test
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void update() throws Exception {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project 2").get();
 
         AccountRestrictionForm accountRestrictionForm = new AccountRestrictionForm();
         accountRestrictionForm.setAccountId(account.getId());
@@ -142,7 +145,7 @@ class AccountRestrictionServiceTest {
     @Test
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void delete() {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project 2").get();
 
         AccountRestriction accountRestriction = new AccountRestriction();
         accountRestriction.setAccount(account);
@@ -161,7 +164,7 @@ class AccountRestrictionServiceTest {
 
     @Test
     void getAllForAccount() throws RAObjectNotFoundException {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project 2").get();
 
         AccountRestriction accountRestriction = new AccountRestriction();
         accountRestriction.setAccount(account);
@@ -177,7 +180,7 @@ class AccountRestrictionServiceTest {
 
     @Test
     void checkIfAccountValid() {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project 2").get();
 
         boolean valid = accountRestrictionService.checkIfAccountValid(account);
         assertTrue(valid);

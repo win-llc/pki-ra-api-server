@@ -3,6 +3,7 @@ package com.winllc.pki.ra.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.acme.common.SubjectAltName;
 import com.winllc.acme.common.util.CertUtil;
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.CertificateRequestForm;
 import com.winllc.pki.ra.beans.info.CertificateRequestInfo;
@@ -93,6 +94,8 @@ class CertificateRequestServiceTest {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
+    private AccountService accountService;
+    @Autowired
     private AuditRecordRepository auditRecordRepository;
     @Autowired
     private ServerEntryRepository serverEntryRepository;
@@ -114,10 +117,10 @@ class CertificateRequestServiceTest {
         domain.setBase("winllc-dev.com");
         domain = domainRepository.save(domain);
 
-        Account account = Account.buildNew("Test Project");
-        account.setKeyIdentifier("kidtest1");
-        //account.setMacKey("testmac1");
-        account = accountRepository.save(account);
+        AccountRequestForm form = new AccountRequestForm();
+        form.setProjectName("Test Project");
+        Long id = accountService.createNewAccount(form);
+        Account account = accountRepository.findById(id).get();
 
         DomainPolicy domainPolicy = new DomainPolicy();
         domainPolicy.setTargetDomain(domain);
@@ -133,7 +136,7 @@ class CertificateRequestServiceTest {
         request.setRequestedBy("test@test.com");
         request.setAccount(account);
         request.setCertAuthorityName("mockca");
-        request.setRequestedDnsNames(Collections.singletonList("test.winllc-dev.com"));
+        request.setRequestedDnsNames("test.winllc-dev.com");
 
         certificateRequestRepository.save(request);
         when(entityDirectoryService.applyServerEntryToDirectory(any())).thenReturn(new HashMap<>());
@@ -146,23 +149,26 @@ class CertificateRequestServiceTest {
         accountRepository.deleteAll();
         auditRecordRepository.deleteAll();
         serverEntryRepository.deleteAll();
-        domainRepository.deleteAll();
         domainPolicyRepository.deleteAll();;
+        domainRepository.deleteAll();
     }
 
     @Test
+    @Transactional
     void getAll() {
         List<CertificateRequest> all = certificateRequestService.getAll();
         assertEquals(1, all.size());
     }
 
     @Test
+    @Transactional
     void getAllWithStatus() {
         List<CertificateRequest> all = certificateRequestService.getAllWithStatus("new");
         assertEquals(1, all.size());
     }
 
     @Test
+    @Transactional
     void byId() throws RAObjectNotFoundException {
         CertificateRequest request = certificateRequestRepository.findAll().get(0);
         CertificateRequestInfo certificateRequestInfo = certificateRequestService.byId(request.getId());
@@ -170,6 +176,7 @@ class CertificateRequestServiceTest {
     }
 
     @Test
+    @Transactional
     void byIdFull() throws RAObjectNotFoundException {
         CertificateRequest request = certificateRequestRepository.findAll().get(0);
         CertificateRequest certificateRequestInfo = certificateRequestService.byIdFull(request.getId());
@@ -177,8 +184,9 @@ class CertificateRequestServiceTest {
     }
 
     @Test
+    @Transactional
     void submitRequest() throws Exception {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         UserDetails userDetails =
                 new org.springframework.security.core.userdetails.User("test@test.com", "", new ArrayList<>());
 
@@ -205,6 +213,7 @@ class CertificateRequestServiceTest {
     }
 
     @Test
+    @Transactional
     void reviewRequestGet() throws RAObjectNotFoundException {
         CertificateRequest request = certificateRequestRepository.findAll().get(0);
         CertificateRequest request1 = certificateRequestService.reviewRequestGet(request.getId());
@@ -212,6 +221,7 @@ class CertificateRequestServiceTest {
     }
 
     @Test
+    @Transactional
     void reviewRequest() throws Exception {
         CertificateRequest request = certificateRequestRepository.findAll().get(0);
         CertificateRequestDecisionForm form = new CertificateRequestDecisionForm();
@@ -231,6 +241,7 @@ class CertificateRequestServiceTest {
     }
 
     @Test
+    @Transactional
     void myRequests() throws RAObjectNotFoundException {
         UserDetails userDetails =
                 new org.springframework.security.core.userdetails.User("test@test.com", "", new ArrayList<>());

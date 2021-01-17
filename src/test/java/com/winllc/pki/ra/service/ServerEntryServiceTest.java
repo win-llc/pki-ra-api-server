@@ -142,7 +142,7 @@ class ServerEntryServiceTest {
 
         assertEquals(0, serverEntry.getAlternateDnsValues().size());
 
-        form.setAlternateDnsValues(Collections.singletonList("tester.winllc-dev.com"));
+        form.setAlternateDnsValues(Collections.singletonList("bad dns"));
 
         serverEntryService.updateServerEntry(form);
 

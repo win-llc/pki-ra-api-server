@@ -230,6 +230,14 @@ public class AccountService extends AbstractService {
         }
     }
 
+    public Optional<Account> getByKeyIdentifier(String kid) {
+        try {
+            return authCredentialService.getAssociatedAccount(kid);
+        } catch (RAObjectNotFoundException e) {
+            return Optional.empty();
+        }
+    }
+
     @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.Account', 'view_account')")
     @GetMapping("/byId/{id}")
     @ResponseStatus(HttpStatus.OK)

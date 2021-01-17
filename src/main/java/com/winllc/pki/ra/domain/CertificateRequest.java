@@ -3,6 +3,7 @@ package com.winllc.pki.ra.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nimbusds.jose.util.Base64;
 import com.winllc.acme.common.util.CertUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
@@ -11,10 +12,18 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Entity
-@Table(name = "certificate_request")
+@Table(name = "certificate_request",
+        uniqueConstraints={
+                @UniqueConstraint(columnNames = {"certAuthorityName", "issuedCertificateSerial"})
+        })
 public class CertificateRequest extends AbstractPersistable<Long> implements AccountOwnedEntity {
 
     @Column(length = 2000)
@@ -30,8 +39,7 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
     private String publicKeyBase64;
     private String requestedBy;
     private String adminReviewer;
-    @ElementCollection
-    private List<String> requestedDnsNames;
+    private String requestedDnsNames;
     @ManyToOne
     @JoinColumn(name="account_fk")
     private Account account;
@@ -141,11 +149,31 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
         this.adminReviewer = adminReviewer;
     }
 
-    public List<String> getRequestedDnsNames() {
+    public Set<String> getRequestedDnsNamesAsSet(){
+        if(StringUtils.isNotBlank(requestedDnsNames)){
+            return Stream.of(requestedDnsNames.split(",")).collect(Collectors.toSet());
+        }else{
+            return new HashSet<>();
+        }
+    }
+
+    public void addRequestedDnsName(String name){
+        Set<String> temp = getRequestedDnsNamesAsSet();
+        temp.add(name);
+        setRequestedDnsNames(String.join(",", temp));
+    }
+
+    public void removeRequestedDnsName(String name){
+        Set<String> temp = getRequestedDnsNamesAsSet();
+        temp.remove(name);
+        setRequestedDnsNames(String.join(",", temp));
+    }
+
+    public String getRequestedDnsNames() {
         return requestedDnsNames;
     }
 
-    public void setRequestedDnsNames(List<String> requestedDnsNames) {
+    public void setRequestedDnsNames(String requestedDnsNames) {
         this.requestedDnsNames = requestedDnsNames;
     }
 

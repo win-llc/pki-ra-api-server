@@ -42,6 +42,17 @@ public class SecurityPolicyService {
         }
     }
 
+    @GetMapping("/projectDetails/{projectId}/attributes")
+    public Map<String, Object> getProjectAttributes(@PathVariable String projectId) throws Exception {
+        Optional<SecurityPolicyServerProjectDetails> optionalDetails =
+                getPolicyServerProjectDetails(temporaryStaticPolicyServerName, projectId);
+        if(optionalDetails.isPresent()){
+            return optionalDetails.get().getAllSecurityAttributesMap();
+        }else{
+            throw new RAObjectNotFoundException(SecurityPolicyServerProjectDetails.class, projectId);
+        }
+    }
+
     public Map<String, String> getSecurityPolicyMapForService(String serviceName, String fqdn,
                                                               String projectId) throws Exception {
         SecurityPolicyConnection connection = getConnection(temporaryStaticPolicyServerName);

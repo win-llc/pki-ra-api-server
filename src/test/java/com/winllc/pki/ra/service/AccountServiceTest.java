@@ -57,10 +57,10 @@ class AccountServiceTest {
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew("Test Project");
-        account.setKeyIdentifier("kidtest1");
-        //account.setMacKey("testmac1");
-        account = accountRepository.save(account);
+        AccountRequestForm form = new AccountRequestForm();
+        form.setProjectName("Test Project");
+        Long id = accountService.createNewAccount(form);
+        Account account = accountRepository.findById(id).get();
 
         PocEntry pocEntry = new PocEntry();
         pocEntry.setAccount(account);
@@ -119,7 +119,7 @@ class AccountServiceTest {
 
     @Test
     void updateAccount() throws Exception {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         AccountUpdateForm form = new AccountUpdateForm(account);
 
         List<PocFormEntry> pocFormEntries = new ArrayList<>();
@@ -153,15 +153,9 @@ class AccountServiceTest {
     }
 
     @Test
-    void findByKeyIdentifier() throws RAObjectNotFoundException {
-        AccountInfo kidtest1 = accountService.findByKeyIdentifier("kidtest1");
-        assertNotNull(kidtest1);
-    }
-
-    @Test
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void findById() throws RAObjectNotFoundException {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         AccountInfo byId = accountService.findById(account.getId());
         assertNotNull(byId);
     }
@@ -169,7 +163,7 @@ class AccountServiceTest {
     @Test
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void findInfoById() throws RAObjectNotFoundException {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         AccountInfo infoById = accountService.findInfoById(account.getId());
         assertNotNull(infoById);
     }
@@ -177,7 +171,7 @@ class AccountServiceTest {
     @Test
     @Transactional
     void getAccountPocs() throws RAObjectNotFoundException {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
 
         PocEntry pocEntry = new PocEntry();
         pocEntry.setEmail("test2@test.com");
@@ -193,12 +187,12 @@ class AccountServiceTest {
 
     @Test
     void delete() {
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         assertNotNull(account);
 
         accountService.delete(account.getId());
 
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals("kidtest1");
+        Optional<Account> optionalAccount = accountService.getByKeyIdentifier("kidtest1");
         assertFalse(optionalAccount.isPresent());
     }
 }

@@ -1,10 +1,14 @@
 package com.winllc.pki.ra.beans.metrics;
 
+import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeUnit;
+
 public class AuditMetricRequest {
     private String auditRecordType;
     private String dateFrom;
     private String dateTo;
     private Boolean returnFullAuditRecords = false;
+    private ChronoUnit timeUnit;
 
     public String getAuditRecordType() {
         return auditRecordType;
@@ -36,5 +40,13 @@ public class AuditMetricRequest {
 
     public void setReturnFullAuditRecords(Boolean returnFullAuditRecords) {
         this.returnFullAuditRecords = returnFullAuditRecords;
+    }
+
+    public ChronoUnit getTimeUnit() {
+        return timeUnit;
+    }
+
+    public void setTimeUnit(ChronoUnit timeUnit) {
+        this.timeUnit = timeUnit;
     }
 }

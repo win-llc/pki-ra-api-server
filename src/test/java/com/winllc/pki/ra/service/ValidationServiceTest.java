@@ -32,10 +32,7 @@ import javax.crypto.SecretKey;
 import javax.transaction.Transactional;
 
 import java.text.ParseException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static com.winllc.pki.ra.mock.MockUtil.hmacJwk;
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,8 +42,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureMockMvc
 class ValidationServiceTest {
 
-    @Autowired
-    private MockMvc mockMvc;
     @Autowired
     private ValidationService validationService;
     @Autowired
@@ -59,13 +54,8 @@ class ValidationServiceTest {
     private DomainPolicyRepository domainPolicyRepository;
     @Autowired
     private ServerEntryRepository serverEntryRepository;
-
-    private static String testMacKey;
-
-    @BeforeAll
-    static void beforeAll(){
-        testMacKey = SecurityUtil.generateRandomString(32);
-    }
+    @Autowired
+    private AuthCredentialService authCredentialService;
 
     @BeforeEach
     @Transactional
@@ -122,7 +112,10 @@ class ValidationServiceTest {
     @Test
     @Transactional
     void getAccountPreAuthorizedIdentifiers() throws RAObjectNotFoundException {
-        Set<String> preAuthz = validationService.getAccountPreAuthorizedIdentifiers("kidtest1");
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
+        Optional<AuthCredential> latestAuthCredentialForAccount = authCredentialService.getLatestAuthCredentialForAccount(account);
+
+        Set<String> preAuthz = validationService.getAccountPreAuthorizedIdentifiers(latestAuthCredentialForAccount.get().getKeyIdentifier());
         assertEquals(1, preAuthz.size());
     }
 
@@ -132,7 +125,7 @@ class ValidationServiceTest {
         com.winllc.acme.common.model.requestresponse.AccountRequest accountRequest =
                 new com.winllc.acme.common.model.requestresponse.AccountRequest();
 
-        Account account = accountRepository.findByKeyIdentifierEquals("kidtest1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         AuthCredential authCredential = account.getAuthCredentials().toArray(new AuthCredential[0])[0];
 
         JWSHeader.Builder builder = new JWSHeader.Builder(JWSAlgorithm.HS256)

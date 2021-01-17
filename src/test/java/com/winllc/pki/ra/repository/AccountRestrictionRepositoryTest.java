@@ -1,10 +1,12 @@
 package com.winllc.pki.ra.repository;
 
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.constants.AccountRestrictionAction;
 import com.winllc.pki.ra.constants.AccountRestrictionType;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AccountRestriction;
+import com.winllc.pki.ra.service.AccountService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,8 @@ class AccountRestrictionRepositoryTest {
     private AccountRestrictionRepository accountRestrictionRepository;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private AccountService accountService;
 
     @BeforeEach
     @Transactional
@@ -42,8 +46,10 @@ class AccountRestrictionRepositoryTest {
 
     @Test
     void findAllByAccount() {
-        Account account = Account.buildNew("Test Project");
-        account = accountRepository.save(account);
+        AccountRequestForm form = new AccountRequestForm();
+        form.setProjectName("Test Project");
+        Long id = accountService.createNewAccount(form);
+        Account account = accountRepository.findById(id).get();
 
         AccountRestriction accountRestriction = new AccountRestriction();
         accountRestriction.setAccount(account);

@@ -1,8 +1,11 @@
 package com.winllc.pki.ra.repository;
 
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.PocEntry;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import com.winllc.pki.ra.service.AccountService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,13 +28,16 @@ class PocEntryRepositoryTest {
     private PocEntryRepository pocEntryRepository;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private AccountService accountService;
 
     @BeforeEach
     @Transactional
     void before(){
-        Account account = Account.buildNew("Test Name");
-        account.setKeyIdentifier("testkid1");
-        account = accountRepository.save(account);
+        AccountRequestForm form = new AccountRequestForm();
+        form.setProjectName("Test Project");
+        Long id = accountService.createNewAccount(form);
+        Account account = accountRepository.findById(id).get();
 
         PocEntry pocEntry = new PocEntry();
         pocEntry.setAccount(account);
@@ -50,21 +56,24 @@ class PocEntryRepositoryTest {
     }
 
     @Test
-    void findAllByAccount() {
-        Account account = accountRepository.findByKeyIdentifierEquals("testkid1").get();
+    @Transactional
+    void findAllByAccount() throws RAObjectNotFoundException {
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         List<PocEntry> allByAccount = pocEntryRepository.findAllByAccount(account);
         assertEquals(1, allByAccount.size());
     }
 
     @Test
+    @Transactional
     void findAllByEmailEquals() {
         List<PocEntry> byEmail = pocEntryRepository.findAllByEmailEquals("test@test.com");
         assertEquals(1, byEmail.size());
     }
 
     @Test
-    void deleteAllByEmailInAndAccountEquals() {
-        Account account = accountRepository.findByKeyIdentifierEquals("testkid1").get();
+    @Transactional
+    void deleteAllByEmailInAndAccountEquals() throws RAObjectNotFoundException {
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         assertEquals(1, pocEntryRepository.findAll().size());
 
         pocEntryRepository.deleteAllByEmailInAndAccountEquals(Collections.singletonList("test@test.com"), account);
@@ -72,8 +81,9 @@ class PocEntryRepositoryTest {
     }
 
     @Test
+    @Transactional
     void deleteByEmailEqualsAndAccount() {
-        Account account = accountRepository.findByKeyIdentifierEquals("testkid1").get();
+        Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         assertEquals(1, pocEntryRepository.findAll().size());
 
         pocEntryRepository.deleteByEmailEqualsAndAccount("test@test.com", account);

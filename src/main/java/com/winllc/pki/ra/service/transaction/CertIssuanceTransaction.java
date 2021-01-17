@@ -19,6 +19,7 @@ import com.winllc.pki.ra.util.FormValidationUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.springframework.context.ApplicationContext;
 
 import javax.transaction.Transactional;
@@ -174,6 +175,7 @@ public class CertIssuanceTransaction extends CertTransaction {
                     = certificateRequestRepository.findById(raCertificateIssueRequest.getExistingCertificateRequestId());
             if(optionalRequest.isPresent()){
                 certificateRequest = optionalRequest.get();
+                Hibernate.initialize(certificateRequest.getRequestedDnsNames());
             }else{
                 log.error("Expected an existing certificate request, but found none");
                 throw new RAObjectNotFoundException(CertificateRequest.class, raCertificateIssueRequest.getExistingCertificateRequestId());

@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.AttributePolicyGroupForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
@@ -47,14 +48,16 @@ class AttributePolicyServiceTest {
     @Autowired
     private AccountRepository accountRepository;
     @Autowired
+    private AccountService accountService;
+    @Autowired
     private PocEntryRepository pocEntryRepository;
 
     @BeforeEach
     void beforeEach(){
-        Account account = Account.buildNew("Test Project");
-        account.setKeyIdentifier("kidtest1");
-        //account.setMacKey("testmac1");
-        account = accountRepository.save(account);
+        AccountRequestForm form = new AccountRequestForm();
+        form.setProjectName("Test Project");
+        Long id = accountService.createNewAccount(form);
+        Account account = accountRepository.findById(id).get();
 
         PocEntry pocEntry = new PocEntry();
         pocEntry.setEmail("test@test.com");
@@ -93,7 +96,7 @@ class AttributePolicyServiceTest {
 
     @Test
     void findPolicyGroupById() throws RAObjectNotFoundException {
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals("kidtest1");
+        Optional<Account> optionalAccount = accountRepository.findDistinctByProjectName("Test Project");
 
         AttributePolicyGroup testGroup = new AttributePolicyGroup();
         testGroup.setName("test");
@@ -116,7 +119,7 @@ class AttributePolicyServiceTest {
     @Test
     @Transactional
     void createGroupPolicyGroup() throws Exception {
-        Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals("kidtest1");
+        Optional<Account> optionalAccount = accountRepository.findDistinctByProjectName("Test Project");
         AttributePolicyGroupForm form = new AttributePolicyGroupForm();
         form.setAccountId(optionalAccount.get().getId());
         form.setName("Group 1");

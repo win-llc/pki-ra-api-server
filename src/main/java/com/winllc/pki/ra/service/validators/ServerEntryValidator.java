@@ -3,7 +3,9 @@ package com.winllc.pki.ra.service.validators;
 import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.domain.Account;
+import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.repository.AccountRepository;
+import com.winllc.pki.ra.repository.ServerEntryRepository;
 import com.winllc.pki.ra.util.FormValidationUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -21,8 +23,13 @@ public class ServerEntryValidator implements Validator {
 
     private static final Logger log = LogManager.getLogger(ServerEntryValidator.class);
 
-    @Autowired
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
+    private final ServerEntryRepository serverEntryRepository;
+
+    public ServerEntryValidator(AccountRepository accountRepository, ServerEntryRepository serverEntryRepository) {
+        this.accountRepository = accountRepository;
+        this.serverEntryRepository = serverEntryRepository;
+    }
 
     @Override
     public boolean supports(Class<?> clazz) {
@@ -34,13 +41,23 @@ public class ServerEntryValidator implements Validator {
 
         ServerEntryForm form = (ServerEntryForm) target;
 
-        Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
-        if(optionalAccount.isEmpty()){
-            errors.rejectValue("accountId", "serverEntry.invalidAccountId");
+        boolean isEdit = false;
+        if(form.getId() != null){
+            Optional<ServerEntry> serverOptional = serverEntryRepository.findById(form.getId());
+            isEdit = serverOptional.isPresent();
         }
 
-        if(!FormValidationUtil.isValidFqdn(form.getFqdn())){
-            errors.rejectValue("alternateDnsValues", "serverEntry.invalidFqdn");
+        if(!isEdit) {
+            Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
+            if (optionalAccount.isEmpty()) {
+                errors.rejectValue("accountId", "serverEntry.invalidAccountId");
+            }
+        }
+
+        if(!isEdit) {
+            if (!FormValidationUtil.isValidFqdn(form.getFqdn())) {
+                errors.rejectValue("alternateDnsValues", "serverEntry.invalidFqdn");
+            }
         }
 
         if(!CollectionUtils.isEmpty(form.getAlternateDnsValues())){

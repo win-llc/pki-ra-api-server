@@ -33,7 +33,19 @@ public class NotificationService {
 
     @GetMapping("/forCurrentUser")
     public List<Notification> getCurrentNotificationsForUser(Authentication authentication){
-        return notificationRepository.findAllByForUserNamesLike(authentication.getName());
+        return notificationRepository.findAllByForUserNamesLikeAndNotificationRead(
+                authentication.getName(), false);
+    }
+
+    @GetMapping("/forCurrentUser/count")
+    public Integer getCurrentNotificationsCountForUser(Authentication authentication){
+        return notificationRepository.countAllByForUserNamesLikeAndNotificationRead(
+                authentication.getName(), false);
+    }
+
+    @GetMapping("/byId/{id}")
+    public Notification getById(@PathVariable Long id, Authentication authentication){
+        return notificationRepository.findById(id).get();
     }
 
     public Notification save(Notification notification){

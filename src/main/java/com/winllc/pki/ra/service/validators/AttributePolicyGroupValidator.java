@@ -41,9 +41,6 @@ public class AttributePolicyGroupValidator implements Validator {
 
         for(AttributePolicy policy : form.getAttributePolicies()){
             //must be one or the other
-            if(policy.isUseSecurityAttributeValueIfNameExists() && policy.isUseValueIfSecurityAttributeNameValueExists()){
-                errors.rejectValue("useSecurityAttributeValueIfNameExists", "attributePolicyGroup.invalid");
-            }
 
             if(StringUtils.isEmpty(policy.getAttributeName())){
                 errors.rejectValue("attributeName", "attributePolicyGroup.invalidName");

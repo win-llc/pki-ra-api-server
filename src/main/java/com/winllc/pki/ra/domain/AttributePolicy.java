@@ -17,19 +17,23 @@ public class AttributePolicy extends AbstractPersistable<Long> {
     private boolean multiValued = false;
     @Column(columnDefinition="tinyint(1) default 0")
     private boolean staticValue = false;
+    @Column(columnDefinition="tinyint(1) default 0")
+    private boolean serverEntryValue = false;
+    @Column(columnDefinition="tinyint(1) default 0")
+    private boolean policyServerValue = false;
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name="attributePolicyGroup_fk")
     private AttributePolicyGroup attributePolicyGroup;
 
     //if the security policy attribute exists, use the security policy value
-    @Column(columnDefinition="tinyint(1) default 0")
-    private boolean useSecurityAttributeValueIfNameExists = false;
+   // @Column(columnDefinition="tinyint(1) default 0")
+    //private boolean useSecurityAttributeValueIfNameExists = false;
     //if the security policy attribute and value match, use the above value
-    @Column(columnDefinition="tinyint(1) default 0")
-    private boolean useValueIfSecurityAttributeNameValueExists = false;
-    private String securityAttributeKeyName;
-    private String securityAttributeValue;
+    //@Column(columnDefinition="tinyint(1) default 0")
+    //private boolean useValueIfSecurityAttributeNameValueExists = false;
+    //private String securityAttributeKeyName;
+    //private String securityAttributeValue;
 
     @PreRemove
     private void preRemove(){
@@ -42,11 +46,12 @@ public class AttributePolicy extends AbstractPersistable<Long> {
     public void update(AttributePolicy updated){
         setAttributeName(updated.getAttributeName());
         setAttributeValue(updated.getAttributeValue());
-        setSecurityAttributeKeyName(updated.getSecurityAttributeKeyName());
-        setSecurityAttributeValue(updated.getSecurityAttributeValue());
-        setUseSecurityAttributeValueIfNameExists(updated.isUseSecurityAttributeValueIfNameExists());
-        setUseValueIfSecurityAttributeNameValueExists(updated.isUseValueIfSecurityAttributeNameValueExists());
+        //setSecurityAttributeKeyName(updated.getSecurityAttributeKeyName());
+        //setSecurityAttributeValue(updated.getSecurityAttributeValue());
+        //setUseSecurityAttributeValueIfNameExists(updated.isUseSecurityAttributeValueIfNameExists());
+        //setUseValueIfSecurityAttributeNameValueExists(updated.isUseValueIfSecurityAttributeNameValueExists());
         setStaticValue(updated.isStaticValue());
+
     }
 
     @JsonIgnore
@@ -59,10 +64,10 @@ public class AttributePolicy extends AbstractPersistable<Long> {
         return attributeValue.replace("{","").replace("}","");
     }
 
-    @JsonIgnore
-    public boolean checkSecurityPolicyBackedAttribute(){
-        return useSecurityAttributeValueIfNameExists || useValueIfSecurityAttributeNameValueExists;
-    }
+    //@JsonIgnore
+    //public boolean checkSecurityPolicyBackedAttribute(){
+    //    return useSecurityAttributeValueIfNameExists || useValueIfSecurityAttributeNameValueExists;
+    //}
 
     public String getAttributeName() {
         return attributeName;
@@ -104,6 +109,23 @@ public class AttributePolicy extends AbstractPersistable<Long> {
         this.staticValue = staticValue;
     }
 
+    public boolean isServerEntryValue() {
+        return serverEntryValue;
+    }
+
+    public void setServerEntryValue(boolean serverEntryValue) {
+        this.serverEntryValue = serverEntryValue;
+    }
+
+    public boolean isPolicyServerValue() {
+        return policyServerValue;
+    }
+
+    public void setPolicyServerValue(boolean policyServerValue) {
+        this.policyServerValue = policyServerValue;
+    }
+
+    /*
     public boolean isUseSecurityAttributeValueIfNameExists() {
         return useSecurityAttributeValueIfNameExists;
     }
@@ -135,6 +157,8 @@ public class AttributePolicy extends AbstractPersistable<Long> {
     public void setSecurityAttributeValue(String securityAttributeValue) {
         this.securityAttributeValue = securityAttributeValue;
     }
+
+     */
 
 
 }

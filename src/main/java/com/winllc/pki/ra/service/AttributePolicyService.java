@@ -3,10 +3,7 @@ package com.winllc.pki.ra.service;
 import com.winllc.pki.ra.beans.form.AttributePolicyGroupForm;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
-import com.winllc.pki.ra.repository.AttributePolicyRepository;
-import com.winllc.pki.ra.repository.PocEntryRepository;
+import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.service.external.SecurityPolicyConnection;
 import com.winllc.pki.ra.service.validators.AttributePolicyGroupValidator;
 import org.apache.logging.log4j.LogManager;
@@ -35,6 +32,7 @@ public class AttributePolicyService {
     private final PocEntryRepository pocEntryRepository;
     private final AttributePolicyGroupRepository attributePolicyGroupRepository;
     private final AttributePolicyRepository attributePolicyRepository;
+    private final LdapSchemaOverlayRepository ldapSchemaOverlayRepository;
     //todo integrate this with attribute policy
     private final SecurityPolicyService securityPolicyService;
     private final AttributePolicyGroupValidator attributePolicyGroupValidator;
@@ -42,13 +40,14 @@ public class AttributePolicyService {
     public AttributePolicyService(AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
                                   AttributePolicyGroupRepository attributePolicyGroupRepository,
                                   AttributePolicyRepository attributePolicyRepository, SecurityPolicyService securityPolicyService,
-                                  AttributePolicyGroupValidator attributePolicyGroupValidator) {
+                                  AttributePolicyGroupValidator attributePolicyGroupValidator, LdapSchemaOverlayRepository ldapSchemaOverlayRepository) {
         this.accountRepository = accountRepository;
         this.pocEntryRepository = pocEntryRepository;
         this.attributePolicyGroupRepository = attributePolicyGroupRepository;
         this.attributePolicyRepository = attributePolicyRepository;
         this.securityPolicyService = securityPolicyService;
         this.attributePolicyGroupValidator = attributePolicyGroupValidator;
+        this.ldapSchemaOverlayRepository = ldapSchemaOverlayRepository;
     }
 
     @InitBinder("attributePolicyGroupForm")
@@ -78,6 +77,22 @@ public class AttributePolicyService {
             AttributePolicyGroup apg = policyGroupOptional.get();
             Hibernate.initialize(apg.getAttributePolicies());
             return new AttributePolicyGroupForm(apg);
+        }else{
+            throw new RAObjectNotFoundException(AttributePolicyGroup.class, id);
+        }
+    }
+
+    @GetMapping("/group/byId/{id}/schemaOverlay")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public Map<String, Boolean> findSchemaOverlayForGroup(@PathVariable Long id) throws RAObjectNotFoundException {
+        Optional<AttributePolicyGroup> policyGroupOptional = attributePolicyGroupRepository.findById(id);
+        if(policyGroupOptional.isPresent()){
+            AttributePolicyGroup apg = policyGroupOptional.get();
+            LdapSchemaOverlay overlay = apg.getLdapSchemaOverlay();
+            Hibernate.initialize(overlay.getAttributeMap());
+            return overlay.getAttributeMap().stream()
+                    .collect(Collectors.toMap(a -> a.getName(), a -> a.getEnabled()));
         }else{
             throw new RAObjectNotFoundException(AttributePolicyGroup.class, id);
         }
@@ -119,12 +134,17 @@ public class AttributePolicyService {
             throws RAObjectNotFoundException {
 
         Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
+        Optional<LdapSchemaOverlay> optionalSchema = ldapSchemaOverlayRepository.findById(form.getAttributeSchemaId());
 
-        if(optionalAccount.isPresent()) {
+        if(optionalAccount.isPresent() && optionalSchema.isPresent()) {
             Account account = optionalAccount.get();
+            LdapSchemaOverlay schemaOverlay = optionalSchema.get();
+
             AttributePolicyGroup attributePolicyGroup = new AttributePolicyGroup();
             attributePolicyGroup.setName(form.getName());
             attributePolicyGroup.setAccount(account);
+            attributePolicyGroup.setLdapSchemaOverlay(schemaOverlay);
+
             attributePolicyGroup = attributePolicyGroupRepository.save(attributePolicyGroup);
 
             if (!CollectionUtils.isEmpty(form.getAttributePolicies())) {

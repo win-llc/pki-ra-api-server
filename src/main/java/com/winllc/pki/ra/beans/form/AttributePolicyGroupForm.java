@@ -11,6 +11,7 @@ public class AttributePolicyGroupForm extends ValidForm<AttributePolicyGroup> {
 
     private String name;
     private Long accountId;
+    private Long attributeSchemaId;
     private String policyServerProjectId;
     private String accountName;
     private List<AttributePolicy> attributePolicies;
@@ -20,6 +21,9 @@ public class AttributePolicyGroupForm extends ValidForm<AttributePolicyGroup> {
         this.name = attributePolicyGroup.getName();
         Account account = attributePolicyGroup.getAccount();
         this.accountId = account.getId();
+        if(attributePolicyGroup.getLdapSchemaOverlay() != null) {
+            this.attributeSchemaId = attributePolicyGroup.getLdapSchemaOverlay().getId();
+        }
         this.policyServerProjectId = account.getSecurityPolicyServerProjectId();
         this.accountName = account.getProjectName();
         this.attributePolicies = new ArrayList<>(attributePolicyGroup.getAttributePolicies());
@@ -54,6 +58,14 @@ public class AttributePolicyGroupForm extends ValidForm<AttributePolicyGroup> {
 
     public void setAccountId(Long accountId) {
         this.accountId = accountId;
+    }
+
+    public Long getAttributeSchemaId() {
+        return attributeSchemaId;
+    }
+
+    public void setAttributeSchemaId(Long attributeSchemaId) {
+        this.attributeSchemaId = attributeSchemaId;
     }
 
     public String getPolicyServerProjectId() {

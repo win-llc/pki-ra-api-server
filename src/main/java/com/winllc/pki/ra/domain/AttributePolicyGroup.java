@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.util.CollectionUtils;
 
@@ -19,6 +20,9 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
     @ManyToOne
     @JoinColumn(name="account_fk")
     private Account account;
+    @ManyToOne
+    @JoinColumn(name="ldapSchemaOverlay_fk")
+    private LdapSchemaOverlay ldapSchemaOverlay;
 
     @PreRemove
     private void preRemove(){
@@ -37,6 +41,14 @@ public class AttributePolicyGroup extends AbstractPersistable<Long> {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public LdapSchemaOverlay getLdapSchemaOverlay() {
+        return ldapSchemaOverlay;
+    }
+
+    public void setLdapSchemaOverlay(LdapSchemaOverlay ldapSchemaOverlay) {
+        this.ldapSchemaOverlay = ldapSchemaOverlay;
     }
 
     public Set<AttributePolicy> getAttributePolicies() {

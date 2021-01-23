@@ -12,6 +12,7 @@ import com.winllc.pki.ra.service.external.beans.DirectoryServerEntity;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
@@ -81,6 +82,7 @@ public class EntityDirectoryService {
 
         Map<String, Object> attributeMap = new HashMap<>();
         policyGroups.forEach(pg -> {
+            Hibernate.initialize(pg.getAttributePolicies());
             Map<String, Object> securityPolicyMap = new HashMap<>();
             if(StringUtils.isNotBlank(account.getSecurityPolicyServerProjectId())) {
                 try {
@@ -103,28 +105,19 @@ public class EntityDirectoryService {
                 String attributeValueToAdd = null;
                 //if the AttributePolicy requires a security policy to apply the attribute, check the policy map
                 //from the Policy Service
-                if(ap.checkSecurityPolicyBackedAttribute()){
-                    //todo attribute value should be able to come from the security policy,
-                    //not just allow value if key/value pair is found
-                    if(securityPolicyMap.containsKey(ap.getSecurityAttributeKeyName())){
-                        if(ap.isUseSecurityAttributeValueIfNameExists()){
-                            attributeValueToAdd = securityPolicyMap.get(ap.getSecurityAttributeKeyName()).toString();
-                        }else if(ap.isUseValueIfSecurityAttributeNameValueExists()){
-                            String securityPolicy = securityPolicyMap.get(ap.getSecurityAttributeKeyName()).toString();
-                            if(securityPolicy.equalsIgnoreCase(ap.getSecurityAttributeValue())){
-                                attributeValueToAdd = ap.getAttributeValue();
-                            }
-                        }
+
+                if(ap.isPolicyServerValue()){
+                    if(securityPolicyMap.containsKey(ap.getAttributeValue())) {
+                        Object val = securityPolicyMap.get(ap.getAttributeValue());
+                        attributeValueToAdd = val.toString();
                     }
-                }else{
-                    if(ap.isStaticValue()){
-                        attributeValueToAdd = ap.getAttributeValue();
-                    }else{
-                        Optional<Object> optionalServerValue = getServerEntryField(serverEntry, ap.getVariableValueField());
-                        if(optionalServerValue.isPresent()){
-                            attributeValueToAdd = optionalServerValue.get().toString();
-                        }
+                }else if(ap.isServerEntryValue()){
+                    Optional<Object> optionalServerValue = getServerEntryField(serverEntry, ap.getVariableValueField());
+                    if(optionalServerValue.isPresent()){
+                        attributeValueToAdd = optionalServerValue.get().toString();
                     }
+                }else if(ap.isStaticValue()){
+                    attributeValueToAdd = ap.getAttributeValue();
                 }
 
                 if(attributeValueToAdd != null){

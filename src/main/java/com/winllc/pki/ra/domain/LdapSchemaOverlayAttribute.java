@@ -46,4 +46,6 @@ public class LdapSchemaOverlayAttribute extends AbstractPersistable<Long> {
     public void setLdapSchemaOverlay(LdapSchemaOverlay ldapSchemaOverlay) {
         this.ldapSchemaOverlay = ldapSchemaOverlay;
     }
+
+
 }

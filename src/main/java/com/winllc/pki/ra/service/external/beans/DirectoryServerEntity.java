@@ -9,9 +9,11 @@ import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.util.CollectionUtils;
 
+import javax.naming.InvalidNameException;
 import javax.naming.Name;
 import javax.naming.NamingException;
 import javax.naming.directory.*;
+import javax.naming.ldap.LdapName;
 import java.io.ByteArrayInputStream;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateFactory;
@@ -37,9 +39,9 @@ public class DirectoryServerEntity {
     private Map<String, Attribute> currentMap;
     private List<X509Certificate> certificates;
 
-    public DirectoryServerEntity(ServerEntry serverEntry, LdapTemplate ldapTemplate) {
+    public DirectoryServerEntity(ServerEntry serverEntry, LdapTemplate ldapTemplate) throws InvalidNameException {
         this.serverEntry = serverEntry;
-        this.dn = serverEntry.getDn();
+        this.dn = new LdapName(serverEntry.getDistinguishedName());
         this.fqdn = serverEntry.getFqdn();
         this.ldapTemplate = ldapTemplate;
     }

@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.form.AttributePolicyGroupForm;
+import com.winllc.pki.ra.cron.LdapObjectUpdater;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.*;
@@ -36,6 +37,9 @@ public class AttributePolicyService {
     //todo integrate this with attribute policy
     private final SecurityPolicyService securityPolicyService;
     private final AttributePolicyGroupValidator attributePolicyGroupValidator;
+
+    @Autowired
+    private LdapObjectUpdater ldapObjectUpdater;
 
     public AttributePolicyService(AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
                                   AttributePolicyGroupRepository attributePolicyGroupRepository,
@@ -203,6 +207,8 @@ public class AttributePolicyService {
 
             apg.setAttributePolicies(attributePolicies);
             apg = attributePolicyGroupRepository.save(apg);
+
+            ldapObjectUpdater.update(apg);
 
             return new AttributePolicyGroupForm(apg);
         }else{

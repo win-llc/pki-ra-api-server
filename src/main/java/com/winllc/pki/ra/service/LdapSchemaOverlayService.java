@@ -100,7 +100,18 @@ public class LdapSchemaOverlayService {
             }
         }
 
-        saved.getAttributeMap().clear();
+        Hibernate.initialize(saved.getAttributeMap());
+        Set<LdapSchemaOverlayAttribute> existingAttrs = saved.getAttributeMap();
+
+        List<LdapSchemaOverlayAttribute> toDelete = existingAttrs.stream()
+                .filter(a -> !newAttrs.contains(a))
+                .collect(Collectors.toList());
+
+        for(LdapSchemaOverlayAttribute attr : toDelete) {
+            //saved.getAttributeMap().remove(attr);
+            attributeRepository.delete(attr);
+        }
+
         saved.getAttributeMap().addAll(newAttrs);
         repository.save(saved);
     }

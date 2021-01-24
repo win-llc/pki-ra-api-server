@@ -18,6 +18,7 @@ import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.stereotype.Service;
 
+import javax.naming.InvalidNameException;
 import javax.transaction.Transactional;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -70,8 +71,14 @@ public class EntityDirectoryService {
 
         LdapTemplate ldapTemplate = buildDirectoryLdapTemplate();
 
-        DirectoryServerEntity entity = new DirectoryServerEntity(serverEntry, ldapTemplate);
-        entity.overwriteAttributes(attributeValueMap);
+        DirectoryServerEntity entity = null;
+        try {
+            entity = new DirectoryServerEntity(serverEntry, ldapTemplate);
+            entity.overwriteAttributes(attributeValueMap);
+        } catch (InvalidNameException e) {
+            log.error("Invalid name", e);
+            return false;
+        }
 
         return true;
     }

@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "account_restriction")
-public class AccountRestriction extends AbstractPersistable<Long> implements AccountOwnedEntity {
+public class AccountRestriction extends AbstractPersistable<Long> implements AccountOwnedEntity, TaskEntity {
 
     private AccountRestrictionType type;
     private AccountRestrictionAction action;
@@ -93,5 +93,10 @@ public class AccountRestriction extends AbstractPersistable<Long> implements Acc
 
     public void setMarkedCompletedByUser(String markedCompletedByUser) {
         this.markedCompletedByUser = markedCompletedByUser;
+    }
+
+    @Override
+    public boolean isComplete() {
+        return isCompleted();
     }
 }

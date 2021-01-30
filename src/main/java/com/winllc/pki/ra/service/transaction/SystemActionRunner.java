@@ -10,10 +10,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.CollectionUtils;
 
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -26,8 +30,11 @@ public class SystemActionRunner {
     private final ApplicationContext context;
     private AuditRecord auditRecord;
     private Notification notification;
+    private boolean entityIsTask = false;
+    private Timestamp taskDueBy;
     private boolean sendNotification = false;
     private List<String> notificationEmails;
+    private Object entity;
 
     private SystemActionRunner(ApplicationContext context){
         this.context = context;
@@ -55,6 +62,12 @@ public class SystemActionRunner {
 
     public SystemActionRunner createNotification(Notification notification){
         this.notification = notification;
+        return this;
+    }
+
+    public SystemActionRunner markEntityAsTask(LocalDateTime dueBy){
+        this.entityIsTask = true;
+        this.taskDueBy = Timestamp.valueOf(dueBy);
         return this;
     }
 
@@ -86,19 +99,37 @@ public class SystemActionRunner {
     public <T, E extends Exception> Future<T> executeAsync(ThrowingSupplier<T, E> action){
         ThreadPoolTaskExecutor executor = context.getBean("taskExecutor", ThreadPoolTaskExecutor.class);
 
-        return executor.submit(() -> {
-           return execute(action);
-        });
+        return executor.submit(() -> execute(action));
     }
 
     public <T, E extends Exception> T execute(ThrowingSupplier<T, E> action) throws Exception {
         T result = action.get();
+
+        this.entity = result;
 
         if(result instanceof AccountOwnedEntity){
             AccountOwnedEntity entity = (AccountOwnedEntity) result;
             Hibernate.initialize(entity.getAccount());
             Account account = entity.getAccount();
             addAccountPocsForNotification(account);
+        }
+
+        //Check if a task notification is associated with this entity, if yes mark complete if relevant
+        if(result instanceof TaskEntity && result instanceof AbstractPersistable){
+            if(((TaskEntity) result).isComplete()){
+                Long id = ((AbstractPersistable<Long>) result).getId();
+                String clazz = result.getClass().getCanonicalName();
+
+                NotificationRepository notiRepo = context.getBean(NotificationRepository.class);
+                List<Notification> found = notiRepo.findAllByTaskObjectIdAndTaskObjectClass(id, clazz);
+
+                if(!CollectionUtils.isEmpty(found)){
+                    for(Notification notification : found){
+                        notification.setTaskComplete(true);
+                        notiRepo.save(notification);
+                    }
+                }
+            }
         }
 
         execute();
@@ -120,8 +151,14 @@ public class SystemActionRunner {
 
             if(!CollectionUtils.isEmpty(notificationEmails)){
                 for(String email : notificationEmails){
-                    this.notification.setForUserNames(email);
-                    repository.save(this.notification);
+                    Notification toSave = this.notification.clone();
+
+                    if(this.entityIsTask && entity instanceof AbstractPersistable){
+                        toSave.markAsTask((AbstractPersistable<Long>) entity, taskDueBy);
+                    }
+
+                    toSave.setForUser(email);
+                    repository.save(toSave);
                 }
             }
 

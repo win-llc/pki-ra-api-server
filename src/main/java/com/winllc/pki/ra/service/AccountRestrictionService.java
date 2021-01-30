@@ -6,20 +6,25 @@ import com.winllc.pki.ra.constants.AccountRestrictionType;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AccountRestriction;
 import com.winllc.pki.ra.domain.Domain;
+import com.winllc.pki.ra.domain.Notification;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AccountRestrictionRepository;
+import com.winllc.pki.ra.service.transaction.SystemActionRunner;
+import com.winllc.pki.ra.service.transaction.ThrowingSupplier;
 import com.winllc.pki.ra.service.validators.AccountRestrictionValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,7 +36,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/accountRestriction")
-public class AccountRestrictionService {
+public class AccountRestrictionService extends AbstractService {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
@@ -42,7 +47,10 @@ public class AccountRestrictionService {
     private final AccountRestrictionValidator accountRestrictionValidator;
 
     public AccountRestrictionService(AccountRepository accountRepository,
-                                     AccountRestrictionRepository accountRestrictionRepository, AccountRestrictionValidator accountRestrictionValidator) {
+                                     AccountRestrictionRepository accountRestrictionRepository,
+                                     AccountRestrictionValidator accountRestrictionValidator,
+                                     ApplicationContext applicationContext) {
+        super(applicationContext);
         this.accountRepository = accountRepository;
         this.accountRestrictionRepository = accountRestrictionRepository;
         this.accountRestrictionValidator = accountRestrictionValidator;
@@ -95,13 +103,26 @@ public class AccountRestrictionService {
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public Long create(@Valid @RequestBody AccountRestrictionForm form) throws Exception {
-        AccountRestriction accountRestriction = formToRestriction(form);
 
-        accountRestriction = accountRestrictionRepository.save(accountRestriction);
+        final AccountRestriction accountRestriction = formToRestriction(form);
 
-        log.info("Account restriction added ID: "+accountRestriction.getId());
+        Notification notification = Notification.buildNew();
+        notification.setMessage("Account Restriction Task");
 
-        return accountRestriction.getId();
+        SystemActionRunner runner = SystemActionRunner.build(this.context);
+        runner.createNotification(notification)
+                .markEntityAsTask(accountRestriction.getDueBy().toLocalDateTime());
+
+        ThrowingSupplier<AccountRestriction, Exception> action = () -> {
+            AccountRestriction saved = accountRestrictionRepository.save(accountRestriction);
+
+            log.info("Account restriction added ID: " + saved.getId());
+            return saved;
+        };
+
+        AccountRestriction added = runner.execute(action);
+
+        return added.getId();
     }
 
     @PreAuthorize("hasPermission(#form, 'update_account_restriction')")
@@ -112,22 +133,28 @@ public class AccountRestrictionService {
         Optional<AccountRestriction> optionalAccountRestriction = accountRestrictionRepository.findById(form.getId());
 
         if(optionalAccountRestriction.isPresent()){
-            AccountRestriction existing = optionalAccountRestriction.get();
-            form.setAccountId(existing.getAccount().getId());
-            AccountRestriction fromForm = formToRestriction(form);
 
-            existing.setDueBy(fromForm.getDueBy());
-            existing.setCompleted(form.isCompleted());
-            if(StringUtils.isNotBlank(form.getAction())) {
-                existing.setAction(AccountRestrictionAction.valueOf(form.getAction()));
-            }
-            if(StringUtils.isNotBlank(form.getType())) {
-                existing.setType(AccountRestrictionType.valueOf(form.getType()));
-            }
+            ThrowingSupplier<AccountRestriction, Exception> action = () -> {
+                AccountRestriction existing = optionalAccountRestriction.get();
+                form.setAccountId(existing.getAccount().getId());
+                AccountRestriction fromForm = formToRestriction(form);
 
-            existing = accountRestrictionRepository.save(existing);
+                existing.setDueBy(fromForm.getDueBy());
+                existing.setCompleted(form.isCompleted());
+                if(StringUtils.isNotBlank(form.getAction())) {
+                    existing.setAction(AccountRestrictionAction.valueOf(form.getAction()));
+                }
+                if(StringUtils.isNotBlank(form.getType())) {
+                    existing.setType(AccountRestrictionType.valueOf(form.getType()));
+                }
 
-            return existing;
+                return accountRestrictionRepository.save(existing);
+            };
+
+            SystemActionRunner runner = SystemActionRunner.build(this.context);
+            AccountRestriction restriction = runner.execute(action);
+
+            return restriction;
         }else{
             throw new RAObjectNotFoundException(form);
         }

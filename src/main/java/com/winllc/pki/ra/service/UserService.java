@@ -1,25 +1,35 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.beans.info.PocEntryInfo;
+import com.winllc.pki.ra.domain.PocEntry;
+import com.winllc.pki.ra.repository.PocEntryRepository;
 import com.winllc.pki.ra.security.RAUser;
 import com.winllc.pki.ra.service.external.beans.IdentityExternal;
 import com.winllc.pki.ra.service.external.vendorimpl.KeycloakIdentityProviderConnection;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/user")
 public class UserService {
 
+    private final PocEntryRepository pocEntryRepository;
     private final KeycloakIdentityProviderConnection keycloakService;
 
-    public UserService(KeycloakIdentityProviderConnection keycloakService) {
+    public UserService(KeycloakIdentityProviderConnection keycloakService, PocEntryRepository pocEntryRepository) {
         this.keycloakService = keycloakService;
+        this.pocEntryRepository = pocEntryRepository;
     }
 
 
@@ -41,4 +51,25 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/profile/info")
+    @Transactional
+    public PocEntryInfo getUserInfo(Authentication authentication){
+        PocEntryInfo info = new PocEntryInfo();
+        info.setUserId(authentication.getName());
+
+        Optional<IdentityExternal> externalOptional = keycloakService.findByEmail(authentication.getName());
+        if(externalOptional.isPresent()){
+            IdentityExternal identityExternal = externalOptional.get();
+            info.setFullName(identityExternal.getFirstName() + " " + identityExternal.getLastName());
+        }
+
+        List<PocEntry> allByEmailEquals = pocEntryRepository.findAllByEmailEquals(authentication.getName());
+        if(CollectionUtils.isNotEmpty(allByEmailEquals)){
+            PocEntry pocEntry = allByEmailEquals.get(0);
+            info.setAddedOn(pocEntry.getAddedOn().toString());
+            info.setRoles(authentication.getAuthorities().stream().map(a -> a.getAuthority()).collect(Collectors.toList()));
+        }
+
+        return info;
+    }
 }

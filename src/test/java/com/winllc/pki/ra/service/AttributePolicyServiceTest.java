@@ -4,15 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.AttributePolicyGroupForm;
 import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AttributePolicy;
-import com.winllc.pki.ra.domain.AttributePolicyGroup;
-import com.winllc.pki.ra.domain.PocEntry;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
-import com.winllc.pki.ra.repository.AttributePolicyRepository;
-import com.winllc.pki.ra.repository.PocEntryRepository;
+import com.winllc.pki.ra.repository.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +45,8 @@ class AttributePolicyServiceTest {
     private AccountService accountService;
     @Autowired
     private PocEntryRepository pocEntryRepository;
+    @Autowired
+    private LdapSchemaOverlayRepository ldapSchemaOverlayRepository;
 
     @BeforeEach
     void beforeEach(){
@@ -85,6 +81,15 @@ class AttributePolicyServiceTest {
         attributePolicyGroup.getAttributePolicies().add(dynamicAttribute);
 
         attributePolicyGroupRepository.save(attributePolicyGroup);
+
+        LdapSchemaOverlayAttribute overlayAttribute = new LdapSchemaOverlayAttribute();
+        overlayAttribute.setName("attr");
+        overlayAttribute.setEnabled(true);
+
+        LdapSchemaOverlay overlay = new LdapSchemaOverlay();
+        overlay.setLdapObjectType("test");
+        overlay.getAttributeMap().add(overlayAttribute);
+        ldapSchemaOverlayRepository.save(overlay);
     }
 
     @AfterEach
@@ -92,6 +97,7 @@ class AttributePolicyServiceTest {
         attributePolicyGroupRepository.deleteAll();
         accountRepository.deleteAll();
         pocEntryRepository.deleteAll();
+        ldapSchemaOverlayRepository.deleteAll();
     }
 
     @Test
@@ -119,10 +125,14 @@ class AttributePolicyServiceTest {
     @Test
     @Transactional
     void createGroupPolicyGroup() throws Exception {
+        LdapSchemaOverlay overlay = ldapSchemaOverlayRepository.findAll().get(0);
         Optional<Account> optionalAccount = accountRepository.findDistinctByProjectName("Test Project");
+
         AttributePolicyGroupForm form = new AttributePolicyGroupForm();
         form.setAccountId(optionalAccount.get().getId());
         form.setName("Group 1");
+
+        form.setAttributeSchemaId(overlay.getId());
 
         AttributePolicy staticAttribute = new AttributePolicy();
         staticAttribute.setAttributeName("staticAttr");
@@ -143,14 +153,13 @@ class AttributePolicyServiceTest {
         Optional<AttributePolicyGroup> apg = attributePolicyGroupRepository.findById(apgId);
         assertEquals(2, apg.get().getAttributePolicies().size());
 
-        dynamicAttribute.setUseSecurityAttributeValueIfNameExists(true);
-        dynamicAttribute.setUseValueIfSecurityAttributeNameValueExists(true);
-        String badJson = new ObjectMapper().writeValueAsString(form);
+        dynamicAttribute.setPolicyServerValue(true);
+        String json = new ObjectMapper().writeValueAsString(form);
         mockMvc.perform(
                 post("/api/attributePolicy/group/create")
                         .contentType("application/json")
-                        .content(badJson))
-                .andExpect(status().is(409));
+                        .content(json))
+                .andExpect(status().is(201));
     }
 
     @Test

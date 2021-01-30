@@ -33,14 +33,20 @@ public class NotificationService {
 
     @GetMapping("/forCurrentUser")
     public List<Notification> getCurrentNotificationsForUser(Authentication authentication){
-        return notificationRepository.findAllByForUserNamesLikeAndNotificationRead(
-                authentication.getName(), false);
+        return notificationRepository.findAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskComplete(
+                authentication.getName(), false, false);
+    }
+
+    @GetMapping("/forCurrentUser/tasks")
+    public List<Notification> getCurrentTasksForUser(Authentication authentication){
+        return notificationRepository.findAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskComplete(
+                authentication.getName(), false, false);
     }
 
     @GetMapping("/forCurrentUser/count")
     public Integer getCurrentNotificationsCountForUser(Authentication authentication){
-        return notificationRepository.countAllByForUserNamesLikeAndNotificationRead(
-                authentication.getName(), false);
+        return notificationRepository.countAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskComplete(
+                authentication.getName(), false, false);
     }
 
     @GetMapping("/byId/{id}")
@@ -77,8 +83,7 @@ public class NotificationService {
 
     private boolean checkNotificationBelongsToUser(Notification notification, Authentication authentication){
         String currentUserName = authentication.getName();
-        List<String> userNamesAsList = notification.getUserNamesAsList();
-        return userNamesAsList.contains(currentUserName);
+        return notification.getForUser().equalsIgnoreCase(currentUserName);
     }
 
 }

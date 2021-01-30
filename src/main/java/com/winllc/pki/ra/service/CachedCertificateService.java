@@ -26,8 +26,11 @@ public class CachedCertificateService {
 
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("mm/DD/yyyy");
 
-    @Autowired
-    private CachedCertificateRepository cachedCertificateRepository;
+    private final CachedCertificateRepository cachedCertificateRepository;
+
+    public CachedCertificateService(CachedCertificateRepository cachedCertificateRepository) {
+        this.cachedCertificateRepository = cachedCertificateRepository;
+    }
 
     @GetMapping("/getPaged")
     @Transactional

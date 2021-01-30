@@ -12,6 +12,7 @@ import java.util.List;
 @Transactional
 public interface AccountRestrictionRepository extends BaseRepository<AccountRestriction> {
 
+    List<AccountRestriction> findAllByDueByBefore(Timestamp timestamp);
     List<AccountRestriction> findAllByAccount(Account account);
     List<AccountRestriction> findAllByAccountAndCompleted(Account account, boolean completed);
     List<AccountRestriction> findAllByAccountAndDueByBefore(Account account, Timestamp timestamp);

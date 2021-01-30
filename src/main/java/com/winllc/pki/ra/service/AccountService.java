@@ -2,6 +2,7 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.DirectoryDataSettings;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
+import com.winllc.pki.ra.beans.info.AccountInfoItem;
 import com.winllc.pki.ra.endpoint.acme.AcmeServerService;
 import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.beans.form.AccountUpdateForm;
@@ -22,6 +23,8 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,8 +34,10 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -306,8 +311,26 @@ public class AccountService extends AbstractService {
         }
     }
 
+/*
+    public Page<AccountInfoItem> getPaged(){
 
-    private AccountInfo buildAccountInfo(Account account) {
+    }
+
+    private static Specification<CachedCertificate> buildSearch() {
+
+        return (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            Predicate onlyLatest = builder.equal(root.get("latestForDn"), true);
+            predicates.add(onlyLatest);
+
+        }
+    }
+
+ */
+
+
+            private AccountInfo buildAccountInfo(Account account) {
         List<PocEntry> pocEntries = pocEntryRepository.findAllByAccount(account);
         Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
 

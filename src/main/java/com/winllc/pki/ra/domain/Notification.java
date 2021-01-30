@@ -19,12 +19,21 @@ import java.util.stream.Stream;
 public class Notification extends AbstractPersistable<Long> {
 
     @Column(nullable = false)
-    private String forUserNames;
+    private String forUser;
     @Column(nullable = false)
     private Timestamp created;
     private Timestamp expiresOn;
+    private Timestamp dueBy;
+    @Column(columnDefinition="tinyint(1) default 0")
     private Boolean notificationRead = false;
     private String message;
+
+    @Column(columnDefinition="tinyint(1) default 0")
+    private Boolean isTask = false;
+    private Long taskObjectId;
+    private String taskObjectClass;
+    @Column(columnDefinition="tinyint(1) default 0")
+    private Boolean taskComplete = false;
 
     public static Notification buildNew(){
         Notification notification = new Notification();
@@ -34,14 +43,32 @@ public class Notification extends AbstractPersistable<Long> {
 
     public static Notification buildNew(String forUserName){
         Notification notification = buildNew();
-        notification.setForUserNames(forUserName);
+        notification.setForUser(forUserName);
         notification.setCreated(Timestamp.valueOf(LocalDateTime.now()));
         return notification;
     }
 
-    public static Notification buildNew(List<String> forUserNames){
-        String combined = String.join(",", forUserNames);
-        return buildNew(combined);
+    public Notification markAsTask(AbstractPersistable<Long> taskObj, Timestamp dueBy){
+        this.isTask = true;
+        this.taskObjectClass = taskObj.getClass().getCanonicalName();
+        this.taskObjectId = taskObj.getId();
+        this.dueBy = dueBy;
+        return this;
+    }
+
+    public Notification clone(){
+        Notification cloned = new Notification();
+        cloned.setCreated(this.getCreated());
+        cloned.setMessage(this.getMessage());
+        cloned.setForUser(this.getForUser());
+        cloned.setDueBy(this.getDueBy());
+        cloned.setExpiresOn(this.getExpiresOn());
+        cloned.setNotificationRead(this.getNotificationRead());
+        cloned.setTask(this.getTask());
+        cloned.setTaskObjectClass(this.getTaskObjectClass());
+        cloned.setTaskObjectId(this.getTaskObjectId());
+        cloned.setTaskComplete(this.getTaskComplete());
+        return cloned;
     }
 
     public Notification addMessage(String message){
@@ -49,21 +76,12 @@ public class Notification extends AbstractPersistable<Long> {
         return this;
     }
 
-    @JsonIgnore
-    public List<String> getUserNamesAsList(){
-        if(forUserNames != null){
-            return Stream.of(forUserNames.split(",")).collect(Collectors.toList());
-        }else{
-            return new ArrayList<>();
-        }
+    public String getForUser() {
+        return forUser;
     }
 
-    public String getForUserNames() {
-        return forUserNames;
-    }
-
-    public void setForUserNames(String forUserNames) {
-        this.forUserNames = forUserNames;
+    public void setForUser(String forUser) {
+        this.forUser = forUser;
     }
 
     public Timestamp getCreated() {
@@ -98,10 +116,50 @@ public class Notification extends AbstractPersistable<Long> {
         this.message = message;
     }
 
+    public Timestamp getDueBy() {
+        return dueBy;
+    }
+
+    public void setDueBy(Timestamp dueBy) {
+        this.dueBy = dueBy;
+    }
+
+    public Boolean getTask() {
+        return isTask;
+    }
+
+    public void setTask(Boolean task) {
+        isTask = task;
+    }
+
+    public Long getTaskObjectId() {
+        return taskObjectId;
+    }
+
+    public void setTaskObjectId(Long taskObjectId) {
+        this.taskObjectId = taskObjectId;
+    }
+
+    public String getTaskObjectClass() {
+        return taskObjectClass;
+    }
+
+    public void setTaskObjectClass(String taskObjectClass) {
+        this.taskObjectClass = taskObjectClass;
+    }
+
+    public Boolean getTaskComplete() {
+        return taskComplete;
+    }
+
+    public void setTaskComplete(Boolean taskComplete) {
+        this.taskComplete = taskComplete;
+    }
+
     @Override
     public String toString() {
         return "Notification{" +
-                "forUserNames='" + forUserNames + '\'' +
+                "forUser='" + forUser + '\'' +
                 ", created=" + created +
                 ", expiresOn=" + expiresOn +
                 ", notificationRead=" + notificationRead +

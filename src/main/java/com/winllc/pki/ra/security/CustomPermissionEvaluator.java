@@ -100,6 +100,8 @@ public class CustomPermissionEvaluator implements PermissionEvaluator {
         return hasPermission;
     }
 
+
+
     private boolean hasPermissionToObject(UserDetails user, Class clazz, Long id){
         boolean hasPermissionToObject = false;
         AtomicReference<Account> accountAtomic = new AtomicReference<>();

@@ -2,6 +2,7 @@ package com.winllc.pki.ra.security;
 
 import com.winllc.pki.ra.domain.RolePermission;
 import com.winllc.pki.ra.repository.RolePermissionRepository;
+import com.winllc.pki.ra.service.RolePermissionsService;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
@@ -27,6 +28,8 @@ public class RAUserJwtAuthenticationConverter
 
     @Autowired
     private RolePermissionRepository rolePermissionRepository;
+    @Autowired
+    private RolePermissionsService rolePermissionsService;
     private final RAUserDetailsService raUserDetailsService;
 
     public RAUserJwtAuthenticationConverter(
@@ -40,23 +43,28 @@ public class RAUserJwtAuthenticationConverter
 
         String username = jwt.getClaimAsString("email");
 
-        /*
-        Optional<com.winllc.pki.ra.domain.User> userOptional = userRepository.findOneByUsername(username);
-        if(!userOptional.isPresent()){
-            com.winllc.pki.ra.domain.User temp = new com.winllc.pki.ra.domain.User();
-            temp.setUsername(username);
-            temp.setIdentifier(UUID.randomUUID());
-
-            userRepository.save(temp);
-        }
-
-         */
-
-        //RAUser raUser = (RAUser) raUserDetailsService.loadUserByUsername(username);
-        //raUser.setRoles(authorities.stream().map(a -> a.getAuthority()).collect(Collectors.toList()));
-
         List<String> roles = authorities.stream().map(a -> a.getAuthority()).collect(Collectors.toList());
 
+        Set<GrantedAuthority> permissions = buildEntityPermissionsFromRoles(authorities);
+        permissions.addAll(buildAdditionalPermissions(authorities));
+
+        //raUser.setPermissions(new ArrayList<>(permissions));
+        UserDetails userDetails = new User(username, "", permissions);
+
+        return Optional.of(new UsernamePasswordAuthenticationToken(userDetails, "n/a", permissions))
+                .orElseThrow(() -> new BadCredentialsException("No user found"));
+    }
+
+    private Set<GrantedAuthority> buildEntityPermissionsFromRoles(Collection<GrantedAuthority> authorities){
+        return rolePermissionsService.getAppRoles().stream()
+                .filter(a -> authorities.contains(new SimpleGrantedAuthority(a.getName())))
+                .flatMap(a -> a.getPermissions().stream())
+                .flatMap(e -> e.convertToPermissionsList().stream())
+                .map(p -> new SimpleGrantedAuthority(p))
+                .collect(Collectors.toSet());
+    }
+
+    private Set<GrantedAuthority> buildAdditionalPermissions(Collection<GrantedAuthority> authorities){
         Set<GrantedAuthority> permissions = new HashSet<>();
         for(GrantedAuthority role : authorities){
             List<RolePermission> allByRoleName = rolePermissionRepository.findAllByRoleName(role.toString());
@@ -66,11 +74,7 @@ public class RAUserJwtAuthenticationConverter
                         .collect(Collectors.toList()));
             }
         }
-        //raUser.setPermissions(new ArrayList<>(permissions));
-        UserDetails userDetails = new User(username, "", permissions);
-
-        return Optional.of(new UsernamePasswordAuthenticationToken(userDetails, "n/a", permissions))
-                .orElseThrow(() -> new BadCredentialsException("No user found"));
+        return permissions;
     }
 
     private Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {

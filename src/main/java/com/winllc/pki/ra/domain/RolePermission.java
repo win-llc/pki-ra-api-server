@@ -1,10 +1,9 @@
 package com.winllc.pki.ra.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
@@ -14,6 +13,11 @@ public class RolePermission extends AbstractPersistable<Long> {
     @Column(nullable = false)
     private String roleName;
     private String permission = "";
+
+    @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name="appRole_fk")
+    private AppRole role;
 
     public RolePermission(String roleName, String permission){
         this.roleName = roleName;
@@ -36,6 +40,14 @@ public class RolePermission extends AbstractPersistable<Long> {
 
     public void setPermission(String permission) {
         this.permission = permission;
+    }
+
+    public AppRole getRole() {
+        return role;
+    }
+
+    public void setRole(AppRole role) {
+        this.role = role;
     }
 
     @Override

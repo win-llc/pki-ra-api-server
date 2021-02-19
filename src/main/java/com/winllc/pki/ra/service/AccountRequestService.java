@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.WebDataBinder;
@@ -71,6 +72,7 @@ public class AccountRequestService {
         return accountRequestRepository.countAllByStateEquals("new");
     }
 
+    @PreAuthorize("hasPermission(#form, 'accountrequest:create')")
     @PostMapping("/submit")
     @ResponseStatus(HttpStatus.CREATED)
     public Long createAccountRequest(@Valid @RequestBody AccountRequestForm form) {
@@ -84,6 +86,7 @@ public class AccountRequestService {
         return accountRequest.getId();
     }
 
+    @PreAuthorize("hasPermission(#form, 'accountrequest:update')")
     @PostMapping("/update")
     @Transactional
     public ResponseEntity<?> accountRequestUpdate(@Valid @RequestBody AccountRequestUpdateForm form) throws RAObjectNotFoundException {
@@ -105,6 +108,7 @@ public class AccountRequestService {
         }
     }
 
+    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.AccountRequest', 'accountrequest:read')")
     @GetMapping("/findById/{id}")
     @ResponseStatus(HttpStatus.OK)
     public AccountRequest findById(@PathVariable Long id) throws RAObjectNotFoundException {
@@ -117,6 +121,7 @@ public class AccountRequestService {
         }
     }
 
+    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.AccountRequest', 'accountrequest:delete')")
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void delete(@PathVariable Long id){

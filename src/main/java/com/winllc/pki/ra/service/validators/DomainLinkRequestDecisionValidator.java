@@ -49,14 +49,17 @@ public class DomainLinkRequestDecisionValidator implements Validator {
             if(optionalAccount.isPresent()){
                 Account account = optionalAccount.get();
 
-                Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
+                if(form.getStatus().equalsIgnoreCase("approve")) {
 
-                Optional<DomainPolicy> domainExists = accountDomainPolicies.stream()
-                        .filter(p -> request.getRequestedDomainIds().contains(p.getTargetDomain().getId()))
-                        .findAny();
+                    Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
 
-                if(domainExists.isPresent()){
-                    errors.reject("domainLinkToAccountRequest.alreadyLinked");
+                    Optional<DomainPolicy> domainExists = accountDomainPolicies.stream()
+                            .filter(p -> request.getRequestedDomainIds().contains(p.getTargetDomain().getId()))
+                            .findAny();
+
+                    if (domainExists.isPresent()) {
+                        errors.reject("domainLinkToAccountRequest.alreadyLinked");
+                    }
                 }
             }else{
                 errors.reject("domainLinkToAccountRequest.noAccount");

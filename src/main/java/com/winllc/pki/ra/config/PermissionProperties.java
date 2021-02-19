@@ -12,6 +12,7 @@ import java.util.List;
 public class PermissionProperties {
 
     private List<String> available;
+    private List<String> protectedEntities;
 
     public List<String> getAvailable() {
         return available;
@@ -19,5 +20,13 @@ public class PermissionProperties {
 
     public void setAvailable(List<String> available) {
         this.available = available;
+    }
+
+    public List<String> getProtectedEntities() {
+        return protectedEntities;
+    }
+
+    public void setProtectedEntities(List<String> protectedEntities) {
+        this.protectedEntities = protectedEntities;
     }
 }

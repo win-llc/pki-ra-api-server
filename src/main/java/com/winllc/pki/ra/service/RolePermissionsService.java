@@ -1,15 +1,24 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.beans.form.AppRolePermissionsForm;
 import com.winllc.pki.ra.beans.form.RolePermissionsForm;
+import com.winllc.pki.ra.beans.info.AppRoleInfo;
 import com.winllc.pki.ra.config.KeycloakProperties;
 import com.winllc.pki.ra.config.PermissionProperties;
+import com.winllc.pki.ra.domain.AppRole;
+import com.winllc.pki.ra.domain.EntityPermission;
 import com.winllc.pki.ra.domain.RolePermission;
+import com.winllc.pki.ra.repository.AppRoleRepository;
+import com.winllc.pki.ra.repository.EntityPermissionRepository;
 import com.winllc.pki.ra.repository.RolePermissionRepository;
 import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
+import org.hibernate.Hibernate;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.parameters.P;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,11 +34,130 @@ public class RolePermissionsService {
     private final PermissionProperties permissionProperties;
     private final RolePermissionRepository rolePermissionRepository;
     private final KeycloakOIDCProviderConnection oidcProviderConnection;
+    @Autowired
+    private AppRoleRepository appRoleRepository;
+    @Autowired
+    private EntityPermissionRepository entityPermissionRepository;
 
     public RolePermissionsService(PermissionProperties permissionProperties, RolePermissionRepository rolePermissionRepository, KeycloakOIDCProviderConnection oidcProviderConnection) {
         this.permissionProperties = permissionProperties;
         this.rolePermissionRepository = rolePermissionRepository;
         this.oidcProviderConnection = oidcProviderConnection;
+    }
+
+
+
+    @Transactional
+    public List<AppRole> getAppRoles(){
+        List<AppRole> allRoles = new ArrayList<>();
+        List<RoleRepresentation> frontendClientRoles = oidcProviderConnection.getFrontendClientRoles();
+        for(RoleRepresentation roleRepresentation : frontendClientRoles){
+            String roleName = roleRepresentation.getName();
+
+            Optional<AppRole> optionalRole = appRoleRepository.findFirstByNameEquals(roleName);
+            AppRole appRole;
+            if(optionalRole.isPresent()){
+                appRole = optionalRole.get();
+            }else{
+                appRole = registerAppRole(roleName);
+            }
+
+            appRole = populatePermissionsForRole(appRole);
+            allRoles.add(appRole);
+        }
+        return allRoles;
+    }
+
+    private AppRole registerAppRole(String roleName){
+        AppRole appRole = new AppRole();
+        appRole.setName(roleName);
+        return appRoleRepository.save(appRole);
+    }
+
+    private AppRole populatePermissionsForRole(AppRole appRole){
+        Hibernate.initialize(appRole.getPermissions());
+        boolean change = false;
+        for(String protectedEntity : permissionProperties.getProtectedEntities()){
+            Optional<EntityPermission> optionalPermission = entityPermissionRepository.findFirstByEntityNameAndRole(protectedEntity, appRole);
+
+            EntityPermission permission;
+            if(optionalPermission.isEmpty()){
+                change = true;
+                permission = registerPermission(appRole, protectedEntity);
+                appRole.getPermissions().add(permission);
+            }
+        }
+
+        if(change){
+            appRole = appRoleRepository.save(appRole);
+        }
+
+        return appRole;
+    }
+
+    private EntityPermission registerPermission(AppRole appRole, String entityName){
+        EntityPermission entityPermission = new EntityPermission();
+        entityPermission.setRole(appRole);
+        entityPermission.setEntityName(entityName);
+
+        return entityPermissionRepository.save(entityPermission);
+    }
+
+    @Transactional
+    @GetMapping("/retrieve")
+    public AppRolePermissionsForm getAppRolesForm(){
+        AppRolePermissionsForm form = new AppRolePermissionsForm();
+
+        List<AppRoleInfo> entityRoles = getAppRoles().stream()
+                .map(a -> new AppRoleInfo(a))
+                .collect(Collectors.toList());
+
+       form.setRoles(entityRoles);
+        return form;
+    }
+
+    @Transactional
+    @PostMapping("/update")
+    public AppRolePermissionsForm updateRolePermissions(@RequestBody AppRolePermissionsForm form){
+        for(AppRoleInfo info : form.getRoles()){
+            Optional<AppRole> roleOptional = appRoleRepository.findById(info.getId());
+            if(roleOptional.isPresent()){
+                AppRole appRole = roleOptional.get();
+                for(EntityPermission permission : info.getPermissions()){
+                    Optional<EntityPermission> permissionOptional = entityPermissionRepository.findById(permission.getId());
+                    if(permissionOptional.isPresent()){
+                        EntityPermission entityPermission = permissionOptional.get();
+                        entityPermission.setAllowCreate(permission.isAllowCreate());
+                        entityPermission.setAllowUpdate(permission.isAllowUpdate());
+                        entityPermission.setAllowRead(permission.isAllowRead());
+                        entityPermission.setAllowViewAll(permission.isAllowViewAll());
+                        entityPermission.setAllowDelete(permission.isAllowDelete());
+                        entityPermissionRepository.save(entityPermission);
+                    }
+                }
+
+                List<RolePermission> existingAdditional = rolePermissionRepository.findAllByRole(appRole);
+
+                //Add new
+                for(RolePermission rolePermission : info.getAdditionalPermissions()){
+                    if(existingAdditional.stream().noneMatch(e -> e.getPermission().equalsIgnoreCase(rolePermission.getPermission()))){
+                        rolePermission.setRole(appRole);
+                        rolePermission.setRoleName(appRole.getName());
+                        rolePermissionRepository.save(rolePermission);
+                    }
+                }
+
+                //Delete old
+                for(RolePermission rolePermission : existingAdditional){
+                    if(info.getAdditionalPermissions().stream().noneMatch(e -> e.getPermission().equalsIgnoreCase(rolePermission.getPermission()))){
+                        rolePermissionRepository.delete(rolePermission);
+                    }
+                }
+            }
+        }
+        
+        
+        return getAppRolesForm();
     }
 
     @GetMapping("/permissions/options")

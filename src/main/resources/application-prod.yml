@@ -93,18 +93,9 @@ web-ui:
     account-created: /account/edit/{0}
 permissions:
   front-end-client-oidc-client: pki-ra-client-public
+  protected-entities:
+    - account
+    - domain
   available:
     - super_admin
-    - view_domain
-    - add_domain
-    - update_domain
-    - delete_domain
-    - view_account
-    - add_account
-    - update_account
-    - delete_account
-    - view_account_restriction
-    - add_account_restriction
-    - update_account_restriction
-    - delete_account_restriction
-    - delete_tos
+    - admin

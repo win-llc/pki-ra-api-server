@@ -10,7 +10,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "domain")
-public class Domain extends AbstractPersistable<Long>  {
+public class Domain extends AbstractPersistable<Long> implements ProtectedEntity  {
 
     @Column(unique = true, nullable = false)
     private String base;
@@ -124,5 +124,10 @@ public class Domain extends AbstractPersistable<Long>  {
 
     public void setGlobalDomainPolicy(DomainPolicy globalDomainPolicy) {
         this.globalDomainPolicy = globalDomainPolicy;
+    }
+
+    @Override
+    public String getProtectedEntityName() {
+        return "domain";
     }
 }

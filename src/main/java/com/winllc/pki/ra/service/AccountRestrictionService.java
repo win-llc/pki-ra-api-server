@@ -167,6 +167,7 @@ public class AccountRestrictionService extends AbstractService {
         accountRestrictionRepository.deleteById(id);
     }
 
+    @PreAuthorize("hasPermission(#accountId, 'com.winllc.pki.ra.domain.AccountRestriction', 'view_account_restriction')")
     @GetMapping("/allForAccount/{accountId}")
     @ResponseStatus(HttpStatus.OK)
     public List<AccountRestrictionForm> getAllForAccount(@PathVariable Long accountId) throws RAObjectNotFoundException {

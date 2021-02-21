@@ -77,6 +77,7 @@ class AccountRequestServiceTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"super_admin"})
     void findPending() throws Exception {
         AccountRequest accountRequest = new AccountRequest();
         accountRequest.setAccountOwnerEmail("test@test.com");
@@ -99,6 +100,7 @@ class AccountRequestServiceTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"super_admin"})
     void createAccountRequest() throws Exception {
         AccountRequestForm form = new AccountRequestForm();
         form.setAccountOwnerEmail("test@test.com");
@@ -127,6 +129,7 @@ class AccountRequestServiceTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"super_admin"})
     void accountRequestUpdate() throws Exception {
         AccountRequest accountRequest = new AccountRequest();
         accountRequest.setAccountOwnerEmail("test@test.com");
@@ -153,6 +156,7 @@ class AccountRequestServiceTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"super_admin"})
     void findById() throws RAObjectNotFoundException {
         AccountRequest accountRequest = new AccountRequest();
         accountRequest.setAccountOwnerEmail("test@test.com");
@@ -164,7 +168,7 @@ class AccountRequestServiceTest {
         assertNotNull("Not null", byId);
     }
 
-    @WithMockUser(authorities = {"accountrequest:delete", "accountrequest:read"})
+    @WithMockUser(authorities = {"super_admin"})
     @Test
     void delete() throws RAObjectNotFoundException {
         AccountRequest accountRequest = new AccountRequest();

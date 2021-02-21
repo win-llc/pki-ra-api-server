@@ -163,6 +163,7 @@ class AccountRestrictionServiceTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"super_admin"})
     void getAllForAccount() throws RAObjectNotFoundException {
         Account account = accountRepository.findDistinctByProjectName("Test Project 2").get();
 

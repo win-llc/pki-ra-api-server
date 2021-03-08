@@ -82,7 +82,7 @@ external-services:
     enabled-connection-names: identity-keycloak
 
 policy-server:
-  ldap-url: ldap://192.168.1.45:2389
+  ldap-url: ldap://fid.winllc-dev.com:2389
   ldap-username: cn=Directory Manager
   ldap-password: secretsecret
   ldap-base-dn: dc=winllc-dev,dc=com

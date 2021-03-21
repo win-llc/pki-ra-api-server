@@ -33,7 +33,7 @@ public class IssuedCertificate extends UniqueEntity implements AccountOwnedEntit
 
     public static IssuedCertificate buildNew(){
         IssuedCertificate issuedCertificate = new IssuedCertificate();
-        issuedCertificate.setUuid(UUID.randomUUID());
+        issuedCertificate.setUuid(UUID.randomUUID().toString());
         return issuedCertificate;
     }
 

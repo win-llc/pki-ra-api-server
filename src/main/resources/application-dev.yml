@@ -87,7 +87,7 @@ external-services:
 policy-server:
   ldap-url: ldap://fid.winllc-dev.com:2389
   ldap-username: cn=Directory Manager
-  ldap-password: secretsecret
+  ldap-password: secret1234
   ldap-base-dn: dc=winllc-dev,dc=com
 
 web-ui:

@@ -1,14 +1,14 @@
-package com.winllc.pki.ra.service.external.vendorimpl;
+package com.winllc.pki.ra.service.external;
 
-import com.winllc.pki.ra.config.PolicyServerProperties;
-import com.winllc.pki.ra.service.external.SecurityPolicyConnection;
-import com.winllc.pki.ra.service.external.SecurityPolicyServerProjectDetails;
+import com.winllc.pki.ra.constants.ServerSettingRequired;
+import com.winllc.pki.ra.service.ServerSettingsService;
+import com.winllc.pki.ra.service.external.vendorimpl.OpenDJSecurityPolicyConnection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.query.LdapQueryBuilder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -16,24 +16,21 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import java.util.*;
 
-@Component
-//todo should be loaded as a bean
-public class OpenDJSecurityPolicyConnection implements SecurityPolicyConnection {
+@Service
+public class LdapSecurityPolicyServerService implements SecurityPolicyConnection {
 
     @Autowired
-    private PolicyServerProperties policyServerConfiguration;
+    private ServerSettingsService serverSettingsService;
 
-    private final String[] projectEntryAttributeLdapClass = {"top", "document"};
-
-    public OpenDJSecurityPolicyConnection(PolicyServerProperties policyServerProperties){
-        this.policyServerConfiguration = policyServerProperties;
+    @Override
+    public String getConnectionName() {
+        return null;
     }
-
     @Override
     public Map<String, String> getSecurityPolicyMapForService(String fqdn, String projectId) {
         //todo
         LdapTemplate ldapTemplate = buildLdapTemplate();
-        
+
         return ldapTemplate.lookup("cn=" + fqdn, new AttributesMapper<Map<String, String>>() {
             @Override
             public Map<String, String> mapFromAttributes(Attributes attributes) throws NamingException {
@@ -62,28 +59,32 @@ public class OpenDJSecurityPolicyConnection implements SecurityPolicyConnection 
 
     @Override
     public List<SecurityPolicyServerProjectDetails> getAllProjects() {
-        //todo
+
+        Optional<String> optionalSchemaType = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_SCHEMATYPE);
+        String schemaType = optionalSchemaType.orElse("document");
+
+        Optional<String> optionalProjectBaseDn = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_PROJECTSBASEDN);
+        String projectBaseDn = optionalProjectBaseDn.orElse("ou=policy-server-projects");
 
         LdapTemplate ldapTemplate = buildLdapTemplate();
-        List<SecurityPolicyServerProjectDetails> search = ldapTemplate.search(LdapQueryBuilder.query().base("ou=policy-server-projects")
-                .filter("objectclass=document"), new ProjectDetailsMapper());
+        List<SecurityPolicyServerProjectDetails> search = ldapTemplate.search(LdapQueryBuilder.query().base(projectBaseDn)
+                .filter("objectclass="+schemaType), new ProjectDetailsMapper());
 
         return search;
     }
 
-    @Override
-    public String getConnectionName() {
-        return "opendj-security-policy-service";
-    }
-
-
     private LdapTemplate buildLdapTemplate(){
         LdapContextSource contextSource = new LdapContextSource();
+        Optional<String> optionalUrl = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_URL);
+        Optional<String> optionalUsername = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_USERNAME);
+        Optional<String> optionalPassword = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_PASSWORD);
+        Optional<String> optionalBaseDn = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_BASEDN);
 
-        contextSource.setUrl(policyServerConfiguration.getLdapUrl());
-        contextSource.setBase(policyServerConfiguration.getLdapBaseDn());
-        contextSource.setUserDn(policyServerConfiguration.getLdapUsername());
-        contextSource.setPassword(policyServerConfiguration.getLdapPassword());
+        optionalUrl.ifPresent(u -> contextSource.setUrl(u));
+        optionalUsername.ifPresent(u -> contextSource.setUserDn(u));
+        optionalPassword.ifPresent(u -> contextSource.setPassword(u));
+        optionalBaseDn.ifPresent(u -> contextSource.setBase(u));
+
         contextSource.afterPropertiesSet();
 
         return new LdapTemplate(contextSource);
@@ -94,19 +95,34 @@ public class OpenDJSecurityPolicyConnection implements SecurityPolicyConnection 
         @Override
         public SecurityPolicyServerProjectDetails mapFromAttributes(Attributes attributes) throws NamingException {
             SecurityPolicyServerProjectDetails details = new SecurityPolicyServerProjectDetails();
-            Attribute descriptionAttribute = attributes.get("description");
+            Attribute descriptionAttribute = attributes.get("cn");
             Object desc = descriptionAttribute.get();
             details.setProjectName(desc.toString());
 
             details.setProjectId(attributes.get("cn").get().toString());
 
-            Map<String, Object> extraAttrs = new HashMap<>();
+            Map<String, List<String>> extraAttrs = new HashMap<>();
 
             NamingEnumeration<String> ids = attributes.getIDs();
             while(ids.hasMore()){
                 String id = ids.next();
                 Attribute attribute = attributes.get(id);
-                String val = attribute.get().toString();
+                Object val = attribute.get();
+
+                List<String> temp = new ArrayList<>();
+                if(attribute.size() > 1){
+                    NamingEnumeration<?> all = attribute.getAll();
+                    while(all.hasMore()){
+                        Object next = all.next();
+                        temp.add(next.toString());
+                    }
+                }else{
+                    temp.add(val.toString());
+                }
+
+                extraAttrs.put(id, temp);
+
+                /*
                 switch (id){
                     case "documentLocation":
                         extraAttrs.put("AdminOrg", val);
@@ -124,9 +140,11 @@ public class OpenDJSecurityPolicyConnection implements SecurityPolicyConnection 
                         extraAttrs.put("clearance", val);
                         break;
                 }
+
+                 */
             }
 
-            //details.setAllSecurityAttributesMap(extraAttrs);
+            details.setAllSecurityAttributesMap(extraAttrs);
 
             //description
             //documentLocation

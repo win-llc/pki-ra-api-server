@@ -13,6 +13,7 @@ public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedE
     private String email;
     private boolean groupEmail;
     private boolean enabled;
+    private boolean owner;
     private Timestamp addedOn;
     @ManyToOne
     @JoinColumn(name="accountOwner_fk")
@@ -58,6 +59,14 @@ public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedE
         this.enabled = enabled;
     }
 
+    public boolean isOwner() {
+        return owner;
+    }
+
+    public void setOwner(boolean owner) {
+        this.owner = owner;
+    }
+
     public Timestamp getAddedOn() {
         return addedOn;
     }
@@ -73,4 +82,6 @@ public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedE
     public void setAccount(Account account) {
         this.account = account;
     }
+
+
 }

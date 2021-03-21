@@ -6,10 +6,12 @@ import java.util.Objects;
 
 public class UserInfo extends InfoObject<PocEntry> {
     private String username;
+    private boolean isOwner;
 
     public UserInfo(PocEntry pocEntry){
         super(pocEntry);
         this.username = pocEntry.getEmail();
+        this.isOwner = pocEntry.isOwner();
     }
 
     public String getUsername() {
@@ -20,6 +22,13 @@ public class UserInfo extends InfoObject<PocEntry> {
         this.username = username;
     }
 
+    public boolean isOwner() {
+        return isOwner;
+    }
+
+    public void setOwner(boolean owner) {
+        isOwner = owner;
+    }
 
     @Override
     public boolean equals(Object o) {

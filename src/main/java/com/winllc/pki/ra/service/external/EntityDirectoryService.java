@@ -47,7 +47,11 @@ public class EntityDirectoryService {
         //apply attributes from Attribute Policy Groups
         Map<String, Object> attributeMap = calculateAttributePolicyMapForServerEntry(serverEntry);
 
-        applyAttributesToServerEntry(serverEntry, attributeMap);
+        try {
+            applyAttributesToServerEntry(serverEntry, attributeMap);
+        }catch (Exception e){
+            log.error("Could not apply attributes", e);
+        }
 
         return attributeMap;
     }
@@ -93,12 +97,11 @@ public class EntityDirectoryService {
             Map<String, Object> securityPolicyMap = new HashMap<>();
             if(StringUtils.isNotBlank(account.getSecurityPolicyServerProjectId())) {
                 try {
-                    Optional<SecurityPolicyServerProjectDetails> optionalDetails = securityPolicyService
-                            .getPolicyServerProjectDetails(null, account.getSecurityPolicyServerProjectId());
-                    if(optionalDetails.isPresent()){
-                        SecurityPolicyServerProjectDetails details = optionalDetails.get();
+                    SecurityPolicyServerProjectDetails details = securityPolicyService
+                            .getProjectDetails(account.getSecurityPolicyServerProjectId());
+
                         securityPolicyMap.putAll(details.getAllSecurityAttributesMap());
-                    }
+
                     //Map<String, String> map = securityPolicyService
                     //        .getSecurityPolicyMapForService(null,
                     //                serverEntry.getFqdn(), account.getSecurityPolicyServerProjectId());

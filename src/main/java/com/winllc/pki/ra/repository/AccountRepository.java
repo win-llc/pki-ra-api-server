@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @Repository
 @Transactional
-public interface AccountRepository extends PagingAndSortingRepository<Account, Long>, JpaSpecificationExecutor<Account> {
+public interface AccountRepository extends UniqueEntityRepository<Account> {
 
     List<Account> findAll();
     Optional<Account> findDistinctByProjectName(String projectName);

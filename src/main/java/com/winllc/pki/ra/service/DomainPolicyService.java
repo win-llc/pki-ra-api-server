@@ -9,10 +9,10 @@ import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.DomainPolicyRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -47,6 +47,7 @@ public class DomainPolicyService {
                 .map(DomainPolicyForm::new)
                 .collect(Collectors.toSet());
     }
+
 
     @PostMapping("/addForType/{type}/{targetId}")
     @ResponseStatus(HttpStatus.CREATED)
@@ -97,6 +98,23 @@ public class DomainPolicyService {
         }else{
             throw new RAObjectNotFoundException(DomainPolicy.class, form.getId());
         }
+    }
+
+    @PostMapping("/updateAllForType")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public Set<DomainPolicyForm> updateAllForType(@RequestBody List<DomainPolicyForm> forms){
+        Set<DomainPolicyForm> updated = new HashSet<>();
+        if(CollectionUtils.isNotEmpty(forms)){
+            for(DomainPolicyForm form : forms){
+                try {
+                    updated.add(updateForType(form));
+                } catch (RAObjectNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return updated;
     }
 
     @DeleteMapping("/deleteForType/{type}/{targetId}/{restrictionId}")

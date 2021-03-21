@@ -74,6 +74,7 @@ class ServerEntryServiceTest {
         domain = domainRepository.save(domain);
 
         DomainPolicy domainPolicy = new DomainPolicy(domain);
+        domainPolicy.setAccount(account);
         domainPolicy = domainPolicyRepository.save(domainPolicy);
         account.getAccountDomainPolicies().add(domainPolicy);
         account = accountRepository.save(account);

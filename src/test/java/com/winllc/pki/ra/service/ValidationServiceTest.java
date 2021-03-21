@@ -86,6 +86,7 @@ class ValidationServiceTest {
         domain = domainRepository.save(domain);
 
         DomainPolicy domainPolicy = new DomainPolicy(domain);
+        domainPolicy.setAccount(account);
         domainPolicy = domainPolicyRepository.save(domainPolicy);
         account.getAccountDomainPolicies().add(domainPolicy);
 
@@ -101,7 +102,7 @@ class ValidationServiceTest {
 
     @Test
     @Transactional
-    void getAccountValidationRules() throws RAObjectNotFoundException {
+    void getAccountValidationRules() throws RAException {
         Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         AuthCredential authCredential = account.getLatestAuthCredential().get();
 

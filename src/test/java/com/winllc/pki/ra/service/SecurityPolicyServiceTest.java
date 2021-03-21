@@ -63,10 +63,4 @@ class SecurityPolicyServiceTest {
         assertEquals("testid1", details.getProjectId());
     }
 
-    @Test
-    void getSecurityPolicyMapForService() throws Exception {
-        Map<String, String> test = securityPolicyService.getSecurityPolicyMapForService(
-                "opendj-security-policy-service", "test.com", "test");
-        assertNotNull(test);
-    }
 }

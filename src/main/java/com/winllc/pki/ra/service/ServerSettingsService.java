@@ -23,8 +23,11 @@ public class ServerSettingsService {
 
     private static final Logger log = LogManager.getLogger(ServerEntryService.class);
 
-    @Autowired
-    private ServerSettingsRepository repository;
+    private final ServerSettingsRepository repository;
+
+    public ServerSettingsService(ServerSettingsRepository repository) {
+        this.repository = repository;
+    }
 
 
     @PostConstruct

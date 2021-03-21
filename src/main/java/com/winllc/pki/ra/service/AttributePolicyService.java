@@ -59,6 +59,7 @@ public class AttributePolicyService {
         binder.setValidator(attributePolicyGroupValidator);
     }
 
+    /*
     @GetMapping("/policyService/connectionNames")
     @ResponseStatus(HttpStatus.OK)
     public List<String> getSecurityPolicyServiceNames(){
@@ -71,6 +72,8 @@ public class AttributePolicyService {
             return new ArrayList<>();
         }
     }
+
+     */
 
     @GetMapping("/group/byId/{id}")
     @ResponseStatus(HttpStatus.OK)

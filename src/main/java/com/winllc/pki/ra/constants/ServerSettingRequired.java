@@ -19,6 +19,17 @@ public enum ServerSettingRequired {
     //OIDC_SERVER_BASE_URL("openIdServerBaseUrl", "OIDC", false),
     //OIDC_ENABLED("openIdConnectEnabled", "OIDC", false),
 
+    POLICY_SERVER_LDAP_URL("policyServerLdapUrl", "LDAP URL", "Policy Server", false),
+    POLICY_SERVER_LDAP_USERNAME("policyServerLdapUsername", "Username", "Policy Server", false),
+    POLICY_SERVER_LDAP_PASSWORD("policyServerLdapPassword", "Password", "Policy Server", true),
+    POLICY_SERVER_LDAP_BASEDN("policyServerLdapBaseDn", "Base DN", "Policy Server", false),
+    POLICY_SERVER_LDAP_PROJECTSBASEDN("policyServerLdapProjectsBaseDn", "Projects Base DN", "Policy Server", false),
+    POLICY_SERVER_LDAP_SCHEMATYPE("policyServerLdapSchemaType", "Project LDAP Schema Type", "Policy Server", false),
+    POLICY_SERVER_LDAP_DOMAINSATTRIBUTE("policyServerLdapDomainsAttribute", "Domains Attribute", "Policy Server", false),
+    POLICY_SERVER_LDAP_POCSATTRIBUTE("policyServerLdapPocsAttribute", "POCs Attribute", "Policy Server", false),
+    POLICY_SERVER_LDAP_VALIDFROMATTRIBUTE("policyServerValidFromAttribute", "Valid From Attribute", "Policy Server", false),
+    POLICY_SERVER_LDAP_VALIDTOATTRIBUTE("policyServerValidToAttribute", "Valid To Attribute", "Policy Server", false),
+    POLICY_SERVER_LDAP_ENABLEDATTRIBUTE("policyServerEnabledAttribute", "Enabled Attribute", "Policy Server", false),
     ;
 
     private final String settingName;

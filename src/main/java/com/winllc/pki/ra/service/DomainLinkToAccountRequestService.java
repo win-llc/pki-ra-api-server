@@ -218,6 +218,7 @@ public class DomainLinkToAccountRequestService extends AbstractService {
                             Set<DomainPolicy> saved = new HashSet<>();
                             for (DomainPolicy dp : domainPolicies) {
                                 DomainPolicy temp = domainPolicyRepository.save(dp);
+                                temp.setAccount(account);
                                 Domain domain = dp.getTargetDomain();
 
                                 domain.getAllDomainPolicies().add(temp);

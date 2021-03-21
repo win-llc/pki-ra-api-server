@@ -5,6 +5,7 @@ import java.util.Objects;
 public class PocFormEntry {
     private String id;
     private String email;
+    private boolean owner;
 
     public PocFormEntry(String email) {
         this.email = email;
@@ -27,6 +28,14 @@ public class PocFormEntry {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public boolean isOwner() {
+        return owner;
+    }
+
+    public void setOwner(boolean owner) {
+        this.owner = owner;
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import com.winllc.pki.ra.service.external.LdapSecurityPolicyServerService;
 import com.winllc.pki.ra.service.external.SecurityPolicyConnection;
 import com.winllc.pki.ra.service.external.SecurityPolicyServerProjectDetails;
 import com.winllc.pki.ra.service.external.beans.ExternalSecurityPolicy;
@@ -21,20 +22,22 @@ import java.util.*;
 public class SecurityPolicyService {
     //todo
 
-    @Autowired
-    private List<SecurityPolicyConnection> connections;
+    //@Autowired
+    //private List<SecurityPolicyConnection> connections;
 
-    private String temporaryStaticPolicyServerName = "opendj-security-policy-service";
+    @Autowired
+    private LdapSecurityPolicyServerService policyServerService;
+
+    //private String temporaryStaticPolicyServerName = "opendj-security-policy-service";
 
     @GetMapping("/allProjects")
     public List<SecurityPolicyServerProjectDetails> getAllProjectDetails() throws Exception {
-        return getAllProjects(temporaryStaticPolicyServerName);
+        return policyServerService.getAllProjects();
     }
 
     @GetMapping("/projectDetails/{projectId}")
     public SecurityPolicyServerProjectDetails getProjectDetails(@PathVariable String projectId) throws Exception {
-        Optional<SecurityPolicyServerProjectDetails> optionalDetails =
-                getPolicyServerProjectDetails(temporaryStaticPolicyServerName, projectId);
+        Optional<SecurityPolicyServerProjectDetails> optionalDetails = policyServerService.getProjectDetails(projectId);
         if(optionalDetails.isPresent()){
             return optionalDetails.get();
         }else{
@@ -43,9 +46,8 @@ public class SecurityPolicyService {
     }
 
     @GetMapping("/projectDetails/{projectId}/attributes")
-    public Map<String, Object> getProjectAttributes(@PathVariable String projectId) throws Exception {
-        Optional<SecurityPolicyServerProjectDetails> optionalDetails =
-                getPolicyServerProjectDetails(temporaryStaticPolicyServerName, projectId);
+    public Map<String, List<String>> getProjectAttributes(@PathVariable String projectId) throws Exception {
+        Optional<SecurityPolicyServerProjectDetails> optionalDetails = policyServerService.getProjectDetails(projectId);
         if(optionalDetails.isPresent()){
             return optionalDetails.get().getAllSecurityAttributesMap();
         }else{
@@ -53,41 +55,5 @@ public class SecurityPolicyService {
         }
     }
 
-    public Map<String, String> getSecurityPolicyMapForService(String serviceName, String fqdn,
-                                                              String projectId) throws Exception {
-        SecurityPolicyConnection connection = getConnection(temporaryStaticPolicyServerName);
-
-        return connection.getSecurityPolicyMapForService(fqdn, projectId);
-    }
-
-    public List<String> getSecurityPolicyNamesForService(String serviceName, String fqdn,
-                                                         String projectId) throws Exception {
-        Map<String, String> map = getSecurityPolicyMapForService(temporaryStaticPolicyServerName, fqdn, projectId);
-        return new ArrayList<>(map.keySet());
-    }
-
-    public Optional<SecurityPolicyServerProjectDetails> getPolicyServerProjectDetails(String serviceName,
-                                                                                      String projectId) throws Exception {
-        SecurityPolicyConnection connection = getConnection(temporaryStaticPolicyServerName);
-
-        return connection.getProjectDetails(projectId);
-    }
-
-    public List<SecurityPolicyServerProjectDetails> getAllProjects(String serviceName) throws Exception {
-        SecurityPolicyConnection connection = getConnection(temporaryStaticPolicyServerName);
-
-        return connection.getAllProjects();
-    }
-
-    private SecurityPolicyConnection getConnection(String name) throws Exception {
-        for(SecurityPolicyConnection connection : connections){
-            if(connection.getConnectionName().equals(name)) return connection;
-        }
-        throw new Exception("No connection: "+name);
-    }
-
-    public List<SecurityPolicyConnection> getAllConnections(){
-        return connections;
-    }
 
 }

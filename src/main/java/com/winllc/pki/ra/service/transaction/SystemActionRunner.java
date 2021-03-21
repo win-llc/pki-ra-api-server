@@ -168,13 +168,17 @@ public class SystemActionRunner {
 
                 EmailUtil emailUtil = context.getBean(EmailUtil.class);
                 for(String email : notificationEmails){
-                    SimpleMailMessage message = new SimpleMailMessage();
-                    message.setTo(email);
-                    //todo dynamic
-                    message.setFrom("postmaster@winllc-dev.com");
-                    message.setSubject("WIN RA Notification");
-                    message.setText(notification.getMessage());
-                    emailUtil.sendEmail(message);
+                    try {
+                        SimpleMailMessage message = new SimpleMailMessage();
+                        message.setTo(email);
+                        //todo dynamic
+                        message.setFrom("postmaster@winllc-dev.com");
+                        message.setSubject("WIN RA Notification");
+                        message.setText(notification.getMessage());
+                        emailUtil.sendEmail(message);
+                    }catch (Exception e){
+                        log.error("Could not send email to: "+email, e);
+                    }
                 }
             }
         }

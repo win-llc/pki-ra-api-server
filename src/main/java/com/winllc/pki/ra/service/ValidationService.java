@@ -56,51 +56,91 @@ public class ValidationService {
     @PostMapping("/rules/{kid}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public CertIssuanceValidationResponse getAccountValidationRules(@PathVariable String kid) throws RAObjectNotFoundException {
-        Optional<Account> optionalAccount = authCredentialService.getAssociatedAccount(kid);
-        if(optionalAccount.isPresent()){
-            Account account = optionalAccount.get();
+    public CertIssuanceValidationResponse getAccountValidationRules(@PathVariable String kid) throws RAException {
 
-            Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
+        Optional<AuthCredential> optionalAuthCredential = authCredentialRepository.findDistinctByKeyIdentifier(kid);
+        if(optionalAuthCredential.isPresent()){
+            AuthCredential authCredential = optionalAuthCredential.get();
+            AuthCredentialHolder parentEntity = authCredential.getParentEntity();
 
-            List<CertIssuanceValidationRule> validationRules = new ArrayList<>();
+            CertIssuanceValidationResponse response = new CertIssuanceValidationResponse(authCredential.getKeyIdentifier());
+            response.setCertIssuanceValidationRules(getRulesForEntity(parentEntity));
 
-            Hibernate.initialize(account.getAccountDomainPolicies());
-            Map<String, DomainPolicy> restrictionMap = account.getAccountDomainPolicies().stream()
-                    .collect(Collectors.toMap(r -> r.getTargetDomain().getBase(), r -> r));
+            //todo re-add account check
+            //boolean accountValid = accountRestrictionService.checkIfAccountValid(account);
+            //response.setAccountIsValid(accountValid);
 
-            for (DomainPolicy domainPolicy : accountDomainPolicies) {
-                Domain domain = domainPolicy.getTargetDomain();
-
-                CertIssuanceValidationRule validationRule = new CertIssuanceValidationRule();
-                validationRule.setBaseDomainName(domain.getBase());
-                validationRule.setAllowHostnameIssuance(account.isAllowHostnameIssuance());
-                validationRule.setIdentifierType("dns");
-
-                //If restrictions exist for this domain on the account, apply restrictions
-                if(restrictionMap.containsKey(domain.getBase())){
-                    DomainPolicy restriction = restrictionMap.get(domain.getBase());
-                    validationRule.setRequireHttpChallenge(restriction.isAcmeRequireHttpValidation());
-                    validationRule.setRequireDnsChallenge(restriction.isAcmeRequireDnsValidation());
-                    validationRule.setAllowIssuance(restriction.isAllowIssuance());
-                }else{
-                    validationRule.setAllowIssuance(true);
-                    validationRule.setRequireHttpChallenge(false);
-                }
-
-                validationRules.add(validationRule);
-            }
-
-            CertIssuanceValidationResponse response = new CertIssuanceValidationResponse(account.getKeyIdentifier());
-            response.setCertIssuanceValidationRules(validationRules);
-
-            boolean accountValid = accountRestrictionService.checkIfAccountValid(account);
-            response.setAccountIsValid(accountValid);
+            response.setAccountIsValid(true);
 
             return response;
         } else {
             throw new RAObjectNotFoundException(Account.class, kid);
         }
+    }
+
+    private List<CertIssuanceValidationRule> getRulesForEntity(AuthCredentialHolder holder) throws RAException {
+        List<CertIssuanceValidationRule> rules = new ArrayList<>();
+
+        if(holder instanceof Account){
+            Account account = (Account) holder;
+            Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
+
+            Hibernate.initialize(account.getAccountDomainPolicies());
+
+            for (DomainPolicy domainPolicy : accountDomainPolicies) {
+                rules.add(buildRuleForDomainPolicy(domainPolicy));
+            }
+
+        }else if(holder instanceof DomainPolicy){
+            DomainPolicy domainPolicy = (DomainPolicy) holder;
+            rules.add(buildRuleForDomainPolicy(domainPolicy));
+
+        }else if(holder instanceof ServerEntry){
+            ServerEntry serverEntry = (ServerEntry) holder;
+
+            CertIssuanceValidationRule validationRule = new CertIssuanceValidationRule();
+            validationRule.setAllowIssuance(true);
+            validationRule.setIdentifierType("dns");
+            validationRule.setAllowHostnameIssuance(true);
+            validationRule.setBaseDomainName(serverEntry.getFqdn());
+
+            //todo make dynamic
+            validationRule.setRequireHttpChallenge(false);
+            validationRule.setRequireDnsChallenge(false);
+
+            rules.add(validationRule);
+
+        }else{
+            throw new RAException("Could not find a valid object for AuthCredentialHolder");
+        }
+
+        return rules;
+    }
+
+    private CertIssuanceValidationRule buildRuleForDomainPolicy(DomainPolicy domainPolicy){
+        Domain domain = domainPolicy.getTargetDomain();
+        Account account = domainPolicy.getAccount();
+
+        Map<String, DomainPolicy> restrictionMap = account.getAccountDomainPolicies().stream()
+                .collect(Collectors.toMap(r -> r.getTargetDomain().getBase(), r -> r));
+
+        CertIssuanceValidationRule validationRule = new CertIssuanceValidationRule();
+        validationRule.setBaseDomainName(domain.getBase());
+        validationRule.setAllowHostnameIssuance(account.isAllowHostnameIssuance());
+        validationRule.setIdentifierType("dns");
+
+        //If restrictions exist for this domain on the account, apply restrictions
+        if(restrictionMap.containsKey(domain.getBase())){
+            DomainPolicy restriction = restrictionMap.get(domain.getBase());
+            validationRule.setRequireHttpChallenge(restriction.isAcmeRequireHttpValidation());
+            validationRule.setRequireDnsChallenge(restriction.isAcmeRequireDnsValidation());
+            validationRule.setAllowIssuance(restriction.isAllowIssuance());
+        }else{
+            validationRule.setAllowIssuance(true);
+            validationRule.setRequireHttpChallenge(false);
+        }
+
+        return validationRule;
     }
 
     @GetMapping("/account/preAuthzIdentifiers/{kid}")
@@ -191,6 +231,15 @@ public class ValidationService {
         }
     }
 
+    public boolean canIssueToServer(String kid, String serverFqdn){
+        //todo
+        Optional<AuthCredential> optionalCredential = authCredentialRepository.findDistinctByKeyIdentifier(kid);
+        if(optionalCredential.isPresent()){
+
+        }
+        return false;
+    }
+
     @PostMapping("/account/validateCredentials")
     public RAAccountValidationResponse validateAccountCredentials(@RequestParam("accountId") String accountId,
                                                                   @RequestParam("password") String password) {
@@ -199,7 +248,6 @@ public class ValidationService {
 
         Optional<AuthCredential> optionalCredential = authCredentialRepository.findDistinctByKeyIdentifier(accountId);
 
-        //Optional<Account> optionalAccount = accountRepository.findByKeyIdentifierEquals(accountId);
         if(optionalCredential.isPresent()){
             AuthCredential authCredential = optionalCredential.get();
 

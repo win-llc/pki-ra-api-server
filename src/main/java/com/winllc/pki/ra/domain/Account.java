@@ -33,7 +33,6 @@ public class Account extends AuthCredentialHolder implements AccountOwnedEntity,
     @JsonIgnore
     @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<PocEntry> pocs;
-
     @JsonIgnore
     @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<AccountRestriction> accountRestrictions;
@@ -51,13 +50,12 @@ public class Account extends AuthCredentialHolder implements AccountOwnedEntity,
     private Set<AttributePolicyGroup> policyGroups;
 
     @JsonIgnore
-    @OneToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-    @JoinColumn(name="issueRestriction_FK")
+    @OneToMany(mappedBy = "account", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private Set<DomainPolicy> accountDomainPolicies;
 
     public static Account buildNew(String projectName){
         Account account = new Account();
-        account.setUuid(UUID.randomUUID());
+        account.setUuid(UUID.randomUUID().toString());
 
         //String macKey = AppUtil.generate256BitString();
         String keyIdentifier = AppUtil.generate20BitString();
@@ -89,6 +87,13 @@ public class Account extends AuthCredentialHolder implements AccountOwnedEntity,
         if(!CollectionUtils.isEmpty(pocEntries)){
             for(PocEntry pocEntry : pocEntries){
                 pocEntry.setAccount(null);
+            }
+        }
+
+        Set<DomainPolicy> domainPolicies = getAccountDomainPolicies();
+        if(!CollectionUtils.isEmpty(domainPolicies)){
+            for(DomainPolicy dp : domainPolicies){
+                dp.setAccount(null);
             }
         }
 

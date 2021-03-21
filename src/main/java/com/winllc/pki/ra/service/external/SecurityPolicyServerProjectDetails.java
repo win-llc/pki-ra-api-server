@@ -3,6 +3,7 @@ package com.winllc.pki.ra.service.external;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,7 +13,7 @@ public class SecurityPolicyServerProjectDetails implements Serializable {
     private LocalDate validFrom;
     private LocalDate validTo;
     private Set<String> fqdns;
-    private Map<String, Object> allSecurityAttributesMap;
+    private Map<String, List<String>> allSecurityAttributesMap;
 
     //todo other security attributes associated with a project
 
@@ -57,11 +58,11 @@ public class SecurityPolicyServerProjectDetails implements Serializable {
         this.validTo = validTo;
     }
 
-    public Map<String, Object> getAllSecurityAttributesMap() {
+    public Map<String, List<String>> getAllSecurityAttributesMap() {
         return allSecurityAttributesMap;
     }
 
-    public void setAllSecurityAttributesMap(Map<String, Object> allSecurityAttributesMap) {
+    public void setAllSecurityAttributesMap(Map<String, List<String>> allSecurityAttributesMap) {
         this.allSecurityAttributesMap = allSecurityAttributesMap;
     }
 }

@@ -1,8 +1,10 @@
 package com.winllc.pki.ra.beans.info;
 
 import com.nimbusds.jose.util.Base64;
+import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AuthCredential;
+import com.winllc.pki.ra.domain.PocEntry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +22,8 @@ public class AccountInfo extends InfoObject<Account> {
     private String securityPolicyServerProjectId;
 
     private UserInfo accountOwner;
-    private List<UserInfo> pocs;
+    private boolean userIsOwner = false;
+    private List<PocFormEntry> pocs;
     private List<DomainInfo> canIssueDomains;
 
     private List<AcmeConnectionInfo> acmeConnectionInfoList;
@@ -90,11 +93,11 @@ public class AccountInfo extends InfoObject<Account> {
         this.accountOwner = accountOwner;
     }
 
-    public List<UserInfo> getPocs() {
+    public List<PocFormEntry> getPocs() {
         return pocs;
     }
 
-    public void setPocs(List<UserInfo> pocs) {
+    public void setPocs(List<PocFormEntry> pocs) {
         this.pocs = pocs;
     }
 
@@ -137,6 +140,14 @@ public class AccountInfo extends InfoObject<Account> {
 
     public void setSecurityPolicyServerProjectId(String securityPolicyServerProjectId) {
         this.securityPolicyServerProjectId = securityPolicyServerProjectId;
+    }
+
+    public boolean isUserIsOwner() {
+        return userIsOwner;
+    }
+
+    public void setUserIsOwner(boolean userIsOwner) {
+        this.userIsOwner = userIsOwner;
     }
 
     public static class AcmeConnectionInfo {

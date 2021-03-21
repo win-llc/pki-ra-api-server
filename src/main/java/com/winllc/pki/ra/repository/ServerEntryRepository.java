@@ -7,10 +7,11 @@ import org.springframework.stereotype.Repository;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 @Transactional
-public interface ServerEntryRepository extends BaseRepository<ServerEntry> {
+public interface ServerEntryRepository extends UniqueEntityRepository<ServerEntry> {
 
     Optional<ServerEntry> findDistinctByFqdnEquals(String fqdn);
     List<ServerEntry> findAllByAccount(Account account);

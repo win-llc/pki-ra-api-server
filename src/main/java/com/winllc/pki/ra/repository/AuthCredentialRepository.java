@@ -21,4 +21,5 @@ public interface AuthCredentialRepository extends PagingAndSortingRepository<Aut
 
     Optional<AuthCredential> findDistinctByKeyIdentifier(String kid);
     List<AuthCredential> findAllByParentEntity(AuthCredentialHolder holder);
+    List<AuthCredential> findAllByParentEntityAndValidEquals(AuthCredentialHolder holder, Boolean valid);
 }

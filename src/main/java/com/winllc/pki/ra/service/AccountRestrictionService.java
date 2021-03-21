@@ -1,8 +1,10 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.beans.form.AccountRestrictionForm;
 import com.winllc.pki.ra.constants.AccountRestrictionAction;
 import com.winllc.pki.ra.constants.AccountRestrictionType;
+import com.winllc.pki.ra.constants.ServerSettingRequired;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AccountRestriction;
 import com.winllc.pki.ra.domain.Domain;
@@ -13,6 +15,7 @@ import com.winllc.pki.ra.repository.AccountRestrictionRepository;
 import com.winllc.pki.ra.service.transaction.SystemActionRunner;
 import com.winllc.pki.ra.service.transaction.ThrowingSupplier;
 import com.winllc.pki.ra.service.validators.AccountRestrictionValidator;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +26,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
@@ -45,6 +49,13 @@ public class AccountRestrictionService extends AbstractService {
     private final AccountRepository accountRepository;
     private final AccountRestrictionRepository accountRestrictionRepository;
     private final AccountRestrictionValidator accountRestrictionValidator;
+    @Autowired
+    private SecurityPolicyService securityPolicyService;
+    @Autowired
+    private ServerSettingsService serverSettingsService;
+    @Autowired
+    private AccountService accountService;
+
 
     public AccountRestrictionService(AccountRepository accountRepository,
                                      AccountRestrictionRepository accountRestrictionRepository,
@@ -59,6 +70,74 @@ public class AccountRestrictionService extends AbstractService {
     @InitBinder("accountRestrictionForm")
     public void initAccountRequestUpdateBinder(WebDataBinder binder) {
         binder.setValidator(accountRestrictionValidator);
+    }
+
+    @Transactional
+    public void syncPolicyServerBackedAccountRestrictions(Account account){
+        //todo
+
+        if(StringUtils.isNotBlank(account.getSecurityPolicyServerProjectId())){
+            try {
+                final Account[] temp = {account};
+
+                Map<String, List<String>> projectAttributes = securityPolicyService.getProjectAttributes(account.getSecurityPolicyServerProjectId());
+
+                Optional<String> optionalDomainsAttribute = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_DOMAINSATTRIBUTE);
+                optionalDomainsAttribute.ifPresent(a -> {
+                    if(projectAttributes.get(a) != null){
+                        List<String> domains = projectAttributes.get(a);
+                        temp[0] = updateDomainsForAccount(temp[0], domains);
+                    }
+                });
+
+                Optional<String> optionalPocsAttribute = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_POCSATTRIBUTE);
+                optionalPocsAttribute.ifPresent(a -> {
+                    if(projectAttributes.get(a) != null){
+                        List<String> pocs = projectAttributes.get(a);
+                        temp[0] = updatePocsForAccount(temp[0], pocs);
+                    }
+                });
+
+                Optional<String> optionalEnabledAttribute = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_ENABLEDATTRIBUTE);
+                optionalEnabledAttribute.ifPresent(a -> {
+                    if (projectAttributes.get(a) != null) {
+                        List<String> enabled = projectAttributes.get(a);
+                        if(CollectionUtils.isNotEmpty(enabled)){
+                            temp[0] = updateEnabledForAccount(temp[0], Boolean.parseBoolean(enabled.get(0)));
+                        }
+                    }
+                });
+
+            } catch (Exception e) {
+                log.error("Could not get project attributes", e);
+            }
+        }
+
+        //todo get pocs
+        //todo get domains
+        //todo get validity period
+        //todo get enabled
+        /*
+         POLICY_SERVER_LDAP_DOMAINSATTRIBUTE("policyServerLdapDomainsAttribute", "Domains Attribute", "Policy Server", false),
+    POLICY_SERVER_LDAP_POCSATTRIBUTE("policyServerLdapPocsAttribute", "POCs Attribute", "Policy Server", false),
+    POLICY_SERVER_LDAP_VALIDFROMATTRIBUTE("policyServerValidFromAttribute", "Valid From Attribute", "Policy Server", false),
+    POLICY_SERVER_LDAP_VALIDTOATTRIBUTE("policyServerValidToAttribute", "Valid To Attribute", "Policy Server", false),
+    POLICY_SERVER_LDAP_ENABLEDATTRIBUTE("policyServerEnabledAttribute", "Enabled Attribute", "Policy Server", false),
+         */
+    }
+
+    public Account updatePocsForAccount(Account account, List<String> pocs){
+        return accountService.pocUpdater(account, pocs.stream().map(PocFormEntry::new).collect(Collectors.toList()));
+    }
+
+    public Account updateDomainsForAccount(Account account, List<String> domains){
+        //todo
+        return null;
+    }
+
+    public Account updateEnabledForAccount(Account account, boolean enabled){
+        account.setEnabled(enabled);
+        return accountRepository.save(account);
     }
 
     @GetMapping("/types/options")

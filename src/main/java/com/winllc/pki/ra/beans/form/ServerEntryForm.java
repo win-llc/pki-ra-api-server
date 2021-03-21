@@ -5,6 +5,7 @@ import com.winllc.pki.ra.util.FormValidationUtil;
 import org.springframework.util.CollectionUtils;
 
 import javax.validation.constraints.NotEmpty;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ServerEntryForm extends ValidForm<ServerEntry> {
@@ -59,6 +60,7 @@ public class ServerEntryForm extends ValidForm<ServerEntry> {
     }
 
     public List<String> getAlternateDnsValues() {
+        if(alternateDnsValues == null) alternateDnsValues = new ArrayList<>();
         return alternateDnsValues;
     }
 

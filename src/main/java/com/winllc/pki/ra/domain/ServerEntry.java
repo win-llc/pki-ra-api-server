@@ -63,7 +63,7 @@ public class ServerEntry extends AuthCredentialHolder implements AccountOwnedEnt
 
     public static ServerEntry buildNew(){
         ServerEntry serverEntry = new ServerEntry();
-        serverEntry.setUuid(UUID.randomUUID());
+        serverEntry.setUuid(UUID.randomUUID().toString());
         return serverEntry;
     }
 

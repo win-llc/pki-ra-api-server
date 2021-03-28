@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
+import com.winllc.pki.ra.beans.info.PocEntryInfo;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.constants.AuditRecordType;
@@ -28,6 +29,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.InvalidNameException;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.*;
@@ -289,6 +291,89 @@ public class ServerEntryService extends AbstractService {
             Map<String, Object> attributeMap = entityDirectoryService.calculateAttributePolicyMapForServerEntry(serverEntry);
 
             return attributeMap;
+        } else {
+            throw new RAObjectNotFoundException(ServerEntry.class, id);
+        }
+    }
+
+    @GetMapping("/currentAttributes/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public Map<String, Object> getCurrentAttributes(@PathVariable Long id) throws RAObjectNotFoundException, InvalidNameException {
+        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
+        if (serverEntryOptional.isPresent()) {
+            ServerEntry serverEntry = serverEntryOptional.get();
+
+            Map<String, Object> attributeMap = entityDirectoryService.getCurrentAttributesForServer(serverEntry);
+
+            return attributeMap;
+        } else {
+            throw new RAObjectNotFoundException(ServerEntry.class, id);
+        }
+    }
+
+    @PostMapping("/syncAttributes/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public boolean syncAttributes(@PathVariable Long id) throws RAObjectNotFoundException {
+        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
+        if (serverEntryOptional.isPresent()) {
+            ServerEntry serverEntry = serverEntryOptional.get();
+
+            entityDirectoryService.applyServerEntryToDirectory(serverEntry);
+
+            return true;
+        } else {
+            throw new RAObjectNotFoundException(ServerEntry.class, id);
+        }
+    }
+
+    @GetMapping("/getManagers/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public List<PocEntryInfo> getManagers(@PathVariable Long id) throws RAObjectNotFoundException {
+        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
+        if (serverEntryOptional.isPresent()) {
+            ServerEntry serverEntry = serverEntryOptional.get();
+            List<PocEntry> pocs = pocEntryRepository.findAllByManagesContaining(serverEntry);
+
+            if(!CollectionUtils.isEmpty(pocs)){
+                return pocs.stream()
+                        .map(PocEntryInfo::new)
+                        .collect(Collectors.toList());
+            }else{
+                return new ArrayList<>();
+            }
+        } else {
+            throw new RAObjectNotFoundException(ServerEntry.class, id);
+        }
+    }
+
+    @PostMapping("/updateManagers/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public List<PocEntryInfo> updateManagers(@PathVariable Long id, @RequestBody List<Long> pocs) throws RAObjectNotFoundException {
+        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
+        if (serverEntryOptional.isPresent()) {
+            ServerEntry serverEntry = serverEntryOptional.get();
+
+            serverEntry.getManagedBy().clear();
+
+            for(Long poc : pocs){
+
+                Optional<PocEntry> optionalPocEntry = pocEntryRepository.findById(poc);
+                if(optionalPocEntry.isPresent()){
+                    PocEntry pocEntry = optionalPocEntry.get();
+                    pocEntry.getManages().add(serverEntry);
+                    pocEntry = pocEntryRepository.save(pocEntry);
+
+                    serverEntry.getManagedBy().add(pocEntry);
+                }
+            }
+
+            serverEntryRepository.save(serverEntry);
+
+            return getManagers(id);
         } else {
             throw new RAObjectNotFoundException(ServerEntry.class, id);
         }

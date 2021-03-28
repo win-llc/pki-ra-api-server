@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.config.AppConfig;
+import com.winllc.pki.ra.service.external.LdapSecurityPolicyServerService;
 import com.winllc.pki.ra.service.external.SecurityPolicyServerProjectDetails;
 import com.winllc.pki.ra.service.external.vendorimpl.OpenDJSecurityPolicyConnection;
 import org.junit.jupiter.api.AfterEach;
@@ -31,7 +32,7 @@ class SecurityPolicyServiceTest {
     @Autowired
     private SecurityPolicyService securityPolicyService;
     @MockBean
-    private OpenDJSecurityPolicyConnection policyConnection;
+    private LdapSecurityPolicyServerService policyConnection;
 
     @BeforeEach
     @Transactional

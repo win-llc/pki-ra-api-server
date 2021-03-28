@@ -61,23 +61,42 @@ public class DomainPolicyService {
         if(optionalDomain.isPresent()) {
             Domain domain = optionalDomain.get();
 
-            DomainPolicy restriction = new DomainPolicy();
-            restriction.setTargetDomain(domain);
-            restriction.setAcmeRequireDnsValidation(form.isAcmeRequireDnsValidation());
-            restriction.setAcmeRequireHttpValidation(form.isAcmeRequireHttpValidation());
-            restriction.setAllowIssuance(form.isAllowIssuance());
+            //todo needs to work with domains also
+            Optional<DomainPolicy> domainPolicy = checkEntityContainsDomainPolicy(holder, domain);
 
-            restriction = restrictionRepository.save(restriction);
+            if(domainPolicy.isEmpty()) {
+                DomainPolicy restriction = new DomainPolicy();
+                restriction.setTargetDomain(domain);
+                restriction.setAcmeRequireDnsValidation(form.isAcmeRequireDnsValidation());
+                restriction.setAcmeRequireHttpValidation(form.isAcmeRequireHttpValidation());
+                restriction.setAllowIssuance(form.isAllowIssuance());
 
-            domain.getAllDomainPolicies().add(restriction);
-            holder.getDomainIssuanceRestrictions().add(restriction);
+                if (holder instanceof Account) {
+                    restriction.setAccount((Account) holder);
+                }
 
-            domainRepository.save(domain);
-            saveHolder(holder);
+                restriction = restrictionRepository.save(restriction);
 
-            return restriction.getId();
+                domain.getAllDomainPolicies().add(restriction);
+                holder.getDomainIssuanceRestrictions().add(restriction);
+
+                domainRepository.save(domain);
+                saveHolder(holder);
+
+                return restriction.getId();
+            }else{
+                return domainPolicy.get().getId();
+            }
         }else{
             throw new RAObjectNotFoundException(Domain.class, form.getDomainId());
+        }
+    }
+
+    private Optional<DomainPolicy> checkEntityContainsDomainPolicy(DomainCertIssuanceRestrictionHolder holder, Domain domain) throws Exception {
+        if(holder instanceof Account){
+            return restrictionRepository.findDistinctByAccountAndTargetDomain((Account) holder, domain);
+        }else{
+            throw new Exception("Holder not a valid type, Domain or Account");
         }
     }
 

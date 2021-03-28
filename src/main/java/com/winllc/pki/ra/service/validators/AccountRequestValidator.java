@@ -1,7 +1,9 @@
 package com.winllc.pki.ra.service.validators;
 
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
+import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AccountRequest;
+import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.service.AccountRequestService;
 import com.winllc.pki.ra.service.SecurityPolicyService;
 import com.winllc.pki.ra.util.FormValidationUtil;
@@ -13,12 +15,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
+import java.util.Optional;
+
 @Component
 public class AccountRequestValidator implements Validator {
 
     private static final Logger log = LogManager.getLogger(AccountRequestValidator.class);
 
     private final SecurityPolicyService securityPolicyService;
+    @Autowired
+    private AccountRepository accountRepository;
 
     public AccountRequestValidator(SecurityPolicyService securityPolicyService) {
         this.securityPolicyService = securityPolicyService;
@@ -35,9 +41,22 @@ public class AccountRequestValidator implements Validator {
 
         AccountRequestForm form = (AccountRequestForm) target;
 
-        boolean validEmail = FormValidationUtil.isValidEmailAddress(form.getAccountOwnerEmail());
-        if(!validEmail){
-            errors.rejectValue("accountOwnerEmail", "accountrequest.create.invalidAccountOwnerEmail");
+        if(StringUtils.isNotBlank(form.getProjectName())){
+            Optional<Account> distinctByProjectName = accountRepository.findDistinctByProjectName(form.getProjectName());
+            if(distinctByProjectName.isPresent()){
+                errors.rejectValue("projectName", "accountrequest.create.invalidProjectName");
+            }
+        }else{
+            errors.rejectValue("projectName", "accountrequest.create.emptyProjectName");
+        }
+
+        if(StringUtils.isNotBlank(form.getAccountOwnerEmail())) {
+            boolean validEmail = FormValidationUtil.isValidEmailAddress(form.getAccountOwnerEmail());
+            if (!validEmail) {
+                errors.rejectValue("accountOwnerEmail", "accountrequest.create.invalidAccountOwnerEmail");
+            }
+        }else{
+            errors.rejectValue("accountOwnerEmail", "accountrequest.create.emptyAccountOwnerEmail");
         }
 
         if(StringUtils.isNotBlank(form.getSecurityPolicyServerProjectId())){

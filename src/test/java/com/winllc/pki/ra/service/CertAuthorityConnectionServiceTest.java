@@ -111,7 +111,7 @@ class CertAuthorityConnectionServiceTest {
 
     @BeforeEach
     @Transactional
-    void before(){
+    void before() throws Exception {
         CertAuthority mockCa = new MockCertAuthority();
         certAuthorityStore.addLoadedCertAuthority(mockCa);
 

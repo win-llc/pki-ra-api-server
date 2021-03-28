@@ -1,10 +1,12 @@
 package com.winllc.pki.ra.domain;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "poc_entry")
@@ -14,10 +16,21 @@ public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedE
     private boolean groupEmail;
     private boolean enabled;
     private boolean owner;
+    private boolean addedManually;
     private Timestamp addedOn;
     @ManyToOne
     @JoinColumn(name="accountOwner_fk")
     private Account account;
+
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @JoinTable(name = "pocs_servers",
+            joinColumns = {
+                    @JoinColumn(name = "poc_id", referencedColumnName = "id",
+                            nullable = false, updatable = false)},
+            inverseJoinColumns = {
+                    @JoinColumn(name = "server_id", referencedColumnName = "id",
+                            nullable = false, updatable = false)})
+    private Set<ServerEntry> manages;
 
     public static PocEntry buildNew(String email, Account account){
         PocEntry entry = new PocEntry();
@@ -32,6 +45,12 @@ public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedE
     private void preRemove(){
         if(account != null){
             account.getPocs().remove(this);
+        }
+
+        if(CollectionUtils.isNotEmpty(manages)){
+            for(ServerEntry serverEntry : manages){
+                serverEntry.getManagedBy().remove(this);
+            }
         }
     }
 
@@ -67,6 +86,14 @@ public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedE
         this.owner = owner;
     }
 
+    public boolean isAddedManually() {
+        return addedManually;
+    }
+
+    public void setAddedManually(boolean addedManually) {
+        this.addedManually = addedManually;
+    }
+
     public Timestamp getAddedOn() {
         return addedOn;
     }
@@ -83,5 +110,11 @@ public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedE
         this.account = account;
     }
 
+    public Set<ServerEntry> getManages() {
+        return manages;
+    }
 
+    public void setManages(Set<ServerEntry> manages) {
+        this.manages = manages;
+    }
 }

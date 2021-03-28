@@ -76,7 +76,7 @@ public class ServerEntryValidator implements Validator {
                         .forEach(fqdn -> {
                             Optional<Domain> optionalDomain = accountDomainPolicies.stream()
                                     .map(p -> p.getTargetDomain())
-                                    .filter(d -> fqdn.endsWith(d.getBase()))
+                                    .filter(d -> fqdn.endsWith(d.getFullDomainName()))
                                     .findAny();
 
                             if (optionalDomain.isEmpty()) {

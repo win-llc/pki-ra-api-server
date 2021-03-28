@@ -50,7 +50,7 @@ public class DomainLinkToAccountRequestValidator implements Validator {
         List<Long> requestedDomainIds = form.getRequestedDomainIds();
         for(Long domainId : requestedDomainIds){
             Optional<Domain> optionalDomain = domainRepository.findById(domainId);
-            if(optionalAccount.isEmpty()){
+            if(optionalDomain.isEmpty()){
                 errors.rejectValue("requestedDomainIds", "domainLinkToAccountRequest.invalidDomainId");
             }
         }

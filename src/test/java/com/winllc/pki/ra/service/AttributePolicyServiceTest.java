@@ -49,7 +49,7 @@ class AttributePolicyServiceTest {
     private LdapSchemaOverlayRepository ldapSchemaOverlayRepository;
 
     @BeforeEach
-    void beforeEach(){
+    void beforeEach() throws Exception {
         AccountRequestForm form = new AccountRequestForm();
         form.setProjectName("Test Project");
         Long id = accountService.createNewAccount(form);

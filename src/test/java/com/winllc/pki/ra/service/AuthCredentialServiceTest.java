@@ -34,7 +34,7 @@ class AuthCredentialServiceTest {
     private AccountRepository accountRepository;
 
     @BeforeEach
-    void beforeEach() {
+    void beforeEach() throws Exception {
         AccountRequestForm form = new AccountRequestForm();
         form.setProjectName("Test Project 7");
         accountService.createNewAccount(form);

@@ -47,7 +47,8 @@ class DomainPolicyServiceTest {
     @Transactional
     void before() throws Exception {
         Domain domain = new Domain();
-        domain.setBase("test.com");
+        domain.setFullDomainName("test.com");
+        domain.setBase("test");
         domainRepository.save(domain);
     }
 
@@ -65,7 +66,7 @@ class DomainPolicyServiceTest {
         Account account = Account.buildNew("Test Project");
         account = accountRepository.save(account);
 
-        Domain domain = domainRepository.findDistinctByBaseEquals("test.com").get();
+        Domain domain = domainRepository.findDistinctByFullDomainNameEquals("test.com").get();
 
         DomainPolicy restriction = new DomainPolicy();
         restriction.setTargetDomain(domain);
@@ -88,7 +89,7 @@ class DomainPolicyServiceTest {
         Account account = Account.buildNew("Test Project");
         account = accountRepository.save(account);
 
-        Domain domain = domainRepository.findDistinctByBaseEquals("test.com").get();
+        Domain domain = domainRepository.findDistinctByFullDomainNameEquals("test.com").get();
         DomainPolicy restriction = new DomainPolicy();
         restriction.setTargetDomain(domain);
 
@@ -113,7 +114,7 @@ class DomainPolicyServiceTest {
         Account account = Account.buildNew("Test Project");
         account = accountRepository.save(account);
 
-        Domain domain = domainRepository.findDistinctByBaseEquals("test.com").get();
+        Domain domain = domainRepository.findDistinctByFullDomainNameEquals("test.com").get();
         DomainPolicy restriction = new DomainPolicy();
         restriction.setTargetDomain(domain);
 
@@ -132,7 +133,7 @@ class DomainPolicyServiceTest {
 
     @Test
     void updateForType() throws RAObjectNotFoundException {
-        Domain domain = domainRepository.findDistinctByBaseEquals("test.com").get();
+        Domain domain = domainRepository.findDistinctByFullDomainNameEquals("test.com").get();
 
         DomainPolicy domainPolicy = new DomainPolicy();
         domainPolicy.setAllowIssuance(true);

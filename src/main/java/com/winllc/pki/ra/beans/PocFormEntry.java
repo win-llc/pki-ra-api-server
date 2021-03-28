@@ -3,7 +3,7 @@ package com.winllc.pki.ra.beans;
 import java.util.Objects;
 
 public class PocFormEntry {
-    private String id;
+    private Long id;
     private String email;
     private boolean owner;
 
@@ -14,11 +14,11 @@ public class PocFormEntry {
     public PocFormEntry() {
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

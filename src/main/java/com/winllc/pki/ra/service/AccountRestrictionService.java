@@ -2,16 +2,15 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.beans.form.AccountRestrictionForm;
+import com.winllc.pki.ra.beans.form.DomainPolicyForm;
 import com.winllc.pki.ra.constants.AccountRestrictionAction;
 import com.winllc.pki.ra.constants.AccountRestrictionType;
 import com.winllc.pki.ra.constants.ServerSettingRequired;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AccountRestriction;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.Notification;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AccountRestrictionRepository;
+import com.winllc.pki.ra.repository.DomainRepository;
 import com.winllc.pki.ra.service.transaction.SystemActionRunner;
 import com.winllc.pki.ra.service.transaction.ThrowingSupplier;
 import com.winllc.pki.ra.service.validators.AccountRestrictionValidator;
@@ -55,6 +54,10 @@ public class AccountRestrictionService extends AbstractService {
     private ServerSettingsService serverSettingsService;
     @Autowired
     private AccountService accountService;
+    @Autowired
+    private DomainPolicyService domainPolicyService;
+    @Autowired
+    private DomainRepository domainRepository;
 
 
     public AccountRestrictionService(AccountRepository accountRepository,
@@ -127,12 +130,37 @@ public class AccountRestrictionService extends AbstractService {
     }
 
     public Account updatePocsForAccount(Account account, List<String> pocs){
-        return accountService.pocUpdater(account, pocs.stream().map(PocFormEntry::new).collect(Collectors.toList()));
+        //todo only add, don't overwrite
+        for(String email : pocs){
+            accountService.addPocToAccount(account, new PocFormEntry(email));
+        }
+
+        return accountRepository.findById(account.getId()).get();
+        //return accountService.pocUpdater(account, pocs.stream().map(PocFormEntry::new).collect(Collectors.toList()));
     }
 
     public Account updateDomainsForAccount(Account account, List<String> domains){
         //todo
-        return null;
+        for(String domain : domains) {
+            Optional<Domain> optionalDomain = domainRepository.findDistinctByFullDomainNameEquals(domain);
+            if(optionalDomain.isPresent()){
+                //only if domain exists in system, don't create new domain
+                Domain found = optionalDomain.get();
+
+                DomainPolicyForm form = new DomainPolicyForm();
+                form.setAcmeRequireDnsValidation(false);
+                form.setAcmeRequireDnsValidation(false);
+                form.setDomainId(found.getId());
+                form.setAllowIssuance(true);
+                try {
+                    domainPolicyService.addForType("account", account.getId(), form);
+                } catch (Exception e) {
+                    log.error("Could not add domain policy", e);
+                }
+            }
+        }
+
+        return account;
     }
 
     public Account updateEnabledForAccount(Account account, boolean enabled){

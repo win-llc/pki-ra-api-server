@@ -58,7 +58,7 @@ class AccountServiceTest {
 
     @BeforeEach
     @Transactional
-    void before(){
+    void before() throws Exception {
         AccountRequestForm form = new AccountRequestForm();
         form.setProjectName("Test Project");
         Long id = accountService.createNewAccount(form);

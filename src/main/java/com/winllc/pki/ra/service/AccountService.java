@@ -19,6 +19,7 @@ import com.winllc.pki.ra.service.external.SecurityPolicyServerProjectDetails;
 import com.winllc.pki.ra.service.transaction.SystemActionRunner;
 import com.winllc.pki.ra.service.validators.AccountRequestValidator;
 import com.winllc.pki.ra.service.validators.AccountUpdateValidator;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
@@ -114,10 +115,14 @@ public class AccountService extends AbstractService {
 
         account = (Account) authCredentialService.addNewAuthCredentialToEntry(account);
 
-        SecurityPolicyServerProjectDetails projectDetails
-                = securityPolicyService.getProjectDetails(form.getSecurityPolicyServerProjectId());
+        if(StringUtils.isNotBlank(form.getSecurityPolicyServerProjectId())) {
+            SecurityPolicyServerProjectDetails projectDetails
+                    = securityPolicyService.getProjectDetails(form.getSecurityPolicyServerProjectId());
 
-        account.setSecurityPolicyServerProjectId(projectDetails.getProjectId());
+            if(projectDetails != null) {
+                account.setSecurityPolicyServerProjectId(projectDetails.getProjectId());
+            }
+        }
 
         account = accountRepository.save(account);
 
@@ -219,15 +224,7 @@ public class AccountService extends AbstractService {
             //Only create entry if POC email does not exist
             if (existingPocMap.get(email.getEmail()) == null) {
 
-                PocEntry pocEntry = new PocEntry();
-                pocEntry.setEnabled(true);
-                pocEntry.setEmail(email.getEmail());
-                pocEntry.setAddedOn(Timestamp.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
-                pocEntry.setAccount(account);
-                pocEntry.setOwner(email.isOwner());
-                pocEntry = pocEntryRepository.save(pocEntry);
-
-                account.getPocs().add(pocEntry);
+               account = addPocToAccount(account, email);
             }else{
                 PocEntry pocEntry = existingPocMap.get(email.getEmail());
                 pocEntry.setOwner(email.isOwner());
@@ -239,6 +236,25 @@ public class AccountService extends AbstractService {
         pocEntryRepository.deleteAllByEmailInAndAccountEquals(emailsToRemove, account);
 
         return accountRepository.save(account);
+    }
+
+    public Account addPocToAccount(Account account, PocFormEntry poc){
+        Optional<PocEntry> optionalPoc = pocEntryRepository.findDistinctByEmailEqualsAndAccount(poc.getEmail(), account);
+
+        if(optionalPoc.isEmpty()) {
+            PocEntry pocEntry = new PocEntry();
+            pocEntry.setEnabled(true);
+            pocEntry.setEmail(poc.getEmail());
+            pocEntry.setAddedOn(Timestamp.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
+            pocEntry.setAccount(account);
+            pocEntry.setOwner(poc.isOwner());
+            pocEntry = pocEntryRepository.save(pocEntry);
+
+            account.getPocs().add(pocEntry);
+            return accountRepository.save(account);
+        }else{
+            return account;
+        }
     }
 
     @GetMapping("/all")
@@ -327,6 +343,15 @@ public class AccountService extends AbstractService {
         }
     }
 
+    @GetMapping("/getAccountPocOptions/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public Map<Long, String> getAccountPocOptions(@PathVariable Long id, Authentication authentication) throws RAObjectNotFoundException {
+        List<PocFormEntry> pocs = getAccountPocs(id, authentication);
+        return pocs.stream()
+                .collect(Collectors.toMap(d -> d.getId(), d -> d.getEmail()));
+    }
+
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void delete(@PathVariable Long id) {
@@ -378,6 +403,7 @@ public class AccountService extends AbstractService {
         List<PocFormEntry> userInfoFromPocs = pocEntries.stream()
                 .map(p -> {
                     PocFormEntry entry = new PocFormEntry(p.getEmail());
+                    entry.setId(p.getId());
                     entry.setOwner(p.isOwner());
                     return entry;
                 })

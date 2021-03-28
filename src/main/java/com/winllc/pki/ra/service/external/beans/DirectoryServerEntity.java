@@ -11,6 +11,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.naming.InvalidNameException;
 import javax.naming.Name;
+import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.*;
 import javax.naming.ldap.LdapName;
@@ -68,6 +69,10 @@ public class DirectoryServerEntity {
         }
     }
 
+    public Map<String, Object> getCurrentAttributes(){
+        return ldapTemplate.lookup(dn, new ServerEntryAttributeMapper());
+    }
+
     public void overwriteAttributes(Map<String, Object> attributes){
         if(exists()){
             updateCurrent();
@@ -78,7 +83,6 @@ public class DirectoryServerEntity {
                     deleteItems.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, new BasicAttribute(key)));
                 }
             }
-            ldapTemplate.modifyAttributes(dn, deleteItems.toArray(new ModificationItem[0]));
         }
         saveAttributes(attributes);
     }
@@ -237,7 +241,7 @@ public class DirectoryServerEntity {
         }
     }
 
-    private class CertWrapper implements Comparable<CertWrapper> {
+    private static class CertWrapper implements Comparable<CertWrapper> {
 
         X509Certificate certificate;
         Date notAfter;
@@ -256,6 +260,21 @@ public class DirectoryServerEntity {
         @Override
         public int compareTo(CertWrapper o) {
             return o.notBefore.compareTo(this.notBefore);
+        }
+    }
+
+    private static class ServerEntryAttributeMapper implements AttributesMapper<Map<String, Object>> {
+
+        @Override
+        public Map<String, Object> mapFromAttributes(Attributes attributes) throws NamingException {
+            Map<String, Object> map = new HashMap<>();
+            NamingEnumeration<String> ids = attributes.getIDs();
+            while(ids.hasMore()){
+                String id = ids.next();
+                map.put(id, attributes.get(id).get());
+            }
+
+            return map;
         }
     }
 

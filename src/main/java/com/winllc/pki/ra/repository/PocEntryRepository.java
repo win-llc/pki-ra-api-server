@@ -2,6 +2,7 @@ package com.winllc.pki.ra.repository;
 
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.PocEntry;
+import com.winllc.pki.ra.domain.ServerEntry;
 import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
@@ -16,4 +17,6 @@ public interface PocEntryRepository extends BaseRepository<PocEntry> {
     Optional<PocEntry> findDistinctByEmailEqualsAndAccount(String email, Account account);
     void deleteAllByEmailInAndAccountEquals(List<String> emails, Account account);
     void deleteByEmailEqualsAndAccount(String email, Account account);
+
+    List<PocEntry> findAllByManagesContaining(ServerEntry serverEntry);
 }

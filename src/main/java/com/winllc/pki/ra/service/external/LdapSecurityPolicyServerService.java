@@ -1,8 +1,10 @@
 package com.winllc.pki.ra.service.external;
 
 import com.winllc.pki.ra.constants.ServerSettingRequired;
+import com.winllc.pki.ra.service.AccountService;
 import com.winllc.pki.ra.service.ServerSettingsService;
-import com.winllc.pki.ra.service.external.vendorimpl.OpenDJSecurityPolicyConnection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.LdapTemplate;
@@ -15,9 +17,12 @@ import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class LdapSecurityPolicyServerService implements SecurityPolicyConnection {
+
+    private static final Logger log = LogManager.getLogger(LdapSecurityPolicyServerService.class);
 
     @Autowired
     private ServerSettingsService serverSettingsService;
@@ -29,30 +34,38 @@ public class LdapSecurityPolicyServerService implements SecurityPolicyConnection
     @Override
     public Map<String, String> getSecurityPolicyMapForService(String fqdn, String projectId) {
         //todo
-        LdapTemplate ldapTemplate = buildLdapTemplate();
+        Optional<LdapTemplate> ldapTemplate = buildLdapTemplate();
 
-        return ldapTemplate.lookup("cn=" + fqdn, new AttributesMapper<Map<String, String>>() {
-            @Override
-            public Map<String, String> mapFromAttributes(Attributes attributes) throws NamingException {
-                Map<String, String> map = new HashMap<>();
-                Attribute secAttr = attributes.get("sn");
-                String attrVal = (String) secAttr.get();
-                map.put("testAttr1", attrVal);
-                return map;
-            }
-        });
+        if(ldapTemplate.isPresent()) {
+            return ldapTemplate.get().lookup("cn=" + fqdn, new AttributesMapper<Map<String, String>>() {
+                @Override
+                public Map<String, String> mapFromAttributes(Attributes attributes) throws NamingException {
+                    Map<String, String> map = new HashMap<>();
+                    Attribute secAttr = attributes.get("sn");
+                    String attrVal = (String) secAttr.get();
+                    map.put("testAttr1", attrVal);
+                    return map;
+                }
+            });
+        }else{
+            return new HashMap<>();
+        }
     }
 
     @Override
     public Optional<SecurityPolicyServerProjectDetails> getProjectDetails(String projectId) {
         //todo
-        LdapTemplate ldapTemplate = buildLdapTemplate();
+        Optional<LdapTemplate> ldapTemplate = buildLdapTemplate();
 
-        SecurityPolicyServerProjectDetails details= ldapTemplate.lookup("cn=" + projectId+",ou=policy-server-projects", new ProjectDetailsMapper());
+        if(ldapTemplate.isPresent()) {
+            SecurityPolicyServerProjectDetails details = ldapTemplate.get().lookup("cn=" + projectId + ",ou=policy-server-projects", new ProjectDetailsMapper());
 
-        if(details != null){
-            return Optional.of(details);
-        }else {
+            if (details != null) {
+                return Optional.of(details);
+            } else {
+                return Optional.empty();
+            }
+        }else{
             return Optional.empty();
         }
     }
@@ -66,28 +79,36 @@ public class LdapSecurityPolicyServerService implements SecurityPolicyConnection
         Optional<String> optionalProjectBaseDn = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_PROJECTSBASEDN);
         String projectBaseDn = optionalProjectBaseDn.orElse("ou=policy-server-projects");
 
-        LdapTemplate ldapTemplate = buildLdapTemplate();
-        List<SecurityPolicyServerProjectDetails> search = ldapTemplate.search(LdapQueryBuilder.query().base(projectBaseDn)
-                .filter("objectclass="+schemaType), new ProjectDetailsMapper());
+        Optional<LdapTemplate> ldapTemplateOptional = buildLdapTemplate();
 
-        return search;
+        if(ldapTemplateOptional.isPresent()){
+            return ldapTemplateOptional.get().search(LdapQueryBuilder.query().base(projectBaseDn)
+                    .filter("objectclass="+schemaType), new ProjectDetailsMapper());
+        }else{
+            log.error("Could not build LDAP Template");
+            return new ArrayList<>();
+        }
     }
 
-    private LdapTemplate buildLdapTemplate(){
+    private Optional<LdapTemplate> buildLdapTemplate(){
         LdapContextSource contextSource = new LdapContextSource();
         Optional<String> optionalUrl = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_URL);
         Optional<String> optionalUsername = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_USERNAME);
         Optional<String> optionalPassword = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_PASSWORD);
         Optional<String> optionalBaseDn = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_BASEDN);
 
-        optionalUrl.ifPresent(u -> contextSource.setUrl(u));
-        optionalUsername.ifPresent(u -> contextSource.setUserDn(u));
-        optionalPassword.ifPresent(u -> contextSource.setPassword(u));
+        AtomicInteger notAvailable = new AtomicInteger();
+        optionalUrl.ifPresentOrElse(u -> contextSource.setUrl(u), () -> notAvailable.getAndIncrement());
+        optionalUsername.ifPresentOrElse(u -> contextSource.setUserDn(u), () -> notAvailable.getAndIncrement());
+        optionalPassword.ifPresentOrElse(u -> contextSource.setPassword(u),() -> notAvailable.getAndIncrement());
         optionalBaseDn.ifPresent(u -> contextSource.setBase(u));
 
-        contextSource.afterPropertiesSet();
-
-        return new LdapTemplate(contextSource);
+        if(notAvailable.get() == 0) {
+            contextSource.afterPropertiesSet();
+            return Optional.of(new LdapTemplate(contextSource));
+        }else{
+            return Optional.empty();
+        }
     }
 
     private static class ProjectDetailsMapper implements AttributesMapper<SecurityPolicyServerProjectDetails> {

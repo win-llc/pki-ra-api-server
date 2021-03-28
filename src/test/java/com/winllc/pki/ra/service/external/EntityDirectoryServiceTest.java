@@ -17,9 +17,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.transaction.Transactional;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -75,16 +73,16 @@ class EntityDirectoryServiceTest {
         ServerEntry serverEntry = ServerEntry.buildNew();
         serverEntry.setFqdn("test.winllc-dev.com");
 
-        Map<String, Object> policyMapForServer = new HashMap<>();
-        policyMapForServer.put("matchName", "matchValue");
-        policyMapForServer.put("nameExists", "overrideValue");
+        Map<String, List<String>> policyMapForServer = new HashMap<>();
+        policyMapForServer.put("matchName", Collections.singletonList("matchValue"));
+        policyMapForServer.put("nameExists", Collections.singletonList("overrideValue"));
 
         SecurityPolicyServerProjectDetails details = new SecurityPolicyServerProjectDetails();
         details.setProjectName("project1");
         details.setAllSecurityAttributesMap(policyMapForServer);
         when(securityPolicyService
-        .getPolicyServerProjectDetails(any(), any()))
-                .thenReturn(Optional.of(details));
+        .getProjectDetails(any()))
+                .thenReturn(details);
 
         //will be added
         AttributePolicy apUseSecurityPolicyValue = new AttributePolicy();

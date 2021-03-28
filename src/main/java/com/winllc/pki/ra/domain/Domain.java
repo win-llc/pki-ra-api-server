@@ -12,8 +12,9 @@ import java.util.Set;
 @Table(name = "domain")
 public class Domain extends AbstractPersistable<Long> implements ProtectedEntity  {
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String base;
+    private String fullDomainName;
     @JsonIgnore
     @OneToMany(mappedBy = "parentDomain", cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE }, orphanRemoval = true)
     private Set<Domain> subDomains;
@@ -71,6 +72,14 @@ public class Domain extends AbstractPersistable<Long> implements ProtectedEntity
 
     public void setBase(String base) {
         this.base = base;
+    }
+
+    public String getFullDomainName() {
+        return fullDomainName;
+    }
+
+    public void setFullDomainName(String fullDomainName) {
+        this.fullDomainName = fullDomainName;
     }
 
     /*

@@ -45,7 +45,7 @@ class AccountRestrictionRepositoryTest {
     }
 
     @Test
-    void findAllByAccount() {
+    void findAllByAccount() throws Exception {
         AccountRequestForm form = new AccountRequestForm();
         form.setProjectName("Test Project");
         Long id = accountService.createNewAccount(form);

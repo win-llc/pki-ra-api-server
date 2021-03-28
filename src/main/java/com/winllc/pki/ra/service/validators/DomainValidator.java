@@ -5,6 +5,7 @@ import com.winllc.pki.ra.beans.form.DomainLinkToAccountRequestForm;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.repository.DomainRepository;
 import com.winllc.pki.ra.util.FormValidationUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,9 @@ public class DomainValidator implements Validator {
 
         DomainForm form = (DomainForm) target;
 
-        if(!FormValidationUtil.isValidFqdn(form.getBase())){
+        if(StringUtils.isBlank(form.getBase())){
+            errors.rejectValue("base", "domain.emptyBase");
+        }else if(form.getBase().contains(".") || !FormValidationUtil.isValidFqdn(form.getBase())){
             errors.rejectValue("base", "domain.invalidBase");
         }
 

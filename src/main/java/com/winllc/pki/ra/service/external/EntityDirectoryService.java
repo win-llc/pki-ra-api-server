@@ -56,6 +56,18 @@ public class EntityDirectoryService {
         return attributeMap;
     }
 
+    public Map<String, Object> getCurrentAttributesForServer(ServerEntry serverEntry) throws InvalidNameException {
+        String distinguishedName = serverEntry.getDistinguishedName();
+        if(StringUtils.isNotBlank(distinguishedName)){
+            LdapTemplate ldapTemplate = buildDirectoryLdapTemplate();
+            DirectoryServerEntity entity = new DirectoryServerEntity(serverEntry, ldapTemplate);
+            return entity.getCurrentAttributes();
+        }else{
+            log.debug("Could not find Server Entry in Directory");
+            return new HashMap<>();
+        }
+    }
+
     private boolean applyAttributesToServerEntry(ServerEntry serverEntry, Map<String, Object> attributeValueMap){
         //todo add attributes to an entity service, such as an LDAP directory
 
@@ -75,9 +87,8 @@ public class EntityDirectoryService {
 
         LdapTemplate ldapTemplate = buildDirectoryLdapTemplate();
 
-        DirectoryServerEntity entity = null;
         try {
-            entity = new DirectoryServerEntity(serverEntry, ldapTemplate);
+            DirectoryServerEntity entity = new DirectoryServerEntity(serverEntry, ldapTemplate);
             entity.overwriteAttributes(attributeValueMap);
         } catch (InvalidNameException e) {
             log.error("Invalid name", e);

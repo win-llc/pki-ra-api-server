@@ -18,13 +18,13 @@ public class DomainPolicyForm extends ValidForm<DomainPolicy> {
     public DomainPolicyForm(DomainPolicy restriction){
         super(restriction);
         this.domainId = restriction.getTargetDomain().getId();
-        this.domainName = restriction.getTargetDomain().getBase();
+        this.domainName = restriction.getTargetDomain().getFullDomainName();
         this.acmeRequireDnsValidation = restriction.isAcmeRequireDnsValidation();
         this.acmeRequireHttpValidation = restriction.isAcmeRequireHttpValidation();
         this.allowIssuance = restriction.isAllowIssuance();
     }
 
-    private DomainPolicyForm(){}
+    public DomainPolicyForm(){}
 
     @Override
     protected void processIsValid() {

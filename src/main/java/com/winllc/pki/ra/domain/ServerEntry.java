@@ -60,6 +60,9 @@ public class ServerEntry extends AuthCredentialHolder implements AccountOwnedEnt
     @Transient
     private Boolean acmeAllowPreAuthz;
 
+    @ManyToMany(mappedBy = "manages", fetch = FetchType.LAZY)
+    private Set<PocEntry> managedBy;
+
 
     public static ServerEntry buildNew(){
         ServerEntry serverEntry = new ServerEntry();
@@ -89,6 +92,12 @@ public class ServerEntry extends AuthCredentialHolder implements AccountOwnedEnt
         if(!CollectionUtils.isEmpty(authCredentials)){
             for(AuthCredential credential : authCredentials){
                 credential.setParentEntity(null);
+            }
+        }
+
+        if(!CollectionUtils.isEmpty(managedBy)){
+            for(PocEntry pocEntry : managedBy){
+                pocEntry.getManages().remove(this);
             }
         }
     }
@@ -189,6 +198,14 @@ public class ServerEntry extends AuthCredentialHolder implements AccountOwnedEnt
 
     public void setDn(Name dn) {
         this.dn = dn;
+    }
+
+    public Set<PocEntry> getManagedBy() {
+        return managedBy;
+    }
+
+    public void setManagedBy(Set<PocEntry> managedBy) {
+        this.managedBy = managedBy;
     }
 
     public Name buildDn(String baseDn){

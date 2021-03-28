@@ -2,6 +2,7 @@ package com.winllc.pki.ra.repository;
 
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.CachedCertificate;
+import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.PocEntry;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;

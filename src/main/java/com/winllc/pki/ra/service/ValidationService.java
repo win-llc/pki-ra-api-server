@@ -122,16 +122,16 @@ public class ValidationService {
         Account account = domainPolicy.getAccount();
 
         Map<String, DomainPolicy> restrictionMap = account.getAccountDomainPolicies().stream()
-                .collect(Collectors.toMap(r -> r.getTargetDomain().getBase(), r -> r));
+                .collect(Collectors.toMap(r -> r.getTargetDomain().getFullDomainName(), r -> r));
 
         CertIssuanceValidationRule validationRule = new CertIssuanceValidationRule();
-        validationRule.setBaseDomainName(domain.getBase());
+        validationRule.setBaseDomainName(domain.getFullDomainName());
         validationRule.setAllowHostnameIssuance(account.isAllowHostnameIssuance());
         validationRule.setIdentifierType("dns");
 
         //If restrictions exist for this domain on the account, apply restrictions
-        if(restrictionMap.containsKey(domain.getBase())){
-            DomainPolicy restriction = restrictionMap.get(domain.getBase());
+        if(restrictionMap.containsKey(domain.getFullDomainName())){
+            DomainPolicy restriction = restrictionMap.get(domain.getFullDomainName());
             validationRule.setRequireHttpChallenge(restriction.isAcmeRequireHttpValidation());
             validationRule.setRequireDnsChallenge(restriction.isAcmeRequireDnsValidation());
             validationRule.setAllowIssuance(restriction.isAllowIssuance());
@@ -222,7 +222,7 @@ public class ValidationService {
             List<String> domainList = accountDomainPolicies
                     .stream()
                     .map(DomainPolicy::getTargetDomain)
-                    .map(Domain::getBase)
+                    .map(Domain::getFullDomainName)
                     .collect(Collectors.toList());
 
             return domainList;

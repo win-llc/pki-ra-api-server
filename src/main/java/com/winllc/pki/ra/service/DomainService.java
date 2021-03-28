@@ -45,7 +45,7 @@ public class DomainService {
     public Map<Long, String> options(){
         List<Domain> all = domainRepository.findAll();
         return all.stream()
-                .collect(Collectors.toMap(d -> d.getId(), d -> d.getBase()));
+                .collect(Collectors.toMap(d -> d.getId(), d -> d.getFullDomainName()));
     }
 
     @GetMapping("/all")
@@ -90,8 +90,8 @@ public class DomainService {
                 Domain parentDomain = optionalDomain.get();
                 domain.setParentDomain(parentDomain);
 
-                String newBase = domain.getBase()+"."+parentDomain.getBase();
-                domain.setBase(newBase);
+                String newBase = domain.getBase()+"."+parentDomain.getFullDomainName();
+                domain.setFullDomainName(newBase);
 
                 domain = domainRepository.save(domain);
 
@@ -100,6 +100,8 @@ public class DomainService {
             }else{
                 throw new RAObjectNotFoundException(Domain.class, form.getParentDomainId());
             }
+        }else{
+            domain.setFullDomainName(form.getBase());
         }
 
         domain = domainRepository.save(domain);

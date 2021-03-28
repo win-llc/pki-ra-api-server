@@ -19,7 +19,7 @@ public class DomainForm extends ValidForm<Domain> {
 
         if(entity.getParentDomain() != null){
             this.parentDomainId = entity.getParentDomain().getId();
-            this.parentDomainBase = entity.getParentDomain().getBase();
+            this.parentDomainBase = entity.getParentDomain().getFullDomainName();
         }
     }
 

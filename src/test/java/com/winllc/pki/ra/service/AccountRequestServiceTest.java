@@ -15,6 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -88,7 +90,8 @@ class AccountRequestServiceTest {
         AccountRequestForm form = new AccountRequestForm();
         form.setAccountOwnerEmail("test@test.com");
         form.setProjectName("project1");
-        accountRequestService.createAccountRequest(form);
+        Authentication authentication = new TestingAuthenticationToken("test@test.com", "");
+        accountRequestService.createAccountRequest(form, authentication);
 
         List<AccountRequest> all = accountRequestService.findPending();
         assertTrue("Response null check", all.size() == 2);
@@ -105,7 +108,8 @@ class AccountRequestServiceTest {
         AccountRequestForm form = new AccountRequestForm();
         form.setAccountOwnerEmail("test@test.com");
         form.setProjectName("project1");
-        Long id = accountRequestService.createAccountRequest(form);
+        Authentication authentication = new TestingAuthenticationToken("test@test.com", "");
+        Long id = accountRequestService.createAccountRequest(form, authentication);
 
         AccountRequest accountRequest = accountRequestService.findById(id);
         assertNotNull("Account Request null check", accountRequest);

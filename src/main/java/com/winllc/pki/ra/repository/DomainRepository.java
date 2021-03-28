@@ -15,5 +15,6 @@ public interface DomainRepository extends BaseRepository<Domain> {
     List<Domain> findAllByBaseContains(String search);
     //List<Domain> findAllByCanIssueAccountsContains(Account account);
     List<Domain> findAllByIdIn(Collection<Long> ids);
-    Optional<Domain> findDistinctByBaseEquals(String base);
+    List<Domain> findByBaseEquals(String base);
+    Optional<Domain> findDistinctByFullDomainNameEquals(String fullDomain);
 }

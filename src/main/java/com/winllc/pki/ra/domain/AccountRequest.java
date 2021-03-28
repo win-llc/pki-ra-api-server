@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.domain;
 
+import net.minidev.json.annotate.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
@@ -18,15 +19,11 @@ public class AccountRequest extends AbstractPersistable<Long> {
     private String state;
     private String securityPolicyServerProjectId;
 
+    @JsonIgnore
     public static AccountRequest createNew(){
         AccountRequest request = new AccountRequest();
         request.setState("new");
         return request;
-    }
-
-    @PreRemove
-    private void preRemove(){
-
     }
 
     public String getProjectName() {

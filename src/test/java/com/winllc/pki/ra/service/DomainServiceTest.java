@@ -44,7 +44,8 @@ class DomainServiceTest {
     @Transactional
     void before(){
         Domain domain = new Domain();
-        domain.setBase("winllc-dev.com");
+        domain.setBase("winllc-dev");
+        domain.setFullDomainName("winllc-dev.com");
         domainRepository.save(domain);
     }
 
@@ -63,7 +64,7 @@ class DomainServiceTest {
 
     @Test
     void searchDomainByBaseDomain() {
-        List<Domain> search = domainService.searchDomainByBaseDomain("com");
+        List<Domain> search = domainService.searchDomainByBaseDomain("winllc-dev");
         assertEquals(1, search.size());
     }
 
@@ -96,7 +97,11 @@ class DomainServiceTest {
     @Transactional
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void createDomain() throws Exception {
-        DomainForm form = new DomainForm("test.com");
+        DomainForm parentForm = new DomainForm("com");
+        Long parentId = domainService.createDomain(parentForm);
+
+        DomainForm form = new DomainForm("test");
+        form.setParentDomainId(parentId);
 
         Long domainId = domainService.createDomain(form);
         assertTrue(domainId > 0);
@@ -107,7 +112,7 @@ class DomainServiceTest {
         Long subDomainId = domainService.createDomain(withParentForm);
         Domain checkSubDomain = domainRepository.findById(subDomainId).get();
 
-        assertEquals("sub.test.com", checkSubDomain.getBase());
+        assertEquals("sub.test.com", checkSubDomain.getFullDomainName());
         assertEquals(domainId, checkSubDomain.getParentDomain().getId());
 
         form.setBase("bad base");

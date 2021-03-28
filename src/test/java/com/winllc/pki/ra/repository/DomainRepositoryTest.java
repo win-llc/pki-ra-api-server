@@ -39,7 +39,7 @@ class DomainRepositoryTest {
 
     @BeforeEach
     @Transactional
-    void before(){
+    void before() throws Exception {
         AccountRequestForm form = new AccountRequestForm();
         form.setProjectName("Test Project");
         Long id = accountService.createNewAccount(form);
@@ -79,12 +79,14 @@ class DomainRepositoryTest {
     @Transactional
     void subDomainTest(){
         Domain parentDomain = new Domain();
-        parentDomain.setBase("parent.com");
+        parentDomain.setBase("parent");
+        parentDomain.setFullDomainName("parent.com");
 
         parentDomain = domainRepository.save(parentDomain);
 
         Domain subDomain = new Domain();
-        subDomain.setBase("sub.parent.com");
+        subDomain.setFullDomainName("sub.parent.com");
+        subDomain.setBase("sub");
         subDomain.setParentDomain(parentDomain);
 
         subDomain = domainRepository.save(subDomain);
@@ -95,7 +97,7 @@ class DomainRepositoryTest {
         Domain checkParent = domainRepository.findById(parentDomain.getId()).get();
         Domain checkSub = domainRepository.findById(subDomain.getId()).get();
         Hibernate.initialize(checkParent.getSubDomains());
-        assertEquals("sub.parent.com", new ArrayList<>(checkParent.getSubDomains()).get(0).getBase());
+        assertEquals("sub.parent.com", new ArrayList<>(checkParent.getSubDomains()).get(0).getFullDomainName());
         assertEquals(checkParent.getId(), checkSub.getParentDomain().getId());
     }
 }

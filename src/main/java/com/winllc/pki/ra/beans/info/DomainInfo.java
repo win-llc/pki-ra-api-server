@@ -10,12 +10,14 @@ import java.util.stream.Collectors;
 public class DomainInfo extends InfoObject<Domain> {
 
     private String base;
+    private String fullDomainName;
     private DomainInfo parentDomainInfo;
     private List<DomainInfo> subDomainInfo;
 
     public DomainInfo(Domain domain, boolean loadSubDomains){
         super(domain);
         this.base = domain.getBase();
+        this.fullDomainName = domain.getFullDomainName();
 
         if(domain.getParentDomain() != null){
             DomainInfo parentInfo = new DomainInfo(domain.getParentDomain(), false);
@@ -39,6 +41,14 @@ public class DomainInfo extends InfoObject<Domain> {
 
     public void setBase(String base) {
         this.base = base;
+    }
+
+    public String getFullDomainName() {
+        return fullDomainName;
+    }
+
+    public void setFullDomainName(String fullDomainName) {
+        this.fullDomainName = fullDomainName;
     }
 
     public DomainInfo getParentDomainInfo() {

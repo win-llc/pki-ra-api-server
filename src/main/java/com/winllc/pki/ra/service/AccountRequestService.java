@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.WebDataBinder;
@@ -30,16 +31,18 @@ public class AccountRequestService {
     private static final Logger log = LogManager.getLogger(AccountRequestService.class);
 
     private final AccountRequestRepository accountRequestRepository;
+    private final AccountService accountService;
 
     private final AccountRequestValidator accountRequestValidator;
     private final AccountRequestUpdateValidator accountRequestUpdateValidator;
 
     public AccountRequestService(AccountRequestRepository accountRequestRepository,
                                  AccountRequestValidator accountRequestValidator,
-                                 AccountRequestUpdateValidator accountRequestUpdateValidator) {
+                                 AccountRequestUpdateValidator accountRequestUpdateValidator, AccountService accountService) {
         this.accountRequestRepository = accountRequestRepository;
         this.accountRequestValidator = accountRequestValidator;
         this.accountRequestUpdateValidator = accountRequestUpdateValidator;
+        this.accountService = accountService;
     }
 
     @InitBinder("accountRequestForm")
@@ -72,15 +75,22 @@ public class AccountRequestService {
         return accountRequestRepository.countAllByStateEquals("new");
     }
 
-    @PreAuthorize("hasPermission(#form, 'accountrequest:create')")
+    @GetMapping("/my")
+    @ResponseStatus(HttpStatus.OK)
+    public List<AccountRequest> myRequests(Authentication authentication){
+        return accountRequestRepository.findAllByRequestedByEmailEquals(authentication.getName());
+    }
+
+    //@PreAuthorize("hasPermission(#form, 'accountrequest:create')")
     @PostMapping("/submit")
     @ResponseStatus(HttpStatus.CREATED)
-    public Long createAccountRequest(@Valid @RequestBody AccountRequestForm form) {
+    public Long createAccountRequest(@Valid @RequestBody AccountRequestForm form, Authentication authentication) {
         log.info("Account request: "+form);
         AccountRequest accountRequest = AccountRequest.createNew();
         accountRequest.setAccountOwnerEmail(form.getAccountOwnerEmail());
         accountRequest.setProjectName(form.getProjectName());
         accountRequest.setSecurityPolicyServerProjectId(form.getSecurityPolicyServerProjectId());
+        accountRequest.setRequestedByEmail(authentication.getName());
 
         accountRequest = accountRequestRepository.save(accountRequest);
         return accountRequest.getId();
@@ -89,13 +99,20 @@ public class AccountRequestService {
     @PreAuthorize("hasPermission(#form, 'accountrequest:update')")
     @PostMapping("/update")
     @Transactional
-    public ResponseEntity<?> accountRequestUpdate(@Valid @RequestBody AccountRequestUpdateForm form) throws RAObjectNotFoundException {
+    public ResponseEntity<?> accountRequestUpdate(@Valid @RequestBody AccountRequestUpdateForm form) throws Exception {
         Optional<AccountRequest> optionalAccountRequest = accountRequestRepository.findById(form.getAccountRequestId());
 
         if(optionalAccountRequest.isPresent()){
             AccountRequest accountRequest = optionalAccountRequest.get();
             if(form.getState().contentEquals("approve")){
                 accountRequest.approve();
+
+                AccountRequestForm requestForm = new AccountRequestForm();
+                requestForm.setProjectName(accountRequest.getProjectName());
+                requestForm.setAccountOwnerEmail(accountRequest.getAccountOwnerEmail());
+                requestForm.setSecurityPolicyServerProjectId(accountRequest.getSecurityPolicyServerProjectId());
+
+                accountService.createNewAccount(requestForm);
             }else if(form.getState().contentEquals("reject")){
                 accountRequest.reject();
             }

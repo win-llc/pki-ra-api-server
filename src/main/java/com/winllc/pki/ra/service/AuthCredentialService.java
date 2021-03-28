@@ -1,10 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AuthCredential;
-import com.winllc.pki.ra.domain.AuthCredentialHolder;
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AuthCredentialRepository;
@@ -80,6 +77,7 @@ public class AuthCredentialService {
                 .findFirst();
     }
 
+    @Transactional
     public Optional<Account> getAssociatedAccount(String kid) throws RAObjectNotFoundException {
         Optional<AuthCredential> optionalAuthCredential = authCredentialRepository.findDistinctByKeyIdentifier(kid);
 
@@ -90,8 +88,17 @@ public class AuthCredentialService {
             if(holder instanceof Account){
                 Account account = (Account) holder;
                 return Optional.of(account);
+            }else if(holder instanceof ServerEntry){
+                Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(holder.getId());
+
+                if(optionalServerEntry.isPresent()){
+                    ServerEntry serverEntry = optionalServerEntry.get();
+                    Hibernate.initialize(serverEntry.getAccount());
+                    return Optional.of(serverEntry.getAccount());
+                }else{
+                    return Optional.empty();
+                }
             }else{
-                //todo handler server entry
                 return Optional.empty();
             }
         }else{

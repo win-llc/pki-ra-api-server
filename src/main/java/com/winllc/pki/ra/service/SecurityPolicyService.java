@@ -36,12 +36,12 @@ public class SecurityPolicyService {
     }
 
     @GetMapping("/projectDetails/{projectId}")
-    public SecurityPolicyServerProjectDetails getProjectDetails(@PathVariable String projectId) throws Exception {
+    public SecurityPolicyServerProjectDetails getProjectDetails(@PathVariable String projectId) {
         Optional<SecurityPolicyServerProjectDetails> optionalDetails = policyServerService.getProjectDetails(projectId);
         if(optionalDetails.isPresent()){
             return optionalDetails.get();
         }else{
-            throw new RAObjectNotFoundException(SecurityPolicyServerProjectDetails.class, projectId);
+            return null;
         }
     }
 

@@ -59,10 +59,12 @@ class DomainLinkToAccountRequestServiceTest {
         pocEntryRepository.save(pocEntry);
 
         Domain domain = new Domain();
-        domain.setBase("winllc-dev.com");
+        domain.setBase("winllc-dev");
+        domain.setFullDomainName("winllc-dev.com");
         domain = domainRepository.save(domain);
 
         DomainPolicy domainPolicy = new DomainPolicy(domain);
+        domainPolicy.setAccount(account);
         domainPolicy = domainPolicyRepository.save(domainPolicy);
         account.getAccountDomainPolicies().add(domainPolicy);
         //domain = domainRepository.save(domain);
@@ -139,7 +141,7 @@ class DomainLinkToAccountRequestServiceTest {
 
         Account account = accountRepository.findAll().get(0);
         Set<DomainPolicy> canIssueDomains = account.getAccountDomainPolicies();
-        boolean canIssue = canIssueDomains.stream().anyMatch(d -> d.getTargetDomain().getBase().contentEquals("winllc-dev.com"));
+        boolean canIssue = canIssueDomains.stream().anyMatch(d -> d.getTargetDomain().getFullDomainName().contentEquals("winllc-dev.com"));
         assertTrue(canIssue);
 
         decision.setStatus("bad");

@@ -108,8 +108,8 @@ public class CertIssuanceTransaction extends CertTransaction {
             }
         };
 
-        SystemActionRunner postProcessRunner = SystemActionRunner.build(this.context);
-        postProcessRunner.executeAsync(postProcessAction);
+        //SystemActionRunner postProcessRunner = SystemActionRunner.build(this.context);
+        //postProcessRunner.executeAsync(postProcessAction);
 
         return cert;
     }

@@ -60,6 +60,8 @@ public class ServerEntry extends AuthCredentialHolder implements AccountOwnedEnt
     @Transient
     private Boolean acmeAllowPreAuthz;
 
+    @Transient
+    @JsonIgnore
     @ManyToMany(mappedBy = "manages", fetch = FetchType.LAZY)
     private Set<PocEntry> managedBy;
 
@@ -143,6 +145,7 @@ public class ServerEntry extends AuthCredentialHolder implements AccountOwnedEnt
     }
 
     public List<String> getAlternateDnsValues() {
+        if(alternateDnsValues == null) alternateDnsValues = new ArrayList<>();
         return alternateDnsValues;
     }
 

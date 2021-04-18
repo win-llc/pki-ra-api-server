@@ -26,6 +26,7 @@ public abstract class ValidForm<T extends AbstractPersistable<Long>> extends Inf
         }catch (ClassCastException e){ }
     }
 
+    @JsonIgnore
     public boolean isAccountLinkedForm(){
         return AccountOwnedEntity.class.isAssignableFrom(getFormObjectType());
     }
@@ -33,6 +34,7 @@ public abstract class ValidForm<T extends AbstractPersistable<Long>> extends Inf
 
     protected abstract void processIsValid();
 
+    @JsonIgnore
     public boolean isValid(){
         processIsValid();
         return errors.size() == 0;

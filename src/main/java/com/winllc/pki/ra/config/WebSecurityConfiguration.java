@@ -28,7 +28,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  */
 
 @Configuration
-public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+public class
+
+WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Value("${authentication.jwt-required-audience}")
     private String jwtRequiredAudience;

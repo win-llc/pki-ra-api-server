@@ -2,8 +2,12 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.info.DomainInfo;
+import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.Domain;
+import com.winllc.pki.ra.domain.DomainPolicy;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import com.winllc.pki.ra.repository.AccountRepository;
+import com.winllc.pki.ra.repository.DomainPolicyRepository;
 import com.winllc.pki.ra.repository.DomainRepository;
 import com.winllc.pki.ra.service.validators.DomainValidator;
 import org.apache.logging.log4j.LogManager;
@@ -30,6 +34,10 @@ public class DomainService {
 
     private final DomainRepository domainRepository;
     private final DomainValidator domainValidator;
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private DomainPolicyRepository domainPolicyRepository;
 
     public DomainService(DomainRepository domainRepository, DomainValidator domainValidator) {
         this.domainRepository = domainRepository;
@@ -46,6 +54,25 @@ public class DomainService {
         List<Domain> all = domainRepository.findAll();
         return all.stream()
                 .collect(Collectors.toMap(d -> d.getId(), d -> d.getFullDomainName()));
+    }
+
+    @GetMapping("/options/forAccount/{accountId}")
+    @Transactional
+    public List<DomainInfo> optionsForAccount(@PathVariable Long accountId) throws RAObjectNotFoundException {
+
+        Optional<Account> accountOptional = accountRepository.findById(accountId);
+
+        if(accountOptional.isPresent()){
+            Account account = accountOptional.get();
+
+            List<DomainPolicy> domainPolicies = domainPolicyRepository.findAllByAccount(account);
+
+            return domainPolicies.stream()
+                    .map(d -> new DomainInfo(d.getTargetDomain(), false))
+                    .collect(Collectors.toList());
+        }else{
+            throw new RAObjectNotFoundException(Account.class, accountId);
+        }
     }
 
     @GetMapping("/all")

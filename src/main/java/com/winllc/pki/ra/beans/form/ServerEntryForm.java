@@ -12,6 +12,7 @@ public class ServerEntryForm extends ValidForm<ServerEntry> {
 
     private String fqdn;
     private Long accountId;
+    private Long domainId;
     private List<String> alternateDnsValues;
     private String openidClientRedirectUrl;
     private Boolean allowPreAuthz;
@@ -38,6 +39,7 @@ public class ServerEntryForm extends ValidForm<ServerEntry> {
         super(entry);
         this.fqdn = entry.getFqdn();
         this.accountId = entry.getAccount().getId();
+        //todo add domain id
         this.alternateDnsValues = entry.getAlternateDnsValues();
         this.openidClientRedirectUrl = entry.getOpenidClientRedirectUrl();
         this.allowPreAuthz = entry.getAcmeAllowPreAuthz();
@@ -57,6 +59,14 @@ public class ServerEntryForm extends ValidForm<ServerEntry> {
 
     public void setAccountId(Long accountId) {
         this.accountId = accountId;
+    }
+
+    public Long getDomainId() {
+        return domainId;
+    }
+
+    public void setDomainId(Long domainId) {
+        this.domainId = domainId;
     }
 
     public List<String> getAlternateDnsValues() {

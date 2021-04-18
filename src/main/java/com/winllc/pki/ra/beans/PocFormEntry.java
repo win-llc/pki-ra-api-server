@@ -6,6 +6,7 @@ public class PocFormEntry {
     private Long id;
     private String email;
     private boolean owner;
+    private boolean canManageAllServers;
 
     public PocFormEntry(String email) {
         this.email = email;
@@ -36,6 +37,14 @@ public class PocFormEntry {
 
     public void setOwner(boolean owner) {
         this.owner = owner;
+    }
+
+    public boolean isCanManageAllServers() {
+        return canManageAllServers;
+    }
+
+    public void setCanManageAllServers(boolean canManageAllServers) {
+        this.canManageAllServers = canManageAllServers;
     }
 
     @Override

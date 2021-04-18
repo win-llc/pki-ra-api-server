@@ -28,6 +28,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -195,7 +197,8 @@ public class DomainLinkToAccountRequestService extends AbstractService {
     @Transactional
     @PostMapping("/linkAccount/update")
     @ResponseStatus(HttpStatus.OK)
-    public DomainLinkToAccountRequest domainRequestDecision(@Valid @RequestBody DomainLinkRequestDecisionForm decision) throws RAException {
+    public DomainLinkToAccountRequest domainRequestDecision(@Valid @RequestBody DomainLinkRequestDecisionForm decision,
+                                                            Authentication authentication) throws RAException {
         Optional<DomainLinkToAccountRequest> optionalDomainLinkToAccountRequest = requestRepository.findById(decision.getRequestId());
         if (optionalDomainLinkToAccountRequest.isPresent()) {
             DomainLinkToAccountRequest request = optionalDomainLinkToAccountRequest.get();
@@ -203,6 +206,9 @@ public class DomainLinkToAccountRequestService extends AbstractService {
             Optional<Account> optionalAccount = accountRepository.findById(request.getAccountId());
             if (optionalAccount.isPresent()) {
                 Account account = optionalAccount.get();
+
+                request.setDecisionMadeBy(authentication.getName());
+                request.setStatusUpdatedOn(Timestamp.valueOf(LocalDateTime.now()));
 
                 switch (decision.getStatus()) {
                     case "approve":

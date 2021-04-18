@@ -70,7 +70,7 @@ public class ApplicationKeystoreManagerService {
 
     @GetMapping("/getEntryByAlias/{alias}")
     @ResponseStatus(HttpStatus.OK)
-    public AppKeyStoreEntryForm getEntry(@PathVariable String alias) throws RAObjectNotFoundException, CertificateException, IOException {
+    public AppKeyStoreEntryForm getEntry(@PathVariable String alias) throws RAObjectNotFoundException {
         Optional<KeyEntryWrapper> optionalEntry = getKeyByAlias(alias);
         if(optionalEntry.isPresent()){
             KeyEntryWrapper keyEntry = optionalEntry.get();

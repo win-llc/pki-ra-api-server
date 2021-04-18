@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.SubjectAltName;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.PocEntryInfo;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
@@ -8,10 +9,7 @@ import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.AuthCredentialRepository;
-import com.winllc.pki.ra.repository.PocEntryRepository;
-import com.winllc.pki.ra.repository.ServerEntryRepository;
+import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
 import com.winllc.pki.ra.service.transaction.SystemActionRunner;
@@ -26,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,6 +49,8 @@ public class ServerEntryService extends AbstractService {
     private final EntityDirectoryService entityDirectoryService;
     private final ServerEntryValidator serverEntryValidator;
     private final AuthCredentialService authCredentialService;
+    @Autowired
+    private DomainRepository domainRepository;
 
     public ServerEntryService(ApplicationContext context,
                               ServerEntryRepository serverEntryRepository, AccountRepository accountRepository,
@@ -71,6 +72,10 @@ public class ServerEntryService extends AbstractService {
         binder.setValidator(serverEntryValidator);
     }
 
+    public ServerEntry getServerEntry(Long id) throws RAObjectNotFoundException {
+        return serverEntryRepository.findById(id).orElseThrow(() -> new RAObjectNotFoundException(ServerEntry.class, id));
+    }
+
     @GetMapping("/variableFields")
     @ResponseStatus(HttpStatus.OK)
     public List<String> getAvailableVariableFields() {
@@ -84,28 +89,34 @@ public class ServerEntryService extends AbstractService {
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
     public Long createServerEntry(@Valid @RequestBody ServerEntryForm form) throws RAObjectNotFoundException {
+
         Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
 
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
 
-            /*
-            Hibernate.initialize(account.getAccountDomainPolicies());
-            Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();
+            //Don't proceed if FQDN already exists under account
+            Optional<ServerEntry> optionalExisting = serverEntryRepository.findDistinctByFqdnEqualsAndAccountEquals(form.getFqdn(), account);
+            if(optionalExisting.isPresent()){
+                return optionalExisting.get().getId();
+            }
 
-            Optional<Domain> optionalDomain = accountDomainPolicies.stream()
-                    .map(p -> p.getTargetDomain())
-                    .filter(d -> form.getFqdn().endsWith(d.getBase()))
-                    .findAny();
+            String fqdn = form.getFqdn();
 
-            if(optionalDomain.isPresent()){
+            if(form.getDomainId() != null) {
+                Optional<Domain> optionalDomain = domainRepository.findById(form.getDomainId());
+                if(optionalDomain.isPresent()){
+                    Domain domain = optionalDomain.get();
+                    String fullDomain = domain.getFullDomainName();
+                    fqdn = fqdn + "." + fullDomain;
+                }
+            }
 
-             */
             //Domain domain = optionalDomain.get();
             ServerEntry entry = ServerEntry.buildNew();
             entry.setAccount(account);
             //entry.setDomainParent(domain);
-            entry.setFqdn(form.getFqdn());
+            entry.setFqdn(fqdn);
             entry.setHostname(form.getFqdn());
 
             if (!CollectionUtils.isEmpty(form.getAlternateDnsValues())) {
@@ -129,13 +140,6 @@ public class ServerEntryService extends AbstractService {
             log.info("Created a Server Entry: " + entry);
 
             return entry.getId();
-                /*
-            }else{
-                String fqdn = form.getFqdn();
-                throw new RAObjectNotFoundException(Domain.class, form.getFqdn());
-            }
-
-                 */
         } else {
             throw new RAObjectNotFoundException(Account.class, form.getAccountId());
         }
@@ -150,78 +154,100 @@ public class ServerEntryService extends AbstractService {
 
         log.info("Is account linked: " + form.isAccountLinkedForm());
 
-        Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(form.getId());
-        if (optionalServerEntry.isPresent()) {
-            ServerEntry serverEntry = optionalServerEntry.get();
+        ServerEntry serverEntry = getServerEntry(form.getId());
 
-            serverEntry.setAlternateDnsValues(form.getAlternateDnsValues());
-            serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
+        serverEntry.setAlternateDnsValues(form.getAlternateDnsValues());
+        serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
 
-            List<String> alternateDnsValues = new ArrayList<>(serverEntry.getAlternateDnsValues());
-            serverEntry.setAlternateDnsValues(alternateDnsValues);
+        List<String> alternateDnsValues = new ArrayList<>(serverEntry.getAlternateDnsValues());
+        serverEntry.setAlternateDnsValues(alternateDnsValues);
 
-            serverEntry = serverEntryRepository.save(serverEntry);
+        serverEntry = serverEntryRepository.save(serverEntry);
 
-            SystemActionRunner.build(context)
-                    .createAuditRecord(AuditRecordType.SERVER_ENTRY_UPDATED, serverEntry)
-                    .createNotificationForAccountPocs(Notification.buildNew()
-                            .addMessage("Server Entry updated: " + serverEntry.getFqdn()), serverEntry.getAccount())
-                    .sendNotification()
-                    .execute();
+        SystemActionRunner.build(context)
+                .createAuditRecord(AuditRecordType.SERVER_ENTRY_UPDATED, serverEntry)
+                .createNotificationForAccountPocs(Notification.buildNew()
+                        .addMessage("Server Entry updated: " + serverEntry.getFqdn()), serverEntry.getAccount())
+                .sendNotification()
+                .execute();
 
-            //apply attributes to external directory
-            entityDirectoryService.applyServerEntryToDirectory(serverEntry);
+        //apply attributes to external directory
+        entityDirectoryService.applyServerEntryToDirectory(serverEntry);
 
-            return entryToInfo(serverEntry);
-        } else {
-            throw new RAException("Invalid Server Entry form");
+        return entryToInfo(serverEntry);
+    }
+
+    @GetMapping("/getSans/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public List<SubjectAltName> getSans(@PathVariable Long id) throws RAObjectNotFoundException {
+
+        ServerEntry serverEntry = getServerEntry(id);
+        Hibernate.initialize(serverEntry.getAlternateDnsValues());
+
+        return serverEntry.getAlternateDnsValues().stream()
+                .map(a -> new SubjectAltName(a, "dns"))
+                .collect(Collectors.toList());
+    }
+
+    @PostMapping("/updateSans/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public List<SubjectAltName> updateSans(@PathVariable Long id, @RequestBody List<SubjectAltName> sans) throws RAObjectNotFoundException {
+        ServerEntry serverEntry = getServerEntry(id);
+
+        if(!CollectionUtils.isEmpty(sans)){
+            List<String> dns = sans.stream()
+                    .map(s -> s.getValue())
+                    .collect(Collectors.toList());
+
+            serverEntry.setAlternateDnsValues(dns);
+        }else{
+            serverEntry.setAlternateDnsValues(new ArrayList<>());
         }
+
+        serverEntryRepository.save(serverEntry);
+
+        return getSans(id);
     }
 
     @GetMapping("/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ServerEntryInfo getServerEntry(@PathVariable Long id) throws RAObjectNotFoundException {
-        Optional<ServerEntry> entryOptional = serverEntryRepository.findById(id);
+    public ServerEntryInfo getServerEntryInfo(@PathVariable Long id) throws RAObjectNotFoundException {
 
-        if (entryOptional.isPresent()) {
-            ServerEntry entry = entryOptional.get();
+        ServerEntry entry = getServerEntry(id);
 
-            return entryToInfo(entry);
-        } else {
-            throw new RAObjectNotFoundException(ServerEntry.class, id);
-        }
+        return entryToInfo(entry);
     }
 
     @GetMapping("/latestAuthCredential/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public AuthCredential getLatestAuthCredential(@PathVariable Long id) throws RAObjectNotFoundException {
-        Optional<ServerEntry> entryOptional = serverEntryRepository.findById(id);
 
-        if (entryOptional.isPresent()) {
-            ServerEntry entry = entryOptional.get();
+        ServerEntry entry = getServerEntry(id);
 
-            Optional<AuthCredential> optionalAuthCredential = entry.getLatestAuthCredential();
-            if (optionalAuthCredential.isPresent()) {
-                return optionalAuthCredential.get();
-            } else {
-                log.error("No credential for server: " + id);
-                throw new RAObjectNotFoundException(AuthCredential.class, id);
-            }
+        Optional<AuthCredential> optionalAuthCredential = entry.getLatestAuthCredential();
+        if (optionalAuthCredential.isPresent()) {
+            return optionalAuthCredential.get();
         } else {
-            throw new RAObjectNotFoundException(ServerEntry.class, id);
+            log.error("No credential for server: " + id);
+            throw new RAObjectNotFoundException(AuthCredential.class, id);
         }
     }
 
 
     @GetMapping("/allByAccountId/{accountId}")
     @ResponseStatus(HttpStatus.OK)
-    public List<ServerEntry> getAllServerEntriesForAccount(@PathVariable Long accountId) {
+    @Transactional
+    public List<ServerEntryInfo> getAllServerEntriesForAccount(@PathVariable Long accountId) {
 
         List<ServerEntry> allByAccountId = serverEntryRepository.findAllByAccountId(accountId);
 
-        return allByAccountId;
+        return allByAccountId.stream()
+                .map(s -> new ServerEntryInfo(s))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/all")
@@ -257,95 +283,72 @@ public class ServerEntryService extends AbstractService {
     @ResponseStatus(HttpStatus.OK)
     public void deleteServerEntry(@PathVariable Long id) throws RAException {
 
-        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
-        if (serverEntryOptional.isPresent()) {
-            ServerEntry serverEntry = serverEntryOptional.get();
+        ServerEntry serverEntry = getServerEntry(id);
 
-            //if server entry is deleted, remove the OIDC client if it exists
-            if (StringUtils.isNotBlank(serverEntry.getOpenidClientId())) {
-                try {
-                    oidcProviderConnection.deleteClient(serverEntry);
-                } catch (Exception e) {
-                    log.error("Could not delete OID Client", e);
-                }
+        //if server entry is deleted, remove the OIDC client if it exists
+        if (StringUtils.isNotBlank(serverEntry.getOpenidClientId())) {
+            try {
+                oidcProviderConnection.deleteClient(serverEntry);
+            } catch (Exception e) {
+                log.error("Could not delete OID Client", e);
             }
-
-            serverEntryRepository.deleteById(id);
-
-            SystemActionRunner.build(context)
-                    .createAuditRecord(AuditRecordType.SERVER_ENTRY_REMOVED, serverEntry)
-                    .execute();
-        } else {
-            throw new RAObjectNotFoundException(ServerEntry.class, id);
         }
+
+        serverEntryRepository.deleteById(id);
+
+        SystemActionRunner.build(context)
+                .createAuditRecord(AuditRecordType.SERVER_ENTRY_REMOVED, serverEntry)
+                .execute();
     }
 
     @GetMapping("/calculateAttributes/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public Map<String, Object> getCalculatedAttributes(@PathVariable Long id) throws RAObjectNotFoundException {
-        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
-        if (serverEntryOptional.isPresent()) {
-            ServerEntry serverEntry = serverEntryOptional.get();
 
-            Map<String, Object> attributeMap = entityDirectoryService.calculateAttributePolicyMapForServerEntry(serverEntry);
+        ServerEntry serverEntry = getServerEntry(id);
 
-            return attributeMap;
-        } else {
-            throw new RAObjectNotFoundException(ServerEntry.class, id);
-        }
+        Map<String, Object> attributeMap = entityDirectoryService.calculateAttributePolicyMapForServerEntry(serverEntry);
+
+        return attributeMap;
     }
 
     @GetMapping("/currentAttributes/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public Map<String, Object> getCurrentAttributes(@PathVariable Long id) throws RAObjectNotFoundException, InvalidNameException {
-        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
-        if (serverEntryOptional.isPresent()) {
-            ServerEntry serverEntry = serverEntryOptional.get();
+        ServerEntry serverEntry = getServerEntry(id);
 
-            Map<String, Object> attributeMap = entityDirectoryService.getCurrentAttributesForServer(serverEntry);
+        Map<String, Object> attributeMap = entityDirectoryService.getCurrentAttributesForServer(serverEntry);
 
-            return attributeMap;
-        } else {
-            throw new RAObjectNotFoundException(ServerEntry.class, id);
-        }
+        return attributeMap;
     }
 
     @PostMapping("/syncAttributes/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public boolean syncAttributes(@PathVariable Long id) throws RAObjectNotFoundException {
-        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
-        if (serverEntryOptional.isPresent()) {
-            ServerEntry serverEntry = serverEntryOptional.get();
+        ServerEntry serverEntry = getServerEntry(id);
 
-            entityDirectoryService.applyServerEntryToDirectory(serverEntry);
+        entityDirectoryService.applyServerEntryToDirectory(serverEntry);
 
-            return true;
-        } else {
-            throw new RAObjectNotFoundException(ServerEntry.class, id);
-        }
+        return true;
     }
 
     @GetMapping("/getManagers/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public List<PocEntryInfo> getManagers(@PathVariable Long id) throws RAObjectNotFoundException {
-        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
-        if (serverEntryOptional.isPresent()) {
-            ServerEntry serverEntry = serverEntryOptional.get();
-            List<PocEntry> pocs = pocEntryRepository.findAllByManagesContaining(serverEntry);
 
-            if(!CollectionUtils.isEmpty(pocs)){
-                return pocs.stream()
-                        .map(PocEntryInfo::new)
-                        .collect(Collectors.toList());
-            }else{
-                return new ArrayList<>();
-            }
+        ServerEntry serverEntry = getServerEntry(id);
+        List<PocEntry> pocs = pocEntryRepository.findAllByManagesContaining(serverEntry);
+
+        if (!CollectionUtils.isEmpty(pocs)) {
+            return pocs.stream()
+                    .map(PocEntryInfo::new)
+                    .collect(Collectors.toList());
         } else {
-            throw new RAObjectNotFoundException(ServerEntry.class, id);
+            return new ArrayList<>();
         }
     }
 
@@ -353,30 +356,26 @@ public class ServerEntryService extends AbstractService {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public List<PocEntryInfo> updateManagers(@PathVariable Long id, @RequestBody List<Long> pocs) throws RAObjectNotFoundException {
-        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(id);
-        if (serverEntryOptional.isPresent()) {
-            ServerEntry serverEntry = serverEntryOptional.get();
 
-            serverEntry.getManagedBy().clear();
+        ServerEntry serverEntry = getServerEntry(id);
 
-            for(Long poc : pocs){
+        serverEntry.getManagedBy().clear();
 
-                Optional<PocEntry> optionalPocEntry = pocEntryRepository.findById(poc);
-                if(optionalPocEntry.isPresent()){
-                    PocEntry pocEntry = optionalPocEntry.get();
-                    pocEntry.getManages().add(serverEntry);
-                    pocEntry = pocEntryRepository.save(pocEntry);
+        for (Long poc : pocs) {
 
-                    serverEntry.getManagedBy().add(pocEntry);
-                }
+            Optional<PocEntry> optionalPocEntry = pocEntryRepository.findById(poc);
+            if (optionalPocEntry.isPresent()) {
+                PocEntry pocEntry = optionalPocEntry.get();
+                pocEntry.getManages().add(serverEntry);
+                pocEntry = pocEntryRepository.save(pocEntry);
+
+                serverEntry.getManagedBy().add(pocEntry);
             }
-
-            serverEntryRepository.save(serverEntry);
-
-            return getManagers(id);
-        } else {
-            throw new RAObjectNotFoundException(ServerEntry.class, id);
         }
+
+        serverEntryRepository.save(serverEntry);
+
+        return getManagers(id);
     }
 
     private ServerEntryInfo entryToInfo(ServerEntry entry) {

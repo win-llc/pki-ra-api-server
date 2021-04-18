@@ -162,14 +162,14 @@ class ServerEntryServiceTest {
     @Test
     void getServerEntry() throws RAObjectNotFoundException {
         ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
-        ServerEntryInfo info = serverEntryService.getServerEntry(serverEntry.getId());
+        ServerEntryInfo info = serverEntryService.getServerEntryInfo(serverEntry.getId());
         assertEquals("test.winllc-dev.com", info.getFqdn());
     }
 
     @Test
     void getAllServerEntriesForAccount() {
         Account account = accountRepository.findAll().get(0);
-        List<ServerEntry> allServerEntriesForAccount = serverEntryService.getAllServerEntriesForAccount(account.getId());
+        List<ServerEntryInfo> allServerEntriesForAccount = serverEntryService.getAllServerEntriesForAccount(account.getId());
         assertEquals(1, allServerEntriesForAccount.size());
     }
 

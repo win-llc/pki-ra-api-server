@@ -6,6 +6,8 @@ import java.util.List;
 
 public class PocEntryInfo {
 
+    private Long id;
+    private String email;
     private String userId;
     private String fullName;
     private List<String> roles;
@@ -14,7 +16,25 @@ public class PocEntryInfo {
     public PocEntryInfo(){}
 
     public PocEntryInfo(PocEntry pocEntry){
+        this.id = pocEntry.getId();
         this.userId = pocEntry.getEmail();
+        this.email = pocEntry.getEmail();
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getUserId() {

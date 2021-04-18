@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,6 +20,9 @@ public class DomainLinkToAccountRequest extends AbstractPersistable<Long> {
     private Set<Long> requestedDomainIds = new HashSet<>();
     @Column(nullable = false)
     private String status;
+
+    private Timestamp statusUpdatedOn;
+    private String decisionMadeBy;
 
     public static DomainLinkToAccountRequest buildNew(){
         DomainLinkToAccountRequest request = new DomainLinkToAccountRequest();
@@ -48,6 +52,22 @@ public class DomainLinkToAccountRequest extends AbstractPersistable<Long> {
 
     public void setRequestedDomainIds(Set<Long> requestedDomainIds) {
         this.requestedDomainIds = requestedDomainIds;
+    }
+
+    public Timestamp getStatusUpdatedOn() {
+        return statusUpdatedOn;
+    }
+
+    public void setStatusUpdatedOn(Timestamp statusUpdatedOn) {
+        this.statusUpdatedOn = statusUpdatedOn;
+    }
+
+    public String getDecisionMadeBy() {
+        return decisionMadeBy;
+    }
+
+    public void setDecisionMadeBy(String decisionMadeBy) {
+        this.decisionMadeBy = decisionMadeBy;
     }
 
     public void setStatusRequested(){

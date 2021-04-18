@@ -8,5 +8,6 @@ public interface DomainLinkToAccountRequestRepository extends BaseRepository<Dom
     List<DomainLinkToAccountRequest> findAllByStatusEquals(String status);
     Integer countAllByStatusEquals(String status);
     List<DomainLinkToAccountRequest> findAllByAccountIdIn(List<Long> accountIds);
+    List<DomainLinkToAccountRequest> findAllByAccountId(Long accountId);
 
 }

@@ -66,6 +66,8 @@ public class AccountService extends AbstractService {
     private SecurityPolicyService securityPolicyService;
     @Autowired
     private AccountRestrictionService accountRestrictionService;
+    @Autowired
+    private DomainLinkToAccountRequestRepository domainLinkToAccountRequestRepository;
 
     public AccountService(AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
                           AuditRecordService auditRecordService,
@@ -125,6 +127,14 @@ public class AccountService extends AbstractService {
         }
 
         account = accountRepository.save(account);
+
+        //add admin user to pocs
+        if(StringUtils.isNotBlank(form.getAccountOwnerEmail())) {
+            PocFormEntry adminPoc = new PocFormEntry(form.getAccountOwnerEmail());
+            adminPoc.setOwner(true);
+
+            pocUpdater(account, Collections.singletonList(adminPoc));
+        }
 
         accountRestrictionService.syncPolicyServerBackedAccountRestrictions(account);
 
@@ -186,7 +196,8 @@ public class AccountService extends AbstractService {
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
 
-            account = pocUpdater(account, form.getPocEmails());
+            account.setSecurityPolicyServerProjectId(form.getSecurityPolicyProjectId());
+            account = accountRepository.save(account);
 
             return buildAccountInfo(account, authentication);
         } else {
@@ -194,17 +205,43 @@ public class AccountService extends AbstractService {
         }
     }
 
+    @GetMapping("/getAccountPocs/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public List<PocFormEntry> getAccountPocs(@PathVariable Long id, Authentication authentication) throws RAObjectNotFoundException {
+
+        Optional<Account> optionalAccount = accountRepository.findById(id);
+
+        if (optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            AccountInfo accountInfo = buildAccountInfo(account, authentication);
+
+            return accountInfo.getPocs();
+        } else {
+            throw new RAObjectNotFoundException(Account.class, id);
+        }
+    }
+
+    @GetMapping("/getAccountPocOptions/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public Map<Long, String> getAccountPocOptions(@PathVariable Long id, Authentication authentication) throws RAObjectNotFoundException {
+        List<PocFormEntry> pocs = getAccountPocs(id, authentication);
+        return pocs.stream()
+                .collect(Collectors.toMap(d -> d.getId(), d -> d.getEmail()));
+    }
+
     @PostMapping("/updatePocs/{accountId}")
     @Transactional
     @ResponseStatus(HttpStatus.OK)
-    public AccountInfo updateAccountPocs(@PathVariable(name = "accountId") Long accountId, @RequestBody List<PocFormEntry> pocs, Authentication authentication)
+    public List<PocFormEntry> updateAccountPocs(@PathVariable(name = "accountId") Long accountId, @RequestBody List<PocFormEntry> pocs, Authentication authentication)
             throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findById(accountId);
         if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
 
-            account = pocUpdater(account, pocs);
-            return buildAccountInfo(account, authentication);
+            pocUpdater(account, pocs);
+            return getAccountPocs(accountId, authentication);
         } else {
             throw new RAObjectNotFoundException(Account.class, accountId);
         }
@@ -219,21 +256,27 @@ public class AccountService extends AbstractService {
                 .map(e -> e.getEmail())
                 .collect(Collectors.toList());
 
-        for (PocFormEntry email : pocs) {
-
-            //Only create entry if POC email does not exist
-            if (existingPocMap.get(email.getEmail()) == null) {
-
-               account = addPocToAccount(account, email);
-            }else{
-                PocEntry pocEntry = existingPocMap.get(email.getEmail());
-                pocEntry.setOwner(email.isOwner());
-                pocEntryRepository.save(pocEntry);
-            }
-        }
-
+        //delete existing if removed
         account.getPocs().removeIf(p -> emailsToRemove.contains(p.getEmail()));
         pocEntryRepository.deleteAllByEmailInAndAccountEquals(emailsToRemove, account);
+        accountRepository.save(account);
+
+        //add new or update
+        if(!CollectionUtils.isEmpty(pocs)) {
+            for (PocFormEntry email : pocs) {
+
+                //Only create entry if POC email does not exist
+                if (existingPocMap.get(email.getEmail()) == null) {
+
+                    account = addPocToAccount(account, email);
+                } else {
+                    PocEntry pocEntry = existingPocMap.get(email.getEmail());
+                    pocEntry.setOwner(email.isOwner());
+                    pocEntry.setCanManageAllServers(email.isCanManageAllServers());
+                    pocEntryRepository.save(pocEntry);
+                }
+            }
+        }
 
         return accountRepository.save(account);
     }
@@ -248,6 +291,7 @@ public class AccountService extends AbstractService {
             pocEntry.setAddedOn(Timestamp.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
             pocEntry.setAccount(account);
             pocEntry.setOwner(poc.isOwner());
+            poc.setCanManageAllServers(poc.isCanManageAllServers());
             pocEntry = pocEntryRepository.save(pocEntry);
 
             account.getPocs().add(pocEntry);
@@ -326,31 +370,7 @@ public class AccountService extends AbstractService {
         }
     }
 
-    @GetMapping("/getAccountPocs/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional
-    public List<PocFormEntry> getAccountPocs(@PathVariable Long id, Authentication authentication) throws RAObjectNotFoundException {
 
-        Optional<Account> optionalAccount = accountRepository.findById(id);
-
-        if (optionalAccount.isPresent()) {
-            Account account = optionalAccount.get();
-            AccountInfo accountInfo = buildAccountInfo(account, authentication);
-
-            return accountInfo.getPocs();
-        } else {
-            throw new RAObjectNotFoundException(Account.class, id);
-        }
-    }
-
-    @GetMapping("/getAccountPocOptions/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional
-    public Map<Long, String> getAccountPocOptions(@PathVariable Long id, Authentication authentication) throws RAObjectNotFoundException {
-        List<PocFormEntry> pocs = getAccountPocs(id, authentication);
-        return pocs.stream()
-                .collect(Collectors.toMap(d -> d.getId(), d -> d.getEmail()));
-    }
 
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -363,6 +383,12 @@ public class AccountService extends AbstractService {
             accountRepository.delete(account);
 
             auditRecordService.save(AuditRecord.buildNew(AuditRecordType.ACCOUNT_REMOVED, account));
+
+            //clean up domain link requests
+            List<DomainLinkToAccountRequest> existingDomainLinkRequests = domainLinkToAccountRequestRepository.findAllByAccountId(id);
+            for(DomainLinkToAccountRequest request : existingDomainLinkRequests){
+                domainLinkToAccountRequestRepository.delete(request);
+            }
         } else {
             log.debug("Did not delete Account, ID not found: " + id);
         }
@@ -405,6 +431,7 @@ public class AccountService extends AbstractService {
                     PocFormEntry entry = new PocFormEntry(p.getEmail());
                     entry.setId(p.getId());
                     entry.setOwner(p.isOwner());
+                    entry.setCanManageAllServers(p.isCanManageAllServers());
                     return entry;
                 })
                 .collect(Collectors.toList());

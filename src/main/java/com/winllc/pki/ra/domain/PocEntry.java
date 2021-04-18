@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
@@ -16,12 +17,14 @@ public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedE
     private boolean groupEmail;
     private boolean enabled;
     private boolean owner;
+    private boolean canManageAllServers;
     private boolean addedManually;
     private Timestamp addedOn;
     @ManyToOne
     @JoinColumn(name="accountOwner_fk")
     private Account account;
 
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinTable(name = "pocs_servers",
             joinColumns = {
@@ -84,6 +87,14 @@ public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedE
 
     public void setOwner(boolean owner) {
         this.owner = owner;
+    }
+
+    public boolean isCanManageAllServers() {
+        return canManageAllServers;
+    }
+
+    public void setCanManageAllServers(boolean canManageAllServers) {
+        this.canManageAllServers = canManageAllServers;
     }
 
     public boolean isAddedManually() {

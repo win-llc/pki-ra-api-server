@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface DomainPolicyRepository extends BaseRepository<DomainPolicy> {
     List<DomainPolicy> findAllByTargetDomainEquals(Domain targetDomain);
     Optional<DomainPolicy> findDistinctByAccountAndTargetDomain(Account account, Domain domain);
+
+    List<DomainPolicy> findAllByAccount(Account account);
 }

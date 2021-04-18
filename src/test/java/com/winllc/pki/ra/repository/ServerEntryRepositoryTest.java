@@ -81,7 +81,7 @@ class ServerEntryRepositoryTest {
     @Transactional
     void findDistinctByFqdnEqualsAndAccount() {
         Account account = accountRepository.findDistinctByProjectName("Test Project").get();
-        Optional<ServerEntry> distinctByFqdnEqualsAndAccount = serverEntryRepository.findDistinctByFqdnEqualsAndAccount("test.winllc-dev.com", account);
+        Optional<ServerEntry> distinctByFqdnEqualsAndAccount = serverEntryRepository.findDistinctByFqdnEqualsAndAccountEquals("test.winllc-dev.com", account);
         assertTrue(distinctByFqdnEqualsAndAccount.isPresent());
     }
 }

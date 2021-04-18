@@ -111,6 +111,13 @@ public class Account extends AuthCredentialHolder implements AccountOwnedEntity,
             }
         }
 
+        Set<AccountRestriction> accountRestrictions = getAccountRestrictions();
+        if(!CollectionUtils.isEmpty(accountRestrictions)){
+            for(AccountRestriction restriction : accountRestrictions){
+                restriction.setAccount(null);
+            }
+        }
+
         if(!CollectionUtils.isEmpty(authCredentials)){
             for(AuthCredential credential : authCredentials){
                 credential.setParentEntity(null);

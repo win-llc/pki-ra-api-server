@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -73,7 +74,7 @@ public class AuthCredentialService {
     public Optional<AuthCredential> getLatestAuthCredentialForAccount(Account account){
         List<AuthCredential> authCredentials = authCredentialRepository.findAllByParentEntity(account);
         return authCredentials.stream()
-                .sorted((c1, c2) -> c1.getCreatedOn().compareTo(c2.getCreatedOn()))
+                .sorted(Comparator.comparing(AuthCredential::getCreatedOn))
                 .findFirst();
     }
 

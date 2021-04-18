@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.beans.info;
 
 import com.winllc.pki.ra.domain.ServerEntry;
+import org.hibernate.Hibernate;
 
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class ServerEntryInfo extends InfoObject<ServerEntry> {
     public ServerEntryInfo(ServerEntry serverEntry){
         super(serverEntry);
         this.fqdn = serverEntry.getFqdn();
+        Hibernate.initialize(serverEntry.getAlternateDnsValues());
         this.alternateDnsValues = serverEntry.getAlternateDnsValues();
         this.setAccountInfo(new AccountInfo(serverEntry.getAccount(), false));
         this.openidClientId = serverEntry.getOpenidClientId();

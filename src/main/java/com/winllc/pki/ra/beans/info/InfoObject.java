@@ -28,10 +28,12 @@ public abstract class InfoObject<T extends AbstractPersistable<Long>> {
         }
     }
 
+    @JsonIgnore
     public Class getFormObjectType(){
         return clazz;
     }
 
+    @JsonIgnore
     public boolean isUniqueEntityForm() { return UniqueEntity.class.isAssignableFrom(getFormObjectType()); }
 
     protected InfoObject(){}

@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -134,10 +136,12 @@ class DomainLinkToAccountRequestServiceTest {
     void domainRequestDecision() throws Exception {
         DomainLinkToAccountRequest request = requestRepository.findAll().get(0);
 
+        Authentication authentication = new TestingAuthenticationToken("test@test.com", "");
+
         DomainLinkRequestDecisionForm decision = new DomainLinkRequestDecisionForm();
         decision.setRequestId(request.getId());
         decision.setStatus("approve");
-        linkToAccountRequestService.domainRequestDecision(decision);
+        linkToAccountRequestService.domainRequestDecision(decision, authentication);
 
         Account account = accountRepository.findAll().get(0);
         Set<DomainPolicy> canIssueDomains = account.getAccountDomainPolicies();

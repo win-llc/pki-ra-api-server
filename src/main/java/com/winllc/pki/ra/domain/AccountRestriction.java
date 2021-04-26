@@ -1,16 +1,16 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.winllc.acme.common.domain.BaseEntity;
 import com.winllc.pki.ra.constants.AccountRestrictionAction;
 import com.winllc.pki.ra.constants.AccountRestrictionType;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
 @Table(name = "account_restriction")
-public class AccountRestriction extends AbstractPersistable<Long> implements AccountOwnedEntity, TaskEntity {
+public class AccountRestriction extends BaseEntity implements AccountOwnedEntity, TaskEntity {
 
     private AccountRestrictionType type;
     private AccountRestrictionAction action;

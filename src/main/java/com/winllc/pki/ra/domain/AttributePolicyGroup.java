@@ -1,8 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.acme.common.domain.BaseEntity;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
@@ -11,7 +10,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "attribute_policy_group")
-public class AttributePolicyGroup extends AbstractPersistable<Long> {
+public class AttributePolicyGroup extends BaseEntity {
 
     private String name;
     @JsonIgnore

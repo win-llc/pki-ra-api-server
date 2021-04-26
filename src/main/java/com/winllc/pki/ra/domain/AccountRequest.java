@@ -1,16 +1,15 @@
 package com.winllc.pki.ra.domain;
 
+import com.winllc.acme.common.domain.BaseEntity;
 import net.minidev.json.annotate.JsonIgnore;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.PreRemove;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "account_request")
-public class AccountRequest extends AbstractPersistable<Long> {
+public class AccountRequest extends BaseEntity {
 
     private String accountOwnerEmail;
     private String requestedByEmail;

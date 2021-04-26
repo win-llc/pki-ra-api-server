@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.domain;
 
+import com.winllc.acme.common.domain.BaseEntity;
 import com.winllc.pki.ra.util.AppUtil;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,7 +12,7 @@ import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "terms_of_service")
-public class TermsOfService extends AbstractPersistable<Long> {
+public class TermsOfService extends BaseEntity {
 
     @Column(nullable = false, unique = true)
     private String versionId;

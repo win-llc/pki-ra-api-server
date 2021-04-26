@@ -6,6 +6,7 @@ import com.winllc.pki.ra.beans.OIDCClientDetails;
 import com.winllc.pki.ra.beans.ServerEntryDockerDeploymentFile;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
+import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AuthCredential;
 import com.winllc.pki.ra.domain.ServerEntry;
@@ -14,28 +15,54 @@ import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
 import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
+import com.winllc.pki.ra.service.transaction.SystemActionRunner;
+import com.winllc.pki.ra.service.transaction.ThrowingSupplier;
 import org.hibernate.Hibernate;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/serverEntry")
-public class OIDCManagementService {
+@RequestMapping("/api/serverEntry/oidc")
+public class OIDCManagementService implements ApplicationContextAware {
 
     //todo replace with OIDCProviderService
     private final KeycloakOIDCProviderConnection oidcProviderConnection;
     private final ServerEntryRepository serverEntryRepository;
     private final AccountRepository accountRepository;
+    private final ApplicationContext applicationContext;
 
-    public OIDCManagementService(KeycloakOIDCProviderConnection oidcProviderConnection, ServerEntryRepository serverEntryRepository, AccountRepository accountRepository) {
+    public OIDCManagementService(KeycloakOIDCProviderConnection oidcProviderConnection,
+                                 ServerEntryRepository serverEntryRepository, AccountRepository accountRepository, ApplicationContext applicationContext) {
         this.oidcProviderConnection = oidcProviderConnection;
         this.serverEntryRepository = serverEntryRepository;
         this.accountRepository = accountRepository;
+        this.applicationContext = applicationContext;
+        setApplicationContext(applicationContext);
+    }
+
+    @GetMapping("/getDetails/{serverId}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public OIDCClientDetails getDetailsForServer(@PathVariable Long serverId) throws RAObjectNotFoundException {
+        Optional<ServerEntry> optionalServer = serverEntryRepository.findById(serverId);
+        if(optionalServer.isPresent()){
+            ServerEntry serverEntry = optionalServer.get();
+            OIDCClientDetails oidcClientDetails = oidcProviderConnection.getClient(serverEntry);
+
+            return oidcClientDetails;
+        }else{
+            throw new RAObjectNotFoundException(ServerEntry.class, serverId);
+        }
+
     }
 
     @PostMapping("/enableForOIDConnect")
@@ -50,7 +77,14 @@ public class OIDCManagementService {
 
             try {
                 //todo generify
-                serverEntry = oidcProviderConnection.createClient(serverEntry);
+
+                SystemActionRunner runner = SystemActionRunner.build(this.applicationContext)
+                        .createAuditRecord(AuditRecordType.OPENID_ENABLED, serverEntry);
+
+                ServerEntry finalServerEntry = serverEntry;
+                ThrowingSupplier<ServerEntry, Exception> action = () -> oidcProviderConnection.createClient(finalServerEntry);
+
+                serverEntry = runner.execute(action);
 
                 if(serverEntry != null){
                     serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
@@ -72,13 +106,21 @@ public class OIDCManagementService {
     @PostMapping("/disableForOIDConnect")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ServerEntryInfo disableForOIDConnect(@RequestBody ServerEntryForm form) throws RAException {
+    public ServerEntryInfo disableForOIDConnect(@RequestBody ServerEntryForm form) throws Exception {
 
         Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(form.getId());
 
         if(optionalServerEntry.isPresent()){
             ServerEntry serverEntry = optionalServerEntry.get();
-            serverEntry = oidcProviderConnection.deleteClient(serverEntry);
+
+            SystemActionRunner runner = SystemActionRunner.build(this.applicationContext)
+                    .createAuditRecord(AuditRecordType.OPENID_DISABLED, serverEntry);
+
+            ServerEntry finalServerEntry = serverEntry;
+            ThrowingSupplier<ServerEntry, Exception> action = () -> oidcProviderConnection.deleteClient(finalServerEntry);
+
+            serverEntry = runner.execute(action);
+
             if(serverEntry != null){
                 return entryToInfo(serverEntry);
             }else {
@@ -99,8 +141,7 @@ public class OIDCManagementService {
             ServerEntry serverEntry = serverEntryOptional.get();
             Optional<Account> optionalAccount = accountRepository.findById(serverEntry.getAccount().getId());
             if(optionalAccount.isPresent()){
-                Account account = optionalAccount.get();
-                ServerEntryDockerDeploymentFile deploymentFile = buildDeploymentFile(serverEntry, account);
+                ServerEntryDockerDeploymentFile deploymentFile = buildDeploymentFile(serverEntry);
                 return deploymentFile.buildContent();
             }else{
                 throw new RAObjectNotFoundException(Account.class, serverEntry.getAccount().getId());
@@ -110,7 +151,7 @@ public class OIDCManagementService {
         }
     }
 
-    private ServerEntryDockerDeploymentFile buildDeploymentFile(ServerEntry serverEntry, Account account) throws RAObjectNotFoundException {
+    private ServerEntryDockerDeploymentFile buildDeploymentFile(ServerEntry serverEntry) throws RAObjectNotFoundException {
         Optional<AuthCredential> optionalAuthCredential = serverEntry.getLatestAuthCredential();
 
         if(optionalAuthCredential.isPresent()) {
@@ -140,5 +181,10 @@ public class OIDCManagementService {
     private ServerEntryInfo entryToInfo(ServerEntry entry){
         Hibernate.initialize(entry.getAlternateDnsValues());
         return new ServerEntryInfo(entry);
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
     }
 }

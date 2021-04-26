@@ -7,6 +7,7 @@ import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.CertificateRequestForm;
 import com.winllc.pki.ra.beans.info.CertificateRequestInfo;
+import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.pki.ra.beans.validator.CertRequestFormValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
@@ -54,7 +55,7 @@ public class CertificateRequestService extends AbstractService {
     private final CertificateRequestDecisionValidator certificateRequestDecisionValidator;
 
     @Autowired
-    private AuthCredentialService authCredentialService;
+    private DomainService domainService;
 
     public CertificateRequestService(CertificateRequestRepository requestRepository,
                                      AccountRepository accountRepository, LoadedCertAuthorityStore certAuthorityStore,
@@ -153,12 +154,35 @@ public class CertificateRequestService extends AbstractService {
     @PostMapping("/submit")
     @ResponseStatus(HttpStatus.CREATED)
     public Long submitRequest(@Valid @RequestBody CertificateRequestForm form, @AuthenticationPrincipal UserDetails raUser)
-            throws InvalidFormException, RAObjectNotFoundException {
+            throws Exception {
         ValidationResponse validationResponse = formValidator.validate(form, false);
         if (validationResponse.isValid()) {
+
+            String fqdn = form.getPrimaryDnsHostname();
+            String domain = null;
+            Long domainId = form.getPrimaryDnsDomainId();
+            if(domainId != null){
+                List<DomainInfo> domainInfos = domainService.optionsForAccount(form.getAccountId());
+                Optional<DomainInfo> optionalDomainInfo = domainInfos.stream()
+                        .filter(i -> i.getId() == domainId)
+                        .findFirst();
+
+                if(optionalDomainInfo.isPresent()){
+                    DomainInfo domainInfo = optionalDomainInfo.get();
+                    domain = domainInfo.getFullDomainName();
+                }else{
+                    throw new Exception("Account not allowed to use domain");
+                }
+            }
+
+            if(domain != null){
+                fqdn += "."+domain;
+            }
+
             CertificateRequest certificateRequest = CertificateRequest.build();
             certificateRequest.setCsr(form.getCsr());
             certificateRequest.setCertAuthorityName(form.getCertAuthorityName());
+            certificateRequest.setPrimaryDnsName(fqdn);
             certificateRequest.setRequestedDnsNames(form.getRequestedDnsNames().stream()
                     .map(d -> d.getValue())
                     .collect(Collectors.joining(",")));
@@ -237,7 +261,7 @@ public class CertificateRequestService extends AbstractService {
         sans.addValues(SubjectAltNames.SubjAltNameType.DNS, request.getRequestedDnsNamesAsSet());
 
         RACertificateIssueRequest raCertificateIssueRequest = new RACertificateIssueRequest(request.getAccount().getKeyIdentifier(),
-                request.getCsr(), String.join(",", request.getRequestedDnsNames()), request.getCertAuthorityName(), "manual");
+                request.getCsr(), request.getPrimaryDnsName(), String.join(",", request.getRequestedDnsNames()), request.getCertAuthorityName(), "manual");
         raCertificateIssueRequest.setExistingCertificateRequestId(request.getId());
 
         CertIssuanceTransaction certIssuanceTransaction =

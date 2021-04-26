@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.acme.common.domain.BaseEntity;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -12,7 +12,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "app_role")
-public class AppRole extends AbstractPersistable<Long> {
+public class AppRole extends BaseEntity {
 
     private String name;
     @JsonIgnore

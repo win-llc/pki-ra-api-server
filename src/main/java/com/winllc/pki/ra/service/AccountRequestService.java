@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -91,6 +92,7 @@ public class AccountRequestService {
         accountRequest.setProjectName(form.getProjectName());
         accountRequest.setSecurityPolicyServerProjectId(form.getSecurityPolicyServerProjectId());
         accountRequest.setRequestedByEmail(authentication.getName());
+        accountRequest.setCreationDate(new Date());
 
         accountRequest = accountRequestRepository.save(accountRequest);
         return accountRequest.getId();

@@ -22,6 +22,7 @@ public class AuthCredential extends AbstractPersistable<Long> implements Compara
     @Column(nullable = false)
     private Timestamp createdOn;
     private Timestamp expiresOn;
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name="parentEntity_fk")
     private AuthCredentialHolder parentEntity;

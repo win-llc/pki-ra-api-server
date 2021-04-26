@@ -1,20 +1,14 @@
 package com.winllc.pki.ra.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.acme.common.domain.BaseEntity;
 
 import javax.persistence.*;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 @Entity
 @Table(name = "ldap_schema_overlay")
-public class LdapSchemaOverlay extends AbstractPersistable<Long> {
+public class LdapSchemaOverlay extends BaseEntity {
 
     @Column(nullable = false)
     private String ldapObjectType;

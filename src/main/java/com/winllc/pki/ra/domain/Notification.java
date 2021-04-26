@@ -1,7 +1,6 @@
 package com.winllc.pki.ra.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.aspectj.weaver.ast.Not;
+import com.winllc.acme.common.domain.BaseEntity;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
@@ -9,14 +8,10 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Entity
 @Table(name = "notification")
-public class Notification extends AbstractPersistable<Long> {
+public class Notification extends BaseEntity {
 
     @Column(nullable = false)
     private String forUser;

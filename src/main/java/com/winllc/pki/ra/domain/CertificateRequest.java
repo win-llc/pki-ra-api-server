@@ -2,9 +2,9 @@ package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nimbusds.jose.util.Base64;
+import com.winllc.acme.common.domain.BaseEntity;
 import com.winllc.acme.common.util.CertUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
 import java.security.PublicKey;
@@ -12,9 +12,7 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -24,7 +22,7 @@ import java.util.stream.Stream;
         uniqueConstraints={
                 @UniqueConstraint(columnNames = {"certAuthorityName", "issuedCertificateSerial"})
         })
-public class CertificateRequest extends AbstractPersistable<Long> implements AccountOwnedEntity {
+public class CertificateRequest extends BaseEntity implements AccountOwnedEntity {
 
     @Column(length = 2000)
     private String csr;
@@ -39,6 +37,7 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
     private String publicKeyBase64;
     private String requestedBy;
     private String adminReviewer;
+    private String primaryDnsName;
     private String requestedDnsNames;
     @ManyToOne
     @JoinColumn(name="account_fk")
@@ -83,6 +82,14 @@ public class CertificateRequest extends AbstractPersistable<Long> implements Acc
 
     public void setCsr(String csr) {
         this.csr = csr;
+    }
+
+    public String getPrimaryDnsName() {
+        return primaryDnsName;
+    }
+
+    public void setPrimaryDnsName(String primaryDnsName) {
+        this.primaryDnsName = primaryDnsName;
     }
 
     public Timestamp getSubmittedOn() {

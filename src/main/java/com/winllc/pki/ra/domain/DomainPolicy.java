@@ -42,6 +42,7 @@ public class DomainPolicy extends AuthCredentialHolder implements AccountOwnedEn
         if(account != null){
             account.getAccountDomainPolicies().remove(this);
         }
+
     }
 
     public Domain getTargetDomain() {

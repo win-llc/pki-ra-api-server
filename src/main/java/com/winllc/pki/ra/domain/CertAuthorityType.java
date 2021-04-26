@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.domain;
 
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.acme.common.domain.BaseEntity;
 
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -10,7 +10,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "cert_authority_type")
-public class CertAuthorityType extends AbstractPersistable<Long> {
+public class CertAuthorityType extends BaseEntity {
 
     @Column(unique = true)
     private String name;

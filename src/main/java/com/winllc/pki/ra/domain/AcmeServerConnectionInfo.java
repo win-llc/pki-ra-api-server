@@ -1,13 +1,13 @@
 package com.winllc.pki.ra.domain;
 
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.acme.common.domain.BaseEntity;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "acme_server_connection_info")
-public class AcmeServerConnectionInfo extends AbstractPersistable<Long> {
+public class AcmeServerConnectionInfo extends BaseEntity {
 
     private String name;
     private String url;

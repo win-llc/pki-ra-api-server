@@ -5,6 +5,7 @@ import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.pki.ra.constants.AuditRecordType;
+import com.winllc.pki.ra.cron.CachedCertificateUpdater;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
@@ -20,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import javax.transaction.Transactional;
@@ -41,6 +43,7 @@ public class CertIssuanceTransaction extends CertTransaction {
     private final CertificateRequestRepository certificateRequestRepository;
     private final EntityDirectoryService entityDirectoryService;
     private final AuditRecordRepository auditRecordRepository;
+    private CachedCertificateUpdater cachedCertificateUpdater;
 
     public CertIssuanceTransaction(CertAuthority certAuthority, ApplicationContext context) {
         super(certAuthority, context);
@@ -50,6 +53,7 @@ public class CertIssuanceTransaction extends CertTransaction {
         this.certificateRequestRepository = context.getBean(CertificateRequestRepository.class);
         this.entityDirectoryService = context.getBean(EntityDirectoryService.class);
         this.auditRecordRepository = context.getBean(AuditRecordRepository.class);
+        this.cachedCertificateUpdater = context.getBean(CachedCertificateUpdater.class);
     }
 
     /**
@@ -97,19 +101,15 @@ public class CertIssuanceTransaction extends CertTransaction {
 
         ThrowingSupplier<X509Certificate, Exception> postProcessAction = () -> {
             if (cert != null) {
-                if(account != null) {
-                    processIssuedCertificate(cert, certificateRequest, account);
-                }else{
-                    log.info("Anonymous cert issued: "+cert.getSubjectDN());
-                }
+                cachedCertificateUpdater.addSingleCertificate(cert);
                 return cert;
             } else {
-                throw new RAException("Could not issue certificate");
+                throw new RAException("Could not cache certificate");
             }
         };
 
-        //SystemActionRunner postProcessRunner = SystemActionRunner.build(this.context);
-        //postProcessRunner.executeAsync(postProcessAction);
+        SystemActionRunner postProcessRunner = SystemActionRunner.build(this.context);
+        postProcessRunner.executeAsync(postProcessAction);
 
         return cert;
     }
@@ -142,7 +142,7 @@ public class CertIssuanceTransaction extends CertTransaction {
      */
     private void processIssuedCertificate(X509Certificate certificate, RACertificateIssueRequest raCertificateIssueRequest,
                                           Account account)
-            throws CertificateEncodingException, RAObjectNotFoundException {
+            throws CertificateEncodingException, RAException {
 
         ServerEntry serverEntry;
         String subjectNoSpaces = certificate.getSubjectDN().getName().replace(", ", ",");
@@ -153,7 +153,14 @@ public class CertIssuanceTransaction extends CertTransaction {
         if(optionalServerEntry.isPresent()){
             serverEntry = optionalServerEntry.get();
         }else{
-            String fqdn = raCertificateIssueRequest.getDnsNameList().get(0);
+            String fqdn;
+            if(StringUtils.isNotBlank(raCertificateIssueRequest.getSubjectNameRequest())){
+                fqdn = raCertificateIssueRequest.getSubjectNameRequest();
+            }else if(raCertificateIssueRequest.getDnsNameList().size() > 0){
+                fqdn = raCertificateIssueRequest.getDnsNameList().get(0);
+            }else{
+                throw new RAException("No Subject Name available");
+            }
 
             ServerEntryForm form = new ServerEntryForm();
             form.setAccountId(account.getId());

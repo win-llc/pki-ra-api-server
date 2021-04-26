@@ -146,6 +146,9 @@ public class CertAuthorityConnectionService extends AbstractService {
             info.setTrustChainBase64(form.getTrustChainBase64());
 
             CertAuthorityConnectionInfo info2 = repository.save(info);
+
+            certAuthorityStore.reload();
+
             return buildForm(info2);
         }else{
             throw new RAObjectNotFoundException(CertAuthorityConnectionInfo.class, form.getId());

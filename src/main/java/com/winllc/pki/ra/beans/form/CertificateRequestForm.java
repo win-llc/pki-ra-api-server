@@ -20,6 +20,8 @@ public class CertificateRequestForm extends ValidForm<CertificateRequest> {
     @NotNull
     private Long accountId;
     private List<SubjectAltName> requestedDnsNames;
+    private String primaryDnsHostname;
+    private Long primaryDnsDomainId;
 
     public String getCsr() {
         return csr;
@@ -27,6 +29,22 @@ public class CertificateRequestForm extends ValidForm<CertificateRequest> {
 
     public void setCsr(String csr) {
         this.csr = csr;
+    }
+
+    public String getPrimaryDnsHostname() {
+        return primaryDnsHostname;
+    }
+
+    public void setPrimaryDnsHostname(String primaryDnsHostname) {
+        this.primaryDnsHostname = primaryDnsHostname;
+    }
+
+    public Long getPrimaryDnsDomainId() {
+        return primaryDnsDomainId;
+    }
+
+    public void setPrimaryDnsDomainId(Long primaryDnsDomainId) {
+        this.primaryDnsDomainId = primaryDnsDomainId;
     }
 
     public List<SubjectAltName> getRequestedDnsNames() {

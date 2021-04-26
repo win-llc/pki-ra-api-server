@@ -1,15 +1,13 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.acme.common.domain.BaseEntity;
 
 import javax.persistence.*;
 
 @Entity
 @Table(name = "attribute_policy")
-public class AttributePolicy extends AbstractPersistable<Long> {
+public class AttributePolicy extends BaseEntity {
 
     private String attributeName;
     private String attributeValue;

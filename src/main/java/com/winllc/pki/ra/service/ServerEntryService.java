@@ -13,6 +13,7 @@ import com.winllc.pki.ra.repository.*;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
 import com.winllc.pki.ra.service.transaction.SystemActionRunner;
+import com.winllc.pki.ra.service.transaction.ThrowingSupplier;
 import com.winllc.pki.ra.service.validators.ServerEntryValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -135,7 +136,15 @@ public class ServerEntryService extends AbstractService {
                     .execute();
 
             //apply attributes to external directory
-            entityDirectoryService.applyServerEntryToDirectory(entry);
+
+            ServerEntry finalEntry = entry;
+            ThrowingSupplier<Boolean, Exception> action = () -> {
+                entityDirectoryService.applyServerEntryToDirectory(finalEntry);
+                return true;
+            };
+
+            SystemActionRunner.build(context)
+                    .executeAsync(action);
 
             log.info("Created a Server Entry: " + entry);
 
@@ -360,6 +369,17 @@ public class ServerEntryService extends AbstractService {
         ServerEntry serverEntry = getServerEntry(id);
 
         serverEntry.getManagedBy().clear();
+
+        List<PocEntry> existing = pocEntryRepository.findAllByManagesContaining(serverEntry);
+
+        List<PocEntry> existingNotINPocs = existing.stream()
+                .filter(p -> !pocs.contains(p.getId()))
+                .collect(Collectors.toList());
+
+        existingNotINPocs.forEach(p -> {
+            p.getManages().remove(serverEntry);
+            pocEntryRepository.save(p);
+        });
 
         for (Long poc : pocs) {
 

@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.acme.common.domain.BaseEntity;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -10,7 +10,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "domain_link_to_account_request")
-public class DomainLinkToAccountRequest extends AbstractPersistable<Long> {
+public class DomainLinkToAccountRequest extends BaseEntity {
 
     @Column(nullable = false)
     private Long accountId;
@@ -20,6 +20,9 @@ public class DomainLinkToAccountRequest extends AbstractPersistable<Long> {
     private Set<Long> requestedDomainIds = new HashSet<>();
     @Column(nullable = false)
     private String status;
+
+    private Timestamp requestedOn;
+    private String requestedBy;
 
     private Timestamp statusUpdatedOn;
     private String decisionMadeBy;
@@ -52,6 +55,22 @@ public class DomainLinkToAccountRequest extends AbstractPersistable<Long> {
 
     public void setRequestedDomainIds(Set<Long> requestedDomainIds) {
         this.requestedDomainIds = requestedDomainIds;
+    }
+
+    public Timestamp getRequestedOn() {
+        return requestedOn;
+    }
+
+    public void setRequestedOn(Timestamp requestedOn) {
+        this.requestedOn = requestedOn;
+    }
+
+    public String getRequestedBy() {
+        return requestedBy;
+    }
+
+    public void setRequestedBy(String requestedBy) {
+        this.requestedBy = requestedBy;
     }
 
     public Timestamp getStatusUpdatedOn() {

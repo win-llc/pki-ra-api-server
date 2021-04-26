@@ -22,7 +22,7 @@ public class RAException extends Exception {
         if(!validationResponse.isValid()) this.errors = validationResponse.getErrors();
     }
 
-    protected RAException(){
+    public RAException(){
         super();
     }
 

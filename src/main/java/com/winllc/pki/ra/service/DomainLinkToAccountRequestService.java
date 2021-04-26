@@ -148,10 +148,12 @@ public class DomainLinkToAccountRequestService extends AbstractService {
     @PostMapping("/linkAccount/create")
     @ResponseStatus(HttpStatus.CREATED)
     public Long createDomainRequest(@Valid @RequestBody DomainLinkToAccountRequestForm form,
-                                    @AuthenticationPrincipal UserDetails raUser)
+                                    Authentication authentication)
             throws NotAuthorizedException, RAObjectNotFoundException {
 
         DomainLinkToAccountRequest request = DomainLinkToAccountRequest.buildNew();
+        request.setRequestedBy(authentication.getName());
+        request.setRequestedOn(Timestamp.valueOf(LocalDateTime.now()));
 
         List<Long> domainIds = new LinkedList<>(form.getRequestedDomainIds());
         domainIds.removeIf(Objects::isNull);
@@ -164,7 +166,7 @@ public class DomainLinkToAccountRequestService extends AbstractService {
 
             //Ensure user exists in the account
             Optional<PocEntry> pocEntryOptional = pocEntryRepository
-                    .findDistinctByEmailEqualsAndAccount(raUser.getUsername(), account);
+                    .findDistinctByEmailEqualsAndAccount(authentication.getName(), account);
 
             //List<User> accountUsers = userRepository.findAllByAccountsContains(account);
             if (pocEntryOptional.isPresent()) {
@@ -186,7 +188,7 @@ public class DomainLinkToAccountRequestService extends AbstractService {
                 return request.getId();
             } else {
                 log.error("Requester not associated with account");
-                throw new NotAuthorizedException(raUser.getUsername(), "Link Account Create");
+                throw new NotAuthorizedException(authentication.getName(), "Link Account Create");
             }
 
         } else {
@@ -274,6 +276,11 @@ public class DomainLinkToAccountRequestService extends AbstractService {
         DomainLinkToAccountRequestInfo info = new DomainLinkToAccountRequestInfo(request);
         Optional<Account> optionalAccount = accountRepository.findById(request.getAccountId());
         List<Domain> domains = domainRepository.findAllByIdIn(request.getRequestedDomainIds());
+
+        info.setRequestedBy(request.getRequestedBy());
+        if(request.getRequestedOn() != null) {
+            info.setRequestedOn(request.getRequestedOn().toString());
+        }
 
         if (optionalAccount.isPresent()) {
             AccountInfo accountInfo = new AccountInfo(optionalAccount.get(), false);

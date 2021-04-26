@@ -1,13 +1,12 @@
 package com.winllc.pki.ra.domain;
 
-import org.hibernate.annotations.Type;
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.acme.common.domain.BaseEntity;
 
 import javax.persistence.MappedSuperclass;
-import java.util.UUID;
 
 @MappedSuperclass
-public abstract class UniqueEntity extends AbstractPersistable<Long> {
+public abstract class UniqueEntity extends BaseEntity {
+
     private String uuid;
 
     public String getUuid() {
@@ -17,4 +16,5 @@ public abstract class UniqueEntity extends AbstractPersistable<Long> {
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
+
 }

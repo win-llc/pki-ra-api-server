@@ -65,6 +65,7 @@ public class CertAuthorityConnectionInfoForm extends ValidForm<CertAuthorityConn
                     CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
                     prop.setName(requiredProp);
                     prop.setValue("");
+                    prop.setPassword(connectionProperty.getPassword());
                     this.properties.add(prop);
                 }
             }

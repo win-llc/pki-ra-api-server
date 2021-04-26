@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.naming.InvalidNameException;
 import javax.transaction.Transactional;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -33,12 +34,16 @@ public class CachedCertificateUpdater {
 
     private static final Logger log = LogManager.getLogger(CachedCertificateUpdater.class);
 
-    @Autowired
-    private CachedCertificateRepository repository;
-    @Autowired
-    private CertificateRequestRepository certificateRequestRepository;
-    @Autowired
-    private LoadedCertAuthorityStore certAuthorityStore;
+    private final CachedCertificateRepository repository;
+    private final CertificateRequestRepository certificateRequestRepository;
+    private final LoadedCertAuthorityStore certAuthorityStore;
+
+    public CachedCertificateUpdater(CachedCertificateRepository repository,
+                                    CertificateRequestRepository certificateRequestRepository, LoadedCertAuthorityStore certAuthorityStore) {
+        this.repository = repository;
+        this.certificateRequestRepository = certificateRequestRepository;
+        this.certAuthorityStore = certAuthorityStore;
+    }
 
     @Scheduled(fixedDelay = 1000 * 60 * 60)
     @Transactional
@@ -98,9 +103,36 @@ public class CachedCertificateUpdater {
         }
 
         if(toSave.size() > 0){
-            for(CachedCertificate cert : toSave){
-                repository.save(cert);
+            repository.saveAll(toSave);
+        }
+    }
+
+    public void addSingleCertificate(X509Certificate x509Certificate){
+
+        try {
+            Optional<CertAuthority> optionalCa = certAuthorityStore.getLoadedCertAuthorityByIssuerDN(x509Certificate.getIssuerDN());
+
+            if(optionalCa.isPresent()) {
+                long serial = x509Certificate.getSerialNumber().longValue();
+                CertAuthority ca = optionalCa.get();
+                CachedCertificate cached = new CachedCertificate();
+                cached.setIssuer(x509Certificate.getIssuerDN().getName().replace(", ", ","));
+                cached.setCaName(ca.getName());
+                cached.setSerial(serial);
+                cached.setDn(x509Certificate.getSubjectDN().getName());
+                cached.setValidFrom(Timestamp.from(x509Certificate.getNotBefore().toInstant()));
+                cached.setValidTo(Timestamp.from(x509Certificate.getNotAfter().toInstant()));
+
+                Optional<CachedCertificate> optionalCert = repository.findDistinctByIssuerAndSerial(cached.getIssuer(), serial);
+                if(optionalCert.isEmpty()){
+                    repository.save(cached);
+                }
+            }else{
+                log.error("Could not find a CA in the system that matches: "+x509Certificate.getIssuerDN());
             }
+
+        } catch (Exception e) {
+            log.error("Could not add X509 Cert", e);
         }
     }
 

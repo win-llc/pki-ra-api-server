@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.acme.common.domain.BaseEntity;
 
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -12,7 +12,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "entity_permission")
-public class EntityPermission extends AbstractPersistable<Long> {
+public class EntityPermission extends BaseEntity {
 
     private String entityName;
     private boolean allowCreate = false;

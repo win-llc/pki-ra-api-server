@@ -12,6 +12,7 @@ public class ServerEntryInfo extends InfoObject<ServerEntry> {
     private List<String> alternateDnsValues;
     private String openidClientId;
     private String openidClientRedirectUrl;
+    private String creationDate;
 
     public ServerEntryInfo(ServerEntry serverEntry){
         super(serverEntry);
@@ -21,6 +22,9 @@ public class ServerEntryInfo extends InfoObject<ServerEntry> {
         this.setAccountInfo(new AccountInfo(serverEntry.getAccount(), false));
         this.openidClientId = serverEntry.getOpenidClientId();
         this.openidClientRedirectUrl = serverEntry.getOpenidClientRedirectUrl();
+        if(serverEntry.getCreationDate() != null){
+            this.creationDate = serverEntry.getCreationDate().toString();
+        }
     }
 
     public String getFqdn() {
@@ -61,5 +65,13 @@ public class ServerEntryInfo extends InfoObject<ServerEntry> {
 
     public void setOpenidClientRedirectUrl(String openidClientRedirectUrl) {
         this.openidClientRedirectUrl = openidClientRedirectUrl;
+    }
+
+    public String getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(String creationDate) {
+        this.creationDate = creationDate;
     }
 }

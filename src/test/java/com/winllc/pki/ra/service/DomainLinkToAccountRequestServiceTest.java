@@ -115,10 +115,12 @@ class DomainLinkToAccountRequestServiceTest {
         form.setAccountId(account.getId());
         form.setRequestedDomainIds(Collections.singletonList(domain.getId()));
 
+        Authentication authentication = new TestingAuthenticationToken("test@test.com", "");
+
         UserDetails userDetails =
                 new org.springframework.security.core.userdetails.User("test@test.com", "", new ArrayList<>());
 
-        Long domainRequest = linkToAccountRequestService.createDomainRequest(form, userDetails);
+        Long domainRequest = linkToAccountRequestService.createDomainRequest(form, authentication);
         assertTrue(domainRequest > 0);
 
         form.setAccountId(0L);

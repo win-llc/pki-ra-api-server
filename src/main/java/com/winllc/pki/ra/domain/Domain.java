@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.acme.common.domain.BaseEntity;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
@@ -10,7 +10,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "domain")
-public class Domain extends AbstractPersistable<Long> implements ProtectedEntity  {
+public class Domain extends BaseEntity implements ProtectedEntity  {
 
     @Column(nullable = false)
     private String base;

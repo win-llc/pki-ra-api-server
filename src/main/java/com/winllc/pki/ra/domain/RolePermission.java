@@ -1,14 +1,14 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.acme.common.domain.BaseEntity;
 
 import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
 @Table(name = "role_permission")
-public class RolePermission extends AbstractPersistable<Long> {
+public class RolePermission extends BaseEntity {
 
     @Column(nullable = false)
     private String roleName;

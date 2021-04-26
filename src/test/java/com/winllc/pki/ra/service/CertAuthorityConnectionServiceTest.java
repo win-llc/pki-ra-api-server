@@ -268,7 +268,7 @@ class CertAuthorityConnectionServiceTest {
 
         RACertificateIssueRequest request =
                 new RACertificateIssueRequest(latestAuthCredentialForAccount.get().getKeyIdentifier(),
-                        testCsr, "test.winllc-dev.com", "mockca", "test");
+                        testCsr, "test.winllc-dev.com", "test.winllc-dev.com", "mockca", "test");
 
         String s = connectionService.issueCertificate(request);
         assertTrue(s.contains("BEGIN CERTIFICATE"));
@@ -279,7 +279,7 @@ class CertAuthorityConnectionServiceTest {
     void processIssueCertificate() throws Exception {
         Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         RACertificateIssueRequest request =
-                new RACertificateIssueRequest("kidtest1", testCsr, "test.winllc-dev.com", "mockca", "test");
+                new RACertificateIssueRequest("kidtest1", testCsr, "test.winllc-dev.com", "test.winllc-dev.com", "mockca", "test");
 
         CertIssuanceTransaction transaction = new CertIssuanceTransaction(certAuthorityStore.getLoadedCertAuthority("mockca"),
                 context);

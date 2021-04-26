@@ -1,9 +1,7 @@
 package com.winllc.pki.ra.domain;
 
+import com.winllc.acme.common.domain.BaseEntity;
 import net.minidev.json.annotate.JsonIgnore;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -16,7 +14,7 @@ import java.util.Objects;
 //        @UniqueConstraint(columnNames = {"issuer", "serial"})
 //}
 )
-public class CachedCertificate extends AbstractPersistable<Long> implements Comparable<CachedCertificate> {
+public class CachedCertificate extends BaseEntity implements Comparable<CachedCertificate> {
 
     @Column(nullable = false)
     private String dn;

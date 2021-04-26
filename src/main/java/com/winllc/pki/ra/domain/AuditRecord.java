@@ -1,18 +1,17 @@
 package com.winllc.pki.ra.domain;
 
+import com.winllc.acme.common.domain.BaseEntity;
 import com.winllc.pki.ra.constants.AuditRecordType;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "audit_record")
-public class AuditRecord extends AbstractPersistable<Long> {
+public class AuditRecord extends BaseEntity {
 
     @Column(nullable = false)
     private AuditRecordType type;

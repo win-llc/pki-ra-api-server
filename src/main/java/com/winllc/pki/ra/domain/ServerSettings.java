@@ -1,14 +1,14 @@
 package com.winllc.pki.ra.domain;
 
+import com.winllc.acme.common.domain.BaseEntity;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 
 @Entity
-public class ServerSettings extends AbstractPersistable<Long> {
+public class ServerSettings extends BaseEntity {
 
     @Column(unique = true)
     private String property;

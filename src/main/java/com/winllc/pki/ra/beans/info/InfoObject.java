@@ -1,24 +1,30 @@
 package com.winllc.pki.ra.beans.info;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.winllc.acme.common.domain.BaseEntity;
 import com.winllc.pki.ra.domain.UniqueEntity;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.UUID;
 
-public abstract class InfoObject<T extends AbstractPersistable<Long>> {
+public abstract class InfoObject<T extends BaseEntity> {
 
     private Class clazz;
     private Long id;
     private String objectUuid;
     private String objectClass;
+    private String createdOn;
 
     protected InfoObject(T entity){
         this.id = entity.getId();
         clazz = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 
         objectClass = clazz.getCanonicalName();
+
+        if(entity.getCreationDate() != null){
+            //todo convert to common format
+            createdOn = entity.getCreationDate().toString();
+        }
 
         if(isUniqueEntityForm()){
             UniqueEntity ue = ((UniqueEntity) entity);
@@ -69,5 +75,13 @@ public abstract class InfoObject<T extends AbstractPersistable<Long>> {
 
     protected void setClazz(Class clazz) {
         this.clazz = clazz;
+    }
+
+    public String getCreatedOn() {
+        return createdOn;
+    }
+
+    public void setCreatedOn(String createdOn) {
+        this.createdOn = createdOn;
     }
 }

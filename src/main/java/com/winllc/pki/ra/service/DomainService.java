@@ -56,6 +56,27 @@ public class DomainService {
                 .collect(Collectors.toMap(d -> d.getId(), d -> d.getFullDomainName()));
     }
 
+    @GetMapping("/options/availableForAccount/{accountId}")
+    @Transactional
+    public List<DomainInfo> optionsAvailableForAccount(@PathVariable Long accountId) throws RAObjectNotFoundException {
+        Optional<Account> accountOptional = accountRepository.findById(accountId);
+
+        if(accountOptional.isPresent()){
+            Account account = accountOptional.get();
+
+            List<Domain> all = domainRepository.findAll();
+
+            List<DomainPolicy> domainPolicies = domainPolicyRepository.findAllByAccount(account);
+
+            return all.stream()
+                    .filter(d -> domainPolicies.stream().noneMatch(dp -> dp.getTargetDomain().getId() == d.getId()))
+                    .map(d -> new DomainInfo(d, false))
+                    .collect(Collectors.toList());
+        }else{
+            throw new RAObjectNotFoundException(Account.class, accountId);
+        }
+    }
+
     @GetMapping("/options/forAccount/{accountId}")
     @Transactional
     public List<DomainInfo> optionsForAccount(@PathVariable Long accountId) throws RAObjectNotFoundException {

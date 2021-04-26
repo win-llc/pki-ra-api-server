@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.ldap.odm.annotations.Attribute;
 import org.springframework.ldap.odm.annotations.Entry;
@@ -14,6 +15,8 @@ import javax.naming.Name;
 import javax.persistence.*;
 import java.util.*;
 
+import static javax.persistence.TemporalType.TIMESTAMP;
+
 @Entity
 @Entry(objectClasses = {"top", "untypedObject"})
 @Table(name = "server_entry")
@@ -23,6 +26,7 @@ public class ServerEntry extends AuthCredentialHolder implements AccountOwnedEnt
 
     @Id
     @javax.persistence.Transient
+    @JsonIgnore
     private Name dn;
     @Transient
     private String hostname;
@@ -211,6 +215,7 @@ public class ServerEntry extends AuthCredentialHolder implements AccountOwnedEnt
         this.managedBy = managedBy;
     }
 
+    @JsonIgnore
     public Name buildDn(String baseDn){
         LdapNameBuilder builder;
         if(baseDn != null && !StringUtils.isEmpty(baseDn)){

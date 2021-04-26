@@ -1,11 +1,13 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.beans.form.AuthCredentialsUpdateForm;
 import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.AccountRepository;
 import com.winllc.pki.ra.repository.AuthCredentialRepository;
 import com.winllc.pki.ra.repository.ServerEntryRepository;
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,7 +39,48 @@ public class AuthCredentialService {
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public List<AuthCredential> getValidAuthCredentials(@Valid @RequestBody UniqueEntityLookupForm lookupForm)
-            throws RAObjectNotFoundException, ClassNotFoundException {
+            throws Exception {
+
+        AuthCredentialHolder holder = getHolder(lookupForm);
+
+        if(holder != null){
+            return authCredentialRepository.findAllByParentEntity(holder);
+        }else{
+            throw new RAObjectNotFoundException(ServerEntry.class, lookupForm.getObjectUuid());
+        }
+    }
+
+    @PostMapping("/updateAuthCredentials")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public List<AuthCredential> updateAuthCredential(@RequestBody AuthCredentialsUpdateForm form)
+            throws Exception {
+
+        if(CollectionUtils.isNotEmpty(form.getAuthCredentials())){
+            for(AuthCredential authCredential : form.getAuthCredentials()){
+                boolean exists = false;
+                if(authCredential.getId() != null) {
+                    Optional<AuthCredential> optionalCred = authCredentialRepository.findById(authCredential.getId());
+                    if(optionalCred.isPresent()){
+                        exists = true;
+                        AuthCredential existing = optionalCred.get();
+                        existing.setValid(authCredential.getValid());
+                        existing.setExpiresOn(authCredential.getExpiresOn());
+                        authCredentialRepository.save(existing);
+                    }
+                }
+                if(!exists){
+                    AuthCredentialHolder holder = getHolder(form.getLookupForm());
+                    AuthCredential newCred = AuthCredential.buildNew(holder);
+                    authCredentialRepository.save(newCred);
+                }
+            }
+        }
+
+        return getValidAuthCredentials(form.getLookupForm());
+    }
+
+    public AuthCredentialHolder getHolder(UniqueEntityLookupForm lookupForm) throws Exception {
         String entityClass = lookupForm.getObjectClass();
         Class<?> clazz = Class.forName(entityClass);
 
@@ -52,13 +95,11 @@ public class AuthCredentialService {
             if(optionalAccount.isPresent()){
                 holder = optionalAccount.get();
             }
+        }else{
+            throw new Exception("Could not find a valid AuthCredentialHolder for: "+lookupForm);
         }
 
-        if(holder != null){
-            return authCredentialRepository.findAllByParentEntityAndValidEquals(holder, true);
-        }else{
-            throw new RAObjectNotFoundException(ServerEntry.class, lookupForm.getObjectUuid());
-        }
+        return holder;
     }
 
     public AuthCredentialHolder addNewAuthCredentialToEntry(AuthCredentialHolder holder) {

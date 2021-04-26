@@ -1,13 +1,13 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.data.jpa.domain.AbstractPersistable;
+import com.winllc.acme.common.domain.BaseEntity;
 
 import javax.persistence.*;
 
 @Entity
 @Table(name = "ldap_schema_overlay_attribute")
-public class LdapSchemaOverlayAttribute extends AbstractPersistable<Long> {
+public class LdapSchemaOverlayAttribute extends BaseEntity {
 
     private String name;
     private Boolean enabled;

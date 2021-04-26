@@ -113,7 +113,7 @@ class OIDCManagementServiceTest {
 
     @Test
     @Transactional
-    void disableForOIDConnect() throws RAException {
+    void disableForOIDConnect() throws Exception {
         ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test2.winllc-dev.com").get();
         when(oidcProviderConnection.deleteClient(any())).thenReturn(serverEntry);
 

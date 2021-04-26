@@ -1,8 +1,8 @@
 package com.winllc.pki.ra.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.winllc.acme.common.domain.BaseEntity;
 import org.apache.commons.collections.CollectionUtils;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -11,7 +11,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "poc_entry")
-public class PocEntry extends AbstractPersistable<Long> implements AccountOwnedEntity {
+public class PocEntry extends BaseEntity implements AccountOwnedEntity {
 
     private String email;
     private boolean groupEmail;

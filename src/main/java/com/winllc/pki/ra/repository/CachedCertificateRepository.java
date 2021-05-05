@@ -18,4 +18,7 @@ public interface CachedCertificateRepository extends PagingAndSortingRepository<
     List<CachedCertificate> findAllByDnContainsIgnoreCase(String search);
     Optional<CachedCertificate> findDistinctByIssuerAndSerial(String issuer, long serial);
     Optional<CachedCertificate> findTopByCaNameOrderByValidFromDesc(String issuer);
+
+    List<CachedCertificate> findAllBySerialInAndCaNameEqualsAndStatusEquals(List<Long> serials, String caName, String status);
+    List<CachedCertificate> findAllBySerialInAndCaNameEquals(List<Long> serials, String caName);
 }

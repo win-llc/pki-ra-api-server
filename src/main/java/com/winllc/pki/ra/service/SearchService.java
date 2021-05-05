@@ -78,6 +78,7 @@ public class SearchService {
         details.setSerial(cachedCertificate.getSerial().toString());
         details.setSubject(cachedCertificate.getDn());
         details.setCaName(cachedCertificate.getCaName());
+        details.setStatus(cachedCertificate.getStatus());
 
         return details;
     }

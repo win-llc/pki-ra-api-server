@@ -1,15 +1,16 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.domain.CachedCertificate;
+import com.winllc.pki.ra.domain.CertificateRequest;
+import com.winllc.pki.ra.domain.ServerEntry;
 import com.winllc.pki.ra.repository.CachedCertificateRepository;
+import com.winllc.pki.ra.repository.CertificateRequestRepository;
+import com.winllc.pki.ra.repository.ServerEntryRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
@@ -18,6 +19,8 @@ import java.sql.Date;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -27,6 +30,10 @@ public class CachedCertificateService {
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("mm/DD/yyyy");
 
     private final CachedCertificateRepository cachedCertificateRepository;
+    @Autowired
+    private CertificateRequestRepository certificateRequestRepository;
+    @Autowired
+    private ServerEntryRepository serverEntryRepository;
 
     public CachedCertificateService(CachedCertificateRepository cachedCertificateRepository) {
         this.cachedCertificateRepository = cachedCertificateRepository;
@@ -84,6 +91,33 @@ public class CachedCertificateService {
             return new PageImpl<>(items, results.getPageable(), results.getTotalElements());
     }
 
+    @GetMapping("/certificatesForServer/{serverId}")
+    @Transactional
+    public List<CachedCertificate> getCertificatesForServer(@PathVariable Long serverId){
+        Optional<ServerEntry> optionalServer = serverEntryRepository.findById(serverId);
+        if(optionalServer.isPresent()) {
+            ServerEntry serverEntry = optionalServer.get();
+            List<CertificateRequest> certsForServer = certificateRequestRepository.findAllByServerEntryAndIssuedCertificateIsNotNull(serverEntry);
+
+            Map<String, List<CertificateRequest>> certsByCaName = certsForServer.stream()
+                    .collect(Collectors.groupingBy(c -> c.getCertAuthorityName()));
+
+            List<CachedCertificate> all = new ArrayList<>();
+
+            for(Map.Entry<String, List<CertificateRequest>> entry : certsByCaName.entrySet()){
+                List<Long> serials = entry.getValue().stream()
+                        .filter(r -> r.getIssuedCertificateSerial() != null)
+                        .map(r -> Long.valueOf(r.getIssuedCertificateSerial()))
+                        .collect(Collectors.toList());
+
+                List<CachedCertificate> temp = cachedCertificateRepository.findAllBySerialInAndCaNameEquals(serials, entry.getKey());
+                all.addAll(temp);
+            }
+
+            return all;
+        }
+        return new ArrayList<>();
+    }
 
     public static Specification<CachedCertificate> buildSearch(final String text, boolean archived, boolean nonArchived,
                                                                boolean includeValid, boolean includeExpired, Date notBefore, Date notAfter) {

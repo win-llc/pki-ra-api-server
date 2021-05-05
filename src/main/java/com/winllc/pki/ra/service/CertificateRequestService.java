@@ -53,15 +53,17 @@ public class CertificateRequestService extends AbstractService {
     private final CertRequestFormValidator formValidator;
     private final CertificateRequestValidator certificateRequestValidator;
     private final CertificateRequestDecisionValidator certificateRequestDecisionValidator;
-
-    @Autowired
-    private DomainService domainService;
+    private final ServerEntryRepository serverEntryRepository;
+    private final DomainService domainService;
+    private final CachedCertificateRepository cachedCertificateRepository;
 
     public CertificateRequestService(CertificateRequestRepository requestRepository,
                                      AccountRepository accountRepository, LoadedCertAuthorityStore certAuthorityStore,
                                      CertRequestFormValidator formValidator, ApplicationContext context,
                                      CertificateRequestValidator certificateRequestValidator,
-                                     CertificateRequestDecisionValidator certificateRequestDecisionValidator) {
+                                     CertificateRequestDecisionValidator certificateRequestDecisionValidator,
+                                     ServerEntryRepository serverEntryRepository, DomainService domainService,
+                                     CachedCertificateRepository cachedCertificateRepository) {
         super(context);
         this.requestRepository = requestRepository;
         this.accountRepository = accountRepository;
@@ -69,6 +71,9 @@ public class CertificateRequestService extends AbstractService {
         this.formValidator = formValidator;
         this.certificateRequestValidator = certificateRequestValidator;
         this.certificateRequestDecisionValidator = certificateRequestDecisionValidator;
+        this.serverEntryRepository = serverEntryRepository;
+        this.domainService = domainService;
+        this.cachedCertificateRepository = cachedCertificateRepository;
     }
 
     @InitBinder("certificateRequestForm")
@@ -123,6 +128,7 @@ public class CertificateRequestService extends AbstractService {
     public Integer findByStatusCount(@PathVariable String status){
         return requestRepository.countAllByStatusEquals(status);
     }
+
 
     @GetMapping("/byId/{id}")
     @ResponseStatus(HttpStatus.OK)

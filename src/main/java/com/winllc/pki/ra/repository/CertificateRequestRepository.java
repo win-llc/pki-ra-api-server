@@ -17,5 +17,6 @@ public interface CertificateRequestRepository extends BaseRepository<Certificate
     List<CertificateRequest> findAllByRequestedByEquals(String user);
     List<CertificateRequest> findAllByPublicKeyBase64Equals(String publicKey);
     List<CertificateRequest> findAllByServerEntry(ServerEntry serverEntry);
+    List<CertificateRequest> findAllByServerEntryAndIssuedCertificateIsNotNull(ServerEntry serverEntry);
     Optional<CertificateRequest> findDistinctByIssuedCertificateSerialAndCertAuthorityName(String serial, String caName);
 }

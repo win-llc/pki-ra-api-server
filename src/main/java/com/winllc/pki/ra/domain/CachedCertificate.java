@@ -27,6 +27,7 @@ public class CachedCertificate extends BaseEntity implements Comparable<CachedCe
     private Timestamp validFrom;
     @Column(nullable = false)
     private Timestamp validTo;
+    private String status;
     private String signatureAlgorithm;
     private Boolean latestForDn;
     @JsonIgnore
@@ -56,6 +57,14 @@ public class CachedCertificate extends BaseEntity implements Comparable<CachedCe
 
     public void setCaName(String caName) {
         this.caName = caName;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Long getSerial() {

@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.domain;
 
 import com.winllc.acme.common.domain.BaseEntity;
+import com.winllc.pki.ra.constants.AuditRecordType;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import javax.persistence.Column;
@@ -29,6 +30,7 @@ public class Notification extends BaseEntity {
     private String taskObjectClass;
     @Column(columnDefinition="tinyint(1) default 0")
     private Boolean taskComplete = false;
+    private AuditRecordType type;
 
     public static Notification buildNew(){
         Notification notification = new Notification();
@@ -63,6 +65,7 @@ public class Notification extends BaseEntity {
         cloned.setTaskObjectClass(this.getTaskObjectClass());
         cloned.setTaskObjectId(this.getTaskObjectId());
         cloned.setTaskComplete(this.getTaskComplete());
+        cloned.setType(this.getType());
         return cloned;
     }
 
@@ -149,6 +152,14 @@ public class Notification extends BaseEntity {
 
     public void setTaskComplete(Boolean taskComplete) {
         this.taskComplete = taskComplete;
+    }
+
+    public AuditRecordType getType() {
+        return type;
+    }
+
+    public void setType(AuditRecordType type) {
+        this.type = type;
     }
 
     @Override

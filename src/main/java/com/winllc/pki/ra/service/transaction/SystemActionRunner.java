@@ -157,6 +157,10 @@ public class SystemActionRunner {
                         toSave.markAsTask((AbstractPersistable<Long>) entity, taskDueBy);
                     }
 
+                    if(this.auditRecord != null){
+                        toSave.setType(this.auditRecord.getType());
+                    }
+
                     toSave.setForUser(email);
                     repository.save(toSave);
                 }

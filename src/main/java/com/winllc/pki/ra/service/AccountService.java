@@ -149,10 +149,10 @@ public class AccountService extends AbstractService {
     @GetMapping("/myAccounts")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public List<AccountInfo> getAccountsForCurrentUser(@AuthenticationPrincipal UserDetails raUser, Authentication authentication)
+    public List<AccountInfo> getAccountsForCurrentUser(Authentication authentication)
             throws AcmeConnectionException {
 
-        List<PocEntry> pocEntries = pocEntryRepository.findAllByEmailEquals(raUser.getUsername());
+        List<PocEntry> pocEntries = pocEntryRepository.findAllByEmailEquals(authentication.getName());
 
         List<Account> accounts = new ArrayList<>();
         for (PocEntry pocEntry : pocEntries) {
@@ -166,6 +166,7 @@ public class AccountService extends AbstractService {
         for (Account account : filtered) {
             AccountInfo info = buildAccountInfo(account, authentication);
 
+            /*
             //todo fix this section
             AcmeServerService service = acmeServerManagementService.getAcmeServerServiceByName("winllc").get();
             List<DirectoryDataSettings> directoryDataSettings = acmeServerManagementService.getAllDirectorySettings("winllc");
@@ -183,6 +184,9 @@ public class AccountService extends AbstractService {
 
                 accountInfoList.add(info);
             }
+
+             */
+            accountInfoList.add(info);
         }
 
         return accountInfoList;

@@ -10,7 +10,7 @@ import java.util.List;
 @Transactional
 public interface NotificationRepository extends BaseRepository<Notification> {
 
-    List<Notification> findAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskComplete(String userName, boolean read, boolean complete);
+    List<Notification> findAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskCompleteOrderByCreationDateAsc(String userName, boolean read, boolean complete);
     Integer countAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskComplete(String userName, boolean read, boolean complete);
 
     List<Notification> findAllByTaskObjectIdAndTaskObjectClass(Long id, String clazz);

@@ -99,6 +99,8 @@ permissions:
   protected-entities:
     - account
     - domain
+    - serverentry
+    - authkey
   available:
     - super_admin
     - admin

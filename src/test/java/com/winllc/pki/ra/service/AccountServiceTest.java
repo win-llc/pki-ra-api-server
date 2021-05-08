@@ -116,7 +116,7 @@ class AccountServiceTest {
 
         Authentication authentication = new TestingAuthenticationToken("test@test.com", "");
         UserDetails userDetails = new org.springframework.security.core.userdetails.User("test@test.com", "", Collections.emptyList());
-        List<AccountInfo> accountsForCurrentUser = accountService.getAccountsForCurrentUser(userDetails, authentication);
+        List<AccountInfo> accountsForCurrentUser = accountService.getAccountsForCurrentUser(authentication);
         assertEquals(1, accountsForCurrentUser.size());
     }
 

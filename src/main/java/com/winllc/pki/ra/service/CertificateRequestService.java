@@ -157,6 +157,7 @@ public class CertificateRequestService extends AbstractService {
         }
     }
 
+    @Transactional
     @PostMapping("/submit")
     @ResponseStatus(HttpStatus.CREATED)
     public Long submitRequest(@Valid @RequestBody CertificateRequestForm form, @AuthenticationPrincipal UserDetails raUser)
@@ -164,26 +165,7 @@ public class CertificateRequestService extends AbstractService {
         ValidationResponse validationResponse = formValidator.validate(form, false);
         if (validationResponse.isValid()) {
 
-            String fqdn = form.getPrimaryDnsHostname();
-            String domain = null;
-            Long domainId = form.getPrimaryDnsDomainId();
-            if(domainId != null){
-                List<DomainInfo> domainInfos = domainService.optionsForAccount(form.getAccountId());
-                Optional<DomainInfo> optionalDomainInfo = domainInfos.stream()
-                        .filter(i -> i.getId() == domainId)
-                        .findFirst();
-
-                if(optionalDomainInfo.isPresent()){
-                    DomainInfo domainInfo = optionalDomainInfo.get();
-                    domain = domainInfo.getFullDomainName();
-                }else{
-                    throw new Exception("Account not allowed to use domain");
-                }
-            }
-
-            if(domain != null){
-                fqdn += "."+domain;
-            }
+            String fqdn = buildFqdn(form);
 
             CertificateRequest certificateRequest = CertificateRequest.build();
             certificateRequest.setCsr(form.getCsr());
@@ -200,6 +182,15 @@ public class CertificateRequestService extends AbstractService {
                 certificateRequest.setRequestedBy(raUser.getUsername());
                 certificateRequest.setAccount(account);
                 certificateRequest = requestRepository.save(certificateRequest);
+
+                //Allow automatic issuance
+                if(account.isAllowAutomaticManualCertificateIssuance()){
+                    certificateRequest.setStatus("approved");
+                    processApprovedCertRequest(certificateRequest);
+
+                    requestRepository.save(certificateRequest);
+                }
+
                 return certificateRequest.getId();
             } else {
                 throw new RAObjectNotFoundException(Account.class, form.getAccountId());
@@ -207,6 +198,31 @@ public class CertificateRequestService extends AbstractService {
         } else {
             throw new InvalidFormException(form);
         }
+    }
+
+    private String buildFqdn(CertificateRequestForm form) throws Exception {
+        String fqdn = form.getPrimaryDnsHostname();
+        String domain = null;
+        Long domainId = form.getPrimaryDnsDomainId();
+        if(domainId != null){
+            List<DomainInfo> domainInfos = domainService.optionsForAccount(form.getAccountId());
+            Optional<DomainInfo> optionalDomainInfo = domainInfos.stream()
+                    .filter(i -> i.getId().equals(domainId))
+                    .findFirst();
+
+            if(optionalDomainInfo.isPresent()){
+                DomainInfo domainInfo = optionalDomainInfo.get();
+                domain = domainInfo.getFullDomainName();
+            }else{
+                throw new Exception("Account not allowed to use domain");
+            }
+        }
+
+        if(domain != null){
+            fqdn += "."+domain;
+        }
+
+        return fqdn;
     }
 
     @GetMapping("/decision/{id}")

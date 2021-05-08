@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.beans.info.CurrentUserDisplayItems;
 import com.winllc.pki.ra.beans.info.PocEntryInfo;
 import com.winllc.pki.ra.domain.PocEntry;
 import com.winllc.pki.ra.repository.PocEntryRepository;
@@ -27,6 +28,15 @@ public class UserService {
     private final PocEntryRepository pocEntryRepository;
     private final KeycloakIdentityProviderConnection keycloakService;
 
+    @Autowired
+    private AccountRequestService accountRequestService;
+    @Autowired
+    private DomainLinkToAccountRequestService domainLinkToAccountRequestService;
+    @Autowired
+    private CertificateRequestService certificateRequestService;
+    @Autowired
+    private NotificationService notificationService;
+
     public UserService(KeycloakIdentityProviderConnection keycloakService, PocEntryRepository pocEntryRepository) {
         this.keycloakService = keycloakService;
         this.pocEntryRepository = pocEntryRepository;
@@ -39,6 +49,24 @@ public class UserService {
         RAUser raUser = new RAUser(userDetails.getUsername());
         raUser.setPermissions(userDetails.getAuthorities().stream().map(ga -> ga.toString()).collect(Collectors.toList()));
         return raUser;
+    }
+
+    @GetMapping("/displayCounts")
+    public CurrentUserDisplayItems getDisplayItems(Authentication authentication){
+        int accountCount = accountRequestService.findPendingCount();
+        int domainCount = domainLinkToAccountRequestService.findByStatusCount();
+        int certCount = certificateRequestService.findByStatusCount("new");
+
+        int notifications = notificationService.getCurrentNotificationsCountForUser(authentication);
+
+        CurrentUserDisplayItems display = new CurrentUserDisplayItems();
+        display.setDomainLinkRequestsCount(domainCount);
+        display.setAccountRequestsCount(accountCount);
+        display.setManualCertRequestsCount(certCount);
+        display.setNotificationsCount(notifications);
+        display.updateRequestCount();
+
+        return display;
     }
 
     @PostMapping("/search/{search}")

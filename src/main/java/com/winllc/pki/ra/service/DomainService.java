@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.pki.ra.domain.Account;
@@ -16,6 +17,7 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,6 +55,15 @@ public class DomainService {
     public Map<Long, String> options(){
         List<Domain> all = domainRepository.findAll();
         return all.stream()
+                .collect(Collectors.toMap(d -> d.getId(), d -> d.getFullDomainName()));
+    }
+
+    @GetMapping("/options/forAccount/{accountId}/map")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public Map<Long, String> optionsForAccountMap(@PathVariable Long accountId, Authentication authentication) throws RAObjectNotFoundException {
+        List<DomainInfo> pocs = optionsForAccount(accountId);
+        return pocs.stream()
                 .collect(Collectors.toMap(d -> d.getId(), d -> d.getFullDomainName()));
     }
 

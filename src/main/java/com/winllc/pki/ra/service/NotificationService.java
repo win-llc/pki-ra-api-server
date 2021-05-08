@@ -33,13 +33,13 @@ public class NotificationService {
 
     @GetMapping("/forCurrentUser")
     public List<Notification> getCurrentNotificationsForUser(Authentication authentication){
-        return notificationRepository.findAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskComplete(
+        return notificationRepository.findAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskCompleteOrderByCreationDateAsc(
                 authentication.getName(), false, false);
     }
 
     @GetMapping("/forCurrentUser/tasks")
     public List<Notification> getCurrentTasksForUser(Authentication authentication){
-        return notificationRepository.findAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskComplete(
+        return notificationRepository.findAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskCompleteOrderByCreationDateAsc(
                 authentication.getName(), false, false);
     }
 

@@ -24,6 +24,7 @@ public class Account extends AuthCredentialHolder implements AccountOwnedEntity,
     private boolean enabled = true;
     private String securityPolicyServerProjectId;
     private boolean allowHostnameIssuance = true;
+    private boolean allowAutomaticManualCertificateIssuance = false;
 
     @JsonIgnore
     @OneToMany(mappedBy = "parentEntity", fetch = FetchType.EAGER)
@@ -244,6 +245,14 @@ public class Account extends AuthCredentialHolder implements AccountOwnedEntity,
 
     public void setAllowHostnameIssuance(boolean allowHostnameIssuance) {
         this.allowHostnameIssuance = allowHostnameIssuance;
+    }
+
+    public boolean isAllowAutomaticManualCertificateIssuance() {
+        return allowAutomaticManualCertificateIssuance;
+    }
+
+    public void setAllowAutomaticManualCertificateIssuance(boolean allowAutomaticManualCertificateIssuance) {
+        this.allowAutomaticManualCertificateIssuance = allowAutomaticManualCertificateIssuance;
     }
 
     @Override

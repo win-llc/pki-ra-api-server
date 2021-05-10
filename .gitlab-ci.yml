@@ -9,7 +9,6 @@ variables:
 stages:
   - build
   - package
-#  - deploy
 
 build:
   image: gradle:6.5-jdk14

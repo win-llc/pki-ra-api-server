@@ -1,5 +1,5 @@
 FROM openjdk:14-jdk-alpine
-ENV JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom -Djdk.tls.trustNameService=false -Dcom.net.ssl.enableECC=false -DtlsClientParameters.useHttpsURLConnectionDefaultHostnameVerifier=true -Djavax.net.ssl.trustStore=/ssl/trust.jks"
+ENV JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active=dev -Djdk.tls.trustNameService=false -Dcom.net.ssl.enableECC=false -DtlsClientParameters.useHttpsURLConnectionDefaultHostnameVerifier=true -Djavax.net.ssl.trustStore=/ssl/trust.jks"
 VOLUME /tmp
 COPY build/libs/*.jar app.jar
 

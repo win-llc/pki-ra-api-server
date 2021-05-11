@@ -10,7 +10,7 @@ plugins:
   load-from-directory:
 
 app-keystore:
-  location: dogtag-ca-admin-with-chain.pfx
+  location: C:\\Users\\jrmints\\IdeaProjects\\PKI Registration Authority\\src\\main\\resources\\dogtag-ca-admin-with-chain.pfx
   password: P@ssW0rd
   type: PKCS12
 win-ra:
@@ -29,10 +29,10 @@ management:
       show-details: always
 spring:
   datasource:
-    url: jdbc:mysql://database/winpkira-dev
+    url: jdbc:mysql://database.winllc-dev.com/winpkira-dev
     driver-class-name: com.mysql.jdbc.Driver
-    username: winra
-    password: password
+    username: appuser
+    password: P@ssW0rd
   jpa:
     open-in-view: false
     hibernate:
@@ -44,7 +44,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://winra.winllc-dev.com/auth/realms/dev
+          issuer-uri: https://keycloak.winllc-dev.com/auth/realms/dev
 rest:
   security:
     cors:
@@ -67,7 +67,7 @@ server:
   servlet:
     context-path: /
   #address: 192.168.1.13
-  base-url: https://winra.winllc-dev.com:8443/ui
+  base-url: http://192.168.1.3:8080
 keycloak-admin-interface:
   server-base-url: 'https://keycloak.winllc-dev.com/auth'
   realm: dev

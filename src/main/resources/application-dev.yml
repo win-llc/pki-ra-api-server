@@ -10,7 +10,7 @@ plugins:
   load-from-directory:
 
 app-keystore:
-  location: dogtag-ca-admin-with-chain.pfx
+  location: /ssl/dogtag-ca-admin-with-chain.pfx
   password: P@ssW0rd
   type: PKCS12
 win-ra:
@@ -62,7 +62,7 @@ server:
     include-stacktrace: never
   port: 8080
   ssl:
-    trust-store: classpath:trust.jks
+    trust-store: /ssl/trust.jks
     enabled: false
   servlet:
     context-path: /

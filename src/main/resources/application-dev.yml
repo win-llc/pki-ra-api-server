@@ -44,7 +44,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://winra.winllc-dev.com/auth/realms/dev
+          issuer-uri: https://winra.winllc-dev.com/keycloak/auth/realms/dev
 rest:
   security:
     cors:
@@ -60,7 +60,7 @@ logging:
 server:
   error:
     include-stacktrace: never
-  port: 8080
+  port: 8282
   ssl:
     trust-store: /ssl/trust.jks
     enabled: false

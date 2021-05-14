@@ -44,7 +44,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://winra.winllc-dev.com/keycloak/auth/realms/dev
+          issuer-uri: https://winra.winllc-dev.com/auth/realms/dev
 rest:
   security:
     cors:

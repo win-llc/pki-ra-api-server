@@ -64,6 +64,7 @@ server:
   ssl:
     trust-store: /ssl/trust.jks
     enabled: false
+    trust-store-type: JKS
   servlet:
     context-path: /
   #address: 192.168.1.13

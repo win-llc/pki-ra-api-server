@@ -59,7 +59,7 @@ logging:
         security: debug
 server:
   #error:
-    include-stacktrace: never
+  #  include-stacktrace: never
   port: 8282
   #ssl:
   #  trust-store: /ssl/trust.jks

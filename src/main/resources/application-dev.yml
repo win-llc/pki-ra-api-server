@@ -58,15 +58,15 @@ logging:
       springframework:
         security: debug
 server:
-  error:
+  #error:
     include-stacktrace: never
   port: 8282
-  ssl:
-    trust-store: /ssl/trust.jks
-    enabled: false
-    trust-store-type: JKS
-  servlet:
-    context-path: /
+  #ssl:
+  #  trust-store: /ssl/trust.jks
+  #  enabled: false
+  #  trust-store-type: JKS
+  #servlet:
+  #  context-path: /
   #address: 192.168.1.13
   base-url: https://winra.winllc-dev.com:8443/ui
 keycloak-admin-interface:

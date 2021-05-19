@@ -74,6 +74,13 @@ public class RAUserJwtAuthenticationConverter
                         .collect(Collectors.toList()));
             }
         }
+
+        //Override from OIDC provider
+        if(authorities.stream().map(a -> a.getAuthority())
+                .anyMatch(a -> a.equalsIgnoreCase("SUPER_ADMIN"))){
+            authorities.add(new SimpleGrantedAuthority("super_admin"));
+        }
+
         return permissions;
     }
 

@@ -95,8 +95,9 @@ public class UserService {
         if(CollectionUtils.isNotEmpty(allByEmailEquals)){
             PocEntry pocEntry = allByEmailEquals.get(0);
             info.setAddedOn(pocEntry.getAddedOn().toString());
-            info.setRoles(authentication.getAuthorities().stream().map(a -> a.getAuthority()).collect(Collectors.toList()));
         }
+
+        info.setRoles(authentication.getAuthorities().stream().map(a -> a.getAuthority()).collect(Collectors.toList()));
 
         return info;
     }

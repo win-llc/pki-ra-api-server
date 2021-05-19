@@ -98,7 +98,7 @@ public class AccountRequestService {
         return accountRequest.getId();
     }
 
-    @PreAuthorize("hasPermission(#form, 'accountrequest:update')")
+    //@PreAuthorize("hasPermission(#form, 'accountrequest:update')")
     @PostMapping("/update")
     @Transactional
     public ResponseEntity<?> accountRequestUpdate(@Valid @RequestBody AccountRequestUpdateForm form) throws Exception {
@@ -127,7 +127,7 @@ public class AccountRequestService {
         }
     }
 
-    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.AccountRequest', 'accountrequest:read')")
+    //@PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.AccountRequest', 'accountrequest:read')")
     @GetMapping("/findById/{id}")
     @ResponseStatus(HttpStatus.OK)
     public AccountRequest findById(@PathVariable Long id) throws RAObjectNotFoundException {
@@ -140,7 +140,7 @@ public class AccountRequestService {
         }
     }
 
-    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.AccountRequest', 'accountrequest:delete')")
+    //@PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.AccountRequest', 'accountrequest:delete')")
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void delete(@PathVariable Long id){

@@ -78,7 +78,7 @@ public class RAUserJwtAuthenticationConverter
         //Override from OIDC provider
         if(authorities.stream().map(a -> a.getAuthority())
                 .anyMatch(a -> a.equalsIgnoreCase("SUPER_ADMIN"))){
-            authorities.add(new SimpleGrantedAuthority("super_admin"));
+            permissions.add(new SimpleGrantedAuthority("super_admin"));
         }
 
         return permissions;

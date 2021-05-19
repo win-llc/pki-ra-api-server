@@ -68,9 +68,9 @@ server:
   #servlet:
   #  context-path: /
   #address: 192.168.1.13
-  base-url: https://winra.winllc-dev.com:8443/ui
+  base-url: https://winra.winllc-dev.com/ui
 keycloak-admin-interface:
-  server-base-url: 'https://keycloak.winllc-dev.com/auth'
+  server-base-url: 'https://winra.winllc-dev.com/auth'
   realm: dev
   client-id: win-pki-ra-client
   client-secret: 9a8bcf15-2492-4889-8990-d8373a2cda49

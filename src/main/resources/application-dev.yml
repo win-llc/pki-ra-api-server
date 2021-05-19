@@ -73,7 +73,7 @@ keycloak-admin-interface:
   server-base-url: 'https://winra.winllc-dev.com/auth'
   realm: dev
   client-id: win-pki-ra-client
-  client-secret: 9a8bcf15-2492-4889-8990-d8373a2cda49
+  client-secret: 9bbacdcc-6bbc-4c23-8a7a-77864a23a586
   client-username: win-ra-admin
   client-password: P@ssW0rd
   custom-client-scope: pki-app

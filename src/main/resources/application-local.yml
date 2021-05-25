@@ -14,8 +14,9 @@ app-keystore:
   password: P@ssW0rd
   type: PKCS12
 win-ra:
-  acme-server-url: http://localhost:8181
+  acme-server-url: http://192.168.1.3:8181
   acme-server-name: winllc
+  est-server-url: https://192.168.1.3:8888
 management:
   health:
     ldap:
@@ -68,6 +69,7 @@ server:
     context-path: /
   #address: 192.168.1.13
   base-url: http://192.168.1.3:8080
+  base-api-url: http://192.168.1.3:8080
 keycloak-admin-interface:
   server-base-url: 'https://keycloak.winllc-dev.com/auth'
   realm: dev

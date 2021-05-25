@@ -1,0 +1,141 @@
+package com.winllc.pki.ra.service;
+
+import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
+import com.winllc.pki.ra.domain.AuthCredential;
+import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/buildCommand")
+public class CommandBuilderService {
+
+    @Value("${win-ra.acme-server-url}")
+    private String acmeBaseUrl;
+    @Value("${win-ra.est-server-url}")
+    private String estBaseUrl;
+    private final ServerEntryService serverEntryService;
+    private final AuthCredentialService authCredentialService;
+
+    public CommandBuilderService(ServerEntryService serverEntryService, AuthCredentialService authCredentialService) {
+        this.serverEntryService = serverEntryService;
+        this.authCredentialService = authCredentialService;
+    }
+
+    @GetMapping("/{command}/server/{id}/{applicationName}")
+    public List<String> buildCertbotCommand(@PathVariable String command, @PathVariable Long id, @PathVariable String applicationName,
+                                            Authentication authentication)
+            throws Exception {
+        ServerEntry serverEntry = serverEntryService.getServerEntry(id);
+
+        List<String> commands = new LinkedList<>();
+
+        switch (command) {
+            case "certbot" -> {
+                String registerCommand = buildCertbotRegisterCommand(serverEntry, authentication.getName());
+                String certCommand = buildCertbotCertCommand(serverEntry, applicationName, authentication.getName());
+                commands.add(registerCommand);
+                commands.add(certCommand);
+            }
+            case "est" -> commands.addAll(buildEstRequiredInputs(serverEntry));
+        }
+
+        return commands;
+    }
+
+    private String buildCertbotRegisterCommand(ServerEntry serverEntry, String email) throws Exception {
+
+        Optional<AuthCredential> optionalAuthCredential = getAuthCredential(serverEntry);
+
+        if(optionalAuthCredential.isPresent()){
+            AuthCredential credential = optionalAuthCredential.get();
+
+            //certbot register --no-eff-email --server https://winra.winllc-dev.com/acme/acme/directory
+            // --agree-tos -m test@test.com -q --eab-kid AJhLkhbxTNDBAH9BOTlb
+            // --eab-hmac-key ODhOUVdEZmxQQlhLOG8wb1pOQTZJQnBub2Qwa3VhVFhmZHk4TjNySThOOXN1bXEwdjZPSjMyaWd3
+
+            List<String> commandParts = new LinkedList<>();
+            commandParts.add("certbot");
+            commandParts.add("register");
+            commandParts.add("--no-eff-email");
+            commandParts.add("--no-verify-ssl");
+            commandParts.add("--agree-tos");
+            commandParts.add("-q");
+            commandParts.add("-m");
+            commandParts.add(email);
+            commandParts.add("--server");
+            commandParts.add(acmeBaseUrl+"/acme/directory");
+            commandParts.add("--eab-kid");
+            commandParts.add(credential.getKeyIdentifier());
+            commandParts.add("--eab-hmac-key");
+            commandParts.add(credential.getMacKeyBase64());
+
+            return String.join(" ", commandParts);
+        }else{
+            throw new RAObjectNotFoundException(AuthCredential.class, serverEntry.getFqdn());
+        }
+    }
+
+    private String buildCertbotCertCommand(ServerEntry serverEntry, String applicationName, String email){
+        List<String> commandParts = new LinkedList<>();
+        commandParts.add("certbot");
+        if(applicationName.contentEquals("standalone") || applicationName.contentEquals("webroot")){
+            commandParts.add("certonly");
+        }
+        commandParts.add("--"+applicationName);
+        commandParts.add("--no-verify-ssl");
+        commandParts.add("--server");
+        //todo dynamic
+        commandParts.add(acmeBaseUrl+"/acme/directory");
+        commandParts.add("-d");
+        commandParts.add(serverEntry.getFqdn());
+        commandParts.add("--agree-tos");
+        commandParts.add("--non-interactive");
+        commandParts.add("--email");
+        commandParts.add(email);
+
+        return String.join(" ", commandParts);
+    }
+
+    private List<String> buildEstRequiredInputs(ServerEntry serverEntry) throws Exception {
+        Optional<AuthCredential> optionalAuthCredential = getAuthCredential(serverEntry);
+
+        List<String> parts = new LinkedList<>();
+
+        if(optionalAuthCredential.isPresent()) {
+            AuthCredential authCredential = optionalAuthCredential.get();
+            parts.add("Enrollment URL: " +estBaseUrl);
+            parts.add("HTTP Client Username: " +authCredential.getKeyIdentifier());
+            parts.add("HTTP Client Password: " +authCredential.getMacKeyBase64());
+
+        }
+        return parts;
+    }
+
+    private Optional<AuthCredential> getAuthCredential(ServerEntry serverEntry) throws Exception {
+        UniqueEntityLookupForm lookupForm = new UniqueEntityLookupForm();
+        lookupForm.setObjectClass(ServerEntry.class.getCanonicalName());
+        lookupForm.setObjectUuid(serverEntry.getUuid());
+
+        List<AuthCredential> validAuthCredentials = authCredentialService.getValidAuthCredentials(lookupForm);
+        if(CollectionUtils.isNotEmpty(validAuthCredentials)) {
+            AuthCredential credential = validAuthCredentials.get(0);
+            return Optional.of(credential);
+        }else{
+            return Optional.empty();
+        }
+    }
+}

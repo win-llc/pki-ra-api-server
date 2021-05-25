@@ -54,6 +54,12 @@ public class LoadedCertAuthorityStore implements InitializingBean {
         if (optionalCertAuthority.isPresent()) {
             CertAuthority ca = optionalCertAuthority.get();
 
+            try {
+                ca.getTrustChain();
+            } catch (Exception e) {
+                log.error("Could not get trust chain for: "+name, e);
+            }
+
             loadedCertAuthorities.put(ca.getName(), ca);
         }
     }
@@ -70,7 +76,7 @@ public class LoadedCertAuthorityStore implements InitializingBean {
                     try {
                         return c.getIssuerName().equals(ldapName);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Could not get issuer by DN: "+ldapName);
                     }
                     return false;
                 }).findFirst();

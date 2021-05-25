@@ -9,6 +9,7 @@ import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
+import com.winllc.pki.ra.beans.info.CertAuthorityInfo;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.pki.ra.ca.*;
 import com.winllc.acme.common.contants.CertificateStatus;
@@ -56,25 +57,42 @@ public class CertAuthorityConnectionService extends AbstractService {
     private final AccountRepository accountRepository;
     private final LoadedCertAuthorityStore certAuthorityStore;
     private final CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator;
-    @Autowired
-    private AuthCredentialService authCredentialService;
+    private final AuthCredentialService authCredentialService;
 
     public CertAuthorityConnectionService(CertAuthorityConnectionInfoRepository repository,
                                           CertAuthorityConnectionPropertyRepository propertyRepository,
                                           AccountRepository accountRepository,
                                           ApplicationContext context, LoadedCertAuthorityStore certAuthorityStore,
-                                          CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator) {
+                                          CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator, AuthCredentialService authCredentialService) {
         super(context);
         this.repository = repository;
         this.propertyRepository = propertyRepository;
         this.accountRepository = accountRepository;
         this.certAuthorityStore = certAuthorityStore;
         this.certAuthorityConnectionInfoValidator = certAuthorityConnectionInfoValidator;
+        this.authCredentialService = authCredentialService;
     }
 
     @InitBinder("certAuthorityConnectionInfoForm")
     public void initAppKeystoreEntryBinder(WebDataBinder binder) {
         binder.setValidator(certAuthorityConnectionInfoValidator);
+    }
+
+
+
+    @GetMapping("/view/{name}")
+    public CertAuthorityInfo getCertAuthorityInfo(@PathVariable String name) throws Exception {
+        CertAuthorityInfo info = new CertAuthorityInfo();
+
+        CertAuthority ca = certAuthorityStore.getLoadedCertAuthority(name);
+
+        X509Certificate certificate = (X509Certificate) ca.getTrustChain()[0];
+
+        info.setName(ca.getName());
+        info.setTrustChain(ca.getConnectionInfo().getTrustChainBase64());
+        info.setDn(certificate.getSubjectDN().getName());
+
+        return info;
     }
 
     @PostMapping("/api/info/create")

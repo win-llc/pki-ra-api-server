@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -140,6 +141,11 @@ public class MockAbstractCertAuthority extends AbstractCertAuthority {
     @Override
     public X509Certificate getCertificateBySerial(String serial) throws Exception {
         return CertUtil.base64ToCert(testX509Cert);
+    }
+
+    @Override
+    public X509CRL getCrl() {
+        return null;
     }
 
 

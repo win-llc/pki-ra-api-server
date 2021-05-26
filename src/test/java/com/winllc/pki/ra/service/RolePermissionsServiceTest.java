@@ -66,7 +66,7 @@ class RolePermissionsServiceTest {
     @Test
     void getAvailablePermissions() {
         List<String> availableRoles = rolePermissionsService.getAvailablePermissions();
-        assertEquals(13, availableRoles.size());
+        assertEquals(2, availableRoles.size());
     }
 
     @Test

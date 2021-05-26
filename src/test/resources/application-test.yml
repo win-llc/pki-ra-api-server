@@ -5,8 +5,9 @@ app-keystore:
   password: password
   type: JKS
 win-ra:
-  acme-server-url: http://winra.winllc-dev.com:8181
+  acme-server-url: https://winra.winllc-dev.com:8181
   acme-server-name: winllc
+  est-server-url: https://winra.winllc-dev.com:8383
 internal-ca:
   location: src/main/resources/ca-internal/win-llc-intermediate-2.pfx
   password: P@ssW0rd
@@ -91,17 +92,11 @@ web-ui:
     account-created: /account/edit/{0}
 permissions:
   front-end-client-oidc-client: pki-ra-client-public
+  protected-entities:
+    - account
+    - domain
+    - serverentry
+    - authkey
   available:
     - super_admin
-    - add_domain
-    - update_domain
-    - delete_domain
-    - add_account
-    - update_account
-    - delete_account
-    - add_account_restriction
-    - update_account_restriction
-    - delete_account_restriction
-    - add_server_entry
-    - update_server_entry
-    - delete_server_entry
+    - admin

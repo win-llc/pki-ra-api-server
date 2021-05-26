@@ -43,7 +43,7 @@ configurations {
 
 dependencies {
     compile group: 'com.winllc.acme.common', name: 'acme-common', version: '1.0-SNAPSHOT'
-    compile group: 'com.winllc.pki.plugins.dogtag', name: 'dogtag-ca-plugin', version: '1.0-SNAPSHOT'
+    //compile group: 'com.winllc.pki.plugins.dogtag', name: 'dogtag-ca-plugin', version: '1.0-SNAPSHOT'
 
 /*
     implementation name: 'pki-ca'

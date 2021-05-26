@@ -249,7 +249,7 @@ class CertAuthorityConnectionServiceTest {
     @Transactional
     void getTypes() {
         List<String> types = connectionService.getTypes();
-        assertTrue(types.size() > 0);
+        assertEquals(0, types.size());
     }
 
     @Test

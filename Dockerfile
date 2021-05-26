@@ -10,4 +10,4 @@ RUN mkdir -p /ssl
 EXPOSE 8282
 
 #ENTRYPOINT exec java $JAVA_OPTS -jar /app.jar
-ENTRYPOINT exec java $JAVA_OPTS -cp /app.jar:/ca-plugins -Dloader.main=com.winllc.pki.ra.config.AppConfig org.springframework.boot.loader.PropertiesLauncher
+ENTRYPOINT exec java $JAVA_OPTS -cp /app.jar:/ca-plugins/* -Dloader.main=com.winllc.pki.ra.config.AppConfig org.springframework.boot.loader.PropertiesLauncher

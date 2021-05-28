@@ -10,4 +10,4 @@ RUN mkdir -p /ssl
 EXPOSE 8282
 
 #ENTRYPOINT exec java $JAVA_OPTS -jar /app.jar
-ENTRYPOINT exec java  -cp /app.jar $JAVA_OPTS org.springframework.boot.loader.PropertiesLauncher
+ENTRYPOINT exec java -cp /app.jar $JAVA_OPTS org.springframework.boot.loader.PropertiesLauncher

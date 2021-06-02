@@ -6,12 +6,15 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Transient;
 
 @Entity
 public class ServerSettings extends BaseEntity {
 
     @Column(unique = true)
     private String property;
+    @Transient
+    private String friendlyName;
     private String value = "";
     private String groupName;
 
@@ -43,6 +46,14 @@ public class ServerSettings extends BaseEntity {
 
     public void setGroupName(String groupName) {
         this.groupName = groupName;
+    }
+
+    public String getFriendlyName() {
+        return friendlyName;
+    }
+
+    public void setFriendlyName(String friendlyName) {
+        this.friendlyName = friendlyName;
     }
 
     @Override

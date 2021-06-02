@@ -7,10 +7,7 @@ import org.springframework.ldap.odm.annotations.Transient;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "account")
@@ -64,6 +61,7 @@ public class Account extends AuthCredentialHolder implements AccountOwnedEntity,
         account.setKeyIdentifier(keyIdentifier);
         //account.setMacKey(macKey);
         account.setProjectName(projectName);
+        account.setCreationDate(new Date());
 
         return account;
     }

@@ -82,9 +82,28 @@ public class CertAuthorityConnectionService extends AbstractService {
 
     @GetMapping("/view/{name}")
     public CertAuthorityInfo getCertAuthorityInfo(@PathVariable String name) throws Exception {
-        CertAuthorityInfo info = new CertAuthorityInfo();
-
         CertAuthority ca = certAuthorityStore.getLoadedCertAuthority(name);
+        return buildInfo(ca);
+    }
+
+    @GetMapping("/all/info")
+    public List<CertAuthorityInfo> getAllCertAuthorityInfo(){
+        List<CertAuthority> allCertAuthorities = certAuthorityStore.getAllCertAuthorities();
+
+        List<CertAuthorityInfo> infoList = new ArrayList<>();
+        for(CertAuthority ca : allCertAuthorities){
+            try {
+                infoList.add(buildInfo(ca));
+            } catch (Exception e) {
+                log.error("Could not build info", e);
+            }
+        }
+
+        return infoList;
+    }
+
+    private CertAuthorityInfo buildInfo(CertAuthority ca) throws Exception {
+        CertAuthorityInfo info = new CertAuthorityInfo();
 
         X509Certificate certificate = (X509Certificate) ca.getTrustChain()[0];
 

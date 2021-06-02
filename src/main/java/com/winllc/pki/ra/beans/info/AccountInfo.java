@@ -2,6 +2,7 @@ package com.winllc.pki.ra.beans.info;
 
 import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.beans.PocFormEntry;
+import com.winllc.pki.ra.constants.DateTimeUtil;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AuthCredential;
 import com.winllc.pki.ra.domain.PocEntry;
@@ -20,13 +21,12 @@ public class AccountInfo extends InfoObject<Account> {
     private boolean acmeRequireHttpValidation;
     private boolean enabled;
     private String securityPolicyServerProjectId;
+    private String creationDate;
 
     private UserInfo accountOwner;
     private boolean userIsOwner = false;
     private List<PocFormEntry> pocs;
     private List<DomainInfo> canIssueDomains;
-
-    private List<AcmeConnectionInfo> acmeConnectionInfoList;
 
     public AccountInfo(Account entity, boolean loadKeys) {
         super(entity);
@@ -43,6 +43,9 @@ public class AccountInfo extends InfoObject<Account> {
         this.entityBaseDn = entity.getEntityBaseDn();
         this.enabled = entity.isEnabled();
         this.securityPolicyServerProjectId = entity.getSecurityPolicyServerProjectId();
+        if(entity.getCreationDate() != null) {
+            this.creationDate = DateTimeUtil.DATE_TIME_FORMATTER.format(entity.getCreationDate().toInstant());
+        }
     }
 
     public String getKeyIdentifier() {
@@ -117,14 +120,6 @@ public class AccountInfo extends InfoObject<Account> {
         this.acmeRequireHttpValidation = acmeRequireHttpValidation;
     }
 
-    public List<AcmeConnectionInfo> getAcmeConnectionInfoList() {
-        if(acmeConnectionInfoList == null) acmeConnectionInfoList = new ArrayList<>();
-        return acmeConnectionInfoList;
-    }
-
-    public void setAcmeConnectionInfoList(List<AcmeConnectionInfo> acmeConnectionInfoList) {
-        this.acmeConnectionInfoList = acmeConnectionInfoList;
-    }
 
     public boolean isEnabled() {
         return enabled;
@@ -150,43 +145,13 @@ public class AccountInfo extends InfoObject<Account> {
         this.userIsOwner = userIsOwner;
     }
 
-    public static class AcmeConnectionInfo {
-        private String directory;
-
-        private String url;
-        private String macKeyBase64;
-        private String accountKeyId;
-
-        public String getDirectory() {
-            return directory;
-        }
-
-        public void setDirectory(String directory) {
-            this.directory = directory;
-        }
-
-        public String getUrl() {
-            return url;
-        }
-
-        public void setUrl(String url) {
-            this.url = url;
-        }
-
-        public String getMacKeyBase64() {
-            return macKeyBase64;
-        }
-
-        public void setMacKeyBase64(String macKeyBase64) {
-            this.macKeyBase64 = macKeyBase64;
-        }
-
-        public String getAccountKeyId() {
-            return accountKeyId;
-        }
-
-        public void setAccountKeyId(String accountKeyId) {
-            this.accountKeyId = accountKeyId;
-        }
+    public String getCreationDate() {
+        return creationDate;
     }
+
+    public void setCreationDate(String creationDate) {
+        this.creationDate = creationDate;
+    }
+
+
 }

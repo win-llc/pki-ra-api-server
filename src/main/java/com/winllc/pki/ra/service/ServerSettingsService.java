@@ -90,6 +90,7 @@ public class ServerSettingsService {
                 Optional<ServerSettings> optionalSetting = repository.findDistinctByPropertyEquals(settingRequired.getSettingName());
                 if(optionalSetting.isPresent()){
                     ServerSettings setting = optionalSetting.get();
+                    setting.setFriendlyName(settingRequired.getFriendlyName());
                     setting.setGroupName(settingRequired.getSettingGroupName());
                     group.getRequiredSettings().add(setting);
                 }else{

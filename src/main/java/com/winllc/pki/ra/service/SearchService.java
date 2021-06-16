@@ -4,13 +4,16 @@ import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.ca.CertAuthority;
+import com.winllc.acme.common.contants.CertificateStatus;
 import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.domain.CachedCertificate;
 import com.winllc.pki.ra.domain.CertificateRequest;
+import com.winllc.pki.ra.domain.RevocationRequest;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.CachedCertificateRepository;
 import com.winllc.pki.ra.repository.CertificateRequestRepository;
+import com.winllc.pki.ra.repository.RevocationRequestRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +42,8 @@ public class SearchService {
     private CertificateRequestRepository certificateRequestRepository;
     @Autowired
     private CachedCertificateRepository cachedCertificateRepository;
+    @Autowired
+    private RevocationRequestRepository revocationRequestRepository;
 
     @GetMapping("/certificates")
     public List<CertificateDetails> searchCertificates(@RequestParam String search){
@@ -89,10 +94,15 @@ public class SearchService {
                                                  @RequestParam String serial) throws Exception {
         CertAuthority certAuthority = certAuthorityStore.getLoadedCertAuthority(caName);
 
+        //Optional<CachedCertificate> distinctByIssuerAndSerial = cachedCertificateRepository.findDistinctByIssuerAndSerial(
+        //        certAuthority.getIssuerName().toString(), Long.getLong(serial));
+
         X509Certificate certificate = certAuthority.getCertificateBySerial(serial);
         if(certificate != null){
-            FullCertificateDetails fullCertificateDetails = new FullCertificateDetails();
-            fullCertificateDetails.details = new CertificateDetails(certificate);
+            String issuerDn = certificate.getIssuerDN().getName();
+            CertificateStatus status = certAuthority.getCertificateStatus(serial);
+            FullCertificateDetails fullCertificateDetails =
+                    new FullCertificateDetails(new CertificateDetails(certificate, status.name()));
 
             int serialNum;
             if(serial.startsWith("0x")){
@@ -111,6 +121,16 @@ public class SearchService {
                 fullCertificateDetails.accountInfo = accountInfo;
             }
 
+            Optional<RevocationRequest> optionalRevocationRequest = revocationRequestRepository.findDistinctByIssuerDnAndSerial(
+                    issuerDn, serial);
+
+            if(optionalRevocationRequest.isPresent()){
+                RevocationRequest request = optionalRevocationRequest.get();
+                if(request.getStatus().contentEquals("new")){
+                    fullCertificateDetails.revocationPending = true;
+                }
+            }
+
             return fullCertificateDetails;
         }else{
             throw new RAObjectNotFoundException(Certificate.class, serial);
@@ -118,8 +138,21 @@ public class SearchService {
     }
 
     public static class FullCertificateDetails {
+        private boolean revocationPending = false;
         private CertificateDetails details;
         private AccountInfo accountInfo;
+
+        public boolean isRevocationPending() {
+            return revocationPending;
+        }
+
+        public void setRevocationPending(boolean revocationPending) {
+            this.revocationPending = revocationPending;
+        }
+
+        public FullCertificateDetails(CertificateDetails details) {
+            this.details = details;
+        }
 
         public CertificateDetails getDetails() {
             return details;

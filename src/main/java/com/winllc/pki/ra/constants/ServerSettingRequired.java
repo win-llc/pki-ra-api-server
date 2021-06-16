@@ -63,6 +63,10 @@ public enum ServerSettingRequired implements Comparable<ServerSettingRequired> {
         return passwordField;
     }
 
+    public Integer getWeight() {
+        return weight;
+    }
+
     public static Map<String, List<ServerSettingRequired>> getGroupMap(){
         return Stream.of(values())
                 .collect(Collectors.groupingBy(v -> v.getSettingGroupName()));

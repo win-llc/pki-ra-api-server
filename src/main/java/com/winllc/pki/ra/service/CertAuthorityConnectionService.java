@@ -54,20 +54,17 @@ public class CertAuthorityConnectionService extends AbstractService {
 
     private final CertAuthorityConnectionInfoRepository repository;
     private final CertAuthorityConnectionPropertyRepository propertyRepository;
-    private final AccountRepository accountRepository;
     private final LoadedCertAuthorityStore certAuthorityStore;
     private final CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator;
     private final AuthCredentialService authCredentialService;
 
     public CertAuthorityConnectionService(CertAuthorityConnectionInfoRepository repository,
                                           CertAuthorityConnectionPropertyRepository propertyRepository,
-                                          AccountRepository accountRepository,
                                           ApplicationContext context, LoadedCertAuthorityStore certAuthorityStore,
                                           CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator, AuthCredentialService authCredentialService) {
         super(context);
         this.repository = repository;
         this.propertyRepository = propertyRepository;
-        this.accountRepository = accountRepository;
         this.certAuthorityStore = certAuthorityStore;
         this.certAuthorityConnectionInfoValidator = certAuthorityConnectionInfoValidator;
         this.authCredentialService = authCredentialService;
@@ -296,8 +293,13 @@ public class CertAuthorityConnectionService extends AbstractService {
 
         if(raCertificateIssueRequest.getDnsNameList().size() == 0) throw new IllegalArgumentException("Must include at least one DNS name");
 
-        CertIssuanceTransaction certIssuanceTransaction = new CertIssuanceTransaction(certAuthorityStore.getLoadedCertAuthority(
-                raCertificateIssueRequest.getCertAuthorityName()), context);
+        CertAuthority certAuthority = certAuthorityStore.getLoadedCertAuthority(raCertificateIssueRequest.getCertAuthorityName());
+
+        if(certAuthority == null){
+            throw new RAObjectNotFoundException(CertAuthority.class, raCertificateIssueRequest.getCertAuthorityName());
+        }
+
+        CertIssuanceTransaction certIssuanceTransaction = new CertIssuanceTransaction(certAuthority, context);
 
         X509Certificate cert;
 

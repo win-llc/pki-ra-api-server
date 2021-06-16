@@ -9,14 +9,19 @@ import javax.persistence.Entity;
 import javax.persistence.Transient;
 
 @Entity
-public class ServerSettings extends BaseEntity {
+public class ServerSettings extends BaseEntity implements Comparable<ServerSettings> {
 
     @Column(unique = true)
     private String property;
-    @Transient
-    private String friendlyName;
     private String value = "";
     private String groupName;
+
+    @Transient
+    private String friendlyName;
+    @Transient
+    private Integer weight;
+    @Transient
+    private boolean password;
 
     public ServerSettings(){}
 
@@ -56,6 +61,22 @@ public class ServerSettings extends BaseEntity {
         this.friendlyName = friendlyName;
     }
 
+    public Integer getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Integer weight) {
+        this.weight = weight;
+    }
+
+    public boolean isPassword() {
+        return password;
+    }
+
+    public void setPassword(boolean password) {
+        this.password = password;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -78,5 +99,10 @@ public class ServerSettings extends BaseEntity {
                 .append(getProperty())
                 .append(getGroupName())
                 .toHashCode();
+    }
+
+    @Override
+    public int compareTo(ServerSettings o) {
+        return this.weight.compareTo(o.weight);
     }
 }

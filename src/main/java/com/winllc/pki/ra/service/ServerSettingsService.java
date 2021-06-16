@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @RestController
@@ -86,20 +88,28 @@ public class ServerSettingsService {
             ServerSettingsGroup group = new ServerSettingsGroup(groupName);
 
             List<ServerSettingRequired> byGroupName = ServerSettingRequired.getByGroupName(groupName);
-            for(ServerSettingRequired settingRequired : byGroupName){
+            List<ServerSettingRequired> sorted = byGroupName.stream()
+                    .sorted((g1, g2) -> g1.getWeight().compareTo(g2.getWeight()))
+                    .collect(Collectors.toList());
+            for(ServerSettingRequired settingRequired : sorted){
                 Optional<ServerSettings> optionalSetting = repository.findDistinctByPropertyEquals(settingRequired.getSettingName());
                 if(optionalSetting.isPresent()){
                     ServerSettings setting = optionalSetting.get();
                     setting.setFriendlyName(settingRequired.getFriendlyName());
                     setting.setGroupName(settingRequired.getSettingGroupName());
+                    setting.setPassword(settingRequired.isPasswordField());
+                    setting.setWeight(settingRequired.getWeight());
                     group.getRequiredSettings().add(setting);
                 }else{
                     ServerSettings settings = new ServerSettings(settingRequired.getSettingName());
                     settings.setGroupName(settingRequired.getSettingGroupName());
                 }
             }
+
+            Collections.sort(group.getRequiredSettings());
             groups.add(group);
         }
+
         return groups;
     }
 

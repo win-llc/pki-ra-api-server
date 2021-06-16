@@ -2,13 +2,15 @@ package com.winllc.pki.ra.beans;
 
 import com.winllc.pki.ra.domain.ServerSettings;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ServerSettingsGroup {
 
     private String settingsGroupName;
-    private Set<ServerSettings> requiredSettings;
+    private List<ServerSettings> requiredSettings;
 
     public ServerSettingsGroup(String groupName){
         this.settingsGroupName = groupName;
@@ -22,12 +24,12 @@ public class ServerSettingsGroup {
         this.settingsGroupName = settingsGroupName;
     }
 
-    public Set<ServerSettings> getRequiredSettings() {
-        if(requiredSettings == null) requiredSettings = new HashSet<>();
+    public List<ServerSettings> getRequiredSettings() {
+        if(requiredSettings == null) requiredSettings = new ArrayList<>();
         return requiredSettings;
     }
 
-    public void setRequiredSettings(Set<ServerSettings> requiredSettings) {
+    public void setRequiredSettings(List<ServerSettings> requiredSettings) {
         this.requiredSettings = requiredSettings;
     }
 }

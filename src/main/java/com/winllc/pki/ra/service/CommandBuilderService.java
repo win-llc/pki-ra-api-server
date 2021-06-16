@@ -49,6 +49,7 @@ public class CommandBuilderService {
                 String certCommand = buildCertbotCertCommand(serverEntry, applicationName, authentication.getName());
                 commands.add(registerCommand);
                 commands.add(certCommand);
+                commands.add(buildCertbotRenewalCron());
             }
             case "est" -> commands.addAll(buildEstRequiredInputs(serverEntry));
         }
@@ -108,6 +109,10 @@ public class CommandBuilderService {
         commandParts.add(email);
 
         return String.join(" ", commandParts);
+    }
+
+    private String buildCertbotRenewalCron(){
+        return "SLEEPTIME=$(awk 'BEGIN{srand(); print int(rand()*(3600+1))}'); echo \"0 0,12 * * * root sleep $SLEEPTIME && certbot renew -q\" | sudo tee -a /etc/crontab > /dev/null";
     }
 
     private List<String> buildEstRequiredInputs(ServerEntry serverEntry) throws Exception {

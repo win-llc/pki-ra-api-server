@@ -1,11 +1,10 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.SubjectAltNames;
+import com.winllc.acme.common.keystore.KeyEntryWrapper;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.AppKeyStoreEntryForm;
 import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.keystore.ApplicationKeystore;
-import com.winllc.pki.ra.keystore.KeyEntryWrapper;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +17,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.cert.X509Certificate;

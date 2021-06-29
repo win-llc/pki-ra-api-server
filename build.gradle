@@ -1,6 +1,6 @@
 plugins {
-    id 'org.springframework.boot' version '2.3.2.RELEASE'
-    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
     id 'java'
     id 'idea'
 }
@@ -15,6 +15,7 @@ repositories {
 
     maven {
         url "http://util.winllc-dev.com:8081/repository/win-llc/"
+        allowInsecureProtocol true
     }
 }
 
@@ -47,33 +48,31 @@ configurations {
 }
 
 dependencies {
-    compile group: 'com.winllc.acme.common', name: 'acme-common', version: '1.0-SNAPSHOT'
-    //compile group: 'com.winllc.pki.plugins.dogtag', name: 'dogtag-ca-plugin', version: '1.0-SNAPSHOT'
+    implementation group: 'com.winllc.acme.common', name: 'acme-common', version: '1.0-SNAPSHOT'
+    implementation group: 'com.winllc.pki.plugins.dogtag', name: 'dogtag-ca-plugin', version: '1.0-SNAPSHOT'
 
 
     implementation('org.springframework.boot:spring-boot-starter-actuator')
-    implementation('org.springframework.boot:spring-boot-starter-data-jpa')
     implementation('org.springframework.boot:spring-boot-starter-web')
-    implementation('org.springframework.boot:spring-boot-starter-actuator')
     implementation('org.springframework.boot:spring-boot-starter-oauth2-resource-server')
     implementation('org.springframework.boot:spring-boot-starter-hateoas')
     implementation('org.springframework.boot:spring-boot-configuration-processor')
     implementation('org.springframework.boot:spring-boot-starter-mail')
 
     // https://mvnrepository.com/artifact/org.springframework.ldap/spring-ldap-core
-    compile group: 'org.springframework.ldap', name: 'spring-ldap-core', version: '2.3.3.RELEASE'
+    implementation group: 'org.springframework.ldap', name: 'spring-ldap-core', version: '2.3.3.RELEASE'
 
     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
-    compile group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.4.4'
+    implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.4.4'
 
     // https://mvnrepository.com/artifact/io.github.classgraph/classgraph
-    compile group: 'io.github.classgraph', name: 'classgraph', version: '4.8.89'
+    implementation group: 'io.github.classgraph', name: 'classgraph', version: '4.8.89'
 
     // https://mvnrepository.com/artifact/io.springfox/springfox-boot-starter
     //compile group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
     //compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '3.0.0'
     // https://mvnrepository.com/artifact/io.springfox/springfox-swagger2
-    compile group: 'io.springfox', name: 'springfox-swagger2', version: '3.0.0'
+    implementation group: 'io.springfox', name: 'springfox-swagger2', version: '3.0.0'
 
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus
     implementation group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: '1.6.7'
@@ -82,47 +81,40 @@ dependencies {
     annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-configuration-processor'
 
     // https://mvnrepository.com/artifact/org.keycloak/keycloak-admin-client
-    compile group: 'org.keycloak', name: 'keycloak-admin-client', version: '11.0.1'
+    implementation group: 'org.keycloak', name: 'keycloak-admin-client', version: '11.0.1'
 
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-client
-    compile group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.6.2.Final'
+    implementation group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.6.2.Final'
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-jackson2-provider
-    compile group: 'org.jboss.resteasy', name: 'resteasy-jackson2-provider', version: '3.6.2.Final'
+    implementation group: 'org.jboss.resteasy', name: 'resteasy-jackson2-provider', version: '3.6.2.Final'
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-jaxb-provider
-    compile group: 'org.jboss.resteasy', name: 'resteasy-jaxb-provider', version: '3.6.2.Final'
+    implementation group: 'org.jboss.resteasy', name: 'resteasy-jaxb-provider', version: '3.6.2.Final'
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-atom-provider
-    compile group: 'org.jboss.resteasy', name: 'resteasy-atom-provider', version: '3.6.2.Final'
-    // https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-    compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
+    implementation group: 'org.jboss.resteasy', name: 'resteasy-atom-provider', version: '3.6.2.Final'
     // https://mvnrepository.com/artifact/commons-validator/commons-validator
-    compile group: 'commons-validator', name: 'commons-validator', version: '1.7'
-
-
-    // https://mvnrepository.com/artifact/mysql/mysql-connector-java
-    compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.18'
-
+    implementation group: 'commons-validator', name: 'commons-validator', version: '1.7'
 
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
-    //compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.0.pr2'
+    //implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.0.pr2'
 
     // https://mvnrepository.com/artifact/com.h2database/h2
-    //compile group: 'com.h2database', name: 'h2', version: '1.4.199'
+    //implementation group: 'com.h2database', name: 'h2', version: '1.4.199'
 
     // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.0'
 
     implementation 'org.bitbucket.b_c:jose4j:0.6.5'
     // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt
-    compile group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '7.2.1'
+    //implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '7.2.1'
 
 
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'junit', module: 'junit'
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
-    testCompile('com.h2database:h2')
+    testImplementation('com.h2database:h2')
     // https://mvnrepository.com/artifact/org.springframework.security/spring-security-test
-    testCompile group: 'org.springframework.security', name: 'spring-security-test', version: '5.2.8.RELEASE'
+    testImplementation group: 'org.springframework.security', name: 'spring-security-test', version: '5.2.8.RELEASE'
 
 
 

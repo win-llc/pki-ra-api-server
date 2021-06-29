@@ -117,7 +117,7 @@ public class MockCertAuthority implements CertAuthority {
     public List<CertificateDetails> search(CertSearchParam params) {
         if(params.getField() == CertSearchParams.CertField.SUBJECT && params.getValue().equals("test.winllc-dev.com")){
             try {
-                CertificateDetails certificateDetails = new CertificateDetails(CertUtil.base64ToCert(testX509Cert));
+                CertificateDetails certificateDetails = new CertificateDetails(CertUtil.base64ToCert(testX509Cert), "VALID");
                 return Collections.singletonList(certificateDetails);
             } catch (CertificateException e) {
                 e.printStackTrace();

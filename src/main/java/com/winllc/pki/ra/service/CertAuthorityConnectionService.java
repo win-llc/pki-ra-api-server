@@ -3,10 +3,12 @@ package com.winllc.pki.ra.service;
 import com.winllc.acme.common.*;
 import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ca.ConnectionProperty;
+import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import com.winllc.acme.common.domain.CertAuthorityConnectionProperty;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
+import com.winllc.acme.common.repository.CertAuthorityConnectionInfoRepository;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.pki.ra.beans.info.CertAuthorityInfo;
@@ -124,7 +126,7 @@ public class CertAuthorityConnectionService extends AbstractService {
         caConnection.setTrustChainBase64(connectionInfo.getTrustChainBase64());
         caConnection = repository.save(caConnection);
 
-        certAuthorityStore.reload();
+        certAuthorityStore.loadCertAuthority(caConnection);
 
         Map<String, CertAuthorityConnectionProperty> propMap = connectionInfo.getProperties().stream()
                 .collect(Collectors.toMap(p -> p.getName(), p -> p));
@@ -149,9 +151,7 @@ public class CertAuthorityConnectionService extends AbstractService {
 
         caConnection.setProperties(props);
         caConnection = repository.save(caConnection);
-
-        //reload cert authority
-        certAuthorityStore.reload();
+        certAuthorityStore.loadCertAuthority(caConnection);
 
         return caConnection.getId();
     }
@@ -181,7 +181,7 @@ public class CertAuthorityConnectionService extends AbstractService {
 
             CertAuthorityConnectionInfo info2 = repository.save(info);
 
-            certAuthorityStore.reload();
+            certAuthorityStore.loadCertAuthority(info2);
 
             return buildForm(info2);
         }else{

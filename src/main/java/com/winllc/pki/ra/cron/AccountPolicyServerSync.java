@@ -13,10 +13,13 @@ import java.util.List;
 @Component
 public class AccountPolicyServerSync {
 
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private AccountRestrictionService accountRestrictionService;
+    private final AccountRepository accountRepository;
+    private final AccountRestrictionService accountRestrictionService;
+
+    public AccountPolicyServerSync(AccountRepository accountRepository, AccountRestrictionService accountRestrictionService) {
+        this.accountRepository = accountRepository;
+        this.accountRestrictionService = accountRestrictionService;
+    }
 
     @Scheduled(fixedDelay = 1000 * 60 * 60)
     @Transactional

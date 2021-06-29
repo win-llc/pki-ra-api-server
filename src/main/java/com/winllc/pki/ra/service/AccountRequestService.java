@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.sql.Timestamp;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -92,7 +94,7 @@ public class AccountRequestService {
         accountRequest.setProjectName(form.getProjectName());
         accountRequest.setSecurityPolicyServerProjectId(form.getSecurityPolicyServerProjectId());
         accountRequest.setRequestedByEmail(authentication.getName());
-        accountRequest.setCreationDate(new Date());
+        accountRequest.setCreationDate(Timestamp.from(ZonedDateTime.now().toInstant()));
 
         accountRequest = accountRequestRepository.save(accountRequest);
         return accountRequest.getId();

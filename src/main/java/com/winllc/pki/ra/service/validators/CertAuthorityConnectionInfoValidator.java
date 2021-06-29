@@ -1,10 +1,8 @@
 package com.winllc.pki.ra.service.validators;
 
 import com.winllc.acme.common.domain.CertAuthorityConnectionProperty;
-import com.winllc.pki.ra.beans.form.AttributePolicyGroupForm;
+import com.winllc.acme.common.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
-import com.winllc.pki.ra.keystore.ApplicationKeystore;
-import com.winllc.pki.ra.util.FormValidationUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,8 +22,11 @@ public class CertAuthorityConnectionInfoValidator implements Validator {
 
     private static final Logger log = LogManager.getLogger(CertAuthorityConnectionInfoValidator.class);
 
-    @Autowired
-    private ApplicationKeystore applicationKeystore;
+    private final ApplicationKeystore applicationKeystore;
+
+    public CertAuthorityConnectionInfoValidator(ApplicationKeystore applicationKeystore) {
+        this.applicationKeystore = applicationKeystore;
+    }
 
     @Override
     public boolean supports(Class<?> clazz) {

@@ -1,5 +1,9 @@
 package com.winllc.pki.ra.config;
 
+import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
+import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
+import com.winllc.acme.common.keystore.ApplicationKeystore;
+import com.winllc.acme.common.repository.CertAuthorityConnectionInfoRepository;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -9,6 +13,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.DependsOn;
@@ -17,12 +24,12 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
+
+import java.util.List;
 
 
 @SpringBootApplication(
@@ -34,12 +41,14 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 //@EnableOpenApi
 //@EnableWebMvc
-@ComponentScan("com.winllc.pki.ra")
+@ComponentScan({"com.winllc.pki.ra", "com.winllc.acme.common"})
 @EntityScan({"com.winllc.pki.ra.domain", "com.winllc.acme.common.domain"})
-@EnableJpaRepositories(basePackages = "com.winllc.pki.ra.repository")
+@EnableJpaRepositories(basePackages = {"com.winllc.pki.ra.repository", "com.winllc.acme.common.repository"})
 @EnableTransactionManagement
 @EnableJpaAuditing
 @EnableScheduling
+@EnableConfigurationProperties
+@ConfigurationPropertiesScan({"com.winllc.pki.ra.config", "com.winllc.acme.common.config"})
 public class AppConfig {
 
     @Autowired
@@ -70,6 +79,21 @@ public class AppConfig {
         };
     }
     */
+
+
+    @Bean
+    public LoadedCertAuthorityStore loadedCertAuthorityStore(ApplicationContext context,
+                                                             ApplicationKeystore applicationKeystore,
+                                                             CertAuthorityConnectionInfoRepository connectionInfoRepository){
+        LoadedCertAuthorityStore store = new LoadedCertAuthorityStore(applicationKeystore, context);
+
+        List<CertAuthorityConnectionInfo> all = connectionInfoRepository.findAll();
+        for(CertAuthorityConnectionInfo info : all){
+            store.loadCertAuthority(info);
+        }
+
+        return store;
+    }
 
     @Bean(destroyMethod = "close")
     @DependsOn(value = "keycloakProperties")

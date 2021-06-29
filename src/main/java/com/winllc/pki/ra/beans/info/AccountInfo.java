@@ -1,13 +1,10 @@
 package com.winllc.pki.ra.beans.info;
 
-import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.beans.PocFormEntry;
-import com.winllc.pki.ra.constants.DateTimeUtil;
+import com.winllc.acme.common.contants.DateTimeUtil;
 import com.winllc.pki.ra.domain.Account;
 import com.winllc.pki.ra.domain.AuthCredential;
-import com.winllc.pki.ra.domain.PocEntry;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 

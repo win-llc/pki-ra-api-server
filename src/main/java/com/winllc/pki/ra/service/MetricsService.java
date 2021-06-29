@@ -3,17 +3,15 @@ package com.winllc.pki.ra.service;
 import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
+import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.beans.metrics.AuditMetricRequest;
 import com.winllc.pki.ra.beans.metrics.AuditMetricResponse;
 import com.winllc.pki.ra.beans.metrics.ChartMetrics;
 import com.winllc.pki.ra.beans.metrics.DailyAuditMetric;
 import com.winllc.acme.common.ca.CertAuthority;
-import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.AuditRecord;
 import com.winllc.pki.ra.repository.AuditRecordRepository;
-import com.winllc.pki.ra.repository.CachedCertificateRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

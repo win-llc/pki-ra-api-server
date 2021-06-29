@@ -7,6 +7,8 @@ import org.springframework.ldap.odm.annotations.Transient;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 @Entity
@@ -61,7 +63,7 @@ public class Account extends AuthCredentialHolder implements AccountOwnedEntity,
         account.setKeyIdentifier(keyIdentifier);
         //account.setMacKey(macKey);
         account.setProjectName(projectName);
-        account.setCreationDate(new Date());
+        account.setCreationDate(Timestamp.from(ZonedDateTime.now().toInstant()));
 
         return account;
     }

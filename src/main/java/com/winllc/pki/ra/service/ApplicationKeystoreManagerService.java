@@ -1,28 +1,20 @@
 package com.winllc.pki.ra.service;
 
-import com.nimbusds.jose.util.X509CertUtils;
+import com.winllc.acme.common.keystore.ApplicationKeystore;
+import com.winllc.acme.common.keystore.KeyEntryWrapper;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.AppKeyStoreEntryForm;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.keystore.ApplicationKeystore;
-import com.winllc.pki.ra.keystore.KeyEntryWrapper;
 import com.winllc.pki.ra.service.validators.AppKeyStoreEntryValidator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.jce.provider.X509CertificateObject;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.io.IOException;
-import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.*;
 import java.security.cert.Certificate;

@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.beans.form;
 
+import com.winllc.acme.common.keystore.KeyEntryWrapper;
 import com.winllc.acme.common.util.CertUtil;
-import com.winllc.pki.ra.keystore.KeyEntryWrapper;
 import org.apache.commons.lang.StringUtils;
 
 import javax.validation.constraints.NotEmpty;

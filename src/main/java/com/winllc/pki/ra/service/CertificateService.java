@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/certificates")
-public class CachedCertificateService {
+public class CertificateService {
 
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("mm/DD/yyyy");
 
@@ -35,7 +35,7 @@ public class CachedCertificateService {
     @Autowired
     private ServerEntryRepository serverEntryRepository;
 
-    public CachedCertificateService(CachedCertificateRepository cachedCertificateRepository) {
+    public CertificateService(CachedCertificateRepository cachedCertificateRepository) {
         this.cachedCertificateRepository = cachedCertificateRepository;
     }
 
@@ -44,7 +44,7 @@ public class CachedCertificateService {
     public Page<CachedCertificate> getPaged(@RequestParam(required = false) String search,
                                             @RequestParam(defaultValue = "0") Integer page,
                                             @RequestParam(defaultValue = "10") Integer pageSize,
-                                            @RequestParam(defaultValue = "dn") String sortBy,
+                                            @RequestParam(defaultValue = "validTo") String sortBy,
                                             @RequestParam(defaultValue = "desc") String order,
                                             @RequestParam(defaultValue = "false") Boolean includeArchive,
                                             @RequestParam(defaultValue = "true") Boolean includeNonArchive,

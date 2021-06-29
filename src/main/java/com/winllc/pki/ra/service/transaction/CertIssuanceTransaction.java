@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service.transaction;
 
 import com.winllc.acme.common.SubjectAltNames;
+import com.winllc.acme.common.cache.CachedCertificateService;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.acme.common.ca.CertAuthority;
@@ -44,6 +45,8 @@ public class CertIssuanceTransaction extends CertTransaction {
     private final EntityDirectoryService entityDirectoryService;
     private final AuditRecordRepository auditRecordRepository;
     private CachedCertificateUpdater cachedCertificateUpdater;
+    @Autowired
+    private CachedCertificateService cachedCertificateService;
 
     public CertIssuanceTransaction(CertAuthority certAuthority, ApplicationContext context) {
         super(certAuthority, context);
@@ -101,7 +104,7 @@ public class CertIssuanceTransaction extends CertTransaction {
 
         ThrowingSupplier<X509Certificate, Exception> postProcessAction = () -> {
             if (cert != null) {
-                cachedCertificateUpdater.addSingleCertificate(cert);
+                cachedCertificateService.persist(cert);
                 return cert;
             } else {
                 throw new RAException("Could not cache certificate");

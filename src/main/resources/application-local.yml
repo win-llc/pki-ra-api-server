@@ -70,6 +70,10 @@ server:
   #address: 192.168.1.13
   base-url: http://192.168.1.3:8080
   base-api-url: http://192.168.1.3:8080
+
+elasticsearch:
+  url: winra.winllc-dev.com:9200
+
 keycloak-admin-interface:
   server-base-url: 'https://keycloak.winllc-dev.com/auth'
   realm: dev

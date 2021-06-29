@@ -4,9 +4,11 @@ import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.ca.CertAuthority;
+import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
+import com.winllc.acme.common.cache.CachedCertificateService;
 import com.winllc.acme.common.contants.CertificateStatus;
+import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.info.AccountInfo;
-import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.domain.CachedCertificate;
 import com.winllc.pki.ra.domain.CertificateRequest;
 import com.winllc.pki.ra.domain.RevocationRequest;
@@ -28,7 +30,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -44,6 +45,8 @@ public class SearchService {
     private CachedCertificateRepository cachedCertificateRepository;
     @Autowired
     private RevocationRequestRepository revocationRequestRepository;
+    @Autowired
+    private CachedCertificateService cachedCertificateService;
 
     @GetMapping("/certificates")
     public List<CertificateDetails> searchCertificates(@RequestParam String search){
@@ -51,8 +54,15 @@ public class SearchService {
         List<CertificateDetails> details = new ArrayList<>();
         if(StringUtils.isNotEmpty(search) && search.length() > 2) {
 
+            CertSearchParam param = CertSearchParam.createNew();
+            param.setRelation(CertSearchParams.CertSearchParamRelation.CONTAINS);
+            param.setField(CertSearchParams.CertField.SUBJECT);
+            param.setValue(search);
+
+            List<com.winllc.acme.common.ca.CachedCertificate> search1 = cachedCertificateService.search(param);
+
             List<CachedCertificate> found = cachedCertificateRepository.findAllByDnContainsIgnoreCase(search);
-            return found.stream()
+            return search1.stream()
                     .sorted()
                     .map(c -> cachedToDetails(c))
                     .collect(Collectors.toList());
@@ -75,10 +85,10 @@ public class SearchService {
         return details;
     }
 
-    private CertificateDetails cachedToDetails(CachedCertificate cachedCertificate){
+    private CertificateDetails cachedToDetails(com.winllc.acme.common.ca.CachedCertificate cachedCertificate){
         CertificateDetails details = new CertificateDetails();
-        details.setValidFrom(cachedCertificate.getValidFrom().toLocalDateTime().atZone(ZoneId.systemDefault()));
-        details.setValidTo(cachedCertificate.getValidTo().toInstant().atZone(ZoneId.systemDefault()));
+        details.setValidFrom(ZonedDateTime.from(cachedCertificate.getValidFrom().toInstant().atZone(ZoneId.systemDefault())));
+        details.setValidTo(ZonedDateTime.from(cachedCertificate.getValidTo().toInstant().atZone(ZoneId.systemDefault())));
         details.setIssuer(cachedCertificate.getIssuer());
         details.setSerial(cachedCertificate.getSerial().toString());
         details.setSubject(cachedCertificate.getDn());
@@ -104,12 +114,7 @@ public class SearchService {
             FullCertificateDetails fullCertificateDetails =
                     new FullCertificateDetails(new CertificateDetails(certificate, status.name()));
 
-            int serialNum;
-            if(serial.startsWith("0x")){
-                serialNum = Integer.parseInt(serial.replace("0x", ""),16);
-            }else{
-                serialNum = Integer.parseInt(serial);
-            }
+            int serialNum = CertUtil.serialToInt(serial);
 
             Optional<CertificateRequest> optionalRequest = certificateRequestRepository.findDistinctByIssuedCertificateSerialAndCertAuthorityName(
                     Integer.toString(serialNum), caName);

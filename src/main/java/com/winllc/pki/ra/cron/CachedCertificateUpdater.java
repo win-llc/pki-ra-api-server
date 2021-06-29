@@ -4,24 +4,19 @@ import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.ca.CertAuthority;
-import com.winllc.pki.ra.ca.LoadedCertAuthorityStore;
-import com.winllc.pki.ra.domain.Account;
+import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.domain.CachedCertificate;
 import com.winllc.pki.ra.domain.CertificateRequest;
-import com.winllc.pki.ra.keystore.ApplicationKeystore;
 import com.winllc.pki.ra.repository.CachedCertificateRepository;
 import com.winllc.pki.ra.repository.CertificateRequestRepository;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import javax.naming.InvalidNameException;
 import javax.transaction.Transactional;
-import java.math.BigInteger;
 import java.security.cert.*;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -29,7 +24,7 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Component
+//@Component
 public class CachedCertificateUpdater {
 
     private static final Logger log = LogManager.getLogger(CachedCertificateUpdater.class);

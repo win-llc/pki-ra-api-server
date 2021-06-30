@@ -44,14 +44,16 @@ public class CommandBuilderService {
         List<String> commands = new LinkedList<>();
 
         switch (command) {
-            case "certbot" -> {
+            case "certbot":
                 String registerCommand = buildCertbotRegisterCommand(serverEntry, authentication.getName());
                 String certCommand = buildCertbotCertCommand(serverEntry, applicationName, authentication.getName());
                 commands.add(registerCommand);
                 commands.add(certCommand);
                 commands.add(buildCertbotRenewalCron());
-            }
-            case "est" -> commands.addAll(buildEstRequiredInputs(serverEntry));
+                break;
+            case "est":
+                commands.addAll(buildEstRequiredInputs(serverEntry));
+                break;
         }
 
         return commands;

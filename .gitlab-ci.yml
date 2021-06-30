@@ -17,7 +17,7 @@ build:
     - gradle -x test build
   artifacts:
     paths:
-      - build/libs/*.jar
+      - build/libs/winllc-pki-registration-authority-1.0-SNAPSHOT.jar
       - build/resources/main/*.jks
       - build/resources/main/*.pfx
 

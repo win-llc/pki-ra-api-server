@@ -31,7 +31,10 @@
         </Root>
 
         <!-- LOG "com.baeldung*" at TRACE level -->
-        <Logger name="com.winllc" level="debug"></Logger>
+        <Logger name="com.winllc" level="debug">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="RollingFile" />
+        </Logger>
     </Loggers>
 
 </Configuration>

@@ -19,6 +19,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.util.*;
+import java.util.function.Function;
 
 public class MockCertAuthority implements CertAuthority {
 
@@ -142,6 +143,11 @@ public class MockCertAuthority implements CertAuthority {
     @Override
     public X509CRL getCrl() {
         return null;
+    }
+
+    @Override
+    public void performOnResults(CertSearchParam param, Function<List<CertificateDetails>, Boolean> operation) {
+
     }
 
 

@@ -3,25 +3,23 @@ package com.winllc.pki.ra.service;
 import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
+import com.winllc.acme.common.ca.CachedCertificate;
 import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
 import com.winllc.acme.common.cache.CachedCertificateService;
 import com.winllc.acme.common.contants.CertificateStatus;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.info.AccountInfo;
-import com.winllc.pki.ra.domain.CachedCertificate;
 import com.winllc.pki.ra.domain.CertificateRequest;
 import com.winllc.pki.ra.domain.RevocationRequest;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.repository.CachedCertificateRepository;
 import com.winllc.pki.ra.repository.CertificateRequestRepository;
 import com.winllc.pki.ra.repository.RevocationRequestRepository;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.security.cert.Certificate;
@@ -61,28 +59,22 @@ public class SearchService {
 
             List<com.winllc.acme.common.ca.CachedCertificate> search1 = cachedCertificateService.search(param);
 
-            List<CachedCertificate> found = cachedCertificateRepository.findAllByDnContainsIgnoreCase(search);
             return search1.stream()
                     .sorted()
                     .map(c -> cachedToDetails(c))
                     .collect(Collectors.toList());
-            /*
-            CertSearchParam param = new CertSearchParam(CertSearchParams.CertField.SUBJECT,
-                    search, CertSearchParams.CertSearchParamRelation.CONTAINS);
-
-            Map<String, CertAuthority> loadedCertAuthorities = certAuthorityStore.getLoadedCertAuthorities();
-            for (Map.Entry<String, CertAuthority> entry : loadedCertAuthorities.entrySet()) {
-                List<CertificateDetails> results = entry.getValue().search(param);
-                results.forEach(r -> {
-                    r.setCaName(entry.getKey());
-                });
-
-                details.addAll(results);
-            }
-
-             */
         }
         return details;
+    }
+
+    @PostMapping("/certificates/advanced")
+    public List<CertificateDetails> advancedSearchCertificates(@RequestBody CertSearchParam param){
+
+        List<com.winllc.acme.common.ca.CachedCertificate> search1 = cachedCertificateService.search(param);
+
+        return search1.stream()
+                .map(c -> cachedToDetails(c))
+                .collect(Collectors.toList());
     }
 
     private CertificateDetails cachedToDetails(com.winllc.acme.common.ca.CachedCertificate cachedCertificate){
@@ -107,6 +99,34 @@ public class SearchService {
         //Optional<CachedCertificate> distinctByIssuerAndSerial = cachedCertificateRepository.findDistinctByIssuerAndSerial(
         //        certAuthority.getIssuerName().toString(), Long.getLong(serial));
 
+        CertSearchParam serialSearch = CertSearchParam.createNew()
+                .field(CertSearchParams.CertField.SERIAL)
+                .relation(CertSearchParams.CertSearchParamRelation.EQUALS)
+                .value(serial);
+
+        CertSearchParam caSearch = CertSearchParam.createNew()
+                .field(CertSearchParams.CertField.ISSUER)
+                .relation(CertSearchParams.CertSearchParamRelation.EQUALS)
+                .value(certAuthority.getIssuerName().toString());
+
+        CertSearchParam andParam = CertSearchParam.createNew()
+                .relation(CertSearchParams.CertSearchParamRelation.AND)
+                .addSearchParam(serialSearch)
+                .addSearchParam(caSearch);
+
+        List<CachedCertificate> search = cachedCertificateService.search(andParam);
+
+        if(CollectionUtils.isNotEmpty(search)){
+            CachedCertificate cachedCertificate = search.get(0);
+            X509Certificate certificate = CertUtil.base64ToCert(cachedCertificate.getBase64Certificate());
+            FullCertificateDetails fullCertificateDetails =
+                    new FullCertificateDetails(new CertificateDetails(certificate, cachedCertificate.getStatus()));
+
+            return fullCertificateDetails;
+        }else{
+            throw new RAObjectNotFoundException(Certificate.class, serial);
+        }
+        /*
         X509Certificate certificate = certAuthority.getCertificateBySerial(serial);
         if(certificate != null){
             String issuerDn = certificate.getIssuerDN().getName();
@@ -140,6 +160,8 @@ public class SearchService {
         }else{
             throw new RAObjectNotFoundException(Certificate.class, serial);
         }
+
+         */
     }
 
     public static class FullCertificateDetails {

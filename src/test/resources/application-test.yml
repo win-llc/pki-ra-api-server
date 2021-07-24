@@ -21,6 +21,10 @@ management:
   endpoint:
     health:
       show-details: always
+
+elasticsearch:
+  url: winra.winllc-dev.com:9200
+
 spring:
   datasource:
     url: jdbc:h2:mem:db;DB_CLOSE_DELAY=-1

@@ -21,6 +21,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 public class MockAbstractCertAuthority extends AbstractCertAuthority {
 
@@ -146,6 +147,11 @@ public class MockAbstractCertAuthority extends AbstractCertAuthority {
     @Override
     public X509CRL getCrl() {
         return null;
+    }
+
+    @Override
+    public void performOnResults(CertSearchParam param, Function<List<CertificateDetails>, Boolean> operation) {
+
     }
 
 

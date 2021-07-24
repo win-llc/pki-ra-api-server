@@ -25,16 +25,16 @@
 
     <Loggers>
         <!-- LOG everything at INFO level -->
-        <Root level="info">
+        <Root level="debug">
             <AppenderRef ref="Console" />
             <AppenderRef ref="RollingFile" />
         </Root>
 
-        <!-- LOG "com.baeldung*" at TRACE level -->
+        <!-- LOG "com.baeldung*" at TRACE level
         <Logger name="com.winllc" level="debug">
             <AppenderRef ref="Console" />
             <AppenderRef ref="RollingFile" />
-        </Logger>
+        </Logger>-->
     </Loggers>
 
 </Configuration>

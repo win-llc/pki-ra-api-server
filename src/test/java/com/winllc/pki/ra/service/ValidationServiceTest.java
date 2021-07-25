@@ -8,6 +8,7 @@ import com.winllc.acme.common.CertIssuanceValidationResponse;
 import com.winllc.acme.common.model.AcmeJWSObject;
 import com.winllc.acme.common.model.requestresponse.ExternalAccountBinding;
 import com.winllc.acme.common.util.SecurityUtil;
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.*;
@@ -37,10 +38,7 @@ import java.util.*;
 import static com.winllc.pki.ra.mock.MockUtil.hmacJwk;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-class ValidationServiceTest {
+class ValidationServiceTest extends BaseTest {
 
     @Autowired
     private ValidationService validationService;

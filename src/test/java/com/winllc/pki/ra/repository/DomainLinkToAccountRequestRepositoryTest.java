@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.repository;
 
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.DomainLinkToAccountRequest;
 import org.junit.jupiter.api.Test;
@@ -12,9 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-class DomainLinkToAccountRequestRepositoryTest {
+class DomainLinkToAccountRequestRepositoryTest extends BaseTest {
 
     @Autowired
     private DomainLinkToAccountRequestRepository requestRepository;

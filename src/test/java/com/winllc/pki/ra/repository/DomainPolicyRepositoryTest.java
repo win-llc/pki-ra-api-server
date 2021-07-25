@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.repository;
 
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Domain;
 import com.winllc.pki.ra.domain.DomainPolicy;
@@ -12,9 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-class DomainPolicyRepositoryTest {
+class DomainPolicyRepositoryTest extends BaseTest {
 
     @Autowired
     private DomainPolicyRepository domainPolicyRepository;

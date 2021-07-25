@@ -11,6 +11,7 @@ import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.repository.CertAuthorityConnectionInfoRepository;
 import com.winllc.acme.common.util.CertUtil;
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.acme.common.ca.CertAuthority;
@@ -53,10 +54,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-class CertAuthorityConnectionServiceTest {
+class CertAuthorityConnectionServiceTest extends BaseTest {
 
     private final String testCsr =
             "MIIDDDCCAfQCAQAwgZkxCzAJBgNVBAYTAlVTMREwDwYDVQQIDAhWaXJnaW5pYTET\n" +

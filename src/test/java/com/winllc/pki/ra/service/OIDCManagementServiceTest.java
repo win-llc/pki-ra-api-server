@@ -1,5 +1,7 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.BaseTest;
+import com.winllc.pki.ra.TestConfig;
 import com.winllc.pki.ra.beans.OIDCClientDetails;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
@@ -14,6 +16,7 @@ import com.winllc.pki.ra.util.EmailUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.keycloak.admin.client.Keycloak;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,10 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-class OIDCManagementServiceTest {
+class OIDCManagementServiceTest extends BaseTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -54,8 +54,6 @@ class OIDCManagementServiceTest {
     private KeycloakOIDCProviderConnection oidcProviderConnection;
     @MockBean
     private EntityDirectoryService entityDirectoryService;
-    @MockBean
-    private EmailUtil emailUtil;
 
     @BeforeEach
     @Transactional

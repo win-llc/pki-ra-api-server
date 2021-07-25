@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.security;
 
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.config.AppConfig;
@@ -22,9 +23,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-class CustomPermissionEvaluatorTest {
+class CustomPermissionEvaluatorTest extends BaseTest {
 
     @Autowired
     private CustomPermissionEvaluator customPermissionEvaluator;

@@ -3,6 +3,7 @@ package com.winllc.pki.ra.service;
 import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.keystore.KeyEntryWrapper;
 import com.winllc.acme.common.util.CertUtil;
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AppKeyStoreEntryForm;
 import com.winllc.pki.ra.config.AppConfig;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
@@ -25,10 +26,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-class ApplicationKeystoreManagerServiceTest {
+class ApplicationKeystoreManagerServiceTest extends BaseTest {
 
     //NOTE app.jks has 2 key entries by default
 

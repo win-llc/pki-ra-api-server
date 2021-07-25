@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.service.external.LdapSecurityPolicyServerService;
 import com.winllc.pki.ra.service.external.SecurityPolicyServerProjectDetails;
@@ -22,10 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-class SecurityPolicyServiceTest {
+class SecurityPolicyServiceTest extends BaseTest {
 
     @Autowired
     private MockMvc mockMvc;

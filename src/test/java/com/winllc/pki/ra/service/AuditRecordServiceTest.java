@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
 import com.winllc.pki.ra.beans.info.InfoObject;
 import com.winllc.pki.ra.config.AppConfig;
@@ -24,9 +25,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-class AuditRecordServiceTest {
+class AuditRecordServiceTest extends BaseTest {
 
     @Autowired
     private AuditRecordService auditRecordService;

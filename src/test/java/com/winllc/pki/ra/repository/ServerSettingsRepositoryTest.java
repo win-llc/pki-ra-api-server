@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.repository;
 
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.ServerSettings;
 import org.junit.jupiter.api.Test;
@@ -11,9 +12,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-class ServerSettingsRepositoryTest {
+class ServerSettingsRepositoryTest extends BaseTest {
 
     @Autowired
     private ServerSettingsRepository serverSettingsRepository;

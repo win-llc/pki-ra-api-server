@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.OIDCClientDetails;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
@@ -32,10 +33,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-class ServerEntryServiceTest {
+class ServerEntryServiceTest extends BaseTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -55,8 +53,6 @@ class ServerEntryServiceTest {
     private KeycloakOIDCProviderConnection oidcProviderConnection;
     @MockBean
     private EntityDirectoryService entityDirectoryService;
-    @MockBean
-    private EmailUtil emailUtil;
 
     @BeforeEach
     @Transactional

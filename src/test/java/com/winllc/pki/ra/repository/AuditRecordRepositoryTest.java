@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.repository;
 
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.constants.AuditRecordType;
 import com.winllc.pki.ra.domain.AuditRecord;
@@ -18,9 +19,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-class AuditRecordRepositoryTest {
+class AuditRecordRepositoryTest extends BaseTest {
 
     @Autowired
     private AuditRecordRepository auditRecordRepository;

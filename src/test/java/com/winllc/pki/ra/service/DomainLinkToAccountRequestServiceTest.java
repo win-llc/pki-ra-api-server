@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.DomainLinkRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.DomainLinkToAccountRequestForm;
 import com.winllc.pki.ra.beans.info.DomainLinkToAccountRequestInfo;
@@ -30,10 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-class DomainLinkToAccountRequestServiceTest {
+class DomainLinkToAccountRequestServiceTest extends BaseTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.DirectoryDataSettings;
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.*;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
@@ -26,10 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-class TermsOfServiceManagementServiceTest {
+class TermsOfServiceManagementServiceTest extends BaseTest {
 
     @Autowired
     private MockMvc mockMvc;

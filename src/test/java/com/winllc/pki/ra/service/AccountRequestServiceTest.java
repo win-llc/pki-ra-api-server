@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.AccountRequestUpdateForm;
 import com.winllc.pki.ra.config.AppConfig;
@@ -31,10 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-class AccountRequestServiceTest {
+class AccountRequestServiceTest extends BaseTest {
 
     @Autowired
     private MockMvc mockMvc;

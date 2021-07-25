@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.repository;
 
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.endpoint.acme.AcmeServerConnection;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.AcmeServerConnectionInfo;
@@ -10,9 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-class AcmeServerConnectionInfoRepositoryTest {
+class AcmeServerConnectionInfoRepositoryTest extends BaseTest {
 
     @Autowired
     private AcmeServerConnectionInfoRepository acmeServerConnectionInfoRepository;

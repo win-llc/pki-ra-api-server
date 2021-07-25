@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
@@ -20,9 +21,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-class AuthCredentialServiceTest {
+class AuthCredentialServiceTest extends BaseTest {
 
     @Autowired
     private AuthCredentialService authCredentialService;

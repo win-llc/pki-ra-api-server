@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.repository;
 
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Account;
@@ -24,9 +25,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-class DomainRepositoryTest {
+class DomainRepositoryTest extends BaseTest {
 
     @Autowired
     private DomainRepository domainRepository;

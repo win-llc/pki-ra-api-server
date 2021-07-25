@@ -3,6 +3,7 @@ package com.winllc.pki.ra.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.acme.common.SubjectAltName;
 import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.CertificateRequestForm;
@@ -40,10 +41,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-class CertificateRequestServiceTest {
+class CertificateRequestServiceTest extends BaseTest {
 
     private final String testCsr =
                     "-----BEGIN CERTIFICATE REQUEST-----\n" +

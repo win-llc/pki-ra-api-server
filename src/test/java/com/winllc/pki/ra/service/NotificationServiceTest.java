@@ -1,11 +1,13 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.Notification;
 import com.winllc.pki.ra.mock.MockUtil;
 import com.winllc.pki.ra.repository.NotificationRepository;
 import com.winllc.pki.ra.util.EmailUtil;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,10 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-class NotificationServiceTest {
+class NotificationServiceTest extends BaseTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -35,8 +34,12 @@ class NotificationServiceTest {
     private NotificationService notificationService;
     @Autowired
     private NotificationRepository notificationRepository;
-    @MockBean
-    private EmailUtil emailUtil;
+
+    @BeforeEach
+    @Transactional
+    void before(){
+        notificationRepository.deleteAll();
+    }
 
     @AfterEach
     @Transactional

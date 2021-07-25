@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.repository;
 
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.domain.TermsOfService;
 import org.junit.jupiter.api.AfterEach;
@@ -16,9 +17,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-class TermsOfServiceRepositoryTest {
+class TermsOfServiceRepositoryTest extends BaseTest {
 
     @Autowired
     private TermsOfServiceRepository termsOfServiceRepository;

@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.RolePermissionsForm;
 import com.winllc.pki.ra.config.AppConfig;
 import com.winllc.pki.ra.config.PermissionProperties;
@@ -25,10 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = AppConfig.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-class RolePermissionsServiceTest {
+class RolePermissionsServiceTest extends BaseTest {
 
     @Autowired
     private MockMvc mockMvc;

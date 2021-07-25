@@ -42,11 +42,11 @@ spring:
   jackson:
     date-format: com.fasterxml.jackson.databind.util.StdDateFormat
     default-property-inclusion: non_null
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: https://keycloak.winllc-dev.com:8443/auth/realms/dev
+#  security:
+#    oauth2:
+#      resourceserver:
+#        jwt:
+#          issuer-uri: https://keycloak.winllc-dev.com:8443/auth/realms/dev
 rest:
   security:
     cors:

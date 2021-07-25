@@ -1,9 +1,10 @@
 package com.winllc.pki.ra.security;
 
-import com.nimbusds.jose.shaded.json.JSONObject;
+
 import com.winllc.pki.ra.domain.RolePermission;
 import com.winllc.pki.ra.repository.RolePermissionRepository;
 import com.winllc.pki.ra.service.RolePermissionsService;
+import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

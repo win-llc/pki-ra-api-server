@@ -37,7 +37,8 @@ class AccountRestrictionRepositoryTest extends BaseTest {
     @AfterEach
     @Transactional
     void after(){
-
+        accountRestrictionRepository.deleteAll();
+        accountRepository.deleteAll();
     }
 
     @Test
@@ -59,7 +60,7 @@ class AccountRestrictionRepositoryTest extends BaseTest {
         assertEquals(1, allByAccount.size());
 
         accountRestrictionRepository.delete(accountRestriction);
-        accountRepository.delete(account);
+        //accountRepository.delete(account);
     }
 
     @Test
@@ -81,7 +82,7 @@ class AccountRestrictionRepositoryTest extends BaseTest {
         assertEquals(1, completedFalse.size());
 
         accountRestrictionRepository.delete(accountRestriction);
-        accountRepository.delete(account);
+        //accountRepository.delete(account);
     }
 
     @Test
@@ -103,7 +104,7 @@ class AccountRestrictionRepositoryTest extends BaseTest {
         assertEquals(1, allByAccountAndDueByBefore.size());
 
         accountRestrictionRepository.delete(accountRestriction);
-        accountRepository.delete(account);
+        //accountRepository.delete(account);
     }
 
     @Test
@@ -128,6 +129,6 @@ class AccountRestrictionRepositoryTest extends BaseTest {
         assertEquals(1, completedFalse.size());
 
         accountRestrictionRepository.delete(accountRestriction);
-        accountRepository.delete(account);
+        //accountRepository.delete(account);
     }
 }

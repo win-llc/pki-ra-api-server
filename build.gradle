@@ -47,6 +47,10 @@ configurations {
     }
 }
 
+bootJar {
+    enabled(true)
+}
+
 dependencies {
     implementation group: 'com.winllc.acme.common', name: 'acme-common', version: '1.0-SNAPSHOT'
     implementation group: 'com.winllc.pki.plugins.dogtag', name: 'dogtag-ca-plugin', version: '1.0-SNAPSHOT'

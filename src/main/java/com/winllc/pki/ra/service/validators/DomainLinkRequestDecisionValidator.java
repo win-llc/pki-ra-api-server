@@ -1,11 +1,11 @@
 package com.winllc.pki.ra.service.validators;
 
 import com.winllc.pki.ra.beans.form.DomainLinkRequestDecisionForm;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.DomainLinkToAccountRequest;
-import com.winllc.pki.ra.domain.DomainPolicy;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.DomainLinkToAccountRequestRepository;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.DomainLinkToAccountRequest;
+import com.winllc.acme.common.domain.DomainPolicy;
+import com.winllc.acme.common.repository.AccountRepository;
+import com.winllc.acme.common.repository.DomainLinkToAccountRequestRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;

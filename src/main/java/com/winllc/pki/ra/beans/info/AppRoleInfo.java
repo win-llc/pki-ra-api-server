@@ -1,8 +1,8 @@
 package com.winllc.pki.ra.beans.info;
 
-import com.winllc.pki.ra.domain.AppRole;
-import com.winllc.pki.ra.domain.EntityPermission;
-import com.winllc.pki.ra.domain.RolePermission;
+import com.winllc.acme.common.domain.AppRole;
+import com.winllc.acme.common.domain.EntityPermission;
+import com.winllc.acme.common.domain.RolePermission;
 import org.hibernate.Hibernate;
 
 import java.util.HashSet;

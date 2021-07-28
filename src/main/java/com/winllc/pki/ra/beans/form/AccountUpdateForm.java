@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.beans.form;
 
 import com.winllc.pki.ra.beans.PocFormEntry;
-import com.winllc.pki.ra.domain.Account;
+import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.util.FormValidationUtil;
 import org.springframework.util.CollectionUtils;
 

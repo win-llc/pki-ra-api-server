@@ -1,10 +1,8 @@
 package com.winllc.pki.ra.service.validators;
 
-import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.AccountRestrictionForm;
-import com.winllc.pki.ra.constants.AccountRestrictionAction;
-import com.winllc.pki.ra.constants.AccountRestrictionType;
-import com.winllc.pki.ra.service.SecurityPolicyService;
+import com.winllc.acme.common.constants.AccountRestrictionAction;
+import com.winllc.acme.common.constants.AccountRestrictionType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,7 +10,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 

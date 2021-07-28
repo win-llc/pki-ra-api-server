@@ -2,18 +2,15 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
-import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AuthCredential;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.AuthCredential;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.AuthCredentialRepository;
+import com.winllc.acme.common.repository.AccountRepository;
+import com.winllc.acme.common.repository.AuthCredentialRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
@@ -41,8 +38,8 @@ class AuthCredentialServiceTest extends BaseTest {
 
     @AfterEach
     void afterEach(){
+        //authCredentialRepository.deleteAll();
         accountRepository.deleteAll();
-        authCredentialRepository.deleteAll();
     }
 
     @Test

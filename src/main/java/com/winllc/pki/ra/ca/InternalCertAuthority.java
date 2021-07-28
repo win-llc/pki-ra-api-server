@@ -5,12 +5,11 @@ import com.winllc.acme.common.CertSearchParam;
 import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.SqlCertSearchConverter;
 import com.winllc.acme.common.SubjectAltNames;
-import com.winllc.acme.common.ca.AbstractCertAuthority;
 import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.util.CertUtil;
-import com.winllc.acme.common.contants.CertificateStatus;
+import com.winllc.acme.common.constants.CertificateStatus;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
-import com.winllc.pki.ra.domain.IssuedCertificate;
+import com.winllc.acme.common.domain.IssuedCertificate;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 

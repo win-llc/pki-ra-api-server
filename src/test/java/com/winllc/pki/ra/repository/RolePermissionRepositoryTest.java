@@ -1,8 +1,8 @@
-package com.winllc.pki.ra.repository;
+package com.winllc.acme.common.repository;
 
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.RolePermission;
+import com.winllc.acme.common.domain.RolePermission;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

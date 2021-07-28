@@ -1,11 +1,11 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.domain.CachedCertificate;
-import com.winllc.pki.ra.domain.CertificateRequest;
-import com.winllc.pki.ra.domain.ServerEntry;
-import com.winllc.pki.ra.repository.CachedCertificateRepository;
-import com.winllc.pki.ra.repository.CertificateRequestRepository;
-import com.winllc.pki.ra.repository.ServerEntryRepository;
+import com.winllc.acme.common.domain.CachedCertificate;
+import com.winllc.acme.common.domain.CertificateRequest;
+import com.winllc.acme.common.domain.ServerEntry;
+import com.winllc.acme.common.repository.CachedCertificateRepository;
+import com.winllc.acme.common.repository.CertificateRequestRepository;
+import com.winllc.acme.common.repository.ServerEntryRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;

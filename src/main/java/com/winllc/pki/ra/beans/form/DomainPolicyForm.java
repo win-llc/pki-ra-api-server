@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.beans.form;
 
-import com.winllc.pki.ra.domain.CertificateRequest;
-import com.winllc.pki.ra.domain.DomainPolicy;
+import com.winllc.acme.common.domain.CertificateRequest;
+import com.winllc.acme.common.domain.DomainPolicy;
 
 import java.util.ArrayList;
 import java.util.List;

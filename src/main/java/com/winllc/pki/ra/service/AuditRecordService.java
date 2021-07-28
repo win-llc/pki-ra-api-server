@@ -1,20 +1,15 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
-import com.winllc.pki.ra.beans.info.InfoObject;
-import com.winllc.pki.ra.constants.AuditRecordType;
-import com.winllc.pki.ra.domain.AuditRecord;
-import com.winllc.pki.ra.domain.UniqueEntity;
-import com.winllc.pki.ra.repository.AuditRecordRepository;
-import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.winllc.acme.common.constants.AuditRecordType;
+import com.winllc.acme.common.domain.AuditRecord;
+import com.winllc.acme.common.repository.AuditRecordRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/auditRecord")

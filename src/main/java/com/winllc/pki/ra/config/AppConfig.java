@@ -42,8 +42,8 @@ import java.util.List;
 //@EnableOpenApi
 //@EnableWebMvc
 @ComponentScan({"com.winllc.pki.ra", "com.winllc.acme.common"})
-@EntityScan({"com.winllc.pki.ra.domain", "com.winllc.acme.common.domain"})
-@EnableJpaRepositories(basePackages = {"com.winllc.pki.ra.repository", "com.winllc.acme.common.repository"})
+@EntityScan({"com.winllc.acme.common.domain"})
+@EnableJpaRepositories(basePackages = {"com.winllc.acme.common.repository", "com.winllc.acme.common.repository"})
 @EnableTransactionManagement
 @EnableJpaAuditing
 @EnableScheduling

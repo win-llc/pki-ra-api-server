@@ -1,19 +1,17 @@
 package com.winllc.pki.ra.service.validators;
 
-import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.DomainPolicy;
-import com.winllc.pki.ra.domain.ServerEntry;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.ServerEntryRepository;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.Domain;
+import com.winllc.acme.common.domain.DomainPolicy;
+import com.winllc.acme.common.domain.ServerEntry;
+import com.winllc.acme.common.repository.AccountRepository;
+import com.winllc.acme.common.repository.ServerEntryRepository;
 import com.winllc.pki.ra.util.FormValidationUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.validation.Errors;

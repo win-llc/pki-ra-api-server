@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.beans.info;
 
-import com.winllc.pki.ra.domain.DomainLinkToAccountRequest;
+import com.winllc.acme.common.domain.DomainLinkToAccountRequest;
 
 import java.sql.Timestamp;
 import java.util.List;

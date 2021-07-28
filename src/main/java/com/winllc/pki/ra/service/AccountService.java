@@ -1,20 +1,16 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.DirectoryDataSettings;
+import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
-import com.winllc.pki.ra.beans.info.AccountInfoItem;
-import com.winllc.pki.ra.endpoint.acme.AcmeServerService;
 import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.beans.form.AccountUpdateForm;
 import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.beans.info.DomainInfo;
-import com.winllc.pki.ra.beans.info.UserInfo;
-import com.winllc.pki.ra.constants.AuditRecordType;
-import com.winllc.pki.ra.domain.*;
+import com.winllc.acme.common.constants.AuditRecordType;
+import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
-import com.winllc.pki.ra.exception.InvalidFormException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.*;
+import com.winllc.acme.common.repository.*;
 import com.winllc.pki.ra.service.external.SecurityPolicyServerProjectDetails;
 import com.winllc.pki.ra.service.transaction.SystemActionRunner;
 import com.winllc.pki.ra.service.validators.AccountRequestValidator;
@@ -22,11 +18,8 @@ import com.winllc.pki.ra.service.validators.AccountUpdateValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.domain.Page;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -37,10 +30,8 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -339,7 +330,7 @@ public class AccountService extends AbstractService {
         }
     }
 
-    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.Account', 'view_account')")
+    @PreAuthorize("hasPermission(#id, 'com.winllc.acme.common.domain.Account', 'view_account')")
     @GetMapping("/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
@@ -356,7 +347,7 @@ public class AccountService extends AbstractService {
         }
     }
 
-    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.Account', 'view_account')")
+    @PreAuthorize("hasPermission(#id, 'com.winllc.acme.common.domain.Account', 'view_account')")
     @GetMapping("/info/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional

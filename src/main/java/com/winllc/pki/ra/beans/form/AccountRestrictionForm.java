@@ -1,8 +1,8 @@
 package com.winllc.pki.ra.beans.form;
 
-import com.winllc.pki.ra.constants.AccountRestrictionAction;
-import com.winllc.pki.ra.constants.AccountRestrictionType;
-import com.winllc.pki.ra.domain.AccountRestriction;
+import com.winllc.acme.common.constants.AccountRestrictionAction;
+import com.winllc.acme.common.constants.AccountRestrictionType;
+import com.winllc.acme.common.domain.AccountRestriction;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.util;
 
 import com.winllc.pki.ra.constants.ServerSettingRequired;
-import com.winllc.pki.ra.domain.ServerSettings;
+import com.winllc.acme.common.domain.ServerSettings;
 import com.winllc.pki.ra.service.ServerSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.beans.info;
 
-import com.winllc.pki.ra.domain.CertificateRequest;
+import com.winllc.acme.common.domain.CertificateRequest;
 
 public class CertificateRequestInfo extends InfoObject<CertificateRequest> {
 

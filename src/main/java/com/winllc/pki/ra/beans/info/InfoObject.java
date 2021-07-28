@@ -2,7 +2,7 @@ package com.winllc.pki.ra.beans.info;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.winllc.acme.common.domain.BaseEntity;
-import com.winllc.pki.ra.domain.UniqueEntity;
+import com.winllc.acme.common.domain.UniqueEntity;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.UUID;

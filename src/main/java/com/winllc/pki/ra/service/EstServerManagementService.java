@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.domain.EstServerProperties;
-import com.winllc.pki.ra.repository.EstServerPropertiesRepository;
+import com.winllc.acme.common.domain.EstServerProperties;
+import com.winllc.acme.common.repository.EstServerPropertiesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

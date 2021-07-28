@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.beans.form;
 
 import com.winllc.pki.ra.constants.CertificateRequestAction;
-import com.winllc.pki.ra.domain.CertificateRequest;
+import com.winllc.acme.common.domain.CertificateRequest;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;

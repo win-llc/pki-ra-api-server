@@ -2,7 +2,7 @@ package com.winllc.pki.ra.beans.form;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.winllc.pki.ra.beans.info.InfoObject;
-import com.winllc.pki.ra.domain.AccountOwnedEntity;
+import com.winllc.acme.common.domain.AccountOwnedEntity;
 import com.winllc.acme.common.domain.BaseEntity;
 
 import java.lang.reflect.ParameterizedType;

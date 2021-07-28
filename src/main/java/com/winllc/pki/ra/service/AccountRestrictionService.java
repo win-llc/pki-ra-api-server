@@ -1,16 +1,17 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.beans.form.AccountRestrictionForm;
 import com.winllc.pki.ra.beans.form.DomainPolicyForm;
-import com.winllc.pki.ra.constants.AccountRestrictionAction;
-import com.winllc.pki.ra.constants.AccountRestrictionType;
+import com.winllc.acme.common.constants.AccountRestrictionAction;
+import com.winllc.acme.common.constants.AccountRestrictionType;
 import com.winllc.pki.ra.constants.ServerSettingRequired;
-import com.winllc.pki.ra.domain.*;
+import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.AccountRestrictionRepository;
-import com.winllc.pki.ra.repository.DomainRepository;
+import com.winllc.acme.common.repository.AccountRepository;
+import com.winllc.acme.common.repository.AccountRestrictionRepository;
+import com.winllc.acme.common.repository.DomainRepository;
 import com.winllc.pki.ra.service.transaction.SystemActionRunner;
 import com.winllc.pki.ra.service.transaction.ThrowingSupplier;
 import com.winllc.pki.ra.service.validators.AccountRestrictionValidator;
@@ -27,7 +28,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -192,7 +192,7 @@ public class AccountRestrictionService extends AbstractService {
         return Arrays.asList(AccountRestrictionAction.values());
     }
 
-    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.AccountRestriction', 'view_account_restriction')")
+    @PreAuthorize("hasPermission(#id, 'com.winllc.acme.common.domain.AccountRestriction', 'view_account_restriction')")
     @GetMapping("/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
     public AccountRestrictionForm getById(@PathVariable Long id) throws RAObjectNotFoundException {
@@ -267,14 +267,14 @@ public class AccountRestrictionService extends AbstractService {
         }
     }
 
-    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.AccountRestriction', 'delete_account_restriction')")
+    @PreAuthorize("hasPermission(#id, 'com.winllc.acme.common.domain.AccountRestriction', 'delete_account_restriction')")
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void delete(@PathVariable Long id){
         accountRestrictionRepository.deleteById(id);
     }
 
-    @PreAuthorize("hasPermission(#accountId, 'com.winllc.pki.ra.domain.AccountRestriction', 'view_account_restriction')")
+    @PreAuthorize("hasPermission(#accountId, 'com.winllc.acme.common.domain.AccountRestriction', 'view_account_restriction')")
     @GetMapping("/allForAccount/{accountId}")
     @ResponseStatus(HttpStatus.OK)
     public List<AccountRestrictionForm> getAllForAccount(@PathVariable Long accountId) throws RAObjectNotFoundException {

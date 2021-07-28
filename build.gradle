@@ -59,9 +59,6 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-configuration-processor')
     implementation('org.springframework.boot:spring-boot-starter-mail')
 
-    // https://mvnrepository.com/artifact/org.springframework.ldap/spring-ldap-core
-    implementation group: 'org.springframework.ldap', name: 'spring-ldap-core', version: '2.3.4.RELEASE'
-
     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
     implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.4.4'
 

@@ -9,9 +9,9 @@ import com.winllc.pki.ra.beans.metrics.AuditMetricResponse;
 import com.winllc.pki.ra.beans.metrics.ChartMetrics;
 import com.winllc.pki.ra.beans.metrics.DailyAuditMetric;
 import com.winllc.acme.common.ca.CertAuthority;
-import com.winllc.pki.ra.constants.AuditRecordType;
-import com.winllc.pki.ra.domain.AuditRecord;
-import com.winllc.pki.ra.repository.AuditRecordRepository;
+import com.winllc.acme.common.constants.AuditRecordType;
+import com.winllc.acme.common.domain.AuditRecord;
+import com.winllc.acme.common.repository.AuditRecordRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

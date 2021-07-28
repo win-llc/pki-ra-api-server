@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.beans.form;
 
-import com.winllc.pki.ra.domain.AuthCredential;
+import com.winllc.acme.common.domain.AuthCredential;
 
 import java.util.List;
 

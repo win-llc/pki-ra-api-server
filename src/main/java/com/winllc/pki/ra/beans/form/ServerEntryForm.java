@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.beans.form;
 
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.pki.ra.util.FormValidationUtil;
 import org.springframework.util.CollectionUtils;
 

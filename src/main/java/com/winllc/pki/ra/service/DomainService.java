@@ -1,19 +1,17 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.info.DomainInfo;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.DomainPolicy;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.Domain;
+import com.winllc.acme.common.domain.DomainPolicy;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.DomainPolicyRepository;
-import com.winllc.pki.ra.repository.DomainRepository;
+import com.winllc.acme.common.repository.AccountRepository;
+import com.winllc.acme.common.repository.DomainPolicyRepository;
+import com.winllc.acme.common.repository.DomainRepository;
 import com.winllc.pki.ra.service.validators.DomainValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -121,7 +119,7 @@ public class DomainService {
         return domainRepository.findAllByBaseContains(search);
     }
 
-    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.Domain', 'view_domain')")
+    @PreAuthorize("hasPermission(#id, 'com.winllc.acme.common.domain.Domain', 'view_domain')")
     @GetMapping("/byId/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
@@ -183,7 +181,7 @@ public class DomainService {
         }
     }
 
-    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.Domain', 'delete_domain')")
+    @PreAuthorize("hasPermission(#id, 'com.winllc.acme.common.domain.Domain', 'delete_domain')")
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void deleteDomain(@PathVariable Long id){

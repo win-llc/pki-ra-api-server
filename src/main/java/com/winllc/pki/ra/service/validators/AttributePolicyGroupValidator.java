@@ -1,11 +1,9 @@
 package com.winllc.pki.ra.service.validators;
 
-import com.winllc.acme.common.util.CertUtil;
-import com.winllc.pki.ra.beans.form.AppKeyStoreEntryForm;
 import com.winllc.pki.ra.beans.form.AttributePolicyGroupForm;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AttributePolicy;
-import com.winllc.pki.ra.repository.AccountRepository;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.AttributePolicy;
+import com.winllc.acme.common.repository.AccountRepository;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

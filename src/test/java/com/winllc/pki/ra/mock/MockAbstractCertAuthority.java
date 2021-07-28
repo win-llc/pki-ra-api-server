@@ -5,9 +5,8 @@ import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.ca.AbstractCertAuthority;
-import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ca.ConnectionProperty;
-import com.winllc.acme.common.contants.CertificateStatus;
+import com.winllc.acme.common.constants.CertificateStatus;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import com.winllc.acme.common.util.CertUtil;
 

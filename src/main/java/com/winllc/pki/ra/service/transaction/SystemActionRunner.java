@@ -1,10 +1,12 @@
 package com.winllc.pki.ra.service.transaction;
 
-import com.winllc.pki.ra.constants.AuditRecordType;
-import com.winllc.pki.ra.domain.*;
-import com.winllc.pki.ra.repository.AuditRecordRepository;
-import com.winllc.pki.ra.repository.NotificationRepository;
-import com.winllc.pki.ra.repository.PocEntryRepository;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.UniqueEntity;
+import com.winllc.acme.common.constants.AuditRecordType;
+import com.winllc.acme.common.domain.*;
+import com.winllc.acme.common.repository.AuditRecordRepository;
+import com.winllc.acme.common.repository.NotificationRepository;
+import com.winllc.acme.common.repository.PocEntryRepository;
 import com.winllc.pki.ra.util.EmailUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,7 +17,6 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.CollectionUtils;
 
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -109,8 +110,8 @@ public class SystemActionRunner {
 
         if(result instanceof AccountOwnedEntity){
             AccountOwnedEntity entity = (AccountOwnedEntity) result;
-            Hibernate.initialize(entity.getAccount());
-            Account account = entity.getAccount();
+            Hibernate.initialize(entity.getOwnerAccount());
+            Account account = entity.getOwnerAccount();
             addAccountPocsForNotification(account);
         }
 

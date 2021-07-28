@@ -2,9 +2,9 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.AccountRequestUpdateForm;
-import com.winllc.pki.ra.domain.AccountRequest;
+import com.winllc.acme.common.domain.AccountRequest;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRequestRepository;
+import com.winllc.acme.common.repository.AccountRequestRepository;
 import com.winllc.pki.ra.service.validators.AccountRequestUpdateValidator;
 import com.winllc.pki.ra.service.validators.AccountRequestValidator;
 import org.apache.logging.log4j.LogManager;
@@ -129,7 +129,7 @@ public class AccountRequestService {
         }
     }
 
-    //@PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.AccountRequest', 'accountrequest:read')")
+    //@PreAuthorize("hasPermission(#id, 'com.winllc.acme.common.domain.AccountRequest', 'accountrequest:read')")
     @GetMapping("/findById/{id}")
     @ResponseStatus(HttpStatus.OK)
     public AccountRequest findById(@PathVariable Long id) throws RAObjectNotFoundException {
@@ -142,7 +142,7 @@ public class AccountRequestService {
         }
     }
 
-    //@PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.AccountRequest', 'accountrequest:delete')")
+    //@PreAuthorize("hasPermission(#id, 'com.winllc.acme.common.domain.AccountRequest', 'accountrequest:delete')")
     @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void delete(@PathVariable Long id){

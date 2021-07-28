@@ -2,9 +2,9 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.Notification;
+import com.winllc.acme.common.domain.Notification;
 import com.winllc.pki.ra.mock.MockUtil;
-import com.winllc.pki.ra.repository.NotificationRepository;
+import com.winllc.acme.common.repository.NotificationRepository;
 import com.winllc.pki.ra.util.EmailUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

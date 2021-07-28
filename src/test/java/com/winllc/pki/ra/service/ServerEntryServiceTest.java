@@ -1,27 +1,22 @@
 package com.winllc.pki.ra.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.BaseTest;
-import com.winllc.pki.ra.beans.OIDCClientDetails;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
-import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.*;
+import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.*;
+import com.winllc.acme.common.repository.*;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
-import com.winllc.pki.ra.util.EmailUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;
@@ -57,6 +52,8 @@ class ServerEntryServiceTest extends BaseTest {
     @BeforeEach
     @Transactional
     void before(){
+        accountRepository.deleteAll();
+
         Account account = Account.buildNew("Test Project 3");
         account.setKeyIdentifier("kidtest1");
         //account.setMacKey("testmac1");

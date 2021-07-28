@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.beans.info;
 
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.acme.common.domain.ServerEntry;
 import org.hibernate.Hibernate;
 
 import java.util.List;

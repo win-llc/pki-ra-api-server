@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.beans.info;
 
-import com.winllc.pki.ra.domain.PocEntry;
+import com.winllc.acme.common.domain.PocEntry;
 
 import java.util.List;
 

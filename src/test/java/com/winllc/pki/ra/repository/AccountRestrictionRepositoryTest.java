@@ -1,19 +1,16 @@
-package com.winllc.pki.ra.repository;
+package com.winllc.acme.common.repository;
 
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
-import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.constants.AccountRestrictionAction;
-import com.winllc.pki.ra.constants.AccountRestrictionType;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AccountRestriction;
+import com.winllc.acme.common.constants.AccountRestrictionAction;
+import com.winllc.acme.common.constants.AccountRestrictionType;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.AccountRestriction;
 import com.winllc.pki.ra.service.AccountService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import javax.transaction.Transactional;
 import java.sql.Timestamp;

@@ -1,11 +1,11 @@
 package com.winllc.pki.ra.service.external;
 
 import com.winllc.pki.ra.constants.ServerSettingRequired;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AttributePolicyGroup;
-import com.winllc.pki.ra.domain.ServerEntry;
-import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
-import com.winllc.pki.ra.repository.ServerEntryRepository;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.AttributePolicyGroup;
+import com.winllc.acme.common.domain.ServerEntry;
+import com.winllc.acme.common.repository.AttributePolicyGroupRepository;
+import com.winllc.acme.common.repository.ServerEntryRepository;
 import com.winllc.pki.ra.service.SecurityPolicyService;
 import com.winllc.pki.ra.service.ServerSettingsService;
 import com.winllc.pki.ra.service.external.beans.DirectoryServerEntity;

@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.beans.metrics;
 
-import com.winllc.pki.ra.domain.AuditRecord;
+import com.winllc.acme.common.domain.AuditRecord;
 
 import java.util.List;
 

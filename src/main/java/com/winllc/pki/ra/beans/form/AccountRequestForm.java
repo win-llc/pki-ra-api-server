@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.beans.form;
 
-import com.winllc.pki.ra.domain.AccountRequest;
+import com.winllc.acme.common.domain.AccountRequest;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;

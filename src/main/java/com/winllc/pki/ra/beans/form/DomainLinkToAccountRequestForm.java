@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.beans.form;
 
-import com.winllc.pki.ra.domain.DomainLinkToAccountRequest;
+import com.winllc.acme.common.domain.DomainLinkToAccountRequest;
 import org.springframework.util.CollectionUtils;
 
 import javax.validation.constraints.NotNull;

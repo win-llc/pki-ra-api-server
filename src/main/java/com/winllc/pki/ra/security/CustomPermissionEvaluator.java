@@ -1,12 +1,11 @@
 package com.winllc.pki.ra.security;
 
+import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.beans.form.ValidForm;
-import com.winllc.pki.ra.domain.*;
-import com.winllc.pki.ra.repository.*;
-import com.winllc.pki.ra.service.AccountRestrictionService;
+import com.winllc.acme.common.domain.*;
+import com.winllc.acme.common.repository.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;

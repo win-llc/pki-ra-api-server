@@ -2,8 +2,8 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.info.CurrentUserDisplayItems;
 import com.winllc.pki.ra.beans.info.PocEntryInfo;
-import com.winllc.pki.ra.domain.PocEntry;
-import com.winllc.pki.ra.repository.PocEntryRepository;
+import com.winllc.acme.common.domain.PocEntry;
+import com.winllc.acme.common.repository.PocEntryRepository;
 import com.winllc.pki.ra.security.RAUser;
 import com.winllc.pki.ra.service.external.beans.IdentityExternal;
 import com.winllc.pki.ra.service.external.vendorimpl.KeycloakIdentityProviderConnection;

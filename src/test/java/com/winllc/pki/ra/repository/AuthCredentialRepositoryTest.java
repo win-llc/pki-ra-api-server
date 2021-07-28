@@ -1,21 +1,15 @@
-package com.winllc.pki.ra.repository;
+package com.winllc.acme.common.repository;
 
 import com.winllc.pki.ra.BaseTest;
-import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.constants.AuditRecordType;
-import com.winllc.pki.ra.domain.AuditRecord;
-import com.winllc.pki.ra.domain.AuthCredential;
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.acme.common.domain.AuditRecord;
+import com.winllc.acme.common.domain.AuthCredential;
+import com.winllc.acme.common.domain.ServerEntry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import javax.transaction.Transactional;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

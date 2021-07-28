@@ -1,21 +1,19 @@
 package com.winllc.pki.ra.security;
 
+import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
-import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.*;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.PocEntryRepository;
-import com.winllc.pki.ra.repository.ServerEntryRepository;
+import com.winllc.acme.common.domain.*;
+import com.winllc.acme.common.repository.AccountRepository;
+import com.winllc.acme.common.repository.PocEntryRepository;
+import com.winllc.acme.common.repository.ServerEntryRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.List;

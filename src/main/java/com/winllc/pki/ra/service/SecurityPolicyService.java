@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.service.external.LdapSecurityPolicyServerService;
 import com.winllc.pki.ra.service.external.SecurityPolicyConnection;

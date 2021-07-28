@@ -1,8 +1,8 @@
 package com.winllc.pki.ra.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.acme.common.DirectoryDataSettings;
+import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.endpoint.acme.AcmeServerConnection;
@@ -11,25 +11,20 @@ import com.winllc.pki.ra.endpoint.acme.AcmeServerServiceImpl;
 import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.beans.form.AccountUpdateForm;
 import com.winllc.pki.ra.beans.info.AccountInfo;
-import com.winllc.pki.ra.beans.info.UserInfo;
-import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.*;
+import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.PocEntryRepository;
+import com.winllc.acme.common.repository.AccountRepository;
+import com.winllc.acme.common.repository.PocEntryRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;

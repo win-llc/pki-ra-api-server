@@ -2,8 +2,8 @@ package com.winllc.pki.ra.beans.validator;
 
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertificateRequestForm;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.repository.AccountRepository;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

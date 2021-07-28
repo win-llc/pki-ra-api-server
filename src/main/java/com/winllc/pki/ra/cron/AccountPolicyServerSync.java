@@ -1,9 +1,8 @@
 package com.winllc.pki.ra.cron;
 
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.repository.AccountRepository;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.repository.AccountRepository;
 import com.winllc.pki.ra.service.AccountRestrictionService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 

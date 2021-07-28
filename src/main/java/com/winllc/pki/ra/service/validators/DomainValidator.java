@@ -2,8 +2,8 @@ package com.winllc.pki.ra.service.validators;
 
 import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.form.DomainLinkToAccountRequestForm;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.repository.DomainRepository;
+import com.winllc.acme.common.domain.Domain;
+import com.winllc.acme.common.repository.DomainRepository;
 import com.winllc.pki.ra.util.FormValidationUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;

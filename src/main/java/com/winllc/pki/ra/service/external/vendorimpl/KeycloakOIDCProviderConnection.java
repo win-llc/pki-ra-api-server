@@ -2,9 +2,9 @@ package com.winllc.pki.ra.service.external.vendorimpl;
 
 import com.winllc.pki.ra.beans.OIDCClientDetails;
 import com.winllc.pki.ra.config.KeycloakProperties;
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAException;
-import com.winllc.pki.ra.repository.ServerEntryRepository;
+import com.winllc.acme.common.repository.ServerEntryRepository;
 import com.winllc.pki.ra.service.external.OIDCProviderConnection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

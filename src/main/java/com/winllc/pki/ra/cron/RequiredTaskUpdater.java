@@ -1,21 +1,19 @@
 package com.winllc.pki.ra.cron;
 
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AccountRestriction;
-import com.winllc.pki.ra.domain.Notification;
-import com.winllc.pki.ra.domain.PocEntry;
-import com.winllc.pki.ra.repository.AccountRestrictionRepository;
-import com.winllc.pki.ra.repository.NotificationRepository;
-import com.winllc.pki.ra.repository.PocEntryRepository;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.AccountRestriction;
+import com.winllc.acme.common.domain.Notification;
+import com.winllc.acme.common.domain.PocEntry;
+import com.winllc.acme.common.repository.AccountRestrictionRepository;
+import com.winllc.acme.common.repository.NotificationRepository;
+import com.winllc.acme.common.repository.PocEntryRepository;
 import org.apache.commons.collections.CollectionUtils;
-import org.aspectj.weaver.ast.Not;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;

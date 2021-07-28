@@ -1,10 +1,10 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.DirectoryDataSettings;
-import com.winllc.pki.ra.domain.TermsOfService;
+import com.winllc.acme.common.domain.TermsOfService;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.TermsOfServiceRepository;
+import com.winllc.acme.common.repository.TermsOfServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -114,7 +114,7 @@ public class TermsOfServiceManagementService {
         }
     }
 
-    @PreAuthorize("hasPermission(#id, 'com.winllc.pki.ra.domain.TermsOfService', 'delete_tos')")
+    @PreAuthorize("hasPermission(#id, 'com.winllc.acme.common.domain.TermsOfService', 'delete_tos')")
     @DeleteMapping("/api/tos/delete/{id}")
     @ResponseStatus(HttpStatus.OK)
     public void delete(@PathVariable Long id){

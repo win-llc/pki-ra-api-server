@@ -1,8 +1,8 @@
 package com.winllc.pki.ra.beans.form;
 
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AttributePolicy;
-import com.winllc.pki.ra.domain.AttributePolicyGroup;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.AttributePolicy;
+import com.winllc.acme.common.domain.AttributePolicyGroup;
 
 import java.util.ArrayList;
 import java.util.List;

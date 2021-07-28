@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.acme.common.Settings;
 import com.winllc.acme.common.util.HttpCommandUtil;
-import com.winllc.pki.ra.domain.AcmeServerConnectionInfo;
+import com.winllc.acme.common.domain.AcmeServerConnectionInfo;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;

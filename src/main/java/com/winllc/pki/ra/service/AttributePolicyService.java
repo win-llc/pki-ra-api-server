@@ -1,11 +1,11 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.beans.form.AttributePolicyGroupForm;
 import com.winllc.pki.ra.cron.LdapObjectUpdater;
-import com.winllc.pki.ra.domain.*;
+import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.*;
-import com.winllc.pki.ra.service.external.SecurityPolicyConnection;
+import com.winllc.acme.common.repository.*;
 import com.winllc.pki.ra.service.validators.AttributePolicyGroupValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

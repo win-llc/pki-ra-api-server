@@ -2,7 +2,7 @@ package com.winllc.pki.ra.service.validators;
 
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
-import com.winllc.pki.ra.domain.CertificateRequest;
+import com.winllc.acme.common.domain.CertificateRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

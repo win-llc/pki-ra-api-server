@@ -7,7 +7,7 @@ import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.acme.common.ca.CertAuthority;
-import com.winllc.acme.common.contants.CertificateStatus;
+import com.winllc.acme.common.constants.CertificateStatus;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;

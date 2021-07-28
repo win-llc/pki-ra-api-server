@@ -1,8 +1,8 @@
 package com.winllc.pki.ra.security;
 
 
-import com.winllc.pki.ra.domain.RolePermission;
-import com.winllc.pki.ra.repository.RolePermissionRepository;
+import com.winllc.acme.common.domain.RolePermission;
+import com.winllc.acme.common.repository.RolePermissionRepository;
 import com.winllc.pki.ra.service.RolePermissionsService;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;

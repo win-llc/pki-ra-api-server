@@ -1,22 +1,19 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.DirectoryDataSettings;
+import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.BaseTest;
-import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.*;
+import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.TermsOfServiceRepository;
+import com.winllc.acme.common.repository.AccountRepository;
+import com.winllc.acme.common.repository.TermsOfServiceRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;

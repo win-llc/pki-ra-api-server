@@ -1,10 +1,10 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.domain.LdapSchemaOverlay;
-import com.winllc.pki.ra.domain.LdapSchemaOverlayAttribute;
+import com.winllc.acme.common.domain.LdapSchemaOverlay;
+import com.winllc.acme.common.domain.LdapSchemaOverlayAttribute;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.LdapSchemaOverlayAttributeRepository;
-import com.winllc.pki.ra.repository.LdapSchemaOverlayRepository;
+import com.winllc.acme.common.repository.LdapSchemaOverlayAttributeRepository;
+import com.winllc.acme.common.repository.LdapSchemaOverlayRepository;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;

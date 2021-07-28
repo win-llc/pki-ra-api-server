@@ -1,32 +1,29 @@
 package com.winllc.pki.ra.service;
 
-import com.nimbusds.jose.util.Base64;
 import com.winllc.pki.ra.beans.AcmeClientDetails;
 import com.winllc.pki.ra.beans.OIDCClientDetails;
 import com.winllc.pki.ra.beans.ServerEntryDockerDeploymentFile;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
-import com.winllc.pki.ra.constants.AuditRecordType;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AuthCredential;
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.acme.common.constants.AuditRecordType;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.AuthCredential;
+import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.ServerEntryRepository;
+import com.winllc.acme.common.repository.AccountRepository;
+import com.winllc.acme.common.repository.ServerEntryRepository;
 import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
 import com.winllc.pki.ra.service.transaction.SystemActionRunner;
 import com.winllc.pki.ra.service.transaction.ThrowingSupplier;
 import org.hibernate.Hibernate;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
-import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Optional;
 

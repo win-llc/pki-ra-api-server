@@ -1,17 +1,16 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.form.DomainPolicyForm;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Domain;
-import com.winllc.pki.ra.domain.DomainPolicy;
-import com.winllc.pki.ra.domain.DomainCertIssuanceRestrictionHolder;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.Domain;
+import com.winllc.acme.common.domain.DomainPolicy;
+import com.winllc.acme.common.domain.DomainCertIssuanceRestrictionHolder;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.DomainPolicyRepository;
-import com.winllc.pki.ra.repository.DomainRepository;
+import com.winllc.acme.common.repository.AccountRepository;
+import com.winllc.acme.common.repository.DomainPolicyRepository;
+import com.winllc.acme.common.repository.DomainRepository;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Hibernate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 

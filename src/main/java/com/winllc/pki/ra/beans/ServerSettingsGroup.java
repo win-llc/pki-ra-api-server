@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.beans;
 
-import com.winllc.pki.ra.domain.ServerSettings;
+import com.winllc.acme.common.domain.ServerSettings;
 
 import java.util.ArrayList;
 import java.util.HashSet;

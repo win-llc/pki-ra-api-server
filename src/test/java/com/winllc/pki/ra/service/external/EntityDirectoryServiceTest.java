@@ -1,21 +1,18 @@
 package com.winllc.pki.ra.service.external;
 
+import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.BaseTest;
-import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.*;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.AttributePolicyGroupRepository;
-import com.winllc.pki.ra.repository.AttributePolicyRepository;
-import com.winllc.pki.ra.repository.LdapSchemaOverlayRepository;
-import com.winllc.pki.ra.service.AccountService;
+import com.winllc.acme.common.domain.*;
+import com.winllc.acme.common.repository.AccountRepository;
+import com.winllc.acme.common.repository.AttributePolicyGroupRepository;
+import com.winllc.acme.common.repository.AttributePolicyRepository;
+import com.winllc.acme.common.repository.LdapSchemaOverlayRepository;
 import com.winllc.pki.ra.service.SecurityPolicyService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
 
 import javax.transaction.Transactional;
 import java.util.*;

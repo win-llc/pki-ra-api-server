@@ -1,8 +1,8 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
-import com.winllc.pki.ra.domain.AuthCredential;
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.acme.common.domain.AuthCredential;
+import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;

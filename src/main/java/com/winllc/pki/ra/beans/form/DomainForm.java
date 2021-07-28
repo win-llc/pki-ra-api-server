@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.beans.form;
 
-import com.winllc.pki.ra.domain.Domain;
+import com.winllc.acme.common.domain.Domain;
 import com.winllc.pki.ra.util.FormValidationUtil;
 
 import javax.validation.constraints.NotEmpty;

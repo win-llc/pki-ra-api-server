@@ -1,9 +1,9 @@
-package com.winllc.pki.ra.repository;
+package com.winllc.acme.common.repository;
 
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.endpoint.acme.AcmeServerConnection;
 import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.AcmeServerConnectionInfo;
+import com.winllc.acme.common.domain.AcmeServerConnectionInfo;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

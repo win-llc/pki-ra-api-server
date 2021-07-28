@@ -1,10 +1,8 @@
 package com.winllc.pki.ra.service.validators;
 
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.AccountRequest;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.service.AccountRequestService;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.repository.AccountRepository;
 import com.winllc.pki.ra.service.SecurityPolicyService;
 import com.winllc.pki.ra.util.FormValidationUtil;
 import org.apache.commons.lang3.StringUtils;

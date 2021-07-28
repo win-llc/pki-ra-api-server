@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.beans.info;
 
-import com.winllc.pki.ra.domain.Domain;
+import com.winllc.acme.common.domain.Domain;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;

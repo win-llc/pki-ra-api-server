@@ -1,21 +1,14 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.Notification;
-import com.winllc.pki.ra.domain.PocEntry;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.NotificationRepository;
-import com.winllc.pki.ra.util.EmailUtil;
+import com.winllc.acme.common.domain.Notification;
+import com.winllc.acme.common.repository.NotificationRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/notification")

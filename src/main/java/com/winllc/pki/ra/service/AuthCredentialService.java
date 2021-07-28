@@ -1,17 +1,16 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.beans.form.AuthCredentialsUpdateForm;
 import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
-import com.winllc.pki.ra.domain.*;
+import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.AccountRepository;
-import com.winllc.pki.ra.repository.AuthCredentialRepository;
-import com.winllc.pki.ra.repository.ServerEntryRepository;
+import com.winllc.acme.common.repository.AccountRepository;
+import com.winllc.acme.common.repository.AuthCredentialRepository;
+import com.winllc.acme.common.repository.ServerEntryRepository;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Hibernate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -19,7 +18,6 @@ import javax.validation.Valid;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/authCredential")

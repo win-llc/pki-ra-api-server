@@ -5,7 +5,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'winllc-pki-registration-authority'
+rootProject.name = 'winllc-ra-server'
 
 include ":acme-common"
 project(":acme-common").projectDir = file("../acme-common")

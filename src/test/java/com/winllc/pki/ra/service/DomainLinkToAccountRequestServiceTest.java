@@ -1,26 +1,21 @@
 package com.winllc.pki.ra.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.DomainLinkRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.DomainLinkToAccountRequestForm;
 import com.winllc.pki.ra.beans.info.DomainLinkToAccountRequestInfo;
-import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.*;
-import com.winllc.pki.ra.exception.NotAuthorizedException;
-import com.winllc.pki.ra.exception.RAException;
+import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.*;
+import com.winllc.acme.common.repository.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import javax.transaction.Transactional;

@@ -7,15 +7,12 @@ import com.winllc.acme.common.ca.CachedCertificate;
 import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
 import com.winllc.acme.common.cache.CachedCertificateService;
-import com.winllc.acme.common.contants.CertificateStatus;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.info.AccountInfo;
-import com.winllc.pki.ra.domain.CertificateRequest;
-import com.winllc.pki.ra.domain.RevocationRequest;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.CachedCertificateRepository;
-import com.winllc.pki.ra.repository.CertificateRequestRepository;
-import com.winllc.pki.ra.repository.RevocationRequestRepository;
+import com.winllc.acme.common.repository.CachedCertificateRepository;
+import com.winllc.acme.common.repository.CertificateRequestRepository;
+import com.winllc.acme.common.repository.RevocationRequestRepository;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +25,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController

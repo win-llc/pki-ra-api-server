@@ -1,17 +1,14 @@
-package com.winllc.pki.ra.repository;
+package com.winllc.acme.common.repository;
 
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
-import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.domain.Account;
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.pki.ra.service.AccountService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import javax.transaction.Transactional;
 

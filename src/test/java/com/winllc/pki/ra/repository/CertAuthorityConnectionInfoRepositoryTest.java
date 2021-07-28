@@ -1,4 +1,4 @@
-package com.winllc.pki.ra.repository;
+package com.winllc.acme.common.repository;
 
 import com.winllc.acme.common.repository.CertAuthorityConnectionInfoRepository;
 import com.winllc.pki.ra.BaseTest;

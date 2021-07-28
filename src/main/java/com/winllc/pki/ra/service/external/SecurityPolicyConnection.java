@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.service.external;
 
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.acme.common.domain.ServerEntry;
 
 import java.util.List;
 import java.util.Map;

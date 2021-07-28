@@ -2,9 +2,9 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.pki.ra.beans.ServerSettingsGroup;
 import com.winllc.pki.ra.constants.ServerSettingRequired;
-import com.winllc.pki.ra.domain.ServerSettings;
+import com.winllc.acme.common.domain.ServerSettings;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.pki.ra.repository.ServerSettingsRepository;
+import com.winllc.acme.common.repository.ServerSettingsRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;

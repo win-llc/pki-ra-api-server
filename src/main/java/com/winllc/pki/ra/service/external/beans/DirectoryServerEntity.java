@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.service.external.beans;
 
-import com.winllc.pki.ra.domain.ServerEntry;
+import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.pki.ra.service.AccountRequestService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

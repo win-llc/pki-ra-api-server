@@ -1,27 +1,21 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.repository.*;
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
-import com.winllc.pki.ra.beans.info.InfoObject;
-import com.winllc.pki.ra.config.AppConfig;
-import com.winllc.pki.ra.constants.AuditRecordType;
-import com.winllc.pki.ra.domain.*;
-import com.winllc.pki.ra.repository.*;
-import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnection;
+import com.winllc.acme.common.constants.AuditRecordType;
+import com.winllc.acme.common.domain.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.ActiveProfiles;
 
 import javax.transaction.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 

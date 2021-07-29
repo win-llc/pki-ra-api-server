@@ -26,7 +26,7 @@ class AuthCredentialRepositoryTest extends BaseTest {
     @Transactional
     void before(){
         ServerEntry serverEntry = ServerEntry.buildNew();
-        serverEntry.setFqdn("test.com");
+        serverEntry.setFqdn("test55.com");
         serverEntry = serverEntryRepository.save(serverEntry);
 
         AuthCredential authCredential = AuthCredential.buildNew(serverEntry);
@@ -51,7 +51,7 @@ class AuthCredentialRepositoryTest extends BaseTest {
 
     @Test
     void create(){
-        Optional<ServerEntry> optionalServer = serverEntryRepository.findDistinctByFqdnEquals("test.com");
+        Optional<ServerEntry> optionalServer = serverEntryRepository.findDistinctByFqdnEquals("test55.com");
         AuthCredential authCredential = AuthCredential.buildNew(optionalServer.get());
 
         AuthCredential saved = authCredentialRepository.save(authCredential);
@@ -76,14 +76,14 @@ class AuthCredentialRepositoryTest extends BaseTest {
     @Test
     @Transactional
     void delete(){
-        ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.com").get();
+        ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test55.com").get();
         AuthCredential credential = authCredentialRepository.findAll().get(0);
 
         assertTrue(serverEntry.getAuthCredentials().contains(credential));
 
         authCredentialRepository.delete(credential);
 
-        serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.com").get();
+        serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test55.com").get();
         assertFalse(serverEntry.getAuthCredentials().contains(credential));
     }
 }

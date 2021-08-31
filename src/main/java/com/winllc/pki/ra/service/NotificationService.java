@@ -73,7 +73,6 @@ public class NotificationService {
         }
     }
 
-
     private boolean checkNotificationBelongsToUser(Notification notification, Authentication authentication){
         String currentUserName = authentication.getName();
         return notification.getForUser().equalsIgnoreCase(currentUserName);

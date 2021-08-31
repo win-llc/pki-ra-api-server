@@ -108,6 +108,12 @@ public class SystemActionRunner {
 
         this.entity = result;
 
+        if(this.notification != null) {
+            if (this.entity instanceof ServerEntry) {
+                //todo
+            }
+        }
+
         if(result instanceof AccountOwnedEntity){
             AccountOwnedEntity entity = (AccountOwnedEntity) result;
             Hibernate.initialize(entity.getOwnerAccount());

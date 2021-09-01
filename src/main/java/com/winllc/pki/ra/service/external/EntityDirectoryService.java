@@ -85,6 +85,8 @@ public class EntityDirectoryService {
         serverEntry.buildDn(baseDn);
         serverEntry = serverEntryRepository.save(serverEntry);
 
+        log.info("Going to add Server Entry to LDAP: "+serverEntry.getDistinguishedName());
+
         LdapTemplate ldapTemplate = buildDirectoryLdapTemplate();
 
         try {

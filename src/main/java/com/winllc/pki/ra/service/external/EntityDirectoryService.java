@@ -31,14 +31,17 @@ public class EntityDirectoryService {
 
     private static final Logger log = LogManager.getLogger(EntityDirectoryService.class);
 
-    @Autowired
-    private AttributePolicyGroupRepository attributePolicyGroupRepository;
-    @Autowired
-    private SecurityPolicyService securityPolicyService;
-    @Autowired
-    private ServerSettingsService serverSettingsService;
-    @Autowired
-    private ServerEntryRepository serverEntryRepository;
+    private final AttributePolicyGroupRepository attributePolicyGroupRepository;
+    private final SecurityPolicyService securityPolicyService;
+    private final ServerSettingsService serverSettingsService;
+    private final ServerEntryRepository serverEntryRepository;
+
+    public EntityDirectoryService(AttributePolicyGroupRepository attributePolicyGroupRepository, SecurityPolicyService securityPolicyService, ServerSettingsService serverSettingsService, ServerEntryRepository serverEntryRepository) {
+        this.attributePolicyGroupRepository = attributePolicyGroupRepository;
+        this.securityPolicyService = securityPolicyService;
+        this.serverSettingsService = serverSettingsService;
+        this.serverEntryRepository = serverEntryRepository;
+    }
 
     //return the applied attribute map
     @Transactional

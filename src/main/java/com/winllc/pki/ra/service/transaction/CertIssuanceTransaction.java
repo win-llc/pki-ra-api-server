@@ -101,7 +101,11 @@ public class CertIssuanceTransaction extends CertTransaction {
 
         ThrowingSupplier<X509Certificate, Exception> postProcessAction = () -> {
             if (cert != null) {
-                cachedCertificateService.persist(cert, "VALID", certAuthority.getName());
+                try {
+                    cachedCertificateService.persist(cert, "VALID", certAuthority.getName());
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
                 return cert;
             } else {
                 throw new RAException("Could not cache certificate");

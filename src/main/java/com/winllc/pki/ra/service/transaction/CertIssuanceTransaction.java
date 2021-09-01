@@ -43,7 +43,7 @@ public class CertIssuanceTransaction extends CertTransaction {
     private final CertificateRequestRepository certificateRequestRepository;
     private final EntityDirectoryService entityDirectoryService;
     private final AuditRecordRepository auditRecordRepository;
-    private CachedCertificateService cachedCertificateService;
+    private final CachedCertificateService cachedCertificateService;
 
     public CertIssuanceTransaction(CertAuthority certAuthority, ApplicationContext context) {
         super(certAuthority, context);
@@ -101,7 +101,7 @@ public class CertIssuanceTransaction extends CertTransaction {
 
         ThrowingSupplier<X509Certificate, Exception> postProcessAction = () -> {
             if (cert != null) {
-                cachedCertificateService.persist(cert);
+                cachedCertificateService.persist(cert, certificateRequest.getCertAuthorityName());
                 return cert;
             } else {
                 throw new RAException("Could not cache certificate");

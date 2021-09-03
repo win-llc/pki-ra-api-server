@@ -63,9 +63,6 @@ fabric.properties
 
 *.class
 browscap.csv
-gradle/wrapper
-gradlew.bat
-gradlew
 
 # Package Files #
 *.war

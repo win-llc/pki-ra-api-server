@@ -14,7 +14,7 @@ build:
   image: gradle:jdk14
   stage: build
   script:
-    - .\gradlew -x test build
+    - ./gradlew -x test build
   artifacts:
     paths:
       - build/libs/winllc-ra-server-1.0-SNAPSHOT.jar

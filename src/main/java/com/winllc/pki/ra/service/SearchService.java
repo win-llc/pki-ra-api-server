@@ -16,6 +16,7 @@ import com.winllc.acme.common.repository.RevocationRequestRepository;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -53,9 +54,10 @@ public class SearchService {
             param.setField(CertSearchParams.CertField.SUBJECT);
             param.setValue(search);
 
-            List<com.winllc.acme.common.ca.CachedCertificate> search1 = cachedCertificateService.search(param);
+            SearchHits<CachedCertificate> search1 = cachedCertificateService.search(param);
 
             return search1.stream()
+                    .map(h -> h.getContent())
                     .sorted()
                     .map(c -> cachedToDetails(c))
                     .collect(Collectors.toList());
@@ -66,9 +68,10 @@ public class SearchService {
     @PostMapping("/certificates/advanced")
     public List<CertificateDetails> advancedSearchCertificates(@RequestBody CertSearchParam param){
 
-        List<com.winllc.acme.common.ca.CachedCertificate> search1 = cachedCertificateService.search(param);
+        SearchHits<CachedCertificate> search = cachedCertificateService.search(param);
 
-        return search1.stream()
+        return search.stream()
+                .map(h -> h.getContent())
                 .map(c -> cachedToDetails(c))
                 .collect(Collectors.toList());
     }
@@ -110,7 +113,10 @@ public class SearchService {
                 .addSearchParam(serialSearch)
                 .addSearchParam(caSearch);
 
-        List<CachedCertificate> search = cachedCertificateService.search(andParam);
+        SearchHits<CachedCertificate> hits = cachedCertificateService.search(andParam);
+        List<CachedCertificate> search = hits.stream()
+                .map(h -> h.getContent())
+                .collect(Collectors.toList());
 
         if(CollectionUtils.isNotEmpty(search)){
             CachedCertificate cachedCertificate = search.get(0);

@@ -36,9 +36,16 @@ configurations.all {
         dependencySubstitution {
             // Substitute project and module dependencies
 
+            def proj1 = findProject(":acme-common")
+            if (proj1 != null && proj1.buildFile.exists()) {
                 substitute module('com.winllc.acme.common:acme-common') using project(':acme-common')
+            }
 
+
+            def proj2 = findProject(":dogtag-ca-plugin")
+            if (proj2 != null && proj2.buildFile.exists()) {
                 substitute module('com.winllc.pki.plugins.dogtag:dogtag-ca-plugin') using project(':dogtag-ca-plugin')
+            }
 
         }
     }

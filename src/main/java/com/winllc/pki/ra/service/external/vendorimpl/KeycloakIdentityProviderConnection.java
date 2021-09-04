@@ -45,7 +45,7 @@ public class KeycloakIdentityProviderConnection implements IdentityProviderConne
          */
 
         List<UserRepresentation> search = keycloak.realm(keycloakConfiguration.getRealm())
-                .users().search(email);
+                .users().search( email);
 
         if(search.size() > 0){
             UserRepresentation representation = search.get(0);

@@ -4,9 +4,7 @@ import com.winllc.acme.common.*;
 import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
-import com.winllc.acme.common.domain.Account;
-import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
-import com.winllc.acme.common.domain.CertAuthorityConnectionProperty;
+import com.winllc.acme.common.domain.*;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.repository.CertAuthorityConnectionInfoRepository;
@@ -21,9 +19,11 @@ import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
 import com.winllc.pki.ra.service.transaction.CertRevocationTransaction;
 import com.winllc.pki.ra.service.validators.CertAuthorityConnectionInfoValidator;
 import io.github.classgraph.*;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
@@ -34,9 +34,11 @@ import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -53,6 +55,10 @@ public class CertAuthorityConnectionService extends AbstractService {
     private final LoadedCertAuthorityStore certAuthorityStore;
     private final CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator;
     private final AuthCredentialService authCredentialService;
+    @Autowired
+    private RevocationRequestService revocationRequestService;
+    @Autowired
+    private CertificateRequestRepository certificateRequestRepository;
 
     public CertAuthorityConnectionService(CertAuthorityConnectionInfoRepository repository,
                                           CertAuthorityConnectionPropertyRepository propertyRepository,
@@ -315,8 +321,19 @@ public class CertAuthorityConnectionService extends AbstractService {
         CertAuthority certAuthority = certAuthorityStore.getLoadedCertAuthority(revokeRequest.getCertAuthorityName());
         if (certAuthority != null) {
 
+            String serial = revokeRequest.getSerial();
+            if(StringUtils.isEmpty(serial)){
+                serial = getSerialFromRequest(revokeRequest);
+            }
+
+            RevocationRequest request = new RevocationRequest("acme-server");
+            request.setSerial(serial);
+            request.setIssuerDn(certAuthority.getIssuerName().toString());
+            request.setReason(revokeRequest.getReason());
+            request = revocationRequestService.save(request);
+
             CertRevocationTransaction revocationTransaction = new CertRevocationTransaction(certAuthority, context);
-            revocationTransaction.processRevokeCertificate(revokeRequest);
+            revocationTransaction.processRevokeCertificate(request);
 
         } else {
             throw new RAObjectNotFoundException(CertAuthority.class, revokeRequest.getCertAuthorityName());
@@ -433,6 +450,21 @@ public class CertAuthorityConnectionService extends AbstractService {
                     }
                     return false;
                 }).findFirst();
+    }
+
+    private String getSerialFromRequest(RACertificateRevokeRequest revokeRequest) throws RAException, CertificateException, IOException {
+        Optional<CertificateRequest> optionalCertificateRequest = certificateRequestRepository.findById(revokeRequest.getRequestId());
+        if(optionalCertificateRequest.isPresent()){
+            CertificateRequest certificateRequest = optionalCertificateRequest.get();
+            if(StringUtils.isNotBlank(certificateRequest.getIssuedCertificate())){
+                X509Certificate x509Certificate = CertUtil.base64ToCert(certificateRequest.getIssuedCertificate());
+                return x509Certificate.getSerialNumber().toString();
+            }else{
+                throw new RAException("No certificate in request, most likely not issued yet");
+            }
+        }else{
+            throw new RAObjectNotFoundException(CertificateRequest.class, revokeRequest.getRequestId());
+        }
     }
 
 }

@@ -13,9 +13,11 @@ import com.winllc.acme.common.domain.RevocationRequest;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.CachedCertificateRepository;
 import com.winllc.acme.common.repository.RevocationRequestRepository;
+import com.winllc.pki.ra.service.transaction.CertRevocationTransaction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,15 +36,18 @@ public class RevocationRequestService {
 
     private final RevocationRequestRepository revocationRequestRepository;
     private final LoadedCertAuthorityStore certAuthorityStore;
-    @Autowired
-    private CachedCertificateRepository cachedCertificateRepository;
+    private final ApplicationContext applicationContext;
 
     public RevocationRequestService(RevocationRequestRepository revocationRequestRepository,
-                                    LoadedCertAuthorityStore certAuthorityStore) {
+                                    LoadedCertAuthorityStore certAuthorityStore, ApplicationContext applicationContext) {
         this.revocationRequestRepository = revocationRequestRepository;
         this.certAuthorityStore = certAuthorityStore;
+        this.applicationContext = applicationContext;
     }
 
+    public RevocationRequest save(RevocationRequest request){
+        return revocationRequestRepository.save(request);
+    }
 
     @GetMapping("/all")
     public List<RevocationRequest> request(){
@@ -101,7 +106,7 @@ public class RevocationRequestService {
 
     @PostMapping("/decision")
     public void approve(@RequestBody CertificateRequestDecisionForm form, Authentication authentication)
-            throws InvalidNameException, RAObjectNotFoundException {
+            throws Exception {
 
         Optional<RevocationRequest> optionalRequest = revocationRequestRepository.findById(form.getRequestId());
         if(optionalRequest.isPresent()){
@@ -129,30 +134,14 @@ public class RevocationRequestService {
 
     }
 
-    private boolean approveRevoke(RevocationRequest request) throws InvalidNameException, RAObjectNotFoundException {
+    private boolean approveRevoke(RevocationRequest request) throws Exception {
         Optional<CertAuthority> optionalCa
                 = certAuthorityStore.getLoadedCertAuthorityByIssuerDN(new X500Principal(request.getIssuerDn()));
 
         if(optionalCa.isPresent()){
-            CertAuthority ca = optionalCa.get();
-
-            boolean revoked = false;
-            try {
-                revoked = ca.revokeCertificate(request.getSerial(), RevocationReason.UNSPECIFIED.getCode());
-
-                if(revoked) {
-                    Optional<CachedCertificate> optionalCached = cachedCertificateRepository.findDistinctByIssuerAndSerial(
-                            request.getIssuerDn(), Long.parseLong(request.getSerial()));
-
-                    if (optionalCached.isPresent()) {
-                        CachedCertificate cachedCertificate = optionalCached.get();
-                        cachedCertificate.setStatus("REVOKED");
-                        cachedCertificateRepository.save(cachedCertificate);
-                    }
-                }
-            } catch (Exception e) {
-                log.error("Could not revoke: "+request);
-            }
+            CertAuthority certAuthority = optionalCa.get();
+            CertRevocationTransaction revocationTransaction = new CertRevocationTransaction(certAuthority, applicationContext);
+            boolean revoked = revocationTransaction.processRevokeCertificate(request);
 
             log.debug("Was revoked: "+revoked);
             return revoked;

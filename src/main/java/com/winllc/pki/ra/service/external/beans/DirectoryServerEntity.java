@@ -123,8 +123,10 @@ public class DirectoryServerEntity {
     private void createIfDoesNotExistAndUpdate(){
         if(!exists()){
             //todo bind basic attributes
-            ldapTemplate.create(serverEntry);
+            //ldapTemplate.create(serverEntry);
             //ldapTemplate.bind(dn, null, buildBasicAttributes());
+            Attributes attributes = buildBasicAttributes();
+            ldapTemplate.bind(serverEntry.getDn(), null, attributes);
         }
         updateCurrent();
     }

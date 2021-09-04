@@ -11,7 +11,9 @@ app-keystore:
   type: PKCS12
 win-ra:
   acme-server-url: http://winra.winllc-dev.com:8181
+  acme-server-public-url: https://winra.winllc-dev.com
   acme-server-name: winllc
+  est-server-url: https://winra.winllc-dev.com:8383
 management:
   health:
     ldap:

@@ -1,6 +1,10 @@
 package com.winllc.pki.ra.service.transaction;
 
+import com.winllc.acme.common.ca.CachedCertificate;
+import com.winllc.acme.common.cache.CachedCertificateService;
+import com.winllc.acme.common.domain.RevocationRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
+import com.winllc.acme.common.repository.RevocationRequestRepository;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.constants.AuditRecordType;
@@ -11,6 +15,7 @@ import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.AuditRecordRepository;
 import com.winllc.acme.common.repository.CertificateRequestRepository;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,31 +31,30 @@ public class CertRevocationTransaction extends CertTransaction {
 
     private static final Logger log = LogManager.getLogger(CertRevocationTransaction.class);
 
-    private final AuditRecordRepository auditRecordRepository;
     private final CertificateRequestRepository certificateRequestRepository;
+    private final CachedCertificateService cachedCertificateService;
+    private RevocationRequestRepository revocationRequestRepository;
 
-    public CertRevocationTransaction(CertAuthority certAuthority, ApplicationContext context){
+    public CertRevocationTransaction(CertAuthority certAuthority, ApplicationContext context) {
         super(certAuthority, context);
-        this.auditRecordRepository = context.getBean(AuditRecordRepository.class);
+        this.cachedCertificateService = context.getBean(CachedCertificateService.class);
         this.certificateRequestRepository = context.getBean(CertificateRequestRepository.class);
+        this.revocationRequestRepository = context.getBean(RevocationRequestRepository.class);
     }
 
-    public boolean processRevokeCertificate(RACertificateRevokeRequest revokeRequest) throws Exception {
-        log.info("Begin certificate revocation: "+revokeRequest);
+    public boolean processRevokeCertificate(RevocationRequest revokeRequest) throws Exception {
+        log.info("Begin certificate revocation: " + revokeRequest);
         String serial = revokeRequest.getSerial();
         //Get serial from certificate request
-        if(StringUtils.isBlank(serial)){
-            serial = getSerialFromRequest(revokeRequest);
-        }
 
-        if(StringUtils.isBlank(serial)) throw new Exception("Request ID and Serial can't both be null");
+        if (StringUtils.isBlank(serial)) throw new Exception("Request ID and Serial can't both be null");
 
         SystemActionRunner runner = SystemActionRunner.build(context)
                 .createAuditRecord(AuditRecordType.CERTIFICATE_REVOKED)
                 .sendNotification();
 
         Optional<ServerEntry> optionalServerEntry = getServerEntryAssociatedWithCertificate(serial);
-        if(optionalServerEntry.isPresent()){
+        if (optionalServerEntry.isPresent()) {
             ServerEntry serverEntry = optionalServerEntry.get();
 
             runner.createAuditRecord(AuditRecordType.CERTIFICATE_REVOKED, serverEntry);
@@ -72,14 +76,53 @@ public class CertRevocationTransaction extends CertTransaction {
             return revoked;
         };
 
-        return runner.execute(action);
+        boolean success = runner.execute(action);
+        if (success) {
+            postProcessRevokedCert(revokeRequest);
+        }
+
+        return success;
     }
 
-    private Optional<ServerEntry> getServerEntryAssociatedWithCertificate(String serial){
+    private void postProcessRevokedCert(RevocationRequest request) {
+        String finalSerial = request.getSerial();
+        ThrowingSupplier<Boolean, Exception> action = () -> {
+            boolean cached = false;
+
+            try {
+                request.setStatus("revoked");
+                revocationRequestRepository.save(request);
+            } catch (Exception e) {
+                log.error("Could not update revocation request in DB", e);
+            }
+
+            try {
+                X509Certificate certificate = certAuthority.getCertificateBySerial(finalSerial);
+                String thumbprint = DigestUtils.sha1Hex(certificate.getEncoded());
+
+                Optional<CachedCertificate> certificateOptional = cachedCertificateService.findById(thumbprint);
+                if (certificateOptional.isPresent()) {
+                    CachedCertificate cachedCertificate = certificateOptional.get();
+                    cachedCertificate.setStatus("REVOKED");
+                    cachedCertificateService.update(cachedCertificate);
+                    cached = true;
+                }
+            } catch (Exception e) {
+                log.error("Could not cache certificate", e);
+            }
+            return cached;
+        };
+
+        SystemActionRunner runner = SystemActionRunner.build(context);
+        runner.executeAsync(action);
+
+    }
+
+    private Optional<ServerEntry> getServerEntryAssociatedWithCertificate(String serial) {
         Optional<CertificateRequest> optionalRequest
                 = certificateRequestRepository.findDistinctByIssuedCertificateSerialAndCertAuthorityName(serial, certAuthority.getName());
 
-        if(optionalRequest.isPresent()){
+        if (optionalRequest.isPresent()) {
             CertificateRequest request = optionalRequest.get();
             Hibernate.initialize(request.getServerEntry());
             ServerEntry serverEntry = request.getServerEntry();
@@ -87,20 +130,5 @@ public class CertRevocationTransaction extends CertTransaction {
         }
 
         return Optional.empty();
-    }
-
-    private String getSerialFromRequest(RACertificateRevokeRequest revokeRequest) throws RAException, CertificateException, IOException {
-        Optional<CertificateRequest> optionalCertificateRequest = certificateRequestRepository.findById(revokeRequest.getRequestId());
-        if(optionalCertificateRequest.isPresent()){
-            CertificateRequest certificateRequest = optionalCertificateRequest.get();
-            if(StringUtils.isNotBlank(certificateRequest.getIssuedCertificate())){
-                X509Certificate x509Certificate = CertUtil.base64ToCert(certificateRequest.getIssuedCertificate());
-                return x509Certificate.getSerialNumber().toString();
-            }else{
-                throw new RAException("No certificate in request, most likely not issued yet");
-            }
-        }else{
-            throw new RAObjectNotFoundException(CertificateRequest.class, revokeRequest.getRequestId());
-        }
     }
 }

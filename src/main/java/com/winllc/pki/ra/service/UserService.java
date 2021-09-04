@@ -28,18 +28,20 @@ public class UserService {
     private final PocEntryRepository pocEntryRepository;
     private final KeycloakIdentityProviderConnection keycloakService;
 
-    @Autowired
-    private AccountRequestService accountRequestService;
-    @Autowired
-    private DomainLinkToAccountRequestService domainLinkToAccountRequestService;
-    @Autowired
-    private CertificateRequestService certificateRequestService;
-    @Autowired
-    private NotificationService notificationService;
+    private final AccountRequestService accountRequestService;
+    private final DomainLinkToAccountRequestService domainLinkToAccountRequestService;
+    private final CertificateRequestService certificateRequestService;
+    private final NotificationService notificationService;
 
-    public UserService(KeycloakIdentityProviderConnection keycloakService, PocEntryRepository pocEntryRepository) {
+    public UserService(KeycloakIdentityProviderConnection keycloakService, PocEntryRepository pocEntryRepository,
+                       AccountRequestService accountRequestService, DomainLinkToAccountRequestService domainLinkToAccountRequestService,
+                       CertificateRequestService certificateRequestService, NotificationService notificationService) {
         this.keycloakService = keycloakService;
         this.pocEntryRepository = pocEntryRepository;
+        this.accountRequestService = accountRequestService;
+        this.domainLinkToAccountRequestService = domainLinkToAccountRequestService;
+        this.certificateRequestService = certificateRequestService;
+        this.notificationService = notificationService;
     }
 
 

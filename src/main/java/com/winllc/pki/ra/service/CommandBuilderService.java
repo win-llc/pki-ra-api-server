@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/buildCommand")
 public class CommandBuilderService {
 
-    @Value("${win-ra.acme-server-url}")
+    @Value("${win-ra.acme-server-public-url}")
     private String acmeBaseUrl;
     @Value("${win-ra.est-server-url}")
     private String estBaseUrl;
@@ -51,6 +51,9 @@ public class CommandBuilderService {
                 commands.add(certCommand);
                 commands.add(buildCertbotRenewalCron());
                 break;
+            case "win-acme":
+                commands.add(buildWinAcmeRequiredInputs(serverEntry, applicationName));
+                break;
             case "est":
                 commands.addAll(buildEstRequiredInputs(serverEntry));
                 break;
@@ -63,7 +66,7 @@ public class CommandBuilderService {
 
         Optional<AuthCredential> optionalAuthCredential = getAuthCredential(serverEntry);
 
-        if(optionalAuthCredential.isPresent()){
+        if (optionalAuthCredential.isPresent()) {
             AuthCredential credential = optionalAuthCredential.get();
 
             //certbot register --no-eff-email --server https://winra.winllc-dev.com/acme/acme/directory
@@ -80,29 +83,29 @@ public class CommandBuilderService {
             commandParts.add("-m");
             commandParts.add(email);
             commandParts.add("--server");
-            commandParts.add(acmeBaseUrl+"/acme/directory");
+            commandParts.add(acmeBaseUrl + "/acme/directory");
             commandParts.add("--eab-kid");
             commandParts.add(credential.getKeyIdentifier());
             commandParts.add("--eab-hmac-key");
             commandParts.add(credential.getMacKeyBase64());
 
             return String.join(" ", commandParts);
-        }else{
+        } else {
             throw new RAObjectNotFoundException(AuthCredential.class, serverEntry.getFqdn());
         }
     }
 
-    private String buildCertbotCertCommand(ServerEntry serverEntry, String applicationName, String email){
+    private String buildCertbotCertCommand(ServerEntry serverEntry, String applicationName, String email) {
         List<String> commandParts = new LinkedList<>();
         commandParts.add("certbot");
-        if(applicationName.contentEquals("standalone") || applicationName.contentEquals("webroot")){
+        if (applicationName.contentEquals("standalone") || applicationName.contentEquals("webroot")) {
             commandParts.add("certonly");
         }
-        commandParts.add("--"+applicationName);
+        commandParts.add("--" + applicationName);
         commandParts.add("--no-verify-ssl");
         commandParts.add("--server");
         //todo dynamic
-        commandParts.add(acmeBaseUrl+"/acme/directory");
+        commandParts.add(acmeBaseUrl + "/acme/directory");
         commandParts.add("-d");
         commandParts.add(serverEntry.getFqdn());
         commandParts.add("--agree-tos");
@@ -113,7 +116,7 @@ public class CommandBuilderService {
         return String.join(" ", commandParts);
     }
 
-    private String buildCertbotRenewalCron(){
+    private String buildCertbotRenewalCron() {
         return "SLEEPTIME=$(awk 'BEGIN{srand(); print int(rand()*(3600+1))}'); echo \"0 0,12 * * * root sleep $SLEEPTIME && certbot renew -q\" | sudo tee -a /etc/crontab > /dev/null";
     }
 
@@ -122,14 +125,44 @@ public class CommandBuilderService {
 
         List<String> parts = new LinkedList<>();
 
-        if(optionalAuthCredential.isPresent()) {
+        if (optionalAuthCredential.isPresent()) {
             AuthCredential authCredential = optionalAuthCredential.get();
-            parts.add("Enrollment URL: " +estBaseUrl);
-            parts.add("HTTP Client Username: " +authCredential.getKeyIdentifier());
-            parts.add("HTTP Client Password: " +authCredential.getMacKeyBase64());
+            parts.add("Enrollment URL: " + estBaseUrl);
+            parts.add("HTTP Client Username: " + authCredential.getKeyIdentifier());
+            parts.add("HTTP Client Password: " + authCredential.getMacKeyBase64());
 
         }
         return parts;
+    }
+
+    private String buildWinAcmeRequiredInputs(ServerEntry serverEntry, String applicationName) throws Exception {
+        Optional<AuthCredential> optionalAuthCredential = getAuthCredential(serverEntry);
+
+        if (optionalAuthCredential.isPresent()) {
+            AuthCredential credential = optionalAuthCredential.get();
+            List<String> commandParts = new LinkedList<>();
+            commandParts.add("./wacs.exe");
+            commandParts.add("--source");
+            commandParts.add("--accepttos");
+            commandParts.add(applicationName);
+            if(applicationName.equalsIgnoreCase("iis")){
+                commandParts.add("--installation iis");
+            }
+            commandParts.add("--siteid s");
+            commandParts.add("--host");
+            commandParts.add(serverEntry.getFqdn());
+            commandParts.add("--baseuri");
+            commandParts.add(acmeBaseUrl + "/acme/directory");
+            commandParts.add("--eab-key-identifier");
+            commandParts.add(credential.getKeyIdentifier());
+            commandParts.add("--eab-key");
+            commandParts.add(credential.getMacKeyBase64());
+            commandParts.add("--force");
+
+            return String.join(" ", commandParts);
+        } else {
+            throw new RAObjectNotFoundException(AuthCredential.class, serverEntry.getFqdn());
+        }
     }
 
     private Optional<AuthCredential> getAuthCredential(ServerEntry serverEntry) throws Exception {
@@ -138,11 +171,45 @@ public class CommandBuilderService {
         lookupForm.setObjectUuid(serverEntry.getUuid());
 
         List<AuthCredential> validAuthCredentials = authCredentialService.getValidAuthCredentials(lookupForm);
-        if(CollectionUtils.isNotEmpty(validAuthCredentials)) {
+        if (CollectionUtils.isNotEmpty(validAuthCredentials)) {
             AuthCredential credential = validAuthCredentials.get(0);
             return Optional.of(credential);
-        }else{
+        } else {
             return Optional.empty();
         }
+    }
+
+    private static class CertManagerClusterIssuer {
+        private CertManagerClusterIssuerMetadata metadata;
+        private CertManagerClusterIssuerSpec spec;
+    }
+
+    private static class CertManagerClusterIssuerMetadata {
+        private String name;
+
+    }
+
+    private static class CertManagerClusterIssuerSpec {
+        private CertManagerClusterIssuerSpecAcme acme;
+    }
+
+    private static class CertManagerClusterIssuerSpecAcme {
+        private String skipTLSVerify;
+        private String email;
+        private String server;
+        private CertManagerClusterIssuerSpecAcmeEab externalAccountBinding;
+
+    }
+
+    private static class CertManagerClusterIssuerSpecAcmeEab {
+        private String keyID;
+        private CertManagerClusterIssuerSpecAcmeEabKeySecretRef keySecretRef;
+        private String keyAlgorithm;
+
+    }
+
+    private static class CertManagerClusterIssuerSpecAcmeEabKeySecretRef {
+        private String name;
+        private String key;
     }
 }

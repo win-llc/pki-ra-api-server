@@ -104,7 +104,7 @@ public class CertIssuanceTransaction extends CertTransaction {
                 try {
                     cachedCertificateService.persist(cert, "VALID", certAuthority.getName());
                 }catch (Exception e){
-                    e.printStackTrace();
+                   log.error("Could not cache certificate: "+cert.getSubjectDN().getName());
                 }
                 return cert;
             } else {

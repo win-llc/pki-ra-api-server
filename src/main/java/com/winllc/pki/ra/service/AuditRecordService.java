@@ -5,7 +5,9 @@ import com.winllc.acme.common.constants.AuditRecordType;
 import com.winllc.acme.common.domain.AuditRecord;
 import com.winllc.acme.common.repository.AuditRecordRepository;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,6 +44,8 @@ public class AuditRecordService {
     @PostMapping("/forEntity")
     @ResponseStatus(HttpStatus.OK)
     public Page<AuditRecord> getRecordsForEntity(@Valid @RequestBody UniqueEntityLookupForm lookupForm, Pageable pageable){
-        return repository.findAllByObjectClassAndObjectUuid(lookupForm.getObjectClass(), lookupForm.getObjectUuid(), pageable);
+        Sort sort = Sort.by(Sort.Direction.DESC, "timestamp");
+        Pageable withSort = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        return repository.findAllByObjectClassAndObjectUuid(lookupForm.getObjectClass(), lookupForm.getObjectUuid(), withSort);
     }
 }

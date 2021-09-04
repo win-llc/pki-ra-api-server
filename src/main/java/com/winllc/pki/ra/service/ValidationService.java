@@ -60,6 +60,7 @@ public class ValidationService {
         Optional<AuthCredential> optionalAuthCredential = authCredentialRepository.findDistinctByKeyIdentifier(kid);
         if(optionalAuthCredential.isPresent()){
             AuthCredential authCredential = optionalAuthCredential.get();
+            Hibernate.initialize(authCredential.getParentEntity());
             AuthCredentialHolder parentEntity = authCredential.getParentEntity();
 
             CertIssuanceValidationResponse response = new CertIssuanceValidationResponse(authCredential.getKeyIdentifier());

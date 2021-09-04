@@ -45,7 +45,11 @@ public class AuditRecordService {
     @ResponseStatus(HttpStatus.OK)
     public Page<AuditRecord> getRecordsForEntity(@Valid @RequestBody UniqueEntityLookupForm lookupForm, Pageable pageable){
         Sort sort = Sort.by(Sort.Direction.DESC, "timestamp");
-        Pageable withSort = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
-        return repository.findAllByObjectClassAndObjectUuid(lookupForm.getObjectClass(), lookupForm.getObjectUuid(), withSort);
+        if(!pageable.isUnpaged()) {
+            Pageable withSort = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+            return repository.findAllByObjectClassAndObjectUuid(lookupForm.getObjectClass(), lookupForm.getObjectUuid(), withSort);
+        }else{
+            return repository.findAllByObjectClassAndObjectUuid(lookupForm.getObjectClass(), lookupForm.getObjectUuid(), pageable);
+        }
     }
 }

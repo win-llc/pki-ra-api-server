@@ -6,6 +6,7 @@ app-keystore:
   type: JKS
 win-ra:
   acme-server-url: https://winra.winllc-dev.com:8181
+  acme-server-public-url: https://winra.winllc-dev.com:8181
   acme-server-name: winllc
   est-server-url: https://winra.winllc-dev.com:8383
 internal-ca:

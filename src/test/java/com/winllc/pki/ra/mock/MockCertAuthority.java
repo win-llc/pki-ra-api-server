@@ -13,6 +13,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 
 import javax.naming.Name;
+import javax.naming.ldap.LdapName;
 import java.io.IOException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -91,7 +92,7 @@ public class MockCertAuthority implements CertAuthority {
 
     @Override
     public Name getIssuerName() throws Exception {
-        return null;
+        return new LdapName("cn=mock issuer");
     }
 
     @Override

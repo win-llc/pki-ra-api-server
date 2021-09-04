@@ -28,6 +28,24 @@ test {
     systemProperty 'javax.net.ssl.trustStore', 'C:\\Users\\jrmints\\IdeaProjects\\PKI Registration Authority\\src\\main\\resources\\trust.jks'
 }
 
+configurations.all {
+    resolutionStrategy {
+        preferProjectModules()
+        cacheChangingModulesFor 0, 'seconds'
+
+        dependencySubstitution {
+            // Substitute project and module dependencies
+
+                substitute module('com.winllc.acme.common:acme-common') using project(':acme-common')
+
+                substitute module('com.winllc.pki.plugins.dogtag:dogtag-ca-plugin') using project(':dogtag-ca-plugin')
+
+        }
+    }
+}
+
+
+/*
 configurations {
     all {
         resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
@@ -48,6 +66,8 @@ configurations {
         }
     }
 }
+
+ */
 
 bootJar {
     enabled(true)

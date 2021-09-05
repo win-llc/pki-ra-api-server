@@ -52,7 +52,7 @@ public class MetricsService {
 
         AuditRecordType type = AuditRecordType.valueOf(auditMetricRequest.getAuditRecordType());
         LocalDate fromDateTime = LocalDate.parse(auditMetricRequest.getDateFrom(), dtf);
-        LocalDate toDateTime = LocalDate.parse(auditMetricRequest.getDateTo(), dtf);
+        LocalDate toDateTime = LocalDate.parse(auditMetricRequest.getDateTo(), dtf).plusDays(1);
 
         List<AuditRecord> allByTypeEqualsAndTimestampAfterAndTimestampBefore
                 = auditRecordRepository.findAllByTypeEqualsAndTimestampAfterAndTimestampBefore(type,

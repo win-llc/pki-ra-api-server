@@ -1,45 +1,26 @@
 package com.winllc.pki.ra.cron;
 
-import com.winllc.acme.common.CertSearchParam;
-import com.winllc.acme.common.CertSearchParams;
-import com.winllc.acme.common.CertificateDetails;
-import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
-import com.winllc.acme.common.domain.CachedCertificate;
-import com.winllc.acme.common.domain.CertificateRequest;
-import com.winllc.acme.common.repository.CachedCertificateRepository;
 import com.winllc.acme.common.repository.CertificateRequestRepository;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.Hibernate;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
-import javax.transaction.Transactional;
-import java.security.cert.*;
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.*;
-import java.util.stream.Collectors;
 
 //@Component
 public class CachedCertificateUpdater {
 
     private static final Logger log = LogManager.getLogger(CachedCertificateUpdater.class);
 
-    private final CachedCertificateRepository repository;
+    //private final CachedCertificateRepository repository;
     private final CertificateRequestRepository certificateRequestRepository;
     private final LoadedCertAuthorityStore certAuthorityStore;
 
-    public CachedCertificateUpdater(CachedCertificateRepository repository,
-                                    CertificateRequestRepository certificateRequestRepository, LoadedCertAuthorityStore certAuthorityStore) {
-        this.repository = repository;
+    public CachedCertificateUpdater(CertificateRequestRepository certificateRequestRepository, LoadedCertAuthorityStore certAuthorityStore) {
+        //this.repository = repository;
         this.certificateRequestRepository = certificateRequestRepository;
         this.certAuthorityStore = certAuthorityStore;
     }
 
+    /*
     @Scheduled(fixedDelay = 1000 * 60 * 60)
     @Transactional
     public void update() throws Exception {
@@ -197,5 +178,5 @@ public class CachedCertificateUpdater {
             return LocalDate.now().minusMonths(1);
         }
     }
-
+*/
 }

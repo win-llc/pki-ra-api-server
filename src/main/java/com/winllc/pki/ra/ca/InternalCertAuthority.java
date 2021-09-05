@@ -23,6 +23,8 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -191,8 +193,8 @@ public class InternalCertAuthority {
         IssuedCertificate issuedCertificate = IssuedCertificate.buildNew();
         issuedCertificate.setSubjectDn(x509Certificate.getSubjectDN().getName());
         issuedCertificate.setIssuerDn(x509Certificate.getIssuerDN().getName());
-        issuedCertificate.setIssuedOn(Timestamp.from(x509Certificate.getNotBefore().toInstant()));
-        issuedCertificate.setExpiresOn(Timestamp.from(x509Certificate.getNotAfter().toInstant()));
+        issuedCertificate.setIssuedOn(ZonedDateTime.ofInstant(x509Certificate.getNotBefore().toInstant(), ZoneId.systemDefault()));
+        issuedCertificate.setExpiresOn(ZonedDateTime.ofInstant(x509Certificate.getNotAfter().toInstant(), ZoneId.systemDefault()));
         issuedCertificate.setIssuedCertificate(CertUtil.formatCrtFileContents(x509Certificate));
         issuedCertificate.setStatus(status);
         return issuedCertificate;

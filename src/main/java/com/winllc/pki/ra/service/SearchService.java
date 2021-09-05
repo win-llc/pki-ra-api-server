@@ -10,12 +10,8 @@ import com.winllc.acme.common.cache.CachedCertificateService;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
-import com.winllc.acme.common.repository.CachedCertificateRepository;
-import com.winllc.acme.common.repository.CertificateRequestRepository;
-import com.winllc.acme.common.repository.RevocationRequestRepository;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,16 +28,13 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/search")
 public class SearchService {
 
-    @Autowired
-    private LoadedCertAuthorityStore certAuthorityStore;
-    @Autowired
-    private CertificateRequestRepository certificateRequestRepository;
-    @Autowired
-    private CachedCertificateRepository cachedCertificateRepository;
-    @Autowired
-    private RevocationRequestRepository revocationRequestRepository;
-    @Autowired
-    private CachedCertificateService cachedCertificateService;
+    private final LoadedCertAuthorityStore certAuthorityStore;
+    private final CachedCertificateService cachedCertificateService;
+
+    public SearchService(LoadedCertAuthorityStore certAuthorityStore, CachedCertificateService cachedCertificateService) {
+        this.certAuthorityStore = certAuthorityStore;
+        this.cachedCertificateService = cachedCertificateService;
+    }
 
     @GetMapping("/certificates")
     public List<CertificateDetails> searchCertificates(@RequestParam String search){

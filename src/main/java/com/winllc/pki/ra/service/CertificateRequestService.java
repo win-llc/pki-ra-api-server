@@ -51,15 +51,13 @@ public class CertificateRequestService extends AbstractService {
     private final CertificateRequestDecisionValidator certificateRequestDecisionValidator;
     private final ServerEntryRepository serverEntryRepository;
     private final DomainService domainService;
-    private final CachedCertificateRepository cachedCertificateRepository;
 
     public CertificateRequestService(CertificateRequestRepository requestRepository,
                                      AccountRepository accountRepository, LoadedCertAuthorityStore certAuthorityStore,
                                      CertRequestFormValidator formValidator, ApplicationContext context,
                                      CertificateRequestValidator certificateRequestValidator,
                                      CertificateRequestDecisionValidator certificateRequestDecisionValidator,
-                                     ServerEntryRepository serverEntryRepository, DomainService domainService,
-                                     CachedCertificateRepository cachedCertificateRepository) {
+                                     ServerEntryRepository serverEntryRepository, DomainService domainService) {
         super(context);
         this.requestRepository = requestRepository;
         this.accountRepository = accountRepository;
@@ -69,7 +67,6 @@ public class CertificateRequestService extends AbstractService {
         this.certificateRequestDecisionValidator = certificateRequestDecisionValidator;
         this.serverEntryRepository = serverEntryRepository;
         this.domainService = domainService;
-        this.cachedCertificateRepository = cachedCertificateRepository;
     }
 
     @InitBinder("certificateRequestForm")

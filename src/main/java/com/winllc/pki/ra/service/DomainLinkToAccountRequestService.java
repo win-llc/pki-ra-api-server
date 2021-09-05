@@ -28,6 +28,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -151,7 +152,7 @@ public class DomainLinkToAccountRequestService extends AbstractService {
 
         DomainLinkToAccountRequest request = DomainLinkToAccountRequest.buildNew();
         request.setRequestedBy(authentication.getName());
-        request.setRequestedOn(Timestamp.valueOf(LocalDateTime.now()));
+        request.setRequestedOn(ZonedDateTime.now());
 
         List<Long> domainIds = new LinkedList<>(form.getRequestedDomainIds());
         domainIds.removeIf(Objects::isNull);
@@ -208,7 +209,7 @@ public class DomainLinkToAccountRequestService extends AbstractService {
                 Account account = optionalAccount.get();
 
                 request.setDecisionMadeBy(authentication.getName());
-                request.setStatusUpdatedOn(Timestamp.valueOf(LocalDateTime.now()));
+                request.setStatusUpdatedOn(ZonedDateTime.now());
 
                 switch (decision.getStatus()) {
                     case "approve":

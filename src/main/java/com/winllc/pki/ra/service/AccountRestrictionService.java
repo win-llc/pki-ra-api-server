@@ -30,6 +30,7 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
@@ -218,7 +219,7 @@ public class AccountRestrictionService extends AbstractService {
 
         SystemActionRunner runner = SystemActionRunner.build(this.context);
         runner.createNotification(notification)
-                .markEntityAsTask(accountRestriction.getDueBy().toLocalDateTime());
+                .markEntityAsTask(accountRestriction.getDueBy().toLocalDateTime().atZone(ZoneId.systemDefault()));
 
         ThrowingSupplier<AccountRestriction, Exception> action = () -> {
             AccountRestriction saved = accountRestrictionRepository.save(accountRestriction);
@@ -317,7 +318,7 @@ public class AccountRestrictionService extends AbstractService {
             }
 
             LocalDateTime localDateTime = LocalDateTime.from(formatter.parse(form.getDueBy()));
-            restriction.setDueBy(Timestamp.valueOf(localDateTime));
+            restriction.setDueBy(localDateTime.atZone(ZoneId.systemDefault()));
             restriction.setCompleted(form.isCompleted());
 
             return restriction;

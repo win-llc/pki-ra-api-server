@@ -19,6 +19,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -32,7 +33,7 @@ public class SystemActionRunner {
     private AuditRecord auditRecord;
     private Notification notification;
     private boolean entityIsTask = false;
-    private Timestamp taskDueBy;
+    private ZonedDateTime taskDueBy;
     private boolean sendNotification = false;
     private List<String> notificationEmails;
     private Object entity;
@@ -66,9 +67,9 @@ public class SystemActionRunner {
         return this;
     }
 
-    public SystemActionRunner markEntityAsTask(LocalDateTime dueBy){
+    public SystemActionRunner markEntityAsTask(ZonedDateTime dueBy){
         this.entityIsTask = true;
-        this.taskDueBy = Timestamp.valueOf(dueBy);
+        this.taskDueBy = dueBy;
         return this;
     }
 

@@ -29,6 +29,7 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import static com.winllc.pki.ra.constants.ServerSettingRequired.ENTITY_DIRECTORY_LDAP_SERVERBASEDN;
@@ -195,7 +196,7 @@ public class CertIssuanceTransaction extends CertTransaction {
 
         certificateRequest.setCertAuthorityName(raCertificateIssueRequest.getCertAuthorityName());
         certificateRequest.setStatus("issued");
-        certificateRequest.setSubmittedOn(Timestamp.valueOf(LocalDateTime.now()));
+        certificateRequest.setSubmittedOn(ZonedDateTime.now());
         certificateRequest.addIssuedCertificate(certificate);
         certificateRequest.setServerEntry(serverEntry);
         certificateRequest = certificateRequestRepository.save(certificateRequest);

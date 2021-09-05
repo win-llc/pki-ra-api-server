@@ -35,6 +35,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.winllc.pki.ra.constants.ServerSettingRequired.ENTITY_DIRECTORY_LDAP_SERVERBASEDN;
+
 @RestController
 @RequestMapping("/api/serverEntry")
 public class ServerEntryService extends AbstractService {
@@ -49,14 +51,14 @@ public class ServerEntryService extends AbstractService {
     private final EntityDirectoryService entityDirectoryService;
     private final ServerEntryValidator serverEntryValidator;
     private final AuthCredentialService authCredentialService;
-    @Autowired
-    private DomainRepository domainRepository;
+    private final DomainRepository domainRepository;
+    private final ServerSettingsService serverSettingsService;
 
     public ServerEntryService(ApplicationContext context,
                               ServerEntryRepository serverEntryRepository, AccountRepository accountRepository,
                               KeycloakOIDCProviderConnection oidcProviderConnection, PocEntryRepository pocEntryRepository,
                               EntityDirectoryService entityDirectoryService, ServerEntryValidator serverEntryValidator,
-                              AuthCredentialService authCredentialService) {
+                              AuthCredentialService authCredentialService, DomainRepository domainRepository, ServerSettingsService serverSettingsService) {
         super(context);
         this.serverEntryRepository = serverEntryRepository;
         this.accountRepository = accountRepository;
@@ -65,6 +67,8 @@ public class ServerEntryService extends AbstractService {
         this.entityDirectoryService = entityDirectoryService;
         this.serverEntryValidator = serverEntryValidator;
         this.authCredentialService = authCredentialService;
+        this.domainRepository = domainRepository;
+        this.serverSettingsService = serverSettingsService;
     }
 
     @InitBinder("serverEntryForm")
@@ -122,6 +126,14 @@ public class ServerEntryService extends AbstractService {
             if (!CollectionUtils.isEmpty(form.getAlternateDnsValues())) {
                 entry.setAlternateDnsValues(form.getAlternateDnsValues());
             }
+
+            Optional<String> serverBaseDnOptional = serverSettingsService.getServerSettingValue(ENTITY_DIRECTORY_LDAP_SERVERBASEDN);
+            String baseDn = null;
+            if(serverBaseDnOptional.isPresent()) {
+                baseDn = serverBaseDnOptional.get();
+            }
+
+            entry.buildDn(baseDn);
 
             entry = serverEntryRepository.save(entry);
             entry = (ServerEntry) authCredentialService.addNewAuthCredentialToEntry(entry);

@@ -299,11 +299,13 @@ public class AccountService extends AbstractService {
     @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public List<Account> getAll(@AuthenticationPrincipal UserDetails raUser) {
+    public List<AccountInfo> getAll(@AuthenticationPrincipal UserDetails raUser) {
         log.info("RAUser: " + raUser.getUsername());
         List<Account> accounts = accountRepository.findAll();
 
-        return accounts;
+        return accounts.stream()
+                .map(a -> new AccountInfo(a, false))
+                .collect(Collectors.toList());
     }
 
     //todo haspermission

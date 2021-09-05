@@ -143,11 +143,11 @@ public class CommandBuilderService {
             List<String> commandParts = new LinkedList<>();
             commandParts.add("./wacs.exe");
             commandParts.add("--source");
-            commandParts.add("--accepttos");
             commandParts.add(applicationName);
             if(applicationName.equalsIgnoreCase("iis")){
                 commandParts.add("--installation iis");
             }
+            commandParts.add("--accepttos");
             commandParts.add("--siteid s");
             commandParts.add("--host");
             commandParts.add(serverEntry.getFqdn());

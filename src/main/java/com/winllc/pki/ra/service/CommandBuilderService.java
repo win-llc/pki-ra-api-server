@@ -1,5 +1,8 @@
 package com.winllc.pki.ra.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
 import com.winllc.acme.common.domain.AuthCredential;
 import com.winllc.acme.common.domain.ServerEntry;
@@ -56,6 +59,9 @@ public class CommandBuilderService {
                 break;
             case "est":
                 commands.addAll(buildEstRequiredInputs(serverEntry));
+                break;
+            case "k8s":
+                commands.add(buildCertManagerYamlConfig());
                 break;
         }
 
@@ -179,18 +185,68 @@ public class CommandBuilderService {
         }
     }
 
+    private String buildCertManagerYamlConfig() throws JsonProcessingException {
+        CertManagerClusterIssuerSpecAcme acme = new CertManagerClusterIssuerSpecAcme();
+        acme.setServer("https://winra.winllc-dev.com/acme/directory");
+        acme.setEmail("teste@test.com");
+        acme.setSkipTLSVerify("true");
+
+        CertManagerClusterIssuerMetadata metadata = new CertManagerClusterIssuerMetadata();
+        metadata.setName("winllc-acme-server");
+        CertManagerClusterIssuerSpec spec = new CertManagerClusterIssuerSpec();
+        spec.setAcme(acme);
+
+        CertManagerClusterIssuer issuer = new CertManagerClusterIssuer();
+        issuer.setMetadata(metadata);
+        issuer.setSpec(spec);
+
+        ObjectMapper om = new ObjectMapper(new YAMLFactory());
+        return om.writeValueAsString(issuer);
+    }
+
     private static class CertManagerClusterIssuer {
         private CertManagerClusterIssuerMetadata metadata;
         private CertManagerClusterIssuerSpec spec;
+
+        public CertManagerClusterIssuerMetadata getMetadata() {
+            return metadata;
+        }
+
+        public void setMetadata(CertManagerClusterIssuerMetadata metadata) {
+            this.metadata = metadata;
+        }
+
+        public CertManagerClusterIssuerSpec getSpec() {
+            return spec;
+        }
+
+        public void setSpec(CertManagerClusterIssuerSpec spec) {
+            this.spec = spec;
+        }
     }
 
     private static class CertManagerClusterIssuerMetadata {
         private String name;
 
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
     }
 
     private static class CertManagerClusterIssuerSpec {
         private CertManagerClusterIssuerSpecAcme acme;
+
+        public CertManagerClusterIssuerSpecAcme getAcme() {
+            return acme;
+        }
+
+        public void setAcme(CertManagerClusterIssuerSpecAcme acme) {
+            this.acme = acme;
+        }
     }
 
     private static class CertManagerClusterIssuerSpecAcme {
@@ -199,6 +255,37 @@ public class CommandBuilderService {
         private String server;
         private CertManagerClusterIssuerSpecAcmeEab externalAccountBinding;
 
+        public String getSkipTLSVerify() {
+            return skipTLSVerify;
+        }
+
+        public void setSkipTLSVerify(String skipTLSVerify) {
+            this.skipTLSVerify = skipTLSVerify;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getServer() {
+            return server;
+        }
+
+        public void setServer(String server) {
+            this.server = server;
+        }
+
+        public CertManagerClusterIssuerSpecAcmeEab getExternalAccountBinding() {
+            return externalAccountBinding;
+        }
+
+        public void setExternalAccountBinding(CertManagerClusterIssuerSpecAcmeEab externalAccountBinding) {
+            this.externalAccountBinding = externalAccountBinding;
+        }
     }
 
     private static class CertManagerClusterIssuerSpecAcmeEab {
@@ -206,10 +293,49 @@ public class CommandBuilderService {
         private CertManagerClusterIssuerSpecAcmeEabKeySecretRef keySecretRef;
         private String keyAlgorithm;
 
+        public String getKeyID() {
+            return keyID;
+        }
+
+        public void setKeyID(String keyID) {
+            this.keyID = keyID;
+        }
+
+        public CertManagerClusterIssuerSpecAcmeEabKeySecretRef getKeySecretRef() {
+            return keySecretRef;
+        }
+
+        public void setKeySecretRef(CertManagerClusterIssuerSpecAcmeEabKeySecretRef keySecretRef) {
+            this.keySecretRef = keySecretRef;
+        }
+
+        public String getKeyAlgorithm() {
+            return keyAlgorithm;
+        }
+
+        public void setKeyAlgorithm(String keyAlgorithm) {
+            this.keyAlgorithm = keyAlgorithm;
+        }
     }
 
     private static class CertManagerClusterIssuerSpecAcmeEabKeySecretRef {
         private String name;
         private String key;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public void setKey(String key) {
+            this.key = key;
+        }
     }
 }

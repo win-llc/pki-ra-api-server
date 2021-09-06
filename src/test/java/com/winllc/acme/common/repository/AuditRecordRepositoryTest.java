@@ -12,6 +12,7 @@ import javax.transaction.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +27,7 @@ class AuditRecordRepositoryTest extends BaseTest {
     void before(){
         AuditRecord auditRecord = new AuditRecord();
         auditRecord.setAccountKid("test1");
-        auditRecord.setTimestamp(Timestamp.valueOf(LocalDateTime.now()));
+        auditRecord.setTimestamp(ZonedDateTime.now());
         auditRecord.setType(AuditRecordType.CERTIFICATE_ISSUED);
 
         auditRecordRepository.save(auditRecord);

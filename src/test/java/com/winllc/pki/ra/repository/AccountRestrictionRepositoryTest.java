@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -94,7 +95,7 @@ class AccountRestrictionRepositoryTest extends BaseTest {
         accountRestriction.setAccount(account);
         accountRestriction.setAction(AccountRestrictionAction.DISABLE_ACCOUNT);
         accountRestriction.setType(AccountRestrictionType.REQUIRE_ACCREDITATION_BY);
-        accountRestriction.setDueBy(Timestamp.valueOf(LocalDateTime.now()));
+        accountRestriction.setDueBy(ZonedDateTime.now());
 
         accountRestriction = accountRestrictionRepository.save(accountRestriction);
 
@@ -116,7 +117,7 @@ class AccountRestrictionRepositoryTest extends BaseTest {
         accountRestriction.setAccount(account);
         accountRestriction.setAction(AccountRestrictionAction.DISABLE_ACCOUNT);
         accountRestriction.setType(AccountRestrictionType.REQUIRE_ACCREDITATION_BY);
-        accountRestriction.setDueBy(Timestamp.valueOf(LocalDateTime.now()));
+        accountRestriction.setDueBy(ZonedDateTime.now());
 
         accountRestriction = accountRestrictionRepository.save(accountRestriction);
 

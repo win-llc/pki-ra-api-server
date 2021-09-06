@@ -145,7 +145,7 @@ class AccountServiceTest extends BaseTest {
     @Test
     void getAll() {
         UserDetails userDetails = new org.springframework.security.core.userdetails.User("test@test.com", "", Collections.emptyList());
-        List<Account> all = accountService.getAll(userDetails);
+        List<AccountInfo> all = accountService.getAll(userDetails);
         assertEquals(1, all.size());
     }
 

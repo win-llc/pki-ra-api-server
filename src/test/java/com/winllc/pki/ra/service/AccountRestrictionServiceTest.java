@@ -22,6 +22,7 @@ import javax.transaction.Transactional;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -82,7 +83,7 @@ class AccountRestrictionServiceTest extends BaseTest {
         accountRestriction.setAddedByUser("test@test.com");
         accountRestriction.setType(AccountRestrictionType.REQUIRE_ACCREDITATION_BY);
         accountRestriction.setAction(AccountRestrictionAction.DISABLE_ACCOUNT);
-        accountRestriction.setDueBy(Timestamp.from(LocalDateTime.now().plusDays(3).toInstant(ZoneOffset.UTC)));
+        accountRestriction.setDueBy(ZonedDateTime.now());
         accountRestriction = accountRestrictionRepository.save(accountRestriction);
 
         AccountRestrictionForm byId = accountRestrictionService.getById(accountRestriction.getId());
@@ -166,7 +167,7 @@ class AccountRestrictionServiceTest extends BaseTest {
         accountRestriction.setAddedByUser("test@test.com");
         accountRestriction.setType(AccountRestrictionType.REQUIRE_ACCREDITATION_BY);
         accountRestriction.setAction(AccountRestrictionAction.DISABLE_ACCOUNT);
-        accountRestriction.setDueBy(Timestamp.from(LocalDateTime.now().plusDays(3).toInstant(ZoneOffset.UTC)));
+        accountRestriction.setDueBy(ZonedDateTime.now());
         accountRestrictionRepository.save(accountRestriction);
 
         List<AccountRestrictionForm> allForAccount = accountRestrictionService.getAllForAccount(account.getId());

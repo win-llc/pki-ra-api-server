@@ -100,7 +100,7 @@ class AccountRestrictionRepositoryTest extends BaseTest {
         accountRestriction = accountRestrictionRepository.save(accountRestriction);
 
         List<AccountRestriction> allByAccountAndDueByBefore = accountRestrictionRepository.findAllByAccountAndDueByBefore(account,
-                Timestamp.valueOf(LocalDateTime.now().plusDays(1)));
+                ZonedDateTime.now().plusDays(1));
 
         assertEquals(1, allByAccountAndDueByBefore.size());
 
@@ -122,9 +122,9 @@ class AccountRestrictionRepositoryTest extends BaseTest {
         accountRestriction = accountRestrictionRepository.save(accountRestriction);
 
         List<AccountRestriction> completedFalse = accountRestrictionRepository.findAllByAccountAndDueByBeforeAndCompletedEquals(account,
-                Timestamp.valueOf(LocalDateTime.now().plusDays(1)), false);
+                ZonedDateTime.now().plusDays(1), false);
         List<AccountRestriction> completedTrue = accountRestrictionRepository.findAllByAccountAndDueByBeforeAndCompletedEquals(account,
-                Timestamp.valueOf(LocalDateTime.now().plusDays(1)), true);
+                ZonedDateTime.now().plusDays(1), true);
 
         assertEquals(0, completedTrue.size());
         assertEquals(1, completedFalse.size());

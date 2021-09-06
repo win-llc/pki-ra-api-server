@@ -21,6 +21,7 @@ import javax.naming.InvalidNameException;
 import javax.security.auth.x500.X500Principal;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -113,13 +114,13 @@ public class RevocationRequestService {
                     if(approveRevoke(request)){
                         request.setStatus("revoked");
                         request.setDecisionMadeBy(authentication.getName());
-                        request.setStatusUpdatedOn(Timestamp.valueOf(LocalDateTime.now()));
+                        request.setStatusUpdatedOn(ZonedDateTime.now());
                     }
                     break;
                 case "reject":
                     request.setStatus("rejected");
                     request.setDecisionMadeBy(authentication.getName());
-                    request.setStatusUpdatedOn(Timestamp.valueOf(LocalDateTime.now()));
+                    request.setStatusUpdatedOn(ZonedDateTime.now());
                     break;
             }
 

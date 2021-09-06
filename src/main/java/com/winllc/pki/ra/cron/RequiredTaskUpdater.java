@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,7 +37,7 @@ public class RequiredTaskUpdater {
     }
 
     private void findAccountRestrictionTasks(){
-        Timestamp nowMinusWeeks = Timestamp.valueOf(LocalDateTime.now().minusWeeks(2));
+        ZonedDateTime nowMinusWeeks = ZonedDateTime.now().minusWeeks(2);
         List<AccountRestriction> allByDueByBefore = accountRestrictionRepository.findAllByDueByBefore(nowMinusWeeks);
 
         for(AccountRestriction accountRestriction : allByDueByBefore){

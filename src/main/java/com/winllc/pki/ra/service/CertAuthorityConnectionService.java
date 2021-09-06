@@ -55,21 +55,23 @@ public class CertAuthorityConnectionService extends AbstractService {
     private final LoadedCertAuthorityStore certAuthorityStore;
     private final CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator;
     private final AuthCredentialService authCredentialService;
-    @Autowired
-    private RevocationRequestService revocationRequestService;
-    @Autowired
-    private CertificateRequestRepository certificateRequestRepository;
+    private final RevocationRequestService revocationRequestService;
+    private final CertificateRequestRepository certificateRequestRepository;
 
     public CertAuthorityConnectionService(CertAuthorityConnectionInfoRepository repository,
                                           CertAuthorityConnectionPropertyRepository propertyRepository,
                                           ApplicationContext context, LoadedCertAuthorityStore certAuthorityStore,
-                                          CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator, AuthCredentialService authCredentialService) {
+                                          CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator,
+                                          AuthCredentialService authCredentialService, RevocationRequestService revocationRequestService,
+                                          CertificateRequestRepository certificateRequestRepository) {
         super(context);
         this.repository = repository;
         this.propertyRepository = propertyRepository;
         this.certAuthorityStore = certAuthorityStore;
         this.certAuthorityConnectionInfoValidator = certAuthorityConnectionInfoValidator;
         this.authCredentialService = authCredentialService;
+        this.revocationRequestService = revocationRequestService;
+        this.certificateRequestRepository = certificateRequestRepository;
     }
 
     @InitBinder("certAuthorityConnectionInfoForm")
@@ -330,6 +332,7 @@ public class CertAuthorityConnectionService extends AbstractService {
             request.setSerial(serial);
             request.setIssuerDn(certAuthority.getIssuerName().toString());
             request.setReason(revokeRequest.getReason());
+            request.setStatus("new");
             request = revocationRequestService.save(request);
 
             CertRevocationTransaction revocationTransaction = new CertRevocationTransaction(certAuthority, context);

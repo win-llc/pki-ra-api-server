@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,14 +40,14 @@ class AuthCredentialRepositoryTest extends BaseTest {
     @AfterEach
     @Transactional
     void after(){
+        //authCredentialRepository.deleteAll();
         serverEntryRepository.deleteAll();
-        authCredentialRepository.deleteAll();
     }
 
     @Test
     void getAll() {
         List<AuthCredential> credentialList = authCredentialRepository.findAll();
-        assertEquals(1, credentialList.size());
+        assertTrue(credentialList.size() > 0);
     }
 
     @Test
@@ -77,7 +78,7 @@ class AuthCredentialRepositoryTest extends BaseTest {
     @Transactional
     void delete(){
         ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test55.com").get();
-        AuthCredential credential = authCredentialRepository.findAll().get(0);
+        AuthCredential credential = new ArrayList<>(serverEntry.getAuthCredentials()).get(0);
 
         assertTrue(serverEntry.getAuthCredentials().contains(credential));
 

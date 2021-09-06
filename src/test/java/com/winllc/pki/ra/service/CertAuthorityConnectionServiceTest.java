@@ -286,7 +286,7 @@ class CertAuthorityConnectionServiceTest extends BaseTest {
         RACertificateRevokeRequest revokeRequest = new RACertificateRevokeRequest();
         revokeRequest.setReason(1);
         revokeRequest.setRequestId(5L);
-        revokeRequest.setSerial("5");
+        revokeRequest.setSerial("8");
         revokeRequest.setCertAuthorityName("mockca");
         connectionService.revokeCertificate(revokeRequest);
     }

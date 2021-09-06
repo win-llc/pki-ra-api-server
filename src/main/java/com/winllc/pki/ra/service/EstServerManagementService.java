@@ -30,7 +30,7 @@ public class EstServerManagementService {
         return estServerPropertiesRepository.save(properties);
     }
 
-    @PostMapping("/properties/delete/{name}")
+    @DeleteMapping("/properties/delete/{name}")
     public void delete(@PathVariable String name){
         EstServerProperties properties = estServerPropertiesRepository.findByName(name);
         if(properties != null){

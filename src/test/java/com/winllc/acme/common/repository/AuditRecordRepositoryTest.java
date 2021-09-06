@@ -47,8 +47,8 @@ class AuditRecordRepositoryTest extends BaseTest {
 
     @Test
     void countAllByTypeEqualsAndTimestampAfterAndTimestampBefore() {
-        Timestamp notAfter = Timestamp.valueOf(LocalDateTime.now().plusDays(1));
-        Timestamp notBefore = Timestamp.valueOf(LocalDateTime.now().minusDays(1));
+        ZonedDateTime notAfter = ZonedDateTime.now().plusDays(1);
+        ZonedDateTime notBefore = ZonedDateTime.now().minusDays(1);
         Integer count = auditRecordRepository.countAllByTypeEqualsAndTimestampAfterAndTimestampBefore(AuditRecordType.CERTIFICATE_ISSUED,
                 notBefore, notAfter);
         assertEquals(1, count);
@@ -62,8 +62,8 @@ class AuditRecordRepositoryTest extends BaseTest {
 
     @Test
     void findAllByTypeEqualsAndTimestampAfterAndTimestampBefore() {
-        Timestamp notAfter = Timestamp.valueOf(LocalDateTime.now().plusDays(1));
-        Timestamp notBefore = Timestamp.valueOf(LocalDateTime.now().minusDays(1));
+        ZonedDateTime notAfter = ZonedDateTime.now().plusDays(1);
+        ZonedDateTime notBefore = ZonedDateTime.now().minusDays(1);
         List<AuditRecord> records = auditRecordRepository.findAllByTypeEqualsAndTimestampAfterAndTimestampBefore(AuditRecordType.CERTIFICATE_ISSUED,
                 notBefore, notAfter);
         assertEquals(1, records.size());

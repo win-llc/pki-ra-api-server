@@ -56,7 +56,7 @@ public class MetricsService {
 
         List<AuditRecord> allByTypeEqualsAndTimestampAfterAndTimestampBefore
                 = auditRecordRepository.findAllByTypeEqualsAndTimestampAfterAndTimestampBefore(type,
-                Timestamp.valueOf(fromDateTime.atStartOfDay()), Timestamp.valueOf(toDateTime.atStartOfDay()));
+                fromDateTime.atStartOfDay().atZone(ZoneId.systemDefault()), toDateTime.atStartOfDay().atZone(ZoneId.systemDefault()));
 
         Map<LocalDate, List<AuditRecord>> collect = allByTypeEqualsAndTimestampAfterAndTimestampBefore.stream()
                 .collect(Collectors.groupingBy(a -> {

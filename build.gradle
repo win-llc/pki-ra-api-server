@@ -17,6 +17,11 @@ repositories {
         url "http://util.winllc-dev.com:8081/repository/win-llc/"
         allowInsecureProtocol true
     }
+
+    maven {
+        url "http://util.winllc-dev.com:8081/repository/win-llc-releases/"
+        allowInsecureProtocol true
+    }
 }
 
 dependencies {
@@ -81,7 +86,7 @@ bootJar {
 }
 
 dependencies {
-    implementation group: 'com.winllc.acme.common', name: 'acme-common', version: '1.0-SNAPSHOT'
+    implementation group: 'com.winllc.acme.common', name: 'acme-common', version: '1.0'
     implementation group: 'com.winllc.pki.plugins.dogtag', name: 'dogtag-ca-plugin', version: '1.0-SNAPSHOT'
 
 

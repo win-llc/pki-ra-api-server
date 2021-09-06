@@ -34,6 +34,7 @@ test {
 }
 
 configurations.all {
+    exclude group: 'org.jboss.spec.javax.xml.bind', module: 'jboss-jaxb-api_2.3_spec'
     resolutionStrategy {
         preferProjectModules()
         cacheChangingModulesFor 0, 'seconds'
@@ -89,6 +90,7 @@ dependencies {
     implementation group: 'com.winllc.acme.common', name: 'acme-common', version: '1.0'
     implementation(group: 'com.winllc.pki.plugins.dogtag', name: 'dogtag-ca-plugin', version: '1.0'){
         exclude group: 'com.winllc.acme.common', module: 'acme-common'
+        exclude group: 'org.jboss.spec.javax.xml.bind', module: 'jboss-jaxb-api_2.3_spec'
     }
 
 
@@ -117,8 +119,14 @@ dependencies {
     runtimeOnly('org.springframework.boot:spring-boot-devtools')
     annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-configuration-processor'
 
+    //implementation group: 'org.jboss.spec.javax.xml.bind', name: 'jboss-jaxb-api_2.3_spec', version: '2.0.1.Final'
+
+    implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
+
     // https://mvnrepository.com/artifact/org.keycloak/keycloak-admin-client
-    implementation group: 'org.keycloak', name: 'keycloak-admin-client', version: '11.0.1'
+    implementation(group: 'org.keycloak', name: 'keycloak-admin-client', version: '11.0.1'){
+        exclude group: 'org.jboss.spec.javax.xml.bind', module: 'jboss-jaxb-api_2.3_spec'
+    }
 
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-client
     implementation group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.6.2.Final'

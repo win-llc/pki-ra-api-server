@@ -126,7 +126,7 @@ public class AccountService extends AbstractService {
             pocUpdater(account, Collections.singletonList(adminPoc));
         }
 
-        accountRestrictionService.syncPolicyServerBackedAccountRestrictions(account);
+        accountRestrictionService.syncPolicyServerBackedAccountRestrictions(account, this);
 
         SystemActionRunner.build(context)
                 .createAuditRecord(AuditRecordType.ACCOUNT_ADDED, account)

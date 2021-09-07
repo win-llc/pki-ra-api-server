@@ -53,8 +53,8 @@ public class AccountRestrictionService extends AbstractService {
     private SecurityPolicyService securityPolicyService;
     @Autowired
     private ServerSettingsService serverSettingsService;
-    @Autowired
-    private AccountService accountService;
+    //@Autowired
+    //private AccountService accountService;
     @Autowired
     private DomainPolicyService domainPolicyService;
     @Autowired
@@ -77,7 +77,7 @@ public class AccountRestrictionService extends AbstractService {
     }
 
     @Transactional
-    public void syncPolicyServerBackedAccountRestrictions(Account account){
+    public void syncPolicyServerBackedAccountRestrictions(Account account, AccountService accountService){
         //todo
 
         if(StringUtils.isNotBlank(account.getSecurityPolicyServerProjectId())){
@@ -98,7 +98,7 @@ public class AccountRestrictionService extends AbstractService {
                 optionalPocsAttribute.ifPresent(a -> {
                     if(projectAttributes.get(a) != null){
                         List<String> pocs = projectAttributes.get(a);
-                        temp[0] = updatePocsForAccount(temp[0], pocs);
+                        temp[0] = updatePocsForAccount(temp[0], pocs, accountService);
                     }
                 });
 
@@ -130,7 +130,7 @@ public class AccountRestrictionService extends AbstractService {
          */
     }
 
-    public Account updatePocsForAccount(Account account, List<String> pocs){
+    public Account updatePocsForAccount(Account account, List<String> pocs, AccountService accountService){
         //todo only add, don't overwrite
         for(String email : pocs){
             accountService.addPocToAccount(account, new PocFormEntry(email));

@@ -3,6 +3,8 @@ package com.winllc.pki.ra.cron;
 import com.winllc.acme.common.domain.Account;
 import com.winllc.acme.common.repository.AccountRepository;
 import com.winllc.pki.ra.service.AccountRestrictionService;
+import com.winllc.pki.ra.service.AccountService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +16,8 @@ public class AccountPolicyServerSync {
 
     private final AccountRepository accountRepository;
     private final AccountRestrictionService accountRestrictionService;
+    @Autowired
+    private AccountService accountService;
 
     public AccountPolicyServerSync(AccountRepository accountRepository, AccountRestrictionService accountRestrictionService) {
         this.accountRepository = accountRepository;
@@ -26,7 +30,7 @@ public class AccountPolicyServerSync {
         List<Account> all = accountRepository.findAll();
 
         for(Account account : all){
-            accountRestrictionService.syncPolicyServerBackedAccountRestrictions(account);
+            accountRestrictionService.syncPolicyServerBackedAccountRestrictions(account, accountService);
         }
     }
 }

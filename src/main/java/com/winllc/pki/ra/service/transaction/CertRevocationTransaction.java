@@ -2,6 +2,7 @@ package com.winllc.pki.ra.service.transaction;
 
 import com.winllc.acme.common.ca.CachedCertificate;
 import com.winllc.acme.common.cache.CachedCertificateService;
+import com.winllc.acme.common.constants.RevocationReason;
 import com.winllc.acme.common.domain.RevocationRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.repository.RevocationRequestRepository;
@@ -68,7 +69,12 @@ public class CertRevocationTransaction extends CertTransaction {
         ThrowingSupplier<Boolean, Exception> action = () -> {
             boolean revoked = false;
             try {
-                revoked = certAuthority.revokeCertificate(finalSerial, revokeRequest.getReason());
+                Integer reason = RevocationReason.UNSPECIFIED.getCode();
+                if(revokeRequest.getReason() != null){
+                    reason = revokeRequest.getReason();
+                }
+
+                revoked = certAuthority.revokeCertificate(finalSerial, reason);
             } catch (Exception e) {
                 log.error("Could not revoke", e);
             }

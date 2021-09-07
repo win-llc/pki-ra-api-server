@@ -4,6 +4,7 @@ import com.winllc.acme.common.*;
 import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
+import com.winllc.acme.common.constants.DateTimeUtil;
 import com.winllc.acme.common.domain.*;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.acme.common.ra.RACertificateRevokeRequest;
@@ -111,6 +112,8 @@ public class CertAuthorityConnectionService extends AbstractService {
         info.setName(ca.getName());
         info.setTrustChain(ca.getConnectionInfo().getTrustChainBase64());
         info.setDn(certificate.getSubjectDN().getName());
+        info.setValidFrom(DateTimeUtil.DATE_TIME_FORMATTER.format(certificate.getNotBefore().toInstant()));
+        info.setValidTo(DateTimeUtil.DATE_TIME_FORMATTER.format(certificate.getNotAfter().toInstant()));
 
         return info;
     }

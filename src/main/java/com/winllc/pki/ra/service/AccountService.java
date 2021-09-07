@@ -47,32 +47,31 @@ public class AccountService extends AbstractService {
     private final AccountRepository accountRepository;
     private final PocEntryRepository pocEntryRepository;
     private final AuditRecordService auditRecordService;
-    private final AcmeServerManagementService acmeServerManagementService;
     private final AccountRequestValidator accountRequestValidator;
     private final AccountUpdateValidator accountUpdateValidator;
     private final AuthCredentialRepository authCredentialRepository;
-    @Autowired
-    private AuthCredentialService authCredentialService;
-    @Autowired
-    private SecurityPolicyService securityPolicyService;
-    @Autowired
-    private AccountRestrictionService accountRestrictionService;
-    @Autowired
-    private DomainLinkToAccountRequestRepository domainLinkToAccountRequestRepository;
+    private final AuthCredentialService authCredentialService;
+    private final SecurityPolicyService securityPolicyService;
+    private final AccountRestrictionService accountRestrictionService;
+    private final DomainLinkToAccountRequestRepository domainLinkToAccountRequestRepository;
 
     public AccountService(AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
-                          AuditRecordService auditRecordService,
-                          AcmeServerManagementService acmeServerManagementService, ApplicationContext applicationContext,
+                          AuditRecordService auditRecordService, ApplicationContext applicationContext,
                           AccountRequestValidator accountRequestValidator, AccountUpdateValidator accountUpdateValidator,
-                          AuthCredentialRepository authCredentialRepository) {
+                          AuthCredentialRepository authCredentialRepository, AuthCredentialService authCredentialService,
+                          SecurityPolicyService securityPolicyService, AccountRestrictionService accountRestrictionService,
+                          DomainLinkToAccountRequestRepository domainLinkToAccountRequestRepository) {
         super(applicationContext);
         this.accountRepository = accountRepository;
         this.pocEntryRepository = pocEntryRepository;
         this.auditRecordService = auditRecordService;
-        this.acmeServerManagementService = acmeServerManagementService;
         this.accountRequestValidator = accountRequestValidator;
         this.accountUpdateValidator = accountUpdateValidator;
         this.authCredentialRepository = authCredentialRepository;
+        this.authCredentialService = authCredentialService;
+        this.securityPolicyService = securityPolicyService;
+        this.accountRestrictionService = accountRestrictionService;
+        this.domainLinkToAccountRequestRepository = domainLinkToAccountRequestRepository;
     }
 
     @InitBinder("accountRequestForm")
@@ -229,7 +228,8 @@ public class AccountService extends AbstractService {
     @PostMapping("/updatePocs/{accountId}")
     @Transactional
     @ResponseStatus(HttpStatus.OK)
-    public List<PocFormEntry> updateAccountPocs(@PathVariable(name = "accountId") Long accountId, @RequestBody List<PocFormEntry> pocs, Authentication authentication)
+    public List<PocFormEntry> updateAccountPocs(@PathVariable(name = "accountId") Long accountId,
+                                                @RequestBody List<PocFormEntry> pocs, Authentication authentication)
             throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findById(accountId);
         if (optionalAccount.isPresent()) {
@@ -286,7 +286,7 @@ public class AccountService extends AbstractService {
             pocEntry.setAddedOn(Timestamp.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
             pocEntry.setAccount(account);
             pocEntry.setOwner(poc.isOwner());
-            poc.setCanManageAllServers(poc.isCanManageAllServers());
+            pocEntry.setCanManageAllServers(poc.isCanManageAllServers());
             pocEntry = pocEntryRepository.save(pocEntry);
 
             account.getPocs().add(pocEntry);

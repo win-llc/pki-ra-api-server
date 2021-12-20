@@ -124,7 +124,3 @@ local.properties
 
 # PDT-specific
 .buildpath
-
-# git specific
-.gitmodules
-pki-ra-common

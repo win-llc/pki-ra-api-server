@@ -5,10 +5,12 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'winllc-ra-server'
+rootProject.name = 'pki-ra-api-server'
 
-include ":acme-common"
-project(":acme-common").projectDir = file("../acme-common")
+include(":pki-ra-common")
 
-include ":dogtag-ca-plugin"
-project(":dogtag-ca-plugin").projectDir = file("../win-ra-dogtag-ca-plugin")
+//include ":acme-common"
+//project(":acme-common").projectDir = file("../acme-common")
+
+//include ":dogtag-ca-plugin"
+//project(":dogtag-ca-plugin").projectDir = file("../win-ra-dogtag-ca-plugin")

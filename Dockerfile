@@ -6,8 +6,6 @@ COPY build/libs/*.jar app.jar
 RUN apt-get update && apt-get install -y curl
 
 RUN mkdir -p /ssl
-#COPY build/resources/main/trust.jks /ssl/trust.jks
-#COPY build/resources/main/dogtag-ca-admin-with-chain.pfx /ssl/dogtag-ca-admin-with-chain.pfx
 
 EXPOSE 8282
 

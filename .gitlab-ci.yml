@@ -17,7 +17,7 @@ build:
     - ./gradlew clean assemble
   artifacts:
     paths:
-      - build/libs/winllc-ra-server-1.0-SNAPSHOT.jar
+      - build/libs/pki-ra-api-server-1.0-SNAPSHOT.jar
       - build/resources/main/*.jks
       - build/resources/main/*.pfx
 

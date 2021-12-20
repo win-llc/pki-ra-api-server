@@ -42,15 +42,9 @@ configurations.all {
         dependencySubstitution {
             // Substitute project and module dependencies
 
-            def proj1 = findProject(":acme-common")
+            def proj1 = findProject(":pki-ra-common")
             if (proj1 != null && proj1.buildFile.exists()) {
-                substitute module('com.winllc.acme.common:acme-common') using project(':acme-common')
-            }
-
-
-            def proj2 = findProject(":dogtag-ca-plugin")
-            if (proj2 != null && proj2.buildFile.exists()) {
-                substitute module('com.winllc.pki.plugins.dogtag:dogtag-ca-plugin') using project(':dogtag-ca-plugin')
+                substitute module('com.winllc.acme.common:pki-ra-common') with project(':pki-ra-common')
             }
 
         }
@@ -62,12 +56,11 @@ bootJar {
 }
 
 dependencies {
-    implementation group: 'com.winllc.acme.common', name: 'acme-common', version: '1.0'
-    implementation(group: 'com.winllc.pki.plugins.dogtag', name: 'dogtag-ca-plugin', version: '1.0'){
-        exclude group: 'com.winllc.acme.common', module: 'acme-common'
-        exclude group: 'org.jboss.spec.javax.xml.bind', module: 'jboss-jaxb-api_2.3_spec'
-    }
-
+    implementation group: 'com.winllc.acme.common', name: 'pki-ra-common', version: '1.0'
+    //implementation(group: 'com.winllc.pki.plugins.dogtag', name: 'dogtag-ca-plugin', version: '1.0'){
+    //    exclude group: 'com.winllc.acme.common', module: 'acme-common'
+    //    exclude group: 'org.jboss.spec.javax.xml.bind', module: 'jboss-jaxb-api_2.3_spec'
+    //}
 
     implementation('org.springframework.boot:spring-boot-starter-actuator')
     implementation('org.springframework.boot:spring-boot-starter-web')

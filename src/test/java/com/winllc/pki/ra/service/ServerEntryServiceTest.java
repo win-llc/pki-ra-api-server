@@ -48,6 +48,8 @@ class ServerEntryServiceTest extends BaseTest {
     private KeycloakOIDCProviderConnection oidcProviderConnection;
     @MockBean
     private EntityDirectoryService entityDirectoryService;
+    @Autowired
+    private AuthCredentialRepository authCredentialRepository;
 
     @BeforeEach
     @Transactional
@@ -87,6 +89,7 @@ class ServerEntryServiceTest extends BaseTest {
     @AfterEach
     @Transactional
     void after(){
+        authCredentialRepository.deleteAll();
         serverEntryRepository.deleteAll();
         domainRepository.deleteAll();
         accountRepository.deleteAll();

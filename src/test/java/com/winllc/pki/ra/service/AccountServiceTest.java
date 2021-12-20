@@ -3,6 +3,7 @@ package com.winllc.pki.ra.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.winllc.acme.common.DirectoryDataSettings;
 import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.repository.AuthCredentialRepository;
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.endpoint.acme.AcmeServerConnection;
@@ -46,6 +47,8 @@ class AccountServiceTest extends BaseTest {
     private AccountRepository accountRepository;
     @Autowired
     private PocEntryRepository pocEntryRepository;
+    @Autowired
+    private AuthCredentialRepository authCredentialRepository;
     @MockBean
     private AcmeServerManagementService acmeServerManagementService;
 
@@ -67,6 +70,7 @@ class AccountServiceTest extends BaseTest {
     @AfterEach
     @Transactional
     void after(){
+        //authCredentialRepository.deleteAll();
         pocEntryRepository.deleteAll();
         accountRepository.deleteAll();
     }

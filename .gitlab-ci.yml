@@ -7,19 +7,27 @@ variables:
   DOCKER_TLS_CERTDIR: ""
 
 stages:
+  - test
   - build
   - package
 
+test:
+  image: openjdk:14
+  stage: test
+  script:
+    - ./gradlew test
+
 build:
-  image: gradle:jdk14
+  image: openjdk:14
   stage: build
   script:
-    - ./gradlew clean assemble
+    - ./gradlew assemble
   artifacts:
     paths:
       - build/libs/pki-ra-api-server-1.0-SNAPSHOT.jar
       - build/resources/main/*.jks
       - build/resources/main/*.pfx
+    expire_in: 1 week
 
 package:
   stage: package

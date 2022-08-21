@@ -4,8 +4,13 @@ services:
     command: ["--insecure-registry=registry.gitlab.winllc-dev.com"]
 
 variables:
-  DOCKER_TLS_CERTDIR: ""
   TESTCONTAINERS_HOST_OVERRIDE: "host.docker.internal"
+    # Instruct Testcontainers to use the daemon of DinD.
+  DOCKER_HOST: "tcp://docker:2375"
+  # Instruct Docker not to start over TLS.
+  DOCKER_TLS_CERTDIR: ""
+  # Improve performance with overlayfs.
+  DOCKER_DRIVER: overlay2
 
 stages:
   - test

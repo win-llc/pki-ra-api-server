@@ -125,7 +125,9 @@ dependencies {
         exclude group: 'junit', module: 'junit'
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
-    testImplementation('com.h2database:h2')
+    //testImplementation('com.h2database:h2')
+    testImplementation "org.testcontainers:testcontainers:1.17.3"
+    testImplementation "org.testcontainers:junit-jupiter:1.17.3"
     // https://mvnrepository.com/artifact/org.springframework.security/spring-security-test
     testImplementation group: 'org.springframework.security', name: 'spring-security-test', version: '5.2.8.RELEASE'
 

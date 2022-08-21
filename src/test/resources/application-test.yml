@@ -28,18 +28,19 @@ elasticsearch:
 
 spring:
   datasource:
-    url: jdbc:h2:mem:db;DB_CLOSE_DELAY=-1
-    driver-class-name: org.h2.Driver
+    hikari:
+      minimum-idle: 5
+    url: jdbc:postgresql://localhost:5432/apiserver?targetServerType=primary
+    driver-class-name: org.postgresql.Driver
     username: sa
-    password:
+    password: sa
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
     hibernate:
       ddl-auto: create-drop
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-    show-sql: true
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
   jackson:
     date-format: com.fasterxml.jackson.databind.util.StdDateFormat
     default-property-inclusion: non_null

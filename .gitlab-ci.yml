@@ -5,6 +5,7 @@ services:
 
 variables:
   DOCKER_TLS_CERTDIR: ""
+  TESTCONTAINERS_HOST_OVERRIDE: "host.docker.internal"
 
 stages:
   - test

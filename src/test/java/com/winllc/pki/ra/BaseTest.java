@@ -5,6 +5,8 @@ import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import com.winllc.pki.ra.util.EmailUtil;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -60,6 +62,7 @@ public abstract class BaseTest {
         postgreSQLContainer.start();
     }
 
+    @AfterAll
     public static void afterAll() {
         postgreSQLContainer.stop();
     }

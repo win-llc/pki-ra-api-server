@@ -59,4 +59,8 @@ public abstract class BaseTest {
     public static void beforeAll() {
         postgreSQLContainer.start();
     }
+
+    public static void afterAll() {
+        postgreSQLContainer.stop();
+    }
 }

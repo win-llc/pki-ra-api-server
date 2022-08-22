@@ -34,36 +34,32 @@ public abstract class BaseTest {
     @MockBean
     private Keycloak keycloak;
 
-    public static GenericContainer postgreSQLContainer = new GenericContainer<>(DockerImageName.parse(postgresContainerImage)
-            .asCompatibleSubstituteFor("postgresql"))
-            .waitingFor(new LogMessageWaitStrategy()
-                    .withRegEx(".*listening on IPv4 address.*")
-                    //.withTimes(2)
-                    .withStartupTimeout(Duration.of(60, ChronoUnit.SECONDS)))
-            .withExposedPorts(5432)
-            //.withCommand("postgres", "-c", "fsync=off")
-            .withEnv("POSTGRESQL_DATABASE", "apiserver")
-            .withEnv("POSTGRESQL_USERNAME", "sa")
-            .withEnv("POSTGRESQL_PASSWORD", "sa")
-            .withEnv("POSTGRESQL_POSTGRES_PASSWORD", "sa")
-            /*
-            .withEnv("REPMGR_PASSWORD", "repmgrpassword")
-            .withEnv("REPMGR_PRIMARY_HOST", "pg-0")
-            .withEnv("REPMGR_NODE_NETWORK_NAME", "pg-0")
-            .withEnv("REPMGR_NODE_NAME", "pg-0")
-            .withEnv("REPMGR_PARTNER_NODES", "pg-0")
-             */
-            .withCreateContainerCmdModifier(cmd -> cmd.withHostConfig(
-                    new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(5432), new ExposedPort(5432)))
-            ));
+    static final GenericContainer postgreSQLContainer;
 
-    @BeforeAll
-    public static void beforeAll() {
-        postgreSQLContainer.start();
+    static {
+        postgreSQLContainer = new GenericContainer<>(DockerImageName.parse(postgresContainerImage)
+                .asCompatibleSubstituteFor("postgresql"))
+                .waitingFor(new LogMessageWaitStrategy()
+                        .withRegEx(".*listening on IPv4 address.*")
+                        //.withTimes(2)
+                        .withStartupTimeout(Duration.of(60, ChronoUnit.SECONDS)))
+                .withExposedPorts(5432)
+                //.withCommand("postgres", "-c", "fsync=off")
+                .withEnv("POSTGRESQL_DATABASE", "apiserver")
+                .withEnv("POSTGRESQL_USERNAME", "sa")
+                .withEnv("POSTGRESQL_PASSWORD", "sa")
+                .withEnv("POSTGRESQL_POSTGRES_PASSWORD", "sa")
+                /*
+                .withEnv("REPMGR_PASSWORD", "repmgrpassword")
+                .withEnv("REPMGR_PRIMARY_HOST", "pg-0")
+                .withEnv("REPMGR_NODE_NETWORK_NAME", "pg-0")
+                .withEnv("REPMGR_NODE_NAME", "pg-0")
+                .withEnv("REPMGR_PARTNER_NODES", "pg-0")
+                 */
+                .withCreateContainerCmdModifier(cmd -> cmd.withHostConfig(
+                        new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(5432), new ExposedPort(5432)))
+                ));
+                postgreSQLContainer.start();
     }
 
-    @AfterAll
-    public static void afterAll() {
-        postgreSQLContainer.stop();
-    }
 }

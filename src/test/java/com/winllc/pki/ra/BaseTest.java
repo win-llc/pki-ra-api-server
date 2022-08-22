@@ -15,6 +15,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
@@ -34,10 +35,7 @@ public abstract class BaseTest {
     @MockBean
     private Keycloak keycloak;
 
-    static final GenericContainer postgreSQLContainer;
-
-    static {
-        postgreSQLContainer = new GenericContainer<>(DockerImageName.parse(postgresContainerImage)
+    public static GenericContainer postgreSQLContainer = new GenericContainer<>(DockerImageName.parse(postgresContainerImage)
                 .asCompatibleSubstituteFor("postgresql"))
                 .waitingFor(new LogMessageWaitStrategy()
                         .withRegEx(".*listening on IPv4 address.*")
@@ -59,7 +57,12 @@ public abstract class BaseTest {
                 .withCreateContainerCmdModifier(cmd -> cmd.withHostConfig(
                         new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(5432), new ExposedPort(5432)))
                 ));
-                postgreSQLContainer.start();
+
+
+    @BeforeAll
+    static void beforeAll(){
+        postgreSQLContainer.start();
     }
+
 
 }

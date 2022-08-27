@@ -36,7 +36,7 @@ public abstract class BaseTest {
     private Keycloak keycloak;
 
     public static GenericContainer postgreSQLContainer = new GenericContainer<>(DockerImageName.parse(postgresContainerImage)
-                .asCompatibleSubstituteFor("postgresql"))
+                .asCompatibleSubstituteFor("postgres"))
                 .waitingFor(new LogMessageWaitStrategy()
                         .withRegEx(".*listening on IPv4 address.*")
                         //.withTimes(2)

@@ -101,38 +101,44 @@ public class AccountService extends AbstractService {
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public Long createNewAccount(@Valid @RequestBody AccountRequestForm form) throws Exception {
-        Account account = Account.buildNew(form.getProjectName());
+        Optional<Account> optionalAccount = accountRepository.findDistinctByProjectName(form.getProjectName());
+        if(optionalAccount.isEmpty()) {
+            Account account = Account.buildNew(form.getProjectName());
 
-        account = accountRepository.save(account);
+            account = accountRepository.save(account);
 
-        account = (Account) authCredentialService.addNewAuthCredentialToEntry(account);
 
-        if(StringUtils.isNotBlank(form.getSecurityPolicyServerProjectId())) {
-            SecurityPolicyServerProjectDetails projectDetails
-                    = securityPolicyService.getProjectDetails(form.getSecurityPolicyServerProjectId());
+            account = (Account) authCredentialService.addNewAuthCredentialToEntry(account);
 
-            if(projectDetails != null) {
-                account.setSecurityPolicyServerProjectId(projectDetails.getProjectId());
+            if (StringUtils.isNotBlank(form.getSecurityPolicyServerProjectId())) {
+                SecurityPolicyServerProjectDetails projectDetails
+                        = securityPolicyService.getProjectDetails(form.getSecurityPolicyServerProjectId());
+
+                if (projectDetails != null) {
+                    account.setSecurityPolicyServerProjectId(projectDetails.getProjectId());
+                }
             }
+
+            account = accountRepository.save(account);
+
+            //add admin user to pocs
+            if (StringUtils.isNotBlank(form.getAccountOwnerEmail())) {
+                PocFormEntry adminPoc = new PocFormEntry(form.getAccountOwnerEmail());
+                adminPoc.setOwner(true);
+
+                pocUpdater(account, Collections.singletonList(adminPoc));
+            }
+
+            accountRestrictionService.syncPolicyServerBackedAccountRestrictions(account, this);
+
+            SystemActionRunner.build(context)
+                    .createAuditRecord(AuditRecordType.ACCOUNT_ADDED, account)
+                    .execute();
+
+            return account.getId();
+        }else{
+            return optionalAccount.get().getId();
         }
-
-        account = accountRepository.save(account);
-
-        //add admin user to pocs
-        if(StringUtils.isNotBlank(form.getAccountOwnerEmail())) {
-            PocFormEntry adminPoc = new PocFormEntry(form.getAccountOwnerEmail());
-            adminPoc.setOwner(true);
-
-            pocUpdater(account, Collections.singletonList(adminPoc));
-        }
-
-        accountRestrictionService.syncPolicyServerBackedAccountRestrictions(account, this);
-
-        SystemActionRunner.build(context)
-                .createAuditRecord(AuditRecordType.ACCOUNT_ADDED, account)
-                .execute();
-
-        return account.getId();
     }
 
 

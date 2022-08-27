@@ -30,7 +30,7 @@ spring:
   datasource:
     hikari:
       validationTimeout: 300000
-    url: jdbc:postgresql://localhost:5432/apiserver
+    url: jdbc:postgresql://192.168.1.190:5432/apiserver?targetServerType=primary
     driver-class-name: org.postgresql.Driver
     username: sa
     password: sa
@@ -38,12 +38,9 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    properties:
-      hibernate:
-        dialect:  org.hibernate.dialect.PostgreSQLDialect
   jackson:
     date-format: com.fasterxml.jackson.databind.util.StdDateFormat
     default-property-inclusion: non_null

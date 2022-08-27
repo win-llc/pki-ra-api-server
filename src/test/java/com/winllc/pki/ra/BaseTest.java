@@ -23,7 +23,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
 @SpringBootTest(classes = TestConfig.class)
-@ActiveProfiles("test")
+@ActiveProfiles({"test"})
 @AutoConfigureMockMvc
 @Testcontainers
 public abstract class BaseTest {

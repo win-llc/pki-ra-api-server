@@ -41,6 +41,11 @@ build:
 
 package:
   stage: package
+  image: docker:latest
+  services:
+    - name: docker:dind
+      command: [ "--insecure-registry=registry.gitlab.winllc-dev.com", "--tls=false" ]
+      alias: docker
   script:
     - docker build -t registry.gitlab.winllc-dev.com/root/pki-registration-authority .
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.winllc-dev.com

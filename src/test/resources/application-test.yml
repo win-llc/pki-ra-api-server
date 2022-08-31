@@ -23,14 +23,11 @@ management:
     health:
       show-details: always
 
-elasticsearch:
-  url: winra.winllc-dev.com:9200
-
 spring:
   datasource:
     hikari:
       validationTimeout: 300000
-    url: jdbc:postgresql://192.168.1.190:5432/apiserver
+    url: jdbc:postgresql://localhost:5432/apiserver
     driver-class-name: org.postgresql.Driver
     username: sa
     password: sa
@@ -47,6 +44,9 @@ spring:
   jackson:
     date-format: com.fasterxml.jackson.databind.util.StdDateFormat
     default-property-inclusion: non_null
+  elasticsearch:
+    rest:
+      uris: http://localhost:9200
 #  security:
 #    oauth2:
 #      resourceserver:

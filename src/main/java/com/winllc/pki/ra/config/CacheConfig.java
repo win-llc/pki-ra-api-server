@@ -17,9 +17,10 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
 //)
 public class CacheConfig {
 
-    @Value("${elasticsearch.url}") String elasticSearchUrl;
+    //@Value("${elasticsearch.url}")
+    String elasticSearchUrl;
 
-    @Bean
+    //@Bean
     public RestHighLevelClient client() {
         ClientConfiguration clientConfiguration
                 = ClientConfiguration.builder()
@@ -29,7 +30,7 @@ public class CacheConfig {
         return RestClients.create(clientConfiguration).rest();
     }
 
-    @Bean
+    //@Bean
     public ElasticsearchOperations elasticsearchTemplate() {
         return new ElasticsearchRestTemplate(client());
     }

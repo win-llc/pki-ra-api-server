@@ -10,6 +10,7 @@ variables:
   # Use the overlayfs driver for improved performance:
   #DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
+  spring.profiles.active: 'ci'
 
 stages:
   - test

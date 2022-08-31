@@ -10,7 +10,6 @@ variables:
   # Use the overlayfs driver for improved performance:
   #DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
-  spring.profiles.active: 'ci'
 
 stages:
   - test
@@ -21,7 +20,7 @@ test:
   image: openjdk:14
   stage: test
   script:
-    - ./gradlew test
+    - ./gradlew test -Dspring.profiles.active=ci
 
 build:
   image: openjdk:14

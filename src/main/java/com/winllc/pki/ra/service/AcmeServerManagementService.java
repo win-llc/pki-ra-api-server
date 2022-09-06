@@ -51,17 +51,25 @@ public class AcmeServerManagementService {
         services = new HashMap<>();
 
         for(AcmeServerConnectionInfo info : connectionInfoRepository.findAll()){
-            load(info);
+            load(info, false);
         }
 
         //load default, if exists
         if(StringUtils.isNoneBlank(winraAcmeServerName, winraAcmeServerUrl)) {
             AcmeServerConnectionInfo info = new AcmeServerConnectionInfo(winraAcmeServerName, winraAcmeServerUrl);
-            load(info);
+            load(info,true);
         }
     }
 
-    private void load(AcmeServerConnectionInfo connectionInfo){
+    private void load(AcmeServerConnectionInfo connectionInfo, boolean create){
+        if(create){
+            AcmeServerConnectionInfo info = connectionInfoRepository.findByName(connectionInfo.getName());
+            if(info == null){
+                connectionInfo = connectionInfoRepository.save(connectionInfo);
+            }else{
+                connectionInfo = info;
+            }
+        }
         AcmeServerConnection connection = new AcmeServerConnection(connectionInfo);
         AcmeServerServiceImpl serverService = new AcmeServerServiceImpl(connection);
         services.put(serverService.getName(), serverService);
@@ -79,7 +87,7 @@ public class AcmeServerManagementService {
     @ResponseStatus(HttpStatus.CREATED)
     public AcmeServerConnectionInfo save(@RequestBody AcmeServerConnectionInfo connectionInfo){
         connectionInfo = connectionInfoRepository.save(connectionInfo);
-        load(connectionInfo);
+        load(connectionInfo, false);
 
         return connectionInfo;
     }

@@ -133,9 +133,9 @@ public class CertificateService {
             List<CachedCertificate> all = new ArrayList<>();
 
             for (Map.Entry<String, List<CertificateRequest>> entry : certsByCaName.entrySet()) {
-                List<Long> serials = entry.getValue().stream()
+                List<String> serials = entry.getValue().stream()
                         .filter(r -> r.getIssuedCertificateSerial() != null)
-                        .map(r -> Long.valueOf(r.getIssuedCertificateSerial()))
+                        .map(CertificateRequest::getIssuedCertificateSerial)
                         .collect(Collectors.toList());
 
                 CertSearchParam param1 = CertSearchParam.createNew();

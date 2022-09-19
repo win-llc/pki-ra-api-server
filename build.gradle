@@ -71,7 +71,7 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-mail')
 
     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
-    implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.4.4'
+    implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.11'
 
     // https://mvnrepository.com/artifact/io.github.classgraph/classgraph
     implementation group: 'io.github.classgraph', name: 'classgraph', version: '4.8.89'
@@ -93,12 +93,12 @@ dependencies {
     implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
 
     // https://mvnrepository.com/artifact/org.keycloak/keycloak-admin-client
-    implementation(group: 'org.keycloak', name: 'keycloak-admin-client', version: '11.0.1'){
+    implementation(group: 'org.keycloak', name: 'keycloak-admin-client', version: '11.0.3'){
         exclude group: 'org.jboss.spec.javax.xml.bind', module: 'jboss-jaxb-api_2.3_spec'
     }
 
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-client
-    implementation group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.6.2.Final'
+    implementation group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.11.3.Final'
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-jackson2-provider
     implementation group: 'org.jboss.resteasy', name: 'resteasy-jackson2-provider', version: '3.6.2.Final'
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-jaxb-provider

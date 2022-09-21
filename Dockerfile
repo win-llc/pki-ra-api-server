@@ -3,7 +3,7 @@ ENV JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active=
 VOLUME /tmp
 COPY build/libs/*.jar app.jar
 
-RUN apt-get update && apt-get install -y curl
+#RUN apt-get update && apt-get install -y curl
 
 RUN mkdir -p /ssl
 

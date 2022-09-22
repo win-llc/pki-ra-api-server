@@ -1,9 +1,9 @@
 package com.winllc.pki.ra.beans.form;
 
-import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import com.winllc.acme.common.domain.CertAuthorityConnectionProperty;
+import com.winllc.ra.integration.ca.CertAuthority;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 

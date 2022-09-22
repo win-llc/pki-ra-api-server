@@ -1,14 +1,9 @@
 package com.winllc.pki.ra.mock;
 
-import com.winllc.acme.common.CertSearchParam;
-import com.winllc.acme.common.CertSearchParams;
-import com.winllc.acme.common.CertificateDetails;
-import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.util.CertUtil;
-import com.winllc.acme.common.ca.CertAuthority;
-import com.winllc.acme.common.constants.CertificateStatus;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
+import com.winllc.ra.integration.ca.*;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 
@@ -151,9 +146,4 @@ public class MockCertAuthority implements CertAuthority {
 
     }
 
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-
-    }
 }

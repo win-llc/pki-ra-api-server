@@ -44,7 +44,12 @@ configurations.all {
 
             def proj1 = findProject(":pki-ra-common")
             if (proj1 != null && proj1.buildFile.exists()) {
-                substitute module('com.winllc.acme.common:pki-ra-common') with project(':pki-ra-common')
+                substitute module('com.winllc.acme.common:pki-ra-common') using project(':pki-ra-common')
+            }
+
+            def proj2 = findProject(":winllc-ra-integration-lib")
+            if (proj2 != null && proj2.buildFile.exists()) {
+                substitute module('com.winllc.ra.integration:pki-ra-integration') using project(':winllc-ra-integration-lib')
             }
 
         }
@@ -57,7 +62,7 @@ bootJar {
 
 dependencies {
     implementation group: 'com.winllc.acme.common', name: 'pki-ra-common', version: '1.0-SNAPSHOT'
-    implementation group: 'com.winllc.pki.plugins.stepca', name: 'winllc-ra-stepca-plugin', version: '1.0-SNAPSHOT'
+    implementation(group: 'com.winllc.pki.plugins.stepca', name: 'winllc-ra-stepca-plugin', version: '1.0-SNAPSHOT')
     //implementation(group: 'com.winllc.pki.plugins.dogtag', name: 'dogtag-ca-plugin', version: '1.0'){
     //    exclude group: 'com.winllc.acme.common', module: 'acme-common'
     //    exclude group: 'org.jboss.spec.javax.xml.bind', module: 'jboss-jaxb-api_2.3_spec'
@@ -117,7 +122,7 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.4'
 
-    implementation 'org.bitbucket.b_c:jose4j:0.6.5'
+    implementation 'org.bitbucket.b_c:jose4j:0.8.0'
     // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt
     //implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '7.2.1'
 
@@ -130,9 +135,7 @@ dependencies {
     testImplementation "org.testcontainers:testcontainers:1.17.3"
     testImplementation "org.testcontainers:junit-jupiter:1.17.3"
     // https://mvnrepository.com/artifact/org.springframework.security/spring-security-test
-    testImplementation group: 'org.springframework.security', name: 'spring-security-test', version: '5.2.8.RELEASE'
-
-
+    testImplementation group: 'org.springframework.security', name: 'spring-security-test', version: '5.5.8'
 
 
 }

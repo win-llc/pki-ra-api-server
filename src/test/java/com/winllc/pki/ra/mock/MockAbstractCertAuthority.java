@@ -1,14 +1,9 @@
 package com.winllc.pki.ra.mock;
 
-import com.winllc.acme.common.CertSearchParam;
-import com.winllc.acme.common.CertSearchParams;
-import com.winllc.acme.common.CertificateDetails;
-import com.winllc.acme.common.SubjectAltNames;
-import com.winllc.acme.common.ca.AbstractCertAuthority;
 import com.winllc.acme.common.ca.ConnectionProperty;
-import com.winllc.acme.common.constants.CertificateStatus;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import com.winllc.acme.common.util.CertUtil;
+import com.winllc.ra.integration.ca.*;
 
 import javax.naming.Name;
 import java.io.IOException;
@@ -74,7 +69,7 @@ public class MockAbstractCertAuthority extends AbstractCertAuthority {
             "-----END CERTIFICATE-----";
 
     public MockAbstractCertAuthority(CertAuthorityConnectionInfo info, KeyStore applicationKeystore, String keystorePassword) {
-        super(info, null, applicationKeystore, keystorePassword);
+        super(info, applicationKeystore, keystorePassword);
     }
 
 

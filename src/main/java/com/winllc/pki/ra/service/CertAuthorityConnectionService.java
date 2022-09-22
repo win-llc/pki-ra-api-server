@@ -1,7 +1,6 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.*;
-import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
 import com.winllc.acme.common.constants.DateTimeUtil;
@@ -12,19 +11,18 @@ import com.winllc.acme.common.repository.CertAuthorityConnectionInfoRepository;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.pki.ra.beans.info.CertAuthorityInfo;
-import com.winllc.acme.common.constants.CertificateStatus;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.*;
 import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
 import com.winllc.pki.ra.service.transaction.CertRevocationTransaction;
 import com.winllc.pki.ra.service.validators.CertAuthorityConnectionInfoValidator;
+import com.winllc.ra.integration.ca.*;
 import io.github.classgraph.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.CollectionUtils;
@@ -354,7 +352,7 @@ public class CertAuthorityConnectionService extends AbstractService {
             CertIssuanceValidationResponse response = new CertIssuanceValidationResponse();
             //todo get global validation rules from connection info
 
-            CertAuthorityConnectionInfo info = certAuthority.getConnectionInfo();
+            CertAuthorityConnectionInfoInterface info = certAuthority.getConnectionInfo();
 
             //response.getCertIssuanceValidationRules().add();
 

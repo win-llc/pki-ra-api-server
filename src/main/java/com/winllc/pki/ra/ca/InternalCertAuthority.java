@@ -1,15 +1,15 @@
 package com.winllc.pki.ra.ca;
 
 
-import com.winllc.acme.common.CertSearchParam;
-import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.SqlCertSearchConverter;
-import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.util.CertUtil;
-import com.winllc.acme.common.constants.CertificateStatus;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import com.winllc.acme.common.domain.IssuedCertificate;
+import com.winllc.ra.integration.ca.CertSearchParam;
+import com.winllc.ra.integration.ca.CertificateDetails;
+import com.winllc.ra.integration.ca.CertificateStatus;
+import com.winllc.ra.integration.ca.SubjectAltNames;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 
@@ -22,7 +22,6 @@ import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
-import java.sql.Timestamp;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;

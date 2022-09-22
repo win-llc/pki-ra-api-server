@@ -1,7 +1,5 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.SubjectAltNames;
-import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
 import com.winllc.acme.common.domain.Account;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
@@ -19,6 +17,8 @@ import com.winllc.acme.common.repository.*;
 import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
 import com.winllc.pki.ra.service.validators.CertificateRequestDecisionValidator;
 import com.winllc.pki.ra.service.validators.CertificateRequestValidator;
+import com.winllc.ra.integration.ca.CertAuthority;
+import com.winllc.ra.integration.ca.SubjectAltNames;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;

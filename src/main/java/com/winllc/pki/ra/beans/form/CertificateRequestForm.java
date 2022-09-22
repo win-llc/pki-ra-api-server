@@ -1,10 +1,10 @@
 package com.winllc.pki.ra.beans.form;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.winllc.acme.common.SubjectAltName;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.acme.common.domain.CertificateRequest;
 import com.winllc.pki.ra.util.FormValidationUtil;
+import com.winllc.ra.integration.ca.SubjectAltName;
 import org.springframework.util.CollectionUtils;
 
 import javax.validation.constraints.NotNull;

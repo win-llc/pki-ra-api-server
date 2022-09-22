@@ -1,6 +1,5 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.SubjectAltName;
 import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.pki.ra.beans.info.PocEntryInfo;
@@ -15,11 +14,11 @@ import com.winllc.pki.ra.service.external.vendorimpl.KeycloakOIDCProviderConnect
 import com.winllc.pki.ra.service.transaction.SystemActionRunner;
 import com.winllc.pki.ra.service.transaction.ThrowingSupplier;
 import com.winllc.pki.ra.service.validators.ServerEntryValidator;
+import com.winllc.ra.integration.ca.SubjectAltName;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

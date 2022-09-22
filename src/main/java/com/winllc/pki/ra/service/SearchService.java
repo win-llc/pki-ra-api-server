@@ -1,15 +1,15 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.CertSearchParam;
-import com.winllc.acme.common.CertSearchParams;
-import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.ca.CachedCertificate;
-import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
 import com.winllc.acme.common.cache.CachedCertificateService;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import com.winllc.ra.integration.ca.CertAuthority;
+import com.winllc.ra.integration.ca.CertSearchParam;
+import com.winllc.ra.integration.ca.CertSearchParams;
+import com.winllc.ra.integration.ca.CertificateDetails;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.elasticsearch.core.SearchHits;

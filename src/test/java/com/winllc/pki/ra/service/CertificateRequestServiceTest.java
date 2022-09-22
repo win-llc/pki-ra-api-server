@@ -1,7 +1,6 @@
 package com.winllc.pki.ra.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.winllc.acme.common.SubjectAltName;
 import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
@@ -16,6 +15,7 @@ import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.mock.MockCertAuthority;
 import com.winllc.acme.common.repository.*;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
+import com.winllc.ra.integration.ca.SubjectAltName;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

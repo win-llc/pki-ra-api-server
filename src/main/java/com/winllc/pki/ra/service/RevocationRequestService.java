@@ -1,9 +1,5 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.CertSearchParam;
-import com.winllc.acme.common.CertSearchParams;
-import com.winllc.acme.common.CertificateDetails;
-import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.CertificateValidationForm;
@@ -11,6 +7,10 @@ import com.winllc.acme.common.domain.RevocationRequest;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.RevocationRequestRepository;
 import com.winllc.pki.ra.service.transaction.CertRevocationTransaction;
+import com.winllc.ra.integration.ca.CertAuthority;
+import com.winllc.ra.integration.ca.CertSearchParam;
+import com.winllc.ra.integration.ca.CertSearchParams;
+import com.winllc.ra.integration.ca.CertificateDetails;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationContext;
@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.naming.InvalidNameException;
 import javax.security.auth.x500.X500Principal;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;

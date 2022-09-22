@@ -1,9 +1,8 @@
 package com.winllc.pki.ra.beans;
 
-import com.winllc.acme.common.CertSearchParam;
-import com.winllc.acme.common.CertSearchParams;
-import com.winllc.acme.common.ca.CertAuthority;
-import com.winllc.pki.ra.service.transaction.SystemActionRunner;
+import com.winllc.ra.integration.ca.CertAuthority;
+import com.winllc.ra.integration.ca.CertSearchParam;
+import com.winllc.ra.integration.ca.CertSearchParams;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

@@ -1,20 +1,16 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.keystore.KeyEntryWrapper;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AppKeyStoreEntryForm;
-import com.winllc.pki.ra.config.AppConfig;
+import com.winllc.ra.integration.ca.SubjectAltNames;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.FileInputStream;

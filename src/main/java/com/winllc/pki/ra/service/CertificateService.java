@@ -1,17 +1,15 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.CertSearchParam;
-import com.winllc.acme.common.CertSearchParams;
 import com.winllc.acme.common.ca.CachedCertificate;
-import com.winllc.acme.common.cache.CachedCertificateRepository;
 import com.winllc.acme.common.cache.CachedCertificateService;
 import com.winllc.acme.common.domain.CertificateRequest;
 import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.acme.common.repository.CertificateRequestRepository;
 import com.winllc.acme.common.repository.ServerEntryRepository;
+import com.winllc.ra.integration.ca.CertSearchParam;
+import com.winllc.ra.integration.ca.CertSearchParams;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.search.sort.FieldSortBuilder;
-import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;

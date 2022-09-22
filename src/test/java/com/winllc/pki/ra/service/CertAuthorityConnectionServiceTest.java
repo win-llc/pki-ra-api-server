@@ -1,9 +1,6 @@
 package com.winllc.pki.ra.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.winllc.acme.common.CertSearchParam;
-import com.winllc.acme.common.CertSearchParams;
-import com.winllc.acme.common.CertificateDetails;
 import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
 import com.winllc.acme.common.domain.CertAuthorityConnectionProperty;
@@ -14,7 +11,6 @@ import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
-import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.domain.Account;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import com.winllc.acme.common.domain.AuthCredential;
@@ -26,6 +22,10 @@ import com.winllc.pki.ra.mock.MockCertAuthority;
 import com.winllc.acme.common.repository.*;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import com.winllc.pki.ra.service.transaction.CertIssuanceTransaction;
+import com.winllc.ra.integration.ca.CertAuthority;
+import com.winllc.ra.integration.ca.CertSearchParam;
+import com.winllc.ra.integration.ca.CertSearchParams;
+import com.winllc.ra.integration.ca.CertificateDetails;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

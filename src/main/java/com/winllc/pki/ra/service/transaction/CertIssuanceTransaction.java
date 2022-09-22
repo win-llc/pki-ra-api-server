@@ -1,11 +1,9 @@
 package com.winllc.pki.ra.service.transaction;
 
-import com.winllc.acme.common.SubjectAltNames;
 import com.winllc.acme.common.cache.CachedCertificateService;
 import com.winllc.acme.common.domain.Account;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
-import com.winllc.acme.common.ca.CertAuthority;
 import com.winllc.acme.common.constants.AuditRecordType;
 import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.exception.RAException;
@@ -18,6 +16,8 @@ import com.winllc.pki.ra.service.ServerEntryService;
 import com.winllc.pki.ra.service.ServerSettingsService;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
 import com.winllc.pki.ra.util.FormValidationUtil;
+import com.winllc.ra.integration.ca.CertAuthority;
+import com.winllc.ra.integration.ca.SubjectAltNames;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,8 +27,6 @@ import org.springframework.context.ApplicationContext;
 import javax.transaction.Transactional;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 

@@ -113,9 +113,6 @@ dependencies {
     // https://mvnrepository.com/artifact/commons-validator/commons-validator
     implementation group: 'commons-validator', name: 'commons-validator', version: '1.7'
 
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
-    //implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.0.pr2'
-
     // https://mvnrepository.com/artifact/com.h2database/h2
     //implementation group: 'com.h2database', name: 'h2', version: '1.4.199'
 

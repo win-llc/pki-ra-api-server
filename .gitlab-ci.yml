@@ -22,13 +22,13 @@ test:
   image: openjdk:14
   stage: test
   script:
-    - ./gradlew test -Dspring.profiles.active=ci
+    - ./gradlew clean test -Dspring.profiles.active=ci
 
 build:
   image: openjdk:14
   stage: build
   script:
-    - ./gradlew bootJar
+    - ./gradlew clean bootJar
   artifacts:
     paths:
       - build/libs/pki-ra-api-server-1.0-SNAPSHOT.jar

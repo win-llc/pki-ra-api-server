@@ -103,13 +103,13 @@ dependencies {
     }
 
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-client
-    implementation group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.11.3.Final'
+    implementation group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.15.3.Final'
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-jackson2-provider
-    implementation group: 'org.jboss.resteasy', name: 'resteasy-jackson2-provider', version: '3.6.2.Final'
+    implementation group: 'org.jboss.resteasy', name: 'resteasy-jackson2-provider', version: '3.15.3.Final'
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-jaxb-provider
-    implementation group: 'org.jboss.resteasy', name: 'resteasy-jaxb-provider', version: '3.6.2.Final'
+    implementation group: 'org.jboss.resteasy', name: 'resteasy-jaxb-provider', version: '3.15.3.Final'
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-atom-provider
-    implementation group: 'org.jboss.resteasy', name: 'resteasy-atom-provider', version: '3.6.2.Final'
+    implementation group: 'org.jboss.resteasy', name: 'resteasy-atom-provider', version: '3.15.3.Final'
     // https://mvnrepository.com/artifact/commons-validator/commons-validator
     implementation group: 'commons-validator', name: 'commons-validator', version: '1.7'
 

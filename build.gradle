@@ -52,6 +52,11 @@ configurations.all {
                 substitute module('com.winllc.ra.integration:pki-ra-integration') using project(':winllc-ra-integration-lib')
             }
 
+            def proj3 = findProject(":winllc-ra-stepca-plugin")
+            if (proj3 != null && proj3.buildFile.exists()) {
+                substitute module('com.winllc.pki.plugins.stepca:winllc-ra-stepca-plugin') using project(':winllc-ra-stepca-plugin')
+            }
+
         }
     }
 }
@@ -76,7 +81,7 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-mail')
 
     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
-    implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.11'
+    //implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.11'
 
     // https://mvnrepository.com/artifact/io.github.classgraph/classgraph
     implementation group: 'io.github.classgraph', name: 'classgraph', version: '4.8.89'
@@ -85,7 +90,8 @@ dependencies {
     //compile group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
     //compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '3.0.0'
     // https://mvnrepository.com/artifact/io.springfox/springfox-swagger2
-    implementation group: 'io.springfox', name: 'springfox-swagger2', version: '3.0.0'
+    //implementation group: 'io.springfox', name: 'springfox-swagger2', version: '3.0.0'
+    //implementation group: 'io.springfox', name: 'springfox-boot-starter', version: '3.0.0'
 
     // https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus
     implementation group: 'io.micrometer', name: 'micrometer-registry-prometheus', version: '1.6.7'
@@ -98,18 +104,19 @@ dependencies {
     implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
 
     // https://mvnrepository.com/artifact/org.keycloak/keycloak-admin-client
-    implementation(group: 'org.keycloak', name: 'keycloak-admin-client', version: '11.0.3'){
+    implementation(group: 'org.keycloak', name: 'keycloak-admin-client', version: '16.1.1'){
         exclude group: 'org.jboss.spec.javax.xml.bind', module: 'jboss-jaxb-api_2.3_spec'
+        exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
     }
 
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-client
-    implementation group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.15.3.Final'
+    //implementation group: 'org.jboss.resteasy', name: 'resteasy-client', version: '5.0.4.Final'
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-jackson2-provider
-    implementation group: 'org.jboss.resteasy', name: 'resteasy-jackson2-provider', version: '3.15.3.Final'
+    //implementation group: 'org.jboss.resteasy', name: 'resteasy-jackson2-provider', version: '5.0.4.Final'
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-jaxb-provider
-    implementation group: 'org.jboss.resteasy', name: 'resteasy-jaxb-provider', version: '3.15.3.Final'
+    //implementation group: 'org.jboss.resteasy', name: 'resteasy-jaxb-provider', version: '5.0.4.Final'
     // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-atom-provider
-    implementation group: 'org.jboss.resteasy', name: 'resteasy-atom-provider', version: '3.15.3.Final'
+    //implementation group: 'org.jboss.resteasy', name: 'resteasy-atom-provider', version: '5.0.4.Final'
     // https://mvnrepository.com/artifact/commons-validator/commons-validator
     implementation group: 'commons-validator', name: 'commons-validator', version: '1.7'
 

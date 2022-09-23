@@ -62,9 +62,13 @@ public class EntityDirectoryService {
     public Map<String, Object> getCurrentAttributesForServer(ServerEntry serverEntry) throws InvalidNameException {
         String distinguishedName = serverEntry.getDistinguishedName();
         if(StringUtils.isNotBlank(distinguishedName)){
-            LdapTemplate ldapTemplate = buildDirectoryLdapTemplate();
-            DirectoryServerEntity entity = new DirectoryServerEntity(serverEntry, ldapTemplate);
-            return entity.getCurrentAttributes();
+            Optional<LdapTemplate> ldapTemplate = buildDirectoryLdapTemplate();
+            if(ldapTemplate.isPresent()) {
+                DirectoryServerEntity entity = new DirectoryServerEntity(serverEntry, ldapTemplate.get());
+                return entity.getCurrentAttributes();
+            }else{
+                return new HashMap<>();
+            }
         }else{
             log.debug("Could not find Server Entry in Directory");
             return new HashMap<>();
@@ -90,13 +94,17 @@ public class EntityDirectoryService {
 
         log.info("Going to add Server Entry to LDAP: "+serverEntry.getDistinguishedName());
 
-        LdapTemplate ldapTemplate = buildDirectoryLdapTemplate();
+        Optional<LdapTemplate> ldapTemplate = buildDirectoryLdapTemplate();
 
-        try {
-            DirectoryServerEntity entity = new DirectoryServerEntity(serverEntry, ldapTemplate);
-            entity.overwriteAttributes(attributeValueMap);
-        } catch (InvalidNameException e) {
-            log.error("Invalid name", e);
+        if(ldapTemplate.isPresent()) {
+            try {
+                DirectoryServerEntity entity = new DirectoryServerEntity(serverEntry, ldapTemplate.get());
+                entity.overwriteAttributes(attributeValueMap);
+            } catch (InvalidNameException e) {
+                log.error("Invalid name", e);
+                return false;
+            }
+        }else{
             return false;
         }
 
@@ -169,18 +177,22 @@ public class EntityDirectoryService {
     }
 
     //todo finish this
-    private LdapTemplate buildDirectoryLdapTemplate(){
+    private Optional<LdapTemplate> buildDirectoryLdapTemplate(){
         LdapContextSource contextSource = new LdapContextSource();
         Optional<String> optionalUrl = serverSettingsService.getServerSettingValue(ServerSettingRequired.ENTITY_DIRECTORY_LDAP_URL);
         Optional<String> optionalUsername = serverSettingsService.getServerSettingValue(ServerSettingRequired.ENTITY_DIRECTORY_LDAP_USERNAME);
         Optional<String> optionalPassword = serverSettingsService.getServerSettingValue(ServerSettingRequired.ENTITY_DIRECTORY_LDAP_PASSWORD);
 
-        optionalUrl.ifPresent(u -> contextSource.setUrl(u));
-        optionalUsername.ifPresent(u -> contextSource.setUserDn(u));
-        optionalPassword.ifPresent(u -> contextSource.setPassword(u));
+        if(optionalUrl.isPresent() && StringUtils.isNotBlank(optionalUrl.get())) {
+            optionalUrl.ifPresent(u -> contextSource.setUrl(u));
+            optionalUsername.ifPresent(u -> contextSource.setUserDn(u));
+            optionalPassword.ifPresent(u -> contextSource.setPassword(u));
 
-        contextSource.afterPropertiesSet();
+            contextSource.afterPropertiesSet();
 
-        return new LdapTemplate(contextSource);
+            return Optional.of(new LdapTemplate(contextSource));
+        }else{
+            return Optional.empty();
+        }
     }
 }

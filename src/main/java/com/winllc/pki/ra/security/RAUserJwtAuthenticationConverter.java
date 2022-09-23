@@ -1,10 +1,10 @@
 package com.winllc.pki.ra.security;
 
 
+import com.nimbusds.jose.shaded.json.JSONObject;
 import com.winllc.acme.common.domain.RolePermission;
 import com.winllc.acme.common.repository.RolePermissionRepository;
 import com.winllc.pki.ra.service.RolePermissionsService;
-import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -32,10 +32,12 @@ public class RAUserJwtAuthenticationConverter
     @Autowired
     private RolePermissionsService rolePermissionsService;
     private final RAUserDetailsService raUserDetailsService;
+    private final String openidClient;
 
     public RAUserJwtAuthenticationConverter(
-            RAUserDetailsService raUserDetailsService) {
+            RAUserDetailsService raUserDetailsService, String openidClient) {
         this.raUserDetailsService = raUserDetailsService;
+        this.openidClient = openidClient;
     }
 
     @Override
@@ -106,9 +108,11 @@ public class RAUserJwtAuthenticationConverter
     private Collection<String> getGroupsFromResourceAccess(Jwt jwt) {
         List<String> returnRoles = new ArrayList<>();
         Object resourceAccess = jwt.getClaims().get("resource_access");
+        System.out.println("JWT resource_access: "+resourceAccess);
+        System.out.println("JWT resource_access type "+resourceAccess.getClass().getName());
         if (resourceAccess instanceof JSONObject) {
             JSONObject jsonRA = (JSONObject) resourceAccess;
-            JSONObject clientAccess = (JSONObject) jsonRA.get("pki-ra-client-public");
+            JSONObject clientAccess = (JSONObject) jsonRA.get(openidClient);
             Collection<String> roles = (Collection<String>) clientAccess.get("roles");
             returnRoles.addAll(roles);
         }

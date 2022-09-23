@@ -109,7 +109,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Bean
     RAUserJwtAuthenticationConverter raUserJwtAuthenticationConverter() {
-        return new RAUserJwtAuthenticationConverter(raUserDetailsService);
+        return new RAUserJwtAuthenticationConverter(raUserDetailsService, jwtRequiredAudience);
     }
 
     @Bean

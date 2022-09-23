@@ -1,6 +1,6 @@
 pluginManagement {
     plugins {
-        id 'org.springframework.boot' version "2.5.14"
+        id 'org.springframework.boot' version "2.6.12"
         id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     }
 }
@@ -15,4 +15,9 @@ if (new File("../pki-ra-common").with{exists() && isDirectory()}) {
 include(":winllc-ra-integration-lib")
 if (new File("../winllc-ra-integration-lib").with{exists() && isDirectory()}) {
     project(":winllc-ra-integration-lib").projectDir = file("../winllc-ra-integration-lib")
+}
+
+include(":winllc-ra-stepca-plugin")
+if (new File("../winllc-ra-stepca-plugin").with{exists() && isDirectory()}) {
+    project(":winllc-ra-stepca-plugin").projectDir = file("../winllc-ra-stepca-plugin")
 }

@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.cron;
 
-import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
+import com.winllc.acme.common.client.ca.LoadedCertAuthorityStore;
 import com.winllc.acme.common.repository.CertificateRequestRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

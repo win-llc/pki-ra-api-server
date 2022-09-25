@@ -2,14 +2,10 @@ package com.winllc.pki.ra.ca;
 
 
 import com.winllc.acme.common.SqlCertSearchConverter;
-import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import com.winllc.acme.common.domain.IssuedCertificate;
-import com.winllc.ra.integration.ca.CertSearchParam;
-import com.winllc.ra.integration.ca.CertificateDetails;
-import com.winllc.ra.integration.ca.CertificateStatus;
-import com.winllc.ra.integration.ca.SubjectAltNames;
+import com.winllc.ra.integration.ca.*;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 

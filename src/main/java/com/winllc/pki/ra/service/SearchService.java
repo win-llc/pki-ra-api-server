@@ -1,7 +1,7 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.ca.CachedCertificate;
-import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
+import com.winllc.acme.common.client.ca.CachedCertificate;
+import com.winllc.acme.common.client.ca.LoadedCertAuthorityStore;
 import com.winllc.acme.common.cache.CachedCertificateService;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.info.AccountInfo;
@@ -69,7 +69,7 @@ public class SearchService {
                 .collect(Collectors.toList());
     }
 
-    private CertificateDetails cachedToDetails(com.winllc.acme.common.ca.CachedCertificate cachedCertificate){
+    private CertificateDetails cachedToDetails(CachedCertificate cachedCertificate){
         CertificateDetails details = new CertificateDetails();
         details.setValidFrom(ZonedDateTime.from(cachedCertificate.getValidFrom().toInstant().atZone(ZoneId.systemDefault())));
         details.setValidTo(ZonedDateTime.from(cachedCertificate.getValidTo().toInstant().atZone(ZoneId.systemDefault())));

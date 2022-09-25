@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.config;
 
-import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
+import com.winllc.acme.common.client.ca.LoadedCertAuthorityStore;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import com.winllc.acme.common.keystore.ApplicationKeystore;
 import com.winllc.acme.common.repository.CertAuthorityConnectionInfoRepository;

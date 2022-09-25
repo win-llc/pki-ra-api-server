@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
+import com.winllc.acme.common.client.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.CertificateValidationForm;
 import com.winllc.acme.common.domain.RevocationRequest;

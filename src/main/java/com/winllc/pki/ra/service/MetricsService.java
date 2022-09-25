@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.service;
 
-import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
+import com.winllc.acme.common.client.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.beans.metrics.AuditMetricRequest;
 import com.winllc.pki.ra.beans.metrics.AuditMetricResponse;
 import com.winllc.pki.ra.beans.metrics.ChartMetrics;

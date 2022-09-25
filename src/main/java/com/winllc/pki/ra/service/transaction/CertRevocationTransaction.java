@@ -1,6 +1,6 @@
 package com.winllc.pki.ra.service.transaction;
 
-import com.winllc.acme.common.ca.CachedCertificate;
+import com.winllc.acme.common.client.ca.CachedCertificate;
 import com.winllc.acme.common.cache.CachedCertificateService;
 import com.winllc.acme.common.constants.RevocationReason;
 import com.winllc.acme.common.domain.RevocationRequest;

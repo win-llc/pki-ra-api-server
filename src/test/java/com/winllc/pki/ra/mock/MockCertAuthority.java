@@ -1,11 +1,8 @@
 package com.winllc.pki.ra.mock;
 
-import com.winllc.acme.common.ca.ConnectionProperty;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import com.winllc.ra.integration.ca.*;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
 
 import javax.naming.Name;
 import javax.naming.ldap.LdapName;

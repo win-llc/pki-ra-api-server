@@ -1,8 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.*;
-import com.winllc.acme.common.ca.ConnectionProperty;
-import com.winllc.acme.common.ca.LoadedCertAuthorityStore;
+import com.winllc.acme.common.client.ca.LoadedCertAuthorityStore;
 import com.winllc.acme.common.constants.DateTimeUtil;
 import com.winllc.acme.common.domain.*;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;

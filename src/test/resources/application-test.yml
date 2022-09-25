@@ -46,8 +46,8 @@ spring:
     date-format: com.fasterxml.jackson.databind.util.StdDateFormat
     default-property-inclusion: non_null
   elasticsearch:
-    rest:
-      uris: http://192.168.1.190:9200
+    #uris: http://localhost:9200
+    uris: http://192.168.1.190:9200
 #  security:
 #    oauth2:
 #      resourceserver:

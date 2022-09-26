@@ -67,7 +67,7 @@ public class MockCertAuthority implements CertAuthority {
             "-----END CERTIFICATE-----";
 
 
-    public MockCertAuthority(CertAuthorityConnectionInfo info, KeyStore keyStore, String password) {
+    public MockCertAuthority(CertAuthorityConnectionInfoInterface info, KeyStore keyStore, String password) {
     }
 
     public MockCertAuthority(){}

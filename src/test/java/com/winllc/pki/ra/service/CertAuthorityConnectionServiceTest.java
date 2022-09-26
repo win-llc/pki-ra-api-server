@@ -102,7 +102,12 @@ class CertAuthorityConnectionServiceTest extends BaseTest {
     @Transactional
     void before() throws Exception {
         CertAuthority mockCa = new MockCertAuthority();
-        certAuthorityStore.addLoadedCertAuthority(mockCa);
+
+        CertAuthorityConnectionInfo connectionInfo = new CertAuthorityConnectionInfo();
+        connectionInfo.setName(mockCa.getName());
+        connectionInfo.setCertAuthorityClassName(mockCa.getClass().getCanonicalName());
+
+        certAuthorityStore.loadCertAuthority(connectionInfo);
 
         Domain domain = new Domain();
         domain.setBase("winllc-dev.com");

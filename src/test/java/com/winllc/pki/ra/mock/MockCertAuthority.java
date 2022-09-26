@@ -7,6 +7,7 @@ import com.winllc.ra.integration.ca.*;
 import javax.naming.Name;
 import javax.naming.ldap.LdapName;
 import java.io.IOException;
+import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509CRL;
@@ -65,6 +66,11 @@ public class MockCertAuthority implements CertAuthority {
             "w4cVuU8Kktg9dX8yDu4nr5KIh7s/Iog9\n" +
             "-----END CERTIFICATE-----";
 
+
+    public MockCertAuthority(CertAuthorityConnectionInfo info, KeyStore keyStore, String password) {
+    }
+
+    public MockCertAuthority(){}
 
     public static List<ConnectionProperty> getRequiredProperties() {
         ConnectionProperty connectionProperty = ConnectionProperty.build();

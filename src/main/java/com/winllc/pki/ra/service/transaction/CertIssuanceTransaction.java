@@ -129,7 +129,7 @@ public class CertIssuanceTransaction extends CertTransaction {
 
         Optional<String> serverBaseDnOptional = serverSettingsService.getServerSettingValue(ENTITY_DIRECTORY_LDAP_SERVERBASEDN);
 
-        if(serverBaseDnOptional.isPresent()) {
+        if(serverBaseDnOptional.isPresent() && StringUtils.isNotBlank(serverBaseDnOptional.get())) {
             dn += "," + serverBaseDnOptional.get();
         }
         return dn;

@@ -34,7 +34,7 @@ import static com.winllc.pki.ra.constants.ServerSettingRequired.ENTITY_DIRECTORY
 
 public class CertIssuanceTransaction extends CertTransaction {
 
-    private static final Logger log = LogManager.getLogger(CertAuthorityConnectionService.class);
+    private static final Logger log = LogManager.getLogger(CertIssuanceTransaction.class);
 
     private final ServerSettingsService serverSettingsService;
     private final ServerEntryService serverEntryService;
@@ -103,7 +103,7 @@ public class CertIssuanceTransaction extends CertTransaction {
                 try {
                     cachedCertificateService.persist(cert, "VALID", certAuthority.getName());
                 }catch (Exception e){
-                   log.error("Could not cache certificate: "+cert.getSubjectDN().getName());
+                   log.error("Could not cache certificate: "+cert.getSubjectDN().getName(), e);
                 }
                 return cert;
             } else {

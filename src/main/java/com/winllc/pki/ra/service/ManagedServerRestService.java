@@ -147,6 +147,7 @@ public class ManagedServerRestService {
 
              */
 
+            /*
             if (!includeValid || !includeExpired) {
                 if (includeValid) {
                     Predicate validSearch = builder.greaterThanOrEqualTo(root.get("latestCertExpiresOn"), LocalDateTime.now());
@@ -158,6 +159,8 @@ public class ManagedServerRestService {
                     predicates.add(expiredSearch);
                 }
             }
+
+             */
 
             return builder.and(predicates.toArray(new Predicate[0]));
         };

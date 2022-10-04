@@ -117,6 +117,7 @@ public class CertIssuanceTransaction extends CertTransaction {
                     managedServer.setLatestCertIssuedOn(LocalDateTime.now());
                     managedServer.setLatestCertSerial(cert.getSerialNumber().toString());
                     managedServer.setLatestCertIssuer(cert.getIssuerX500Principal().getName());
+                    managedServer.setLatestCertExpiresOn(LocalDateTime.from(cert.getNotAfter().toInstant()));
 
                     managedServerRepository.save(managedServer);
                 }catch (Exception e){

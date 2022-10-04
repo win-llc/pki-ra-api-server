@@ -38,7 +38,7 @@ public class ManagedServerRestService {
     public Page<ManagedServer> getPaged(@RequestParam(required = false) String search,
                                         @RequestParam(defaultValue = "0") Integer page,
                                         @RequestParam(defaultValue = "10") Integer pageSize,
-                                        @RequestParam(defaultValue = "dateLatestCertWillExpire") String sortBy,
+                                        @RequestParam(defaultValue = "latestCertExpiresOn") String sortBy,
                                         @RequestParam(defaultValue = "desc") String order,
                                         @RequestParam(defaultValue = "false") Boolean includeArchive,
                                         @RequestParam(defaultValue = "true") Boolean includeNonArchive,

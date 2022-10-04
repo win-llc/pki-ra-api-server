@@ -21,10 +21,13 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/ldapSchemaOverlay")
 public class LdapSchemaOverlayService {
 
-    @Autowired
-    private LdapSchemaOverlayRepository repository;
-    @Autowired
-    private LdapSchemaOverlayAttributeRepository attributeRepository;
+    private final LdapSchemaOverlayRepository repository;
+    private final LdapSchemaOverlayAttributeRepository attributeRepository;
+
+    public LdapSchemaOverlayService(LdapSchemaOverlayRepository repository, LdapSchemaOverlayAttributeRepository attributeRepository) {
+        this.repository = repository;
+        this.attributeRepository = attributeRepository;
+    }
 
     @GetMapping("/getAll")
     @Transactional

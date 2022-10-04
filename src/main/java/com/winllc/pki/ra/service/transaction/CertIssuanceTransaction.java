@@ -3,6 +3,7 @@ package com.winllc.pki.ra.service.transaction;
 import com.winllc.acme.common.cache.CachedCertificateService;
 import com.winllc.acme.common.domain.Account;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
+import com.winllc.acme.common.repository.ManagedServerRepository;
 import com.winllc.pki.ra.beans.form.ServerEntryForm;
 import com.winllc.acme.common.constants.AuditRecordType;
 import com.winllc.acme.common.domain.*;
@@ -22,11 +23,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import javax.transaction.Transactional;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
@@ -43,6 +46,8 @@ public class CertIssuanceTransaction extends CertTransaction {
     private final EntityDirectoryService entityDirectoryService;
     private final AuditRecordRepository auditRecordRepository;
     private final CachedCertificateService cachedCertificateService;
+    @Autowired
+    private ManagedServerRepository managedServerRepository;
 
     public CertIssuanceTransaction(CertAuthority certAuthority, ApplicationContext context) {
         super(certAuthority, context);
@@ -102,8 +107,20 @@ public class CertIssuanceTransaction extends CertTransaction {
             if (cert != null) {
                 try {
                     cachedCertificateService.persist(cert, "VALID", certAuthority.getName());
+
+                    ManagedServer managedServer = new ManagedServer(certificateRequest.getDnsNames(), account.getUuid());
+                    Optional<ManagedServer> existing = managedServerRepository.findOneByUniqueId(managedServer.getUniqueId());
+                    if(existing.isPresent()){
+                        managedServer = existing.get();
+                    }
+                    managedServer.setProject(account.getProjectName());
+                    managedServer.setLatestCertIssuedOn(LocalDateTime.now());
+                    managedServer.setLatestCertSerial(cert.getSerialNumber().toString());
+                    managedServer.setLatestCertIssuer(cert.getIssuerX500Principal().getName());
+
+                    managedServerRepository.save(managedServer);
                 }catch (Exception e){
-                   log.error("Could not cache certificate: "+cert.getSubjectDN().getName(), e);
+                   log.error("Could not cache certificate: "+ cert.getSubjectX500Principal().getName(), e);
                 }
                 return cert;
             } else {

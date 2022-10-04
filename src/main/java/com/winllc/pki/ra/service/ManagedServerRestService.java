@@ -28,11 +28,6 @@ public class ManagedServerRestService {
     private static final Logger log = LogManager.getLogger(ManagedServerRestService.class);
     private final ManagedServerRepository managedServerRepository;
 
-    @Value("${actionUrlBase}")
-    private String actionUrlBase;
-    @Value("${expirationWindow}")
-    private int expirationWindow;
-
 
     public ManagedServerRestService(ManagedServerRepository managedServerRepository) {
         this.managedServerRepository = managedServerRepository;

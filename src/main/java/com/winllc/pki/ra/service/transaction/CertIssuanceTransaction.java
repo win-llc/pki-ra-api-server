@@ -46,8 +46,7 @@ public class CertIssuanceTransaction extends CertTransaction {
     private final EntityDirectoryService entityDirectoryService;
     private final AuditRecordRepository auditRecordRepository;
     private final CachedCertificateService cachedCertificateService;
-    @Autowired
-    private ManagedServerRepository managedServerRepository;
+    private final ManagedServerRepository managedServerRepository;
 
     public CertIssuanceTransaction(CertAuthority certAuthority, ApplicationContext context) {
         super(certAuthority, context);
@@ -57,6 +56,7 @@ public class CertIssuanceTransaction extends CertTransaction {
         this.certificateRequestRepository = context.getBean(CertificateRequestRepository.class);
         this.entityDirectoryService = context.getBean(EntityDirectoryService.class);
         this.auditRecordRepository = context.getBean(AuditRecordRepository.class);
+        this.managedServerRepository = context.getBean(ManagedServerRepository.class);
         this.cachedCertificateService = context.getBean(CachedCertificateService.class);
     }
 

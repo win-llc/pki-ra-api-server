@@ -30,6 +30,7 @@ import javax.transaction.Transactional;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
@@ -117,7 +118,9 @@ public class CertIssuanceTransaction extends CertTransaction {
                     managedServer.setLatestCertIssuedOn(LocalDateTime.now());
                     managedServer.setLatestCertSerial(cert.getSerialNumber().toString());
                     managedServer.setLatestCertIssuer(cert.getIssuerX500Principal().getName());
-                    managedServer.setLatestCertExpiresOn(LocalDateTime.from(cert.getNotAfter().toInstant()));
+                    managedServer.setLatestCertExpiresOn(cert.getNotAfter().toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime());
 
                     managedServerRepository.save(managedServer);
                 }catch (Exception e){

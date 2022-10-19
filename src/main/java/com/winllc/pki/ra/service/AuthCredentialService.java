@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.domain.Account;
+import com.winllc.pki.ra.beans.form.AuthCredentialForm;
 import com.winllc.pki.ra.beans.form.AuthCredentialsUpdateForm;
 import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
 import com.winllc.acme.common.domain.*;
@@ -10,6 +11,7 @@ import com.winllc.acme.common.repository.AuthCredentialRepository;
 import com.winllc.acme.common.repository.ServerEntryRepository;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Hibernate;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,13 +23,17 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/authCredential")
-public class AuthCredentialService {
+public class AuthCredentialService extends ServerEntryDataTableService<AuthCredential, AuthCredentialForm> {
 
     private final AuthCredentialRepository authCredentialRepository;
     private final ServerEntryRepository serverEntryRepository;
     private final AccountRepository accountRepository;
 
-    public AuthCredentialService(AuthCredentialRepository authCredentialRepository, ServerEntryRepository serverEntryRepository, AccountRepository accountRepository) {
+    public AuthCredentialService(ApplicationContext context,
+                                 AuthCredentialRepository authCredentialRepository,
+                                 ServerEntryRepository serverEntryRepository,
+                                 AccountRepository accountRepository) {
+        super(context, serverEntryRepository, accountRepository, authCredentialRepository);
         this.authCredentialRepository = authCredentialRepository;
         this.serverEntryRepository = serverEntryRepository;
         this.accountRepository = accountRepository;
@@ -39,10 +45,15 @@ public class AuthCredentialService {
     public List<AuthCredential> getValidAuthCredentials(@Valid @RequestBody UniqueEntityLookupForm lookupForm)
             throws Exception {
 
-        AuthCredentialHolder holder = getHolder(lookupForm);
+        AuthCredentialHolderInteface holder = getHolder(lookupForm);
 
         if(holder != null){
-            return authCredentialRepository.findAllByParentEntity(holder);
+            if(holder instanceof Account){
+                return authCredentialRepository.findAllByAccount((Account) holder);
+            }else{
+                return authCredentialRepository.findAllByServerEntry((ServerEntry) holder);
+            }
+
         }else{
             throw new RAObjectNotFoundException(ServerEntry.class, lookupForm.getObjectUuid());
         }
@@ -68,7 +79,7 @@ public class AuthCredentialService {
                     }
                 }
                 if(!exists){
-                    AuthCredentialHolder holder = getHolder(form.getLookupForm());
+                    AuthCredentialHolderInteface holder = getHolder(form.getLookupForm());
                     AuthCredential newCred = AuthCredential.buildNew(holder);
                     authCredentialRepository.save(newCred);
                 }
@@ -78,11 +89,11 @@ public class AuthCredentialService {
         return getValidAuthCredentials(form.getLookupForm());
     }
 
-    public AuthCredentialHolder getHolder(UniqueEntityLookupForm lookupForm) throws Exception {
+    public AuthCredentialHolderInteface getHolder(UniqueEntityLookupForm lookupForm) throws Exception {
         String entityClass = lookupForm.getObjectClass();
         Class<?> clazz = Class.forName(entityClass);
 
-        AuthCredentialHolder holder = null;
+        AuthCredentialHolderInteface holder = null;
         if(clazz == ServerEntry.class){
             Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findDistinctByUuidEquals(lookupForm.getObjectUuid());
             if(optionalServerEntry.isPresent()){
@@ -100,7 +111,7 @@ public class AuthCredentialService {
         return holder;
     }
 
-    public AuthCredentialHolder addNewAuthCredentialToEntry(AuthCredentialHolder holder) {
+    public AuthCredentialHolderInteface addNewAuthCredentialToEntry(AuthCredentialHolderInteface holder) {
         AuthCredential authCredential = AuthCredential.buildNew(holder);
 
         authCredential = authCredentialRepository.save(authCredential);
@@ -111,7 +122,7 @@ public class AuthCredentialService {
     }
 
     public Optional<AuthCredential> getLatestAuthCredentialForAccount(Account account){
-        List<AuthCredential> authCredentials = authCredentialRepository.findAllByParentEntity(account);
+        List<AuthCredential> authCredentials = authCredentialRepository.findAllByAccount(account);
         return authCredentials.stream()
                 .sorted(Comparator.comparing(AuthCredential::getCreatedOn))
                 .findFirst();
@@ -123,16 +134,17 @@ public class AuthCredentialService {
 
         if(optionalAuthCredential.isPresent()){
             AuthCredential authCredential = optionalAuthCredential.get();
-            AuthCredentialHolder holder = authCredential.getParentEntity();
+            Optional<AuthCredentialHolderInteface> parentEntity = authCredential.getParentEntity();
+            AuthCredentialHolderInteface holder = parentEntity.orElseGet(() -> null);
 
-            if(holder instanceof Account){
-                Account account = (Account) holder;
+            if(holder instanceof Account account){
                 return Optional.of(account);
             }else if(holder instanceof ServerEntry){
-                Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(holder.getId());
+                ServerEntry serverEntry = (ServerEntry) holder;
+                Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(serverEntry.getId());
 
                 if(optionalServerEntry.isPresent()){
-                    ServerEntry serverEntry = optionalServerEntry.get();
+                    serverEntry = optionalServerEntry.get();
                     Hibernate.initialize(serverEntry.getAccount());
                     return Optional.of(serverEntry.getAccount());
                 }else{
@@ -144,5 +156,23 @@ public class AuthCredentialService {
         }else{
             throw new RAObjectNotFoundException(AuthCredential.class, kid);
         }
+    }
+
+    @Override
+    protected AuthCredentialForm entityToForm(AuthCredential entity) {
+        return new AuthCredentialForm(entity);
+    }
+
+    @Override
+    protected AuthCredential formToEntity(AuthCredentialForm form, Object parent) throws RAObjectNotFoundException {
+        AuthCredential authCredential = AuthCredential.buildNew((AuthCredentialHolderInteface) parent);
+
+        return authCredential;
+    }
+
+    @Override
+    protected AuthCredential combine(AuthCredential original, AuthCredential updated) {
+        original.setValid(updated.getValid());
+        return original;
     }
 }

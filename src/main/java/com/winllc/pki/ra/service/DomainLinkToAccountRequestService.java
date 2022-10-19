@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.domain.Account;
+import com.winllc.pki.ra.beans.form.AccountRequestForm;
 import com.winllc.pki.ra.beans.form.DomainLinkRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.DomainLinkToAccountRequestForm;
 import com.winllc.pki.ra.beans.info.AccountInfo;
@@ -24,6 +25,10 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.sql.Timestamp;
@@ -34,7 +39,9 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/domain/request")
-public class DomainLinkToAccountRequestService extends AbstractService {
+public class DomainLinkToAccountRequestService extends
+        DataPagedService<DomainLinkToAccountRequest, DomainLinkToAccountRequestForm,
+                DomainLinkToAccountRequestRepository> {
 
     private static final Logger log = LogManager.getLogger(DomainLinkToAccountRequestService.class);
 
@@ -51,7 +58,7 @@ public class DomainLinkToAccountRequestService extends AbstractService {
                                              AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
                                              DomainPolicyRepository domainPolicyRepository,
                                              DomainLinkToAccountRequestValidator domainLinkToAccountRequestValidator, DomainLinkRequestDecisionValidator domainLinkRequestDecisionValidator) {
-        super(context);
+        super(context, DomainLinkToAccountRequest.class, requestRepository);
         this.domainRepository = domainRepository;
         this.requestRepository = requestRepository;
         this.accountRepository = accountRepository;
@@ -99,7 +106,7 @@ public class DomainLinkToAccountRequestService extends AbstractService {
 
     @GetMapping("/new/count")
     @ResponseStatus(HttpStatus.OK)
-    public Integer findByStatusCount(){
+    public Integer findByStatusCount() {
         return requestRepository.countAllByStatusEquals("new");
     }
 
@@ -277,7 +284,7 @@ public class DomainLinkToAccountRequestService extends AbstractService {
         List<Domain> domains = domainRepository.findAllByIdIn(request.getRequestedDomainIds());
 
         info.setRequestedBy(request.getRequestedBy());
-        if(request.getRequestedOn() != null) {
+        if (request.getRequestedOn() != null) {
             info.setRequestedOn(request.getRequestedOn().toString());
         }
 
@@ -294,4 +301,60 @@ public class DomainLinkToAccountRequestService extends AbstractService {
         return info;
     }
 
+    @Override
+    protected DomainLinkToAccountRequestForm entityToForm(DomainLinkToAccountRequest entity) {
+        return new DomainLinkToAccountRequestForm(entity);
+    }
+
+    @Override
+    protected DomainLinkToAccountRequest formToEntity(DomainLinkToAccountRequestForm form, Authentication authentication) throws Exception {
+        Account account = accountRepository.findById(form.getAccountId())
+                .orElseThrow(() -> new RAObjectNotFoundException(Account.class, form.getAccountId()));
+        DomainLinkToAccountRequest request = DomainLinkToAccountRequest.buildNew();
+        request.setRequestedBy(authentication.getName());
+        request.setRequestedOn(ZonedDateTime.now());
+
+        List<Long> domainIds = new LinkedList<>(form.getRequestedDomainIds());
+        domainIds.removeIf(Objects::isNull);
+        form.setRequestedDomainIds(domainIds);
+
+        Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
+        List<Domain> requestedDomains = domainRepository.findAllByIdIn(form.getRequestedDomainIds());
+        //Ensure user exists in the account
+        Optional<PocEntry> pocEntryOptional = pocEntryRepository
+                .findDistinctByEmailEqualsAndAccount(authentication.getName(), account);
+
+        //List<User> accountUsers = userRepository.findAllByAccountsContains(account);
+        if (pocEntryOptional.isPresent()) {
+            Set<Long> avaialableDomains = requestedDomains.stream()
+                    .map(r -> r.getId())
+                    .collect(Collectors.toSet());
+            request.setRequestedDomainIds(avaialableDomains);
+            request.setAccountId(account.getId());
+
+            request = requestRepository.save(request);
+
+            SystemActionRunner.build(context)
+                    .createNotificationForAccountPocs(Notification.buildNew()
+                            .addMessage("Domain Link to Account Requested"), account)
+                    .createAuditRecord(AuditRecordType.DOMAIN_LINK_TO_ACCOUNT_REQUEST_CREATED)
+                    .execute();
+
+            log.info("Created domain link request: " + request);
+            return request;
+        } else {
+            log.error("Requester not associated with account");
+            throw new NotAuthorizedException(authentication.getName(), "Link Account Create");
+        }
+    }
+
+    @Override
+    protected DomainLinkToAccountRequest combine(DomainLinkToAccountRequest original, DomainLinkToAccountRequest updated, Authentication authentication) throws Exception {
+        return null;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<DomainLinkToAccountRequest> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        return null;
+    }
 }

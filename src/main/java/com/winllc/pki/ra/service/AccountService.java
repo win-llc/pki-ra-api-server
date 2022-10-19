@@ -30,6 +30,10 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.sql.Timestamp;
@@ -40,7 +44,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/account")
-public class AccountService extends AbstractService {
+public class AccountService extends DataPagedService<Account, AccountUpdateForm, AccountRepository> {
 
     private static final Logger log = LogManager.getLogger(AccountService.class);
 
@@ -61,7 +65,7 @@ public class AccountService extends AbstractService {
                           AuthCredentialRepository authCredentialRepository, AuthCredentialService authCredentialService,
                           SecurityPolicyService securityPolicyService, AccountRestrictionService accountRestrictionService,
                           DomainLinkToAccountRequestRepository domainLinkToAccountRequestRepository) {
-        super(applicationContext);
+        super(applicationContext, Account.class, accountRepository);
         this.accountRepository = accountRepository;
         this.pocEntryRepository = pocEntryRepository;
         this.auditRecordService = auditRecordService;
@@ -90,54 +94,11 @@ public class AccountService extends AbstractService {
         //if account does not have at least one AuthCred, add one
         for (Account account : accountRepository.findAll()) {
             //Hibernate.initialize(account.getAuthCredentials());
-            List<AuthCredential> credentials = authCredentialRepository.findAllByParentEntity(account);
+            List<AuthCredential> credentials = authCredentialRepository.findAllByAccount(account);
             if (credentials.size() == 0) {
                 log.info("Account did not have an AuthCredential, adding: " + account.getProjectName());
                 authCredentialService.addNewAuthCredentialToEntry(account);
             }
-        }
-    }
-
-    @PostMapping("/create")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Long createNewAccount(@Valid @RequestBody AccountRequestForm form) throws Exception {
-        Optional<Account> optionalAccount = accountRepository.findDistinctByProjectName(form.getProjectName());
-        if(optionalAccount.isEmpty()) {
-            Account account = Account.buildNew(form.getProjectName());
-
-            account = accountRepository.save(account);
-
-
-            account = (Account) authCredentialService.addNewAuthCredentialToEntry(account);
-
-            if (StringUtils.isNotBlank(form.getSecurityPolicyServerProjectId())) {
-                SecurityPolicyServerProjectDetails projectDetails
-                        = securityPolicyService.getProjectDetails(form.getSecurityPolicyServerProjectId());
-
-                if (projectDetails != null) {
-                    account.setSecurityPolicyServerProjectId(projectDetails.getProjectId());
-                }
-            }
-
-            account = accountRepository.save(account);
-
-            //add admin user to pocs
-            if (StringUtils.isNotBlank(form.getAccountOwnerEmail())) {
-                PocFormEntry adminPoc = new PocFormEntry(form.getAccountOwnerEmail());
-                adminPoc.setOwner(true);
-
-                pocUpdater(account, Collections.singletonList(adminPoc));
-            }
-
-            accountRestrictionService.syncPolicyServerBackedAccountRestrictions(account, this);
-
-            SystemActionRunner.build(context)
-                    .createAuditRecord(AuditRecordType.ACCOUNT_ADDED, account)
-                    .execute();
-
-            return account.getId();
-        }else{
-            return optionalAccount.get().getId();
         }
     }
 
@@ -188,22 +149,7 @@ public class AccountService extends AbstractService {
         return accountInfoList;
     }
 
-    @PostMapping("/update")
-    @Transactional
-    @ResponseStatus(HttpStatus.OK)
-    public AccountInfo updateAccount(@Valid @RequestBody AccountUpdateForm form, Authentication authentication) throws Exception {
-        Optional<Account> optionalAccount = accountRepository.findById(form.getId());
-        if (optionalAccount.isPresent()) {
-            Account account = optionalAccount.get();
 
-            account.setSecurityPolicyServerProjectId(form.getSecurityPolicyProjectId());
-            account = accountRepository.save(account);
-
-            return buildAccountInfo(account, authentication);
-        } else {
-            throw new RAObjectNotFoundException(Account.class, form.getId());
-        }
-    }
 
     @GetMapping("/getAccountPocs/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -373,11 +319,31 @@ public class AccountService extends AbstractService {
         }
     }
 
+    public Long createNewAccount(AccountRequestForm form) throws Exception {
+        AccountUpdateForm accountUpdateForm = new AccountUpdateForm();
+        accountUpdateForm.setAccountOwnerEmail(form.getAccountOwnerEmail());
+        accountUpdateForm.setProjectName(form.getProjectName());
+        return add(accountUpdateForm, null).getId();
+    }
+
+    @Override
+    public AccountUpdateForm update(AccountUpdateForm entity, Authentication authentication) throws RAObjectNotFoundException {
+        Optional<Account> optionalAccount = accountRepository.findById(entity.getId());
+        if (optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+
+            account.setSecurityPolicyServerProjectId(entity.getSecurityPolicyProjectId());
+            account = accountRepository.save(account);
+
+            //return buildAccountInfo(account, authentication);
+            return entityToForm(account);
+        } else {
+            throw new RAObjectNotFoundException(Account.class, entity.getId());
+        }
+    }
 
 
-    @DeleteMapping("/delete/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void delete(@PathVariable Long id) {
+    public void delete(Long id, Authentication authentication) {
 
         Optional<Account> optionalAccount = accountRepository.findById(id);
 
@@ -395,6 +361,73 @@ public class AccountService extends AbstractService {
         } else {
             log.debug("Did not delete Account, ID not found: " + id);
         }
+    }
+
+
+    @Override
+    public AccountUpdateForm entityToForm(Account entity) {
+        return new AccountUpdateForm(entity);
+    }
+
+    @Override
+    protected Account formToEntity(AccountUpdateForm form, Authentication authentication) throws RAObjectNotFoundException {
+        Optional<Account> optionalAccount = accountRepository.findDistinctByProjectName(form.getProjectName());
+        if(optionalAccount.isEmpty()) {
+            Account account = Account.buildNew(form.getProjectName());
+
+            account = accountRepository.save(account);
+
+
+            account = (Account) authCredentialService.addNewAuthCredentialToEntry(account);
+
+            if (StringUtils.isNotBlank(form.getSecurityPolicyServerProjectId())) {
+                SecurityPolicyServerProjectDetails projectDetails
+                        = securityPolicyService.getProjectDetails(form.getSecurityPolicyServerProjectId());
+
+                if (projectDetails != null) {
+                    account.setSecurityPolicyServerProjectId(projectDetails.getProjectId());
+                }
+            }
+
+            account = accountRepository.save(account);
+
+            //add admin user to pocs
+            if (StringUtils.isNotBlank(form.getAccountOwnerEmail())) {
+                PocFormEntry adminPoc = new PocFormEntry(form.getAccountOwnerEmail());
+                adminPoc.setOwner(true);
+
+                pocUpdater(account, Collections.singletonList(adminPoc));
+            }
+
+            accountRestrictionService.syncPolicyServerBackedAccountRestrictions(account, this);
+
+            SystemActionRunner.build(context)
+                    .createAuditRecord(AuditRecordType.ACCOUNT_ADDED, account)
+                    .execute();
+
+            return account;
+        }else{
+            return optionalAccount.get();
+        }
+    }
+
+    @Override
+    protected Account combine(Account original, Account updated, Authentication authentication) {
+        return null;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<Account> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        String search = allRequestParams.get("search");
+        if (StringUtils.isNotBlank(search)) {
+            String finalText = search;
+            if (!search.contains("%")) {
+                finalText = "%" + search + "%";
+            }
+            Predicate fqdnLike = cb.like(root.get("projectName"), finalText);
+            return Collections.singletonList(fqdnLike);
+        }
+        return null;
     }
 
 /*
@@ -441,6 +474,8 @@ public class AccountService extends AbstractService {
 
         Set<PocFormEntry> userSet = new HashSet<>();
         userSet.addAll(userInfoFromPocs);
+
+
 
         AccountInfo accountInfo = new AccountInfo(account, true);
         accountInfo.setCanIssueDomains(domainInfoList);

@@ -139,7 +139,9 @@ class AccountRequestServiceTest extends BaseTest {
         form.setAccountRequestId(accountRequest.getId());
         form.setState("approve");
 
-        accountRequestService.accountRequestUpdate(form);
+        Authentication authentication = new TestingAuthenticationToken("test@test.com", "");
+
+        accountRequestService.accountRequestUpdate(form, authentication);
 
         accountRequest = accountRequestRepository.findAll().get(0);
         assertTrue("Account update check", accountRequest.getState().contentEquals("approve"));

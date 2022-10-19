@@ -6,6 +6,7 @@ import com.winllc.acme.common.constants.AccountRestrictionAction;
 import com.winllc.acme.common.constants.AccountRestrictionType;
 import com.winllc.acme.common.domain.Account;
 import com.winllc.acme.common.domain.AccountRestriction;
+import com.winllc.pki.ra.beans.form.AccountUpdateForm;
 import com.winllc.pki.ra.service.AccountService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,9 +45,9 @@ class AccountRestrictionRepositoryTest extends BaseTest {
 
     @Test
     void findAllByAccount() throws Exception {
-        AccountRequestForm form = new AccountRequestForm();
+        AccountUpdateForm form = new AccountUpdateForm();
         form.setProjectName("Test Project");
-        Long id = accountService.createNewAccount(form);
+        Long id = accountService.add(form, null).getId();
         Account account = accountRepository.findById(id).get();
 
         AccountRestriction accountRestriction = new AccountRestriction();

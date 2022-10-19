@@ -166,7 +166,7 @@ public class CertIssuanceTransaction extends CertTransaction {
      */
     private void processIssuedCertificate(X509Certificate certificate, RACertificateIssueRequest raCertificateIssueRequest,
                                           Account account)
-            throws CertificateEncodingException, RAException {
+            throws Exception {
 
         ServerEntry serverEntry;
         String subjectNoSpaces = certificate.getSubjectDN().getName().replace(", ", ",");
@@ -190,7 +190,7 @@ public class CertIssuanceTransaction extends CertTransaction {
             form.setAccountId(account.getId());
             form.setFqdn(fqdn);
             form.setAlternateDnsValues(raCertificateIssueRequest.getDnsNameList());
-            Long serverEntryId = serverEntryService.createServerEntry(form);
+            Long serverEntryId = serverEntryService.createServerEntry(form, null);
             serverEntry = serverEntryRepository.findById(serverEntryId).get();
         }
 

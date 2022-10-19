@@ -11,7 +11,9 @@ import com.winllc.acme.common.repository.DomainPolicyRepository;
 import com.winllc.acme.common.repository.DomainRepository;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Hibernate;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -20,14 +22,16 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/domainPolicy")
-public class DomainPolicyService {
+public class DomainPolicyService extends AccountDataTableService<DomainPolicy, DomainPolicyForm> {
 
     private final AccountRepository accountRepository;
     private final DomainRepository domainRepository;
     private final DomainPolicyRepository restrictionRepository;
 
-    public DomainPolicyService(AccountRepository accountRepository, DomainRepository domainRepository,
+    public DomainPolicyService(ApplicationContext context, AccountRepository accountRepository,
+                               DomainRepository domainRepository,
                                DomainPolicyRepository restrictionRepository) {
+        super(context, accountRepository, restrictionRepository);
         this.accountRepository = accountRepository;
         this.domainRepository = domainRepository;
         this.restrictionRepository = restrictionRepository;
@@ -196,4 +200,28 @@ public class DomainPolicyService {
         }
     }
 
+    @Override
+    protected DomainPolicyForm entityToForm(DomainPolicy entity) {
+        Hibernate.initialize(entity.getTargetDomain());
+        return new DomainPolicyForm(entity);
+    }
+
+    @Override
+    protected DomainPolicy formToEntity(DomainPolicyForm form) {
+        DomainPolicy policy = new DomainPolicy();
+        policy.setId(form.getId());
+        policy.setAcmeRequireDnsValidation(form.isAcmeRequireDnsValidation());
+        policy.setAcmeRequireHttpValidation(form.isAcmeRequireHttpValidation());
+        policy.setAllowIssuance(form.isAllowIssuance());
+
+        return policy;
+    }
+
+    @Override
+    protected DomainPolicy combine(DomainPolicy original, DomainPolicy updated) {
+        original.setAcmeRequireDnsValidation(updated.isAcmeRequireDnsValidation());
+        original.setAcmeRequireHttpValidation(updated.isAcmeRequireHttpValidation());
+        original.setAllowIssuance(updated.isAllowIssuance());
+        return original;
+    }
 }

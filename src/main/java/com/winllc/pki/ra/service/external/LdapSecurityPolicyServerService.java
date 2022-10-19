@@ -98,9 +98,9 @@ public class LdapSecurityPolicyServerService implements SecurityPolicyConnection
         Optional<String> optionalBaseDn = serverSettingsService.getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_BASEDN);
 
         AtomicInteger notAvailable = new AtomicInteger();
-        optionalUrl.ifPresentOrElse(u -> contextSource.setUrl(u), () -> notAvailable.getAndIncrement());
-        optionalUsername.ifPresentOrElse(u -> contextSource.setUserDn(u), () -> notAvailable.getAndIncrement());
-        optionalPassword.ifPresentOrElse(u -> contextSource.setPassword(u),() -> notAvailable.getAndIncrement());
+        optionalUrl.ifPresentOrElse(u -> contextSource.setUrl(u), notAvailable::getAndIncrement);
+        optionalUsername.ifPresentOrElse(u -> contextSource.setUserDn(u), notAvailable::getAndIncrement);
+        optionalPassword.ifPresentOrElse(u -> contextSource.setPassword(u), notAvailable::getAndIncrement);
         optionalBaseDn.ifPresent(u -> contextSource.setBase(u));
 
         if(notAvailable.get() == 0) {

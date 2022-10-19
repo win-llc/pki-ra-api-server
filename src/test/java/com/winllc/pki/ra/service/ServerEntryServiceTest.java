@@ -103,7 +103,7 @@ class ServerEntryServiceTest extends BaseTest {
         serverEntryForm.setFqdn("test2.winllc-dev.com");
         serverEntryForm.setAccountId(account.getId());
 
-        serverEntryService.createServerEntry(serverEntryForm);
+        serverEntryService.createServerEntry(serverEntryForm, null);
 
         Optional<ServerEntry> distinctByFqdnEquals = serverEntryRepository.findDistinctByFqdnEquals("test2.winllc-dev.com");
         assertTrue(distinctByFqdnEquals.isPresent());
@@ -119,13 +119,13 @@ class ServerEntryServiceTest extends BaseTest {
 
     @Test
     @Transactional
-    void getLatestAuthCredential() throws RAObjectNotFoundException {
+    void getLatestAuthCredential() throws Exception {
         Account account = accountRepository.findAll().get(0);
         ServerEntryForm serverEntryForm = new ServerEntryForm();
         serverEntryForm.setFqdn("test2.winllc-dev.com");
         serverEntryForm.setAccountId(account.getId());
 
-        Long serverId = serverEntryService.createServerEntry(serverEntryForm);
+        Long serverId = serverEntryService.createServerEntry(serverEntryForm, null);
 
         AuthCredential latestAuthCredential = serverEntryService.getLatestAuthCredential(serverId);
         assertTrue(latestAuthCredential.getMacKey().length() > 0);
@@ -141,7 +141,7 @@ class ServerEntryServiceTest extends BaseTest {
 
         form.setAlternateDnsValues(Collections.singletonList("bad dns"));
 
-        serverEntryService.updateServerEntry(form);
+        serverEntryService.update(form, null);
 
         serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
         assertEquals(1, serverEntry.getAlternateDnsValues().size());
@@ -183,7 +183,7 @@ class ServerEntryServiceTest extends BaseTest {
         ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
         assertNotNull(serverEntry);
 
-        serverEntryService.deleteServerEntry(serverEntry.getId());
+        serverEntryService.delete(serverEntry.getId(), null);
 
         assertEquals(0, serverEntryRepository.findAll().size());
     }

@@ -3,13 +3,17 @@ package com.winllc.pki.ra.beans.info;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.winllc.acme.common.domain.BaseEntity;
 import com.winllc.acme.common.domain.UniqueEntity;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.UUID;
 
+@Getter
+@Setter
 public abstract class InfoObject<T extends BaseEntity> {
 
-    private Class clazz;
+    private Class<T> clazz;
     private Long id;
     private String objectUuid;
     private String objectClass;
@@ -35,7 +39,7 @@ public abstract class InfoObject<T extends BaseEntity> {
     }
 
     @JsonIgnore
-    public Class getFormObjectType(){
+    public Class<T> getFormObjectType(){
         return clazz;
     }
 
@@ -57,31 +61,5 @@ public abstract class InfoObject<T extends BaseEntity> {
         return UUID.fromString(objectUuid);
     }
 
-    public String getObjectClass() {
-        return objectClass;
-    }
 
-    public void setObjectClass(String objectClass) {
-        this.objectClass = objectClass;
-    }
-
-    public String getObjectUuid() {
-        return objectUuid;
-    }
-
-    public void setObjectUuid(String objectUuid) {
-        this.objectUuid = objectUuid;
-    }
-
-    protected void setClazz(Class clazz) {
-        this.clazz = clazz;
-    }
-
-    public String getCreatedOn() {
-        return createdOn;
-    }
-
-    public void setCreatedOn(String createdOn) {
-        this.createdOn = createdOn;
-    }
 }

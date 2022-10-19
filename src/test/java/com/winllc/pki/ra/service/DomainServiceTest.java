@@ -69,20 +69,20 @@ class DomainServiceTest extends BaseTest {
     @Test
     @Transactional
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
-    void getDomainById() throws RAObjectNotFoundException {
+    void getDomainById() throws Exception {
         Domain domain = domainRepository.findAll().get(0);
         DomainInfo domainById = domainService.getDomainById(domain.getId());
         assertNotNull(domainById);
 
         DomainForm form = new DomainForm("test.com");
 
-        Long domainId = domainService.createDomain(form);
+        Long domainId = domainService.createDomain(form, null);
         assertTrue(domainId > 0);
 
         DomainForm withParentForm = new DomainForm("sub.test.com");
         withParentForm.setParentDomainId(domainId);
 
-        Long subDomainId = domainService.createDomain(withParentForm);
+        Long subDomainId = domainService.createDomain(withParentForm, null);
         DomainInfo subDomainInfo = domainService.getDomainById(subDomainId);
 
         assertEquals("test.com", subDomainInfo.getParentDomainInfo().getBase());
@@ -96,18 +96,18 @@ class DomainServiceTest extends BaseTest {
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
     void createDomain() throws Exception {
         DomainForm parentForm = new DomainForm("com");
-        Long parentId = domainService.createDomain(parentForm);
+        Long parentId = domainService.createDomain(parentForm, null);
 
         DomainForm form = new DomainForm("test");
         form.setParentDomainId(parentId);
 
-        Long domainId = domainService.createDomain(form);
+        Long domainId = domainService.createDomain(form, null);
         assertTrue(domainId > 0);
 
         DomainForm withParentForm = new DomainForm("sub");
         withParentForm.setParentDomainId(domainId);
 
-        Long subDomainId = domainService.createDomain(withParentForm);
+        Long subDomainId = domainService.createDomain(withParentForm, null);
         Domain checkSubDomain = domainRepository.findById(subDomainId).get();
 
         assertEquals("sub.test.com", checkSubDomain.getFullDomainName());
@@ -127,7 +127,7 @@ class DomainServiceTest extends BaseTest {
     void updateDomain() throws Exception {
         Domain domain = domainRepository.findAll().get(0);
         DomainForm form = new DomainForm(domain);
-        Domain domain1 = domainService.updateDomain(form);
+        DomainForm domain1 = domainService.update(form, null);
         assertNotNull(domain1);
 
         form.setParentDomainId(0L);
@@ -141,11 +141,11 @@ class DomainServiceTest extends BaseTest {
 
     @Test
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
-    void deleteDomain() {
+    void deleteDomain() throws RAObjectNotFoundException {
         Domain domain = domainRepository.findAll().get(0);
         assertNotNull(domain);
 
-        domainService.deleteDomain(domain.getId());
+        domainService.delete(domain.getId(), null);
 
         assertEquals(0, domainRepository.findAll().size());
     }

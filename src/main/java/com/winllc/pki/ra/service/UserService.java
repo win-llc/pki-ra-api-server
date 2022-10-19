@@ -96,7 +96,9 @@ public class UserService {
         List<PocEntry> allByEmailEquals = pocEntryRepository.findAllByEmailEquals(authentication.getName());
         if(CollectionUtils.isNotEmpty(allByEmailEquals)){
             PocEntry pocEntry = allByEmailEquals.get(0);
-            info.setAddedOn(pocEntry.getAddedOn().toString());
+            if(pocEntry.getAddedOn() != null) {
+                info.setAddedOn(pocEntry.getAddedOn().toString());
+            }
         }
 
         info.setRoles(authentication.getAuthorities().stream().map(a -> a.getAuthority()).collect(Collectors.toList()));

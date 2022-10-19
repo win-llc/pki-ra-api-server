@@ -9,6 +9,7 @@ import com.winllc.acme.common.ra.RACertificateRevokeRequest;
 import com.winllc.acme.common.repository.CertAuthorityConnectionInfoRepository;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
+import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.info.CertAuthorityInfo;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
@@ -24,12 +25,17 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.io.IOException;
@@ -44,7 +50,9 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/ca")
 @Transactional
-public class CertAuthorityConnectionService extends AbstractService {
+public class CertAuthorityConnectionService extends
+        DataPagedService<CertAuthorityConnectionInfo, CertAuthorityConnectionInfoForm,
+                CertAuthorityConnectionInfoRepository> {
 
     private static final Logger log = LogManager.getLogger(CertAuthorityConnectionService.class);
 
@@ -62,7 +70,7 @@ public class CertAuthorityConnectionService extends AbstractService {
                                           CertAuthorityConnectionInfoValidator certAuthorityConnectionInfoValidator,
                                           AuthCredentialService authCredentialService, RevocationRequestService revocationRequestService,
                                           CertificateRequestRepository certificateRequestRepository) {
-        super(context);
+        super(context, CertAuthorityConnectionInfo.class, repository);
         this.repository = repository;
         this.propertyRepository = propertyRepository;
         this.certAuthorityStore = certAuthorityStore;
@@ -78,7 +86,6 @@ public class CertAuthorityConnectionService extends AbstractService {
     }
 
 
-
     @GetMapping("/view/{name}")
     public CertAuthorityInfo getCertAuthorityInfo(@PathVariable String name) throws Exception {
         CertAuthority ca = certAuthorityStore.getLoadedCertAuthority(name);
@@ -86,11 +93,11 @@ public class CertAuthorityConnectionService extends AbstractService {
     }
 
     @GetMapping("/all/info")
-    public List<CertAuthorityInfo> getAllCertAuthorityInfo(){
+    public List<CertAuthorityInfo> getAllCertAuthorityInfo() {
         List<CertAuthority> allCertAuthorities = certAuthorityStore.getAllCertAuthorities();
 
         List<CertAuthorityInfo> infoList = new ArrayList<>();
-        for(CertAuthority ca : allCertAuthorities){
+        for (CertAuthority ca : allCertAuthorities) {
             try {
                 infoList.add(buildInfo(ca));
             } catch (Exception e) {
@@ -136,13 +143,13 @@ public class CertAuthorityConnectionService extends AbstractService {
         //Create the required settings for the connection, will be filled in on edit screen
         List<ConnectionProperty> propertiesForClass = getPropertiesForClass(Class.forName(connectionInfo.getType()));
         Set<CertAuthorityConnectionProperty> props = new HashSet<>();
-        for(ConnectionProperty connectionProperty : propertiesForClass){
+        for (ConnectionProperty connectionProperty : propertiesForClass) {
             CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
             prop.setName(connectionProperty.getName());
 
-            if(propMap.containsKey(connectionProperty.getName())){
+            if (propMap.containsKey(connectionProperty.getName())) {
                 prop.setValue(propMap.get(connectionProperty.getName()).getValue());
-            }else {
+            } else {
                 prop.setValue("");
             }
 
@@ -169,8 +176,8 @@ public class CertAuthorityConnectionService extends AbstractService {
             final CertAuthorityConnectionInfo info = optionalInfo.get();
 
             Set<CertAuthorityConnectionProperty> props = new HashSet<>();
-            if(!CollectionUtils.isEmpty(form.getProperties())){
-                for(CertAuthorityConnectionProperty prop : form.getProperties()){
+            if (!CollectionUtils.isEmpty(form.getProperties())) {
+                for (CertAuthorityConnectionProperty prop : form.getProperties()) {
                     prop.setCertAuthorityConnectionInfo(info);
                     prop = propertyRepository.save(prop);
                     props.add(prop);
@@ -186,7 +193,7 @@ public class CertAuthorityConnectionService extends AbstractService {
             certAuthorityStore.loadCertAuthority(info2);
 
             return buildForm(info2);
-        }else{
+        } else {
             throw new RAObjectNotFoundException(CertAuthorityConnectionInfo.class, form.getId());
         }
 
@@ -218,7 +225,7 @@ public class CertAuthorityConnectionService extends AbstractService {
         }
     }
 
-    private CertAuthorityConnectionInfoForm buildForm(CertAuthorityConnectionInfo info){
+    private CertAuthorityConnectionInfoForm buildForm(CertAuthorityConnectionInfo info) {
         Hibernate.initialize(info.getProperties());
         CertAuthority ca = certAuthorityStore.getLoadedCertAuthority(info.getName());
         return new CertAuthorityConnectionInfoForm(info, ca);
@@ -232,7 +239,7 @@ public class CertAuthorityConnectionService extends AbstractService {
     }
 
     @GetMapping("/info/options")
-    public Map<Long, String> optionsInfo(){
+    public Map<Long, String> optionsInfo() {
         return repository.findAll().stream()
                 .collect(Collectors.toMap(d -> d.getId(), d -> d.getName()));
     }
@@ -250,7 +257,7 @@ public class CertAuthorityConnectionService extends AbstractService {
         return getCaOptions();
     }
 
-    private List<String> getCaOptions(){
+    private List<String> getCaOptions() {
         //todo externalize
         String pkg = "com.winllc.pki.plugins";
         try (ScanResult scanResult = new ClassGraph().enableAllInfo().acceptPackages(pkg)
@@ -280,7 +287,7 @@ public class CertAuthorityConnectionService extends AbstractService {
         Method m = caClass.getMethod("getRequiredProperties");
         Object result = m.invoke(null);
 
-        if(result instanceof List){
+        if (result instanceof List) {
             log.info("Found a list");
             return (List<ConnectionProperty>) result;
         }
@@ -293,11 +300,12 @@ public class CertAuthorityConnectionService extends AbstractService {
     @ResponseStatus(HttpStatus.OK)
     public String issueCertificate(@Valid @RequestBody RACertificateIssueRequest raCertificateIssueRequest) throws Exception {
 
-        if(raCertificateIssueRequest.getDnsNameList().size() == 0) throw new IllegalArgumentException("Must include at least one DNS name");
+        if (raCertificateIssueRequest.getDnsNameList().size() == 0)
+            throw new IllegalArgumentException("Must include at least one DNS name");
 
         CertAuthority certAuthority = certAuthorityStore.getLoadedCertAuthority(raCertificateIssueRequest.getCertAuthorityName());
 
-        if(certAuthority == null){
+        if (certAuthority == null) {
             throw new RAObjectNotFoundException(CertAuthority.class, raCertificateIssueRequest.getCertAuthorityName());
         }
 
@@ -306,11 +314,11 @@ public class CertAuthorityConnectionService extends AbstractService {
         X509Certificate cert;
 
         Optional<Account> optionalAccount = authCredentialService.getAssociatedAccount(raCertificateIssueRequest.getAccountKid());
-        if(optionalAccount.isPresent()) {
+        if (optionalAccount.isPresent()) {
             Account account = optionalAccount.get();
 
             cert = certIssuanceTransaction.processIssueCertificate(raCertificateIssueRequest, account);
-        }else{
+        } else {
             cert = certIssuanceTransaction.processIssueCertificate(raCertificateIssueRequest);
         }
 
@@ -324,7 +332,7 @@ public class CertAuthorityConnectionService extends AbstractService {
         if (certAuthority != null) {
 
             String serial = revokeRequest.getSerial();
-            if(StringUtils.isEmpty(serial)){
+            if (StringUtils.isEmpty(serial)) {
                 serial = getSerialFromRequest(revokeRequest);
             }
 
@@ -356,7 +364,7 @@ public class CertAuthorityConnectionService extends AbstractService {
             //response.getCertIssuanceValidationRules().add();
 
             return response;
-        }else{
+        } else {
             throw new RAObjectNotFoundException(CertAuthority.class, connectionName);
         }
     }
@@ -376,10 +384,10 @@ public class CertAuthorityConnectionService extends AbstractService {
                 details.setSerial(serial);
 
                 return details;
-            }else{
-                throw new RAException("Could not find certificate with serial: "+serial);
+            } else {
+                throw new RAException("Could not find certificate with serial: " + serial);
             }
-        }else{
+        } else {
             throw new RAObjectNotFoundException(CertAuthority.class, connectionName);
         }
     }
@@ -457,17 +465,92 @@ public class CertAuthorityConnectionService extends AbstractService {
 
     private String getSerialFromRequest(RACertificateRevokeRequest revokeRequest) throws RAException, CertificateException, IOException {
         Optional<CertificateRequest> optionalCertificateRequest = certificateRequestRepository.findById(revokeRequest.getRequestId());
-        if(optionalCertificateRequest.isPresent()){
+        if (optionalCertificateRequest.isPresent()) {
             CertificateRequest certificateRequest = optionalCertificateRequest.get();
-            if(StringUtils.isNotBlank(certificateRequest.getIssuedCertificate())){
+            if (StringUtils.isNotBlank(certificateRequest.getIssuedCertificate())) {
                 X509Certificate x509Certificate = CertUtil.base64ToCert(certificateRequest.getIssuedCertificate());
                 return x509Certificate.getSerialNumber().toString();
-            }else{
+            } else {
                 throw new RAException("No certificate in request, most likely not issued yet");
             }
-        }else{
+        } else {
             throw new RAObjectNotFoundException(CertificateRequest.class, revokeRequest.getRequestId());
         }
     }
 
+    @Override
+    protected CertAuthorityConnectionInfoForm entityToForm(CertAuthorityConnectionInfo entity) {
+        CertAuthority loadedCertAuthority = certAuthorityStore.getLoadedCertAuthority(entity.getName());
+        return new CertAuthorityConnectionInfoForm(entity, loadedCertAuthority);
+    }
+
+    @Override
+    protected CertAuthorityConnectionInfo formToEntity(CertAuthorityConnectionInfoForm connectionInfo,
+                                                       Authentication authentication)
+            throws Exception {
+        CertAuthorityConnectionInfo caConnection = new CertAuthorityConnectionInfo();
+        caConnection.setName(connectionInfo.getName());
+        caConnection.setCertAuthorityClassName(connectionInfo.getType());
+        caConnection.setBaseUrl(connectionInfo.getBaseUrl());
+        caConnection.setAuthKeyAlias(connectionInfo.getAuthKeyAlias());
+        caConnection.setTrustChainBase64(connectionInfo.getTrustChainBase64());
+        caConnection = repository.save(caConnection);
+
+        certAuthorityStore.loadCertAuthority(caConnection);
+
+        Map<String, CertAuthorityConnectionProperty> propMap = connectionInfo.getProperties().stream()
+                .collect(Collectors.toMap(p -> p.getName(), p -> p));
+
+        //Create the required settings for the connection, will be filled in on edit screen
+        List<ConnectionProperty> propertiesForClass = getPropertiesForClass(Class.forName(connectionInfo.getType()));
+        Set<CertAuthorityConnectionProperty> props = new HashSet<>();
+        for (ConnectionProperty connectionProperty : propertiesForClass) {
+            CertAuthorityConnectionProperty prop = new CertAuthorityConnectionProperty();
+            prop.setName(connectionProperty.getName());
+
+            if (propMap.containsKey(connectionProperty.getName())) {
+                prop.setValue(propMap.get(connectionProperty.getName()).getValue());
+            } else {
+                prop.setValue("");
+            }
+
+            prop.setCertAuthorityConnectionInfo(caConnection);
+            prop = propertyRepository.save(prop);
+            props.add(prop);
+        }
+
+        caConnection.setProperties(props);
+        caConnection = repository.save(caConnection);
+        certAuthorityStore.loadCertAuthority(caConnection);
+        return caConnection;
+    }
+
+    @Override
+    protected CertAuthorityConnectionInfo combine(CertAuthorityConnectionInfo original,
+                                                  CertAuthorityConnectionInfo updated, Authentication authentication) {
+
+        Set<CertAuthorityConnectionProperty> props = new HashSet<>();
+        if (!CollectionUtils.isEmpty(updated.getProperties())) {
+            for (CertAuthorityConnectionProperty prop : updated.getProperties()) {
+                prop.setCertAuthorityConnectionInfo(original);
+                prop = propertyRepository.save(prop);
+                props.add(prop);
+            }
+        }
+        original.setProperties(props);
+        original.setBaseUrl(updated.getBaseUrl());
+        original.setAuthKeyAlias(updated.getAuthKeyAlias());
+        original.setTrustChainBase64(updated.getTrustChainBase64());
+
+        original = repository.save(original);
+
+        certAuthorityStore.loadCertAuthority(original);
+
+        return original;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<CertAuthorityConnectionInfo> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        return null;
+    }
 }

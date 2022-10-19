@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.pki.ra.beans.form.AccountUpdateForm;
 import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.acme.common.domain.Account;
@@ -13,35 +14,43 @@ import com.winllc.pki.ra.service.validators.DomainValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/domain")
-public class DomainService {
+public class DomainService extends DataPagedService<Domain, DomainForm, DomainRepository> {
 
     private static final Logger log = LogManager.getLogger(DomainService.class);
 
     private final DomainRepository domainRepository;
     private final DomainValidator domainValidator;
-    @Autowired
-    private AccountRepository accountRepository;
-    @Autowired
-    private DomainPolicyRepository domainPolicyRepository;
+    private final AccountRepository accountRepository;
+    private final DomainPolicyRepository domainPolicyRepository;
 
-    public DomainService(DomainRepository domainRepository, DomainValidator domainValidator) {
+    public DomainService(ApplicationContext applicationContext,
+                         DomainRepository domainRepository, DomainValidator domainValidator, AccountRepository accountRepository, DomainPolicyRepository domainPolicyRepository) {
+        super(applicationContext, Domain.class, domainRepository);
         this.domainRepository = domainRepository;
         this.domainValidator = domainValidator;
+        this.accountRepository = accountRepository;
+        this.domainPolicyRepository = domainPolicyRepository;
     }
 
     @InitBinder("domainForm")
@@ -78,7 +87,7 @@ public class DomainService {
             List<DomainPolicy> domainPolicies = domainPolicyRepository.findAllByAccount(account);
 
             return all.stream()
-                    .filter(d -> domainPolicies.stream().noneMatch(dp -> dp.getTargetDomain().getId() == d.getId()))
+                    .filter(d -> domainPolicies.stream().noneMatch(dp -> Objects.equals(dp.getTargetDomain().getId(), d.getId())))
                     .map(d -> new DomainInfo(d, false))
                     .collect(Collectors.toList());
         }else{
@@ -137,7 +146,21 @@ public class DomainService {
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
-    public Long createDomain(@Valid @RequestBody DomainForm form) throws RAObjectNotFoundException {
+    public Long createDomain(@Valid @RequestBody DomainForm form, Authentication authentication)
+            throws Exception {
+        DomainForm added = add(form, authentication);
+
+        return added.getId();
+    }
+
+
+    @Override
+    public DomainForm entityToForm(Domain entity) {
+        return new DomainForm(entity);
+    }
+
+    @Override
+    protected Domain formToEntity(DomainForm form, Authentication authentication) throws RAObjectNotFoundException {
         Domain domain = new Domain();
         domain.setBase(form.getBase());
 
@@ -162,30 +185,17 @@ public class DomainService {
         }
 
         domain = domainRepository.save(domain);
-
-        return domain.getId();
+        return domain;
     }
 
-    @PreAuthorize("hasPermission(#form, 'update_domain')")
-    @PostMapping("/update")
-    @ResponseStatus(HttpStatus.OK)
-    public Domain updateDomain(@Valid @RequestBody DomainForm form) throws RAObjectNotFoundException{
-        Optional<Domain> optionalDomain = domainRepository.findById(form.getId());
-        if(optionalDomain.isPresent()){
-            Domain existing = optionalDomain.get();
-            existing.setBase(form.getBase());
-            existing = domainRepository.save(existing);
-            return existing;
-        }else{
-            throw new RAObjectNotFoundException(form);
-        }
+    @Override
+    protected Domain combine(Domain original, Domain updated, Authentication authentication) {
+        original.setBase(updated.getBase());
+        return original;
     }
 
-    @PreAuthorize("hasPermission(#id, 'com.winllc.acme.common.domain.Domain', 'delete_domain')")
-    @DeleteMapping("/delete/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void deleteDomain(@PathVariable Long id){
-        domainRepository.deleteById(id);
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<Domain> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        return null;
     }
-
 }

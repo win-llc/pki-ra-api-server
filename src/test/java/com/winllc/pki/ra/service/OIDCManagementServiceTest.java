@@ -50,7 +50,7 @@ class OIDCManagementServiceTest extends BaseTest {
 
     @BeforeEach
     @Transactional
-    void before() throws RAObjectNotFoundException {
+    void before() throws Exception {
         Account account = Account.buildNew("Test Project 3");
         account.setKeyIdentifier("kidtest1");
         //account.setMacKey("testmac1");
@@ -72,7 +72,7 @@ class OIDCManagementServiceTest extends BaseTest {
         form.setAccountId(account.getId());
         form.setFqdn("test2.winllc-dev.com");
 
-        Long savedId = serverEntryService.createServerEntry(form);
+        Long savedId = serverEntryService.createServerEntry(form, null);
         ServerEntry serverEntry = serverEntryRepository.findById(savedId).get();
 
         account.getServerEntries().add(serverEntry);

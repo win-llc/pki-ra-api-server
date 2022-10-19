@@ -1,12 +1,20 @@
 package com.winllc.pki.ra.beans.form;
 
 import com.winllc.acme.common.domain.AccountRequest;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
+@Getter
+@Setter
 public class AccountRequestForm extends ValidForm<AccountRequest> {
 
+
+    @NotEmpty(message = "State must not be empty")
+    private String state;
     @NotEmpty
     @Email(message = "Email not valid")
     private String accountOwnerEmail;
@@ -14,29 +22,16 @@ public class AccountRequestForm extends ValidForm<AccountRequest> {
     private String projectName;
     private String securityPolicyServerProjectId;
 
-    public String getAccountOwnerEmail() {
-        return accountOwnerEmail;
+    public AccountRequestForm() {}
+
+    public AccountRequestForm(AccountRequest entity) {
+        super(entity);
+        this.state = entity.getState();
+        this.accountOwnerEmail = entity.getAccountOwnerEmail();
+        this.projectName = entity.getProjectName();
+        this.securityPolicyServerProjectId = entity.getSecurityPolicyServerProjectId();
     }
 
-    public void setAccountOwnerEmail(String accountOwnerEmail) {
-        this.accountOwnerEmail = accountOwnerEmail;
-    }
-
-    public String getProjectName() {
-        return projectName;
-    }
-
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
-    }
-
-    public String getSecurityPolicyServerProjectId() {
-        return securityPolicyServerProjectId;
-    }
-
-    public void setSecurityPolicyServerProjectId(String securityPolicyServerProjectId) {
-        this.securityPolicyServerProjectId = securityPolicyServerProjectId;
-    }
 
     @Override
     protected void processIsValid() {

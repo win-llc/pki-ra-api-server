@@ -19,6 +19,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -31,6 +32,7 @@ import javax.validation.Valid;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
@@ -40,7 +42,8 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/accountRestriction")
-public class AccountRestrictionService extends AbstractService {
+public class AccountRestrictionService extends
+        AccountDataTableService<AccountRestriction, AccountRestrictionForm> {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
@@ -65,7 +68,7 @@ public class AccountRestrictionService extends AbstractService {
                                      AccountRestrictionRepository accountRestrictionRepository,
                                      AccountRestrictionValidator accountRestrictionValidator,
                                      ApplicationContext applicationContext) {
-        super(applicationContext);
+        super(applicationContext, accountRepository, accountRestrictionRepository);
         this.accountRepository = accountRepository;
         this.accountRestrictionRepository = accountRestrictionRepository;
         this.accountRestrictionValidator = accountRestrictionValidator;
@@ -217,7 +220,7 @@ public class AccountRestrictionService extends AbstractService {
         Notification notification = Notification.buildNew();
         notification.setMessage("Account Restriction Task");
 
-        SystemActionRunner runner = SystemActionRunner.build(this.context);
+        SystemActionRunner runner = SystemActionRunner.build(context);
         runner.createNotification(notification)
                 .markEntityAsTask(accountRestriction.getDueBy().toLocalDateTime().atZone(ZoneId.systemDefault()));
 
@@ -326,5 +329,29 @@ public class AccountRestrictionService extends AbstractService {
         }else{
             throw new RAObjectNotFoundException(form);
         }
+    }
+
+    @Override
+    protected AccountRestrictionForm entityToForm(AccountRestriction entity) {
+        return new AccountRestrictionForm(entity);
+    }
+
+    @Override
+    protected AccountRestriction formToEntity(AccountRestrictionForm form) throws RAObjectNotFoundException {
+        Account account = accountRepository.findById(form.getAccountId()).orElseThrow(()
+                -> new RAObjectNotFoundException(Account.class, form.getAccountId()));
+        AccountRestriction accountRestriction = new AccountRestriction();
+        accountRestriction.setType(AccountRestrictionType.valueOf(form.getType()));
+        accountRestriction.setAccount(account);
+        accountRestriction.setAction(AccountRestrictionAction.valueOf(form.getAction()));
+        accountRestriction.setDueBy(ZonedDateTime.from(AccountRestrictionForm.formatter.parse(form.getDueBy())));
+        accountRestriction.setCompleted(form.isCompleted());
+        return accountRestriction;
+    }
+
+    @Override
+    protected AccountRestriction combine(AccountRestriction original, AccountRestriction updated) {
+        //todo
+        return null;
     }
 }

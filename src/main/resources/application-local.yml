@@ -10,14 +10,14 @@ plugins:
   load-from-directory:
 
 app-keystore:
-  location: C:\\Users\\jrmints\\IdeaProjects\\winllc-ra-server\\src\\main\\resources\\dogtag-ca-admin-with-chain.pfx
+  location: C:\Users\jrmints\IdeaProjects\winllc-ra-server\src\main\resources\dogtag-ca-admin-with-chain.pfx
   password: P@ssW0rd
   type: PKCS12
 win-ra:
-  acme-server-url: http://192.168.1.3:8181
-  acme-server-public-url: http://192.168.1.3:8181
+  acme-server-url: http://winra-winllc-dev.com:8182
+  acme-server-public-url: https://winra.winllc-dev.com
   acme-server-name: winllc
-  est-server-url: https://192.168.1.3:8888
+  est-server-url: https://localhost:8383
 management:
   health:
     ldap:
@@ -30,15 +30,20 @@ management:
     health:
       show-details: always
 spring:
+  main:
+    allow-circular-references: true
   datasource:
-    url: jdbc:mysql://database.winllc-dev.com/winpkira-dev
-    driver-class-name: com.mysql.jdbc.Driver
-    username: appuser
-    password: P@ssW0rd
+    #url: jdbc:postgresql://localhost/winpkira-dev
+    url: jdbc:postgresql://winra.winllc-dev.com/winpkira
+    driver-class-name: org.postgresql.Driver
+    username: admin
+    password: password
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
   jackson:
     date-format: com.fasterxml.jackson.databind.util.StdDateFormat
     default-property-inclusion: non_null
@@ -46,7 +51,10 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://keycloak.winllc-dev.com/auth/realms/dev
+          issuer-uri: https://winra.winllc-dev.com/auth/realms/dev
+  elasticsearch:
+    uris: http://winra.winllc-dev.com:9200
+
 rest:
   security:
     cors:
@@ -60,26 +68,23 @@ logging:
       springframework:
         security: debug
 server:
-  error:
-    include-stacktrace: never
-  port: 8080
-  ssl:
-    trust-store: classpath:trust.jks
-    enabled: false
-  servlet:
-    context-path: /
+  #error:
+  #  include-stacktrace: never
+  port: 8484
+  #ssl:
+  #  trust-store: /ssl/trust.p12
+  #  trust-store-type: PKCS12
+  #  trust-store-password: password
+  #servlet:
+  #  context-path: /
   #address: 192.168.1.13
-  base-url: http://192.168.1.3:8080
-  base-api-url: http://192.168.1.3:8080
-
-elasticsearch:
-  url: winra.winllc-dev.com:9200
-
+  base-url: https://winra.winllc-dev.com/ui
+  base-api-url: https://winra.winllc-dev.com/api
 keycloak-admin-interface:
-  server-base-url: 'https://keycloak.winllc-dev.com/auth'
+  server-base-url: 'https://winra.winllc-dev.com/auth'
   realm: dev
-  client-id: win-pki-ra-client
-  client-secret: 9a8bcf15-2492-4889-8990-d8373a2cda49
+  client-id: pki-ra-client-public
+  client-secret: 748eab87-a260-468c-b67e-2540431655d6
   client-username: win-ra-admin
   client-password: P@ssW0rd
   custom-client-scope: pki-app

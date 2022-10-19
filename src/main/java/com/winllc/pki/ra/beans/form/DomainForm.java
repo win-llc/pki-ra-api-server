@@ -2,20 +2,26 @@ package com.winllc.pki.ra.beans.form;
 
 import com.winllc.acme.common.domain.Domain;
 import com.winllc.pki.ra.util.FormValidationUtil;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.validation.constraints.NotEmpty;
 import java.util.regex.Pattern;
 
+@Getter
+@Setter
 public class DomainForm extends ValidForm<Domain> {
 
     @NotEmpty
     private String base;
+    private String fullDomainName;
     private Long parentDomainId;
     private String parentDomainBase;
 
     public DomainForm(Domain entity) {
         super(entity);
         this.base = entity.getBase();
+        this.fullDomainName = entity.getFullDomainName();
 
         if(entity.getParentDomain() != null){
             this.parentDomainId = entity.getParentDomain().getId();
@@ -36,27 +42,5 @@ public class DomainForm extends ValidForm<Domain> {
         }
     }
 
-    public String getBase() {
-        return base;
-    }
 
-    public void setBase(String base) {
-        this.base = base;
-    }
-
-    public Long getParentDomainId() {
-        return parentDomainId;
-    }
-
-    public void setParentDomainId(Long parentDomainId) {
-        this.parentDomainId = parentDomainId;
-    }
-
-    public String getParentDomainBase() {
-        return parentDomainBase;
-    }
-
-    public void setParentDomainBase(String parentDomainBase) {
-        this.parentDomainBase = parentDomainBase;
-    }
 }

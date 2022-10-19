@@ -60,8 +60,9 @@ public class ValidationService {
         Optional<AuthCredential> optionalAuthCredential = authCredentialRepository.findDistinctByKeyIdentifier(kid);
         if(optionalAuthCredential.isPresent()){
             AuthCredential authCredential = optionalAuthCredential.get();
-            Hibernate.initialize(authCredential.getParentEntity());
-            AuthCredentialHolder parentEntity = authCredential.getParentEntity();
+            //Hibernate.initialize(authCredential.getParentEntity());
+            Optional<AuthCredentialHolderInteface> parentEntityOptional = authCredential.getParentEntity();
+            AuthCredentialHolderInteface parentEntity = parentEntityOptional.orElseThrow();
 
             CertIssuanceValidationResponse response = new CertIssuanceValidationResponse(authCredential.getKeyIdentifier());
             response.setCertIssuanceValidationRules(getRulesForEntity(parentEntity));
@@ -78,7 +79,7 @@ public class ValidationService {
         }
     }
 
-    private List<CertIssuanceValidationRule> getRulesForEntity(AuthCredentialHolder holder) throws RAException {
+    private List<CertIssuanceValidationRule> getRulesForEntity(AuthCredentialHolderInteface holder) throws RAException {
         List<CertIssuanceValidationRule> rules = new ArrayList<>();
 
         if(holder instanceof Account){

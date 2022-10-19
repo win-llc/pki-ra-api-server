@@ -2,6 +2,7 @@ package com.winllc.pki.ra.beans.form;
 
 import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.pki.ra.util.FormValidationUtil;
+import org.hibernate.Hibernate;
 import org.springframework.util.CollectionUtils;
 
 import javax.validation.constraints.NotEmpty;
@@ -38,7 +39,8 @@ public class ServerEntryForm extends ValidForm<ServerEntry> {
     public ServerEntryForm(ServerEntry entry){
         super(entry);
         this.fqdn = entry.getFqdn();
-        this.accountId = entry.getAccount().getId();
+        //Hibernate.initialize(entry.getAccount());
+        //this.accountId = entry.getAccount().getId();
         //todo add domain id
         this.alternateDnsValues = entry.getAlternateDnsValues();
         this.openidClientRedirectUrl = entry.getOpenidClientRedirectUrl();

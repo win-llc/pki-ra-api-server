@@ -130,7 +130,7 @@ class AccountServiceTest extends BaseTest {
         form.setPocEmails(pocFormEntries);
 
         Authentication authentication = new TestingAuthenticationToken("test@test.com", "");
-        AccountInfo accountInfo = accountService.updateAccount(form, authentication);
+        AccountUpdateForm accountInfo = accountService.update(form, authentication);
         assertEquals(1, accountInfo.getPocs().size());
 
         PocFormEntry pocEntry = new PocFormEntry();
@@ -194,7 +194,7 @@ class AccountServiceTest extends BaseTest {
         Account account = accountRepository.findDistinctByProjectName("Test Project").get();
         assertNotNull(account);
 
-        accountService.delete(account.getId());
+        accountService.delete(account.getId(), null);
 
         Optional<Account> optionalAccount = accountService.getByKeyIdentifier("kidtest1");
         assertFalse(optionalAccount.isPresent());

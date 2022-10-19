@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter;
 
 public class AccountRestrictionForm extends ValidForm<AccountRestriction> {
 
-    private DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+    public static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
     private Long accountId;
     private String type;

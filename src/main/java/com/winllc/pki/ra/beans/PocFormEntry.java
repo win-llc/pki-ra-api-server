@@ -1,5 +1,7 @@
 package com.winllc.pki.ra.beans;
 
+import com.winllc.acme.common.domain.PocEntry;
+
 import java.util.Objects;
 
 public class PocFormEntry {
@@ -10,6 +12,13 @@ public class PocFormEntry {
 
     public PocFormEntry(String email) {
         this.email = email;
+    }
+
+    public PocFormEntry(PocEntry entry){
+        this(entry.getEmail());
+        this.id = entry.getId();
+        this.canManageAllServers = entry.isCanManageAllServers();
+        this.owner = entry.isOwner();
     }
 
     public PocFormEntry() {

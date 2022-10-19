@@ -1,35 +1,32 @@
 package com.winllc.pki.ra.beans.form;
 
 import com.winllc.acme.common.domain.DomainLinkToAccountRequest;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.util.CollectionUtils;
 
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@Getter
+@Setter
 public class DomainLinkToAccountRequestForm extends ValidForm<DomainLinkToAccountRequest> {
 
     @NotNull
     private Long accountId;
     private List<Long> requestedDomainIds;
 
-    public Long getAccountId() {
-        return accountId;
+    public DomainLinkToAccountRequestForm(DomainLinkToAccountRequest entity) {
+        super(entity);
+        this.accountId = entity.getAccountId();
+        this.requestedDomainIds = new ArrayList<>(entity.getRequestedDomainIds());
     }
 
-    public void setAccountId(Long accountId) {
-        this.accountId = accountId;
+    public DomainLinkToAccountRequestForm() {
     }
-
-    public List<Long> getRequestedDomainIds() {
-        return requestedDomainIds;
-    }
-
-    public void setRequestedDomainIds(List<Long> requestedDomainIds) {
-        this.requestedDomainIds = requestedDomainIds;
-    }
-
 
     @Override
     protected void processIsValid() {

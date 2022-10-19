@@ -6,7 +6,6 @@ import com.winllc.pki.ra.beans.info.PocEntryInfo;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
 import com.winllc.acme.common.constants.AuditRecordType;
 import com.winllc.acme.common.domain.*;
-import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.*;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
@@ -20,7 +19,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.naming.InvalidNameException;
+import javax.persistence.criteria.*;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.*;
@@ -38,7 +40,7 @@ import static com.winllc.pki.ra.constants.ServerSettingRequired.ENTITY_DIRECTORY
 
 @RestController
 @RequestMapping("/api/serverEntry")
-public class ServerEntryService extends AbstractService {
+public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntryForm, ServerEntryRepository> {
 
     private static final Logger log = LogManager.getLogger(ServerEntryService.class);
 
@@ -58,7 +60,7 @@ public class ServerEntryService extends AbstractService {
                               KeycloakOIDCProviderConnection oidcProviderConnection, PocEntryRepository pocEntryRepository,
                               EntityDirectoryService entityDirectoryService, ServerEntryValidator serverEntryValidator,
                               AuthCredentialService authCredentialService, DomainRepository domainRepository, ServerSettingsService serverSettingsService) {
-        super(context);
+        super(context, ServerEntry.class, serverEntryRepository);
         this.serverEntryRepository = serverEntryRepository;
         this.accountRepository = accountRepository;
         this.oidcProviderConnection = oidcProviderConnection;
@@ -91,109 +93,10 @@ public class ServerEntryService extends AbstractService {
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
-    public Long createServerEntry(@Valid @RequestBody ServerEntryForm form) throws RAObjectNotFoundException {
-
-        Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
-
-        if (optionalAccount.isPresent()) {
-            Account account = optionalAccount.get();
-
-            //Don't proceed if FQDN already exists under account
-            Optional<ServerEntry> optionalExisting = serverEntryRepository.findDistinctByFqdnEqualsAndAccountEquals(form.getFqdn(), account);
-            if(optionalExisting.isPresent()){
-                return optionalExisting.get().getId();
-            }
-
-            String fqdn = form.getFqdn();
-
-            if(form.getDomainId() != null) {
-                Optional<Domain> optionalDomain = domainRepository.findById(form.getDomainId());
-                if(optionalDomain.isPresent()){
-                    Domain domain = optionalDomain.get();
-                    String fullDomain = domain.getFullDomainName();
-                    fqdn = fqdn + "." + fullDomain;
-                }
-            }
-
-            //Domain domain = optionalDomain.get();
-            ServerEntry entry = ServerEntry.buildNew();
-            entry.setAccount(account);
-            //entry.setDomainParent(domain);
-            entry.setFqdn(fqdn);
-            entry.setHostname(form.getFqdn());
-
-            if (!CollectionUtils.isEmpty(form.getAlternateDnsValues())) {
-                entry.setAlternateDnsValues(form.getAlternateDnsValues());
-            }
-
-            Optional<String> serverBaseDnOptional = serverSettingsService.getServerSettingValue(ENTITY_DIRECTORY_LDAP_SERVERBASEDN);
-            String baseDn = null;
-            if(serverBaseDnOptional.isPresent()) {
-                baseDn = serverBaseDnOptional.get();
-            }
-
-            entry.buildDn(baseDn);
-
-            entry = serverEntryRepository.save(entry);
-            entry = (ServerEntry) authCredentialService.addNewAuthCredentialToEntry(entry);
-            entry = serverEntryRepository.save(entry);
-
-            SystemActionRunner.build(context)
-                    .createAuditRecord(AuditRecordType.SERVER_ENTRY_ADDED, entry)
-                    .createNotificationForAccountPocs(Notification.buildNew()
-                            .addMessage("Server Entry added: " + entry.getFqdn()), account)
-                    .sendNotification()
-                    .execute();
-
-            //apply attributes to external directory
-
-            ServerEntry finalEntry = entry;
-            ThrowingSupplier<Boolean, Exception> action = () -> {
-                entityDirectoryService.applyServerEntryToDirectory(finalEntry);
-                return true;
-            };
-
-            SystemActionRunner.build(context)
-                    .executeAsync(action);
-
-            log.info("Created a Server Entry: " + entry);
-
-            return entry.getId();
-        } else {
-            throw new RAObjectNotFoundException(Account.class, form.getAccountId());
-        }
-
-    }
-
-    @PostMapping("/update")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional
-    public ServerEntryInfo updateServerEntry(@Valid @RequestBody ServerEntryForm form) throws RAException {
-        //todo update attributes in directory
-
-        log.info("Is account linked: " + form.isAccountLinkedForm());
-
-        ServerEntry serverEntry = getServerEntry(form.getId());
-
-        serverEntry.setAlternateDnsValues(form.getAlternateDnsValues());
-        serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
-
-        List<String> alternateDnsValues = new ArrayList<>(serverEntry.getAlternateDnsValues());
-        serverEntry.setAlternateDnsValues(alternateDnsValues);
-
-        serverEntry = serverEntryRepository.save(serverEntry);
-
-        SystemActionRunner.build(context)
-                .createAuditRecord(AuditRecordType.SERVER_ENTRY_UPDATED, serverEntry)
-                .createNotificationForAccountPocs(Notification.buildNew()
-                        .addMessage("Server Entry updated: " + serverEntry.getFqdn()), serverEntry.getAccount())
-                .sendNotification()
-                .execute();
-
-        //apply attributes to external directory
-        entityDirectoryService.applyServerEntryToDirectory(serverEntry);
-
-        return entryToInfo(serverEntry);
+    public Long createServerEntry(@Valid @RequestBody ServerEntryForm form, Authentication authentication)
+            throws Exception {
+        ServerEntryForm add = add(form, authentication);
+        return add.getId();
     }
 
     @GetMapping("/getSans/{id}")
@@ -215,13 +118,13 @@ public class ServerEntryService extends AbstractService {
     public List<SubjectAltName> updateSans(@PathVariable Long id, @RequestBody List<SubjectAltName> sans) throws RAObjectNotFoundException {
         ServerEntry serverEntry = getServerEntry(id);
 
-        if(!CollectionUtils.isEmpty(sans)){
+        if (!CollectionUtils.isEmpty(sans)) {
             List<String> dns = sans.stream()
                     .map(s -> s.getValue())
                     .collect(Collectors.toList());
 
             serverEntry.setAlternateDnsValues(dns);
-        }else{
+        } else {
             serverEntry.setAlternateDnsValues(new ArrayList<>());
         }
 
@@ -298,28 +201,6 @@ public class ServerEntryService extends AbstractService {
     }
 
 
-    @DeleteMapping("/delete/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void deleteServerEntry(@PathVariable Long id) throws RAException {
-
-        ServerEntry serverEntry = getServerEntry(id);
-
-        //if server entry is deleted, remove the OIDC client if it exists
-        if (StringUtils.isNotBlank(serverEntry.getOpenidClientId())) {
-            try {
-                oidcProviderConnection.deleteClient(serverEntry);
-            } catch (Exception e) {
-                log.error("Could not delete OID Client", e);
-            }
-        }
-
-        serverEntryRepository.deleteById(id);
-
-        SystemActionRunner.build(context)
-                .createAuditRecord(AuditRecordType.SERVER_ENTRY_REMOVED, serverEntry)
-                .execute();
-    }
-
     @GetMapping("/calculateAttributes/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
@@ -360,7 +241,7 @@ public class ServerEntryService extends AbstractService {
     public List<PocEntryInfo> getManagers(@PathVariable Long id) throws RAObjectNotFoundException {
 
         ServerEntry serverEntry = getServerEntry(id);
-        List<PocEntry> pocs = pocEntryRepository.findAllByManagesContaining(serverEntry);
+        List<PocEntry> pocs = pocEntryRepository.findAllByServerEntry(serverEntry);
 
         if (!CollectionUtils.isEmpty(pocs)) {
             return pocs.stream()
@@ -380,23 +261,17 @@ public class ServerEntryService extends AbstractService {
 
         serverEntry.getManagedBy().clear();
 
-        List<PocEntry> existing = pocEntryRepository.findAllByManagesContaining(serverEntry);
+        List<PocEntry> existing = pocEntryRepository.findAllByServerEntry(serverEntry);
 
         List<PocEntry> existingNotINPocs = existing.stream()
-                .filter(p -> !pocs.contains(p.getId()))
-                .collect(Collectors.toList());
-
-        existingNotINPocs.forEach(p -> {
-            p.getManages().remove(serverEntry);
-            pocEntryRepository.save(p);
-        });
+                .filter(p -> !pocs.contains(p.getId())).toList();
 
         for (Long poc : pocs) {
 
             Optional<PocEntry> optionalPocEntry = pocEntryRepository.findById(poc);
             if (optionalPocEntry.isPresent()) {
                 PocEntry pocEntry = optionalPocEntry.get();
-                pocEntry.getManages().add(serverEntry);
+                pocEntry.setServerEntry(serverEntry);
                 pocEntry = pocEntryRepository.save(pocEntry);
 
                 serverEntry.getManagedBy().add(pocEntry);
@@ -414,4 +289,166 @@ public class ServerEntryService extends AbstractService {
     }
 
 
+
+
+    @Override
+    protected void delete(Long id, Authentication authentication) throws RAObjectNotFoundException {
+        ServerEntry serverEntry = getServerEntry(id);
+
+        //if server entry is deleted, remove the OIDC client if it exists
+        if (StringUtils.isNotBlank(serverEntry.getOpenidClientId())) {
+            try {
+                oidcProviderConnection.deleteClient(serverEntry);
+            } catch (Exception e) {
+                log.error("Could not delete OID Client", e);
+            }
+        }
+
+        serverEntryRepository.deleteById(id);
+
+        SystemActionRunner.build(context)
+                .createAuditRecord(AuditRecordType.SERVER_ENTRY_REMOVED, serverEntry)
+                .execute();
+    }
+
+    @Override
+    public ServerEntryForm entityToForm(ServerEntry entity) {
+        Hibernate.initialize(entity.getAlternateDnsValues());
+        return new ServerEntryForm(entity);
+    }
+
+    @Override
+    protected ServerEntry formToEntity(ServerEntryForm form, Authentication authentication) throws RAObjectNotFoundException {
+        Account account = accountRepository.findById(form.getAccountId()).orElseThrow(() -> new RAObjectNotFoundException(form));
+
+        //Don't proceed if FQDN already exists under account
+        Optional<ServerEntry> optionalExisting = serverEntryRepository.findDistinctByFqdnEqualsAndAccountEquals(form.getFqdn(), account);
+        if (optionalExisting.isPresent()) {
+            return optionalExisting.get();
+        }
+
+        String fqdn = form.getFqdn();
+
+        if (form.getDomainId() != null) {
+            Optional<Domain> optionalDomain = domainRepository.findById(form.getDomainId());
+            if (optionalDomain.isPresent()) {
+                Domain domain = optionalDomain.get();
+                String fullDomain = domain.getFullDomainName();
+                fqdn = fqdn + "." + fullDomain;
+            }
+        }
+
+        //Domain domain = optionalDomain.get();
+        ServerEntry entry = ServerEntry.buildNew();
+        entry.setAccount(account);
+        //entry.setDomainParent(domain);
+        entry.setFqdn(fqdn);
+        entry.setHostname(form.getFqdn());
+
+        if (!CollectionUtils.isEmpty(form.getAlternateDnsValues())) {
+            entry.setAlternateDnsValues(form.getAlternateDnsValues());
+        }
+
+        Optional<String> serverBaseDnOptional = serverSettingsService.getServerSettingValue(ENTITY_DIRECTORY_LDAP_SERVERBASEDN);
+        String baseDn = null;
+        if (serverBaseDnOptional.isPresent()) {
+            baseDn = serverBaseDnOptional.get();
+        }
+
+        entry.buildDn(baseDn);
+
+        entry = serverEntryRepository.save(entry);
+        entry = (ServerEntry) authCredentialService.addNewAuthCredentialToEntry(entry);
+        entry = serverEntryRepository.save(entry);
+
+        SystemActionRunner.build(context)
+                .createAuditRecord(AuditRecordType.SERVER_ENTRY_ADDED, entry)
+                .createNotificationForAccountPocs(Notification.buildNew()
+                        .addMessage("Server Entry added: " + entry.getFqdn()), account)
+                .sendNotification()
+                .execute();
+
+        //apply attributes to external directory
+
+        ServerEntry finalEntry = entry;
+        ThrowingSupplier<Boolean, Exception> action = () -> {
+            entityDirectoryService.applyServerEntryToDirectory(finalEntry);
+            return true;
+        };
+
+        SystemActionRunner.build(context)
+                .executeAsync(action);
+
+        log.info("Created a Server Entry: " + entry);
+
+        return finalEntry;
+    }
+
+    @Override
+    protected ServerEntry combine(ServerEntry original, ServerEntry updated, Authentication authentication) {
+
+        original.setAlternateDnsValues(updated.getAlternateDnsValues());
+        original.setOpenidClientRedirectUrl(updated.getOpenidClientRedirectUrl());
+
+        List<String> alternateDnsValues = new ArrayList<>(original.getAlternateDnsValues());
+        original.setAlternateDnsValues(alternateDnsValues);
+
+        original = serverEntryRepository.save(original);
+
+        SystemActionRunner.build(context)
+                .createAuditRecord(AuditRecordType.SERVER_ENTRY_UPDATED, original)
+                .createNotificationForAccountPocs(Notification.buildNew()
+                        .addMessage("Server Entry updated: " + original.getFqdn()), original.getAccount())
+                .sendNotification()
+                .execute();
+
+        //apply attributes to external directory
+        entityDirectoryService.applyServerEntryToDirectory(original);
+        return original;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<ServerEntry> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        String search = allRequestParams.get("search");
+        if (StringUtils.isNotBlank(search)) {
+            String finalText = search;
+            if (!search.contains("%")) {
+                finalText = "%" + search + "%";
+            }
+            Predicate fqdnLike = cb.like(root.get("fqdn"), finalText);
+            return Collections.singletonList(fqdnLike);
+        }
+        return null;
+    }
+
+
+    public Specification<ServerEntry> buildSearch(Map<String, String> allRequestParams) {
+        /*
+         Specification<ServerEntry> spec = (root, query, builder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+                Join<ServerEntry, Account> pocs = root.join("pocs");
+                Expression<String> exp = pocs.get("email");
+
+                //Predicate joinPredicate = exp.in(onlyPocs);
+
+                //predicates.add(joinPredicate);
+
+
+        };
+
+         */
+        return (root, query, cb) -> {
+            List<Predicate> list = new ArrayList<Predicate>();
+            query.distinct(true);
+            Root<ServerEntry> fromUpdates = query.from(ServerEntry.class);
+            Join<ServerEntry, Account> details = fromUpdates.join("account");
+            Join<Account, PocEntry> associate = details.join("pocs");
+
+            list.add(cb.equal(associate.get("email"), "test3@test.com"));
+
+            Predicate[] p = new Predicate[list.size()];
+            return cb.and(list.toArray(p));
+        };
+    }
 }

@@ -14,11 +14,11 @@ public abstract class ValidForm<T extends BaseEntity> extends InfoObject<T>  {
     protected Map<String, String> errors = new HashMap<>();
 
 
-    protected ValidForm(T entity) {
+    public ValidForm(T entity) {
         super(entity);
     }
 
-    protected ValidForm() {
+    public ValidForm() {
         try {
             setClazz((Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
         }catch (ClassCastException e){ }

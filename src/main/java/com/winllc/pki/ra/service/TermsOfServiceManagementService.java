@@ -1,36 +1,52 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.DirectoryDataSettings;
+import com.winllc.acme.common.domain.CertAuthorityConnectionInfo;
 import com.winllc.acme.common.domain.TermsOfService;
+import com.winllc.acme.common.repository.CertAuthorityConnectionInfoRepository;
+import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
+import com.winllc.pki.ra.beans.form.TermsOfServiceForm;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.TermsOfServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
-public class TermsOfServiceManagementService {
+@RequestMapping("/api/tos")
+public class TermsOfServiceManagementService extends
+        DataPagedService<TermsOfService, TermsOfServiceForm,
+                TermsOfServiceRepository> {
 
     private final TermsOfServiceRepository repository;
     private final AcmeServerManagementService acmeServerManagementService;
     @Value("${server.base-url}")
     private String serverBaseUrl;
 
-    public TermsOfServiceManagementService(TermsOfServiceRepository repository,
+    public TermsOfServiceManagementService(ApplicationContext context,
+                                           TermsOfServiceRepository repository,
                                            AcmeServerManagementService acmeServerManagementService) {
+        super(context, TermsOfService.class, repository);
         this.repository = repository;
         this.acmeServerManagementService = acmeServerManagementService;
     }
 
-    @GetMapping("/api/tos/all")
+    @GetMapping("/all")
     @ResponseStatus(HttpStatus.OK)
     public List<TermsOfService> getAll(){
 
@@ -39,7 +55,7 @@ public class TermsOfServiceManagementService {
         return termsList;
     }
 
-    @GetMapping("/api/tos/getAllForDirectory/{directory}")
+    @GetMapping("/getAllForDirectory/{directory}")
     @ResponseStatus(HttpStatus.OK)
     public List<TermsOfService> getAllForDirectory(@PathVariable String directory){
 
@@ -48,7 +64,7 @@ public class TermsOfServiceManagementService {
         return termsList;
     }
 
-    @GetMapping("/api/tos/getById/{id}")
+    @GetMapping("/getById/{id}")
     @ResponseStatus(HttpStatus.OK)
     public TermsOfService getById(@PathVariable long id) throws RAObjectNotFoundException {
 
@@ -61,7 +77,7 @@ public class TermsOfServiceManagementService {
         }
     }
 
-    @GetMapping("/api/tos/version/{versionId}")
+    @GetMapping("/version/{versionId}")
     @ResponseStatus(HttpStatus.OK)
     public TermsOfService getByVersionId(@PathVariable String versionId) throws RAObjectNotFoundException {
         Optional<TermsOfService> optionalTermsOfService = repository.findByVersionId(versionId);
@@ -72,7 +88,7 @@ public class TermsOfServiceManagementService {
         }
     }
 
-    @GetMapping("/tos/version/{versionId}/view")
+    @GetMapping("/version/{versionId}/view")
     @ResponseStatus(HttpStatus.OK)
     public String getForView(@PathVariable String versionId) throws RAObjectNotFoundException {
         Optional<TermsOfService> optionalTermsOfService = repository.findByVersionId(versionId);
@@ -83,7 +99,7 @@ public class TermsOfServiceManagementService {
         }
     }
 
-    @PostMapping("/api/tos/save/{connectionName}")
+    @PostMapping("/save/{connectionName}")
     @ResponseStatus(HttpStatus.CREATED)
     public Long save(@PathVariable("connectionName") String acmeServerConnectionName,
                                   @Valid @RequestBody TermsOfService tos) throws AcmeConnectionException, IOException {
@@ -96,7 +112,7 @@ public class TermsOfServiceManagementService {
         return newTos.getId();
     }
 
-    @PostMapping("/api/tos/update/{connectionName}")
+    @PostMapping("/update/{connectionName}")
     @ResponseStatus(HttpStatus.OK)
     public TermsOfService update(@PathVariable("connectionName") String acmeServerConnectionName,
                                     @Valid @RequestBody TermsOfService tos) throws AcmeConnectionException,
@@ -114,13 +130,7 @@ public class TermsOfServiceManagementService {
         }
     }
 
-    @PreAuthorize("hasPermission(#id, 'com.winllc.acme.common.domain.TermsOfService', 'delete_tos')")
-    @DeleteMapping("/api/tos/delete/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public void delete(@PathVariable Long id){
 
-        repository.deleteById(id);
-    }
 
     private TermsOfService createAndUpdateAcmeServer(TermsOfService tos, DirectoryDataSettings settings,
                                                      String acmeServerConnectionName) throws AcmeConnectionException, IOException {
@@ -137,4 +147,24 @@ public class TermsOfServiceManagementService {
         return newTos;
     }
 
+    @Override
+    protected TermsOfServiceForm entityToForm(TermsOfService entity) {
+        return new TermsOfServiceForm(entity);
+    }
+
+    @Override
+    protected TermsOfService formToEntity(TermsOfServiceForm form, Authentication authentication) throws Exception {
+        return null;
+    }
+
+    @Override
+    protected TermsOfService combine(TermsOfService original,
+                                     TermsOfService updated, Authentication authentication) {
+        return null;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<TermsOfService> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        return null;
+    }
 }

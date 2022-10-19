@@ -3,6 +3,7 @@ plugins {
     id 'io.spring.dependency-management'
     id 'java'
     id 'idea'
+    id "io.freefair.lombok"
 }
 
 group 'com.winllc.pki.ra'
@@ -106,6 +107,8 @@ dependencies {
 
     runtimeOnly('org.springframework.boot:spring-boot-devtools')
     annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-configuration-processor'
+    // https://mvnrepository.com/artifact/org.projectlombok/lombok
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.24'
 
     //implementation group: 'org.jboss.spec.javax.xml.bind', name: 'jboss-jaxb-api_2.3_spec', version: '2.0.1.Final'
 

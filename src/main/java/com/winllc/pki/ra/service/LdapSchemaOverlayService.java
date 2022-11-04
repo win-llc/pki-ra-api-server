@@ -2,29 +2,41 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.domain.LdapSchemaOverlay;
 import com.winllc.acme.common.domain.LdapSchemaOverlayAttribute;
+import com.winllc.pki.ra.beans.form.LdapSchemaOverlayForm;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.LdapSchemaOverlayAttributeRepository;
 import com.winllc.acme.common.repository.LdapSchemaOverlayRepository;
 import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Transactional
 @RestController
 @RequestMapping("/api/ldapSchemaOverlay")
-public class LdapSchemaOverlayService {
+public class LdapSchemaOverlayService extends
+        DataPagedService<LdapSchemaOverlay, LdapSchemaOverlayForm, LdapSchemaOverlayRepository> {
 
     private final LdapSchemaOverlayRepository repository;
     private final LdapSchemaOverlayAttributeRepository attributeRepository;
 
-    public LdapSchemaOverlayService(LdapSchemaOverlayRepository repository, LdapSchemaOverlayAttributeRepository attributeRepository) {
+    public LdapSchemaOverlayService(ApplicationContext context,
+            LdapSchemaOverlayRepository repository,
+                                    LdapSchemaOverlayAttributeRepository attributeRepository) {
+        super(context, LdapSchemaOverlay.class, repository);
         this.repository = repository;
         this.attributeRepository = attributeRepository;
     }
@@ -72,7 +84,7 @@ public class LdapSchemaOverlayService {
         return saved.getId();
     }
 
-    @PostMapping("/update")
+    //@PostMapping("/update")
     @Transactional
     public Long update(@RequestBody LdapSchemaOverlay form) throws RAObjectNotFoundException {
         Optional<LdapSchemaOverlay> overlayOptional = repository.findById(form.getId());
@@ -119,15 +131,29 @@ public class LdapSchemaOverlayService {
         repository.save(saved);
     }
 
-    @DeleteMapping("/delete/{id}")
-    @Transactional
-    public ResponseEntity<?> deleteById(@PathVariable Long id){
-        Optional<LdapSchemaOverlay> optionalOverlay = repository.findById(id);
-        if(optionalOverlay.isPresent()){
-            LdapSchemaOverlay overlay = optionalOverlay.get();
+    @Override
+    protected LdapSchemaOverlayForm entityToForm(LdapSchemaOverlay entity) {
+        return new LdapSchemaOverlayForm(entity);
+    }
 
-            repository.delete(overlay);
-        }
-        return ResponseEntity.status(HttpStatus.OK).build();
+    @Override
+    protected LdapSchemaOverlay formToEntity(LdapSchemaOverlayForm form, Authentication authentication) throws Exception {
+        LdapSchemaOverlay overlay = new LdapSchemaOverlay();
+        overlay.setLdapObjectType(form.getLdapObjectType());
+        overlay.setAttributeMap(form.getAttributeMap());
+        return overlay;
+    }
+
+    @Override
+    protected LdapSchemaOverlay combine(LdapSchemaOverlay original, LdapSchemaOverlay updated, Authentication authentication) throws Exception {
+        //todo
+        applyFormAttributes(original, updated.getAttributeMap());
+
+        return original;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<LdapSchemaOverlay> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        return null;
     }
 }

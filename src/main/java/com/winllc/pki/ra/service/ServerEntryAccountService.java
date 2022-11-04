@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.domain.Account;
 import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.acme.common.repository.AccountRepository;
 import com.winllc.acme.common.repository.BaseAccountRepository;
@@ -28,7 +29,7 @@ public class ServerEntryAccountService extends AccountDataTableService<ServerEnt
     }
 
     @Override
-    protected ServerEntry formToEntity(ServerEntryForm form) throws RAObjectNotFoundException {
+    protected ServerEntry formToEntity(ServerEntryForm form, Account account) throws RAObjectNotFoundException {
         return null;
     }
 

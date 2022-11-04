@@ -35,15 +35,15 @@ public class CertificateService {
 
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("mm/DD/yyyy");
 
-    @Autowired
-    private CachedCertificateService cachedCertificateService;
+    private final CachedCertificateService cachedCertificateService;
     private final CertificateRequestRepository certificateRequestRepository;
     private final ServerEntryRepository serverEntryRepository;
 
     public CertificateService(CertificateRequestRepository certificateRequestRepository,
-                              ServerEntryRepository serverEntryRepository) {
+                              ServerEntryRepository serverEntryRepository, CachedCertificateService cachedCertificateService) {
         this.certificateRequestRepository = certificateRequestRepository;
         this.serverEntryRepository = serverEntryRepository;
+        this.cachedCertificateService = cachedCertificateService;
     }
 
     @GetMapping("/getPaged")

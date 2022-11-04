@@ -172,15 +172,6 @@ public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntr
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/all")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional
-    public List<ServerEntryInfo> getAll() {
-        List<ServerEntryInfo> infoList = serverEntryRepository.findAll()
-                .stream().map(i -> entryToInfo(i))
-                .collect(Collectors.toList());
-        return infoList;
-    }
 
     @GetMapping("/allForUser")
     @ResponseStatus(HttpStatus.OK)

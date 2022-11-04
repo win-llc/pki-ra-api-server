@@ -79,19 +79,6 @@ public class DomainLinkToAccountRequestService extends
     }
 
     @Transactional
-    @GetMapping("/all")
-    @ResponseStatus(HttpStatus.OK)
-    public List<DomainLinkToAccountRequestInfo> getAllRequests() {
-        List<DomainLinkToAccountRequest> requests = requestRepository.findAll();
-
-        List<DomainLinkToAccountRequestInfo> infoList = requests.stream()
-                .map(d -> buildInfo(d))
-                .collect(Collectors.toList());
-
-        return infoList;
-    }
-
-    @Transactional
     @GetMapping("/new")
     @ResponseStatus(HttpStatus.OK)
     public List<DomainLinkToAccountRequestInfo> getUnapprovedRequests() {
@@ -303,7 +290,20 @@ public class DomainLinkToAccountRequestService extends
 
     @Override
     protected DomainLinkToAccountRequestForm entityToForm(DomainLinkToAccountRequest entity) {
-        return new DomainLinkToAccountRequestForm(entity);
+        Account account = accountRepository.findById(entity.getAccountId())
+                .orElse(null);
+        List<Domain> domains = domainRepository.findAllByIdIn(entity.getRequestedDomainIds());
+        List<DomainInfo> domainInfoList = domains.stream()
+                .map(d -> new DomainInfo(d, true))
+                .collect(Collectors.toList());
+
+        DomainLinkToAccountRequestForm form = new DomainLinkToAccountRequestForm(entity);
+        form.setDomainInfoList(domainInfoList);
+        if(account != null) {
+            form.setAccountInfo(new AccountInfo(account, false));
+        }
+
+        return form;
     }
 
     @Override
@@ -311,6 +311,7 @@ public class DomainLinkToAccountRequestService extends
         Account account = accountRepository.findById(form.getAccountId())
                 .orElseThrow(() -> new RAObjectNotFoundException(Account.class, form.getAccountId()));
         DomainLinkToAccountRequest request = DomainLinkToAccountRequest.buildNew();
+        request.setAccount(account);
         request.setRequestedBy(authentication.getName());
         request.setRequestedOn(ZonedDateTime.now());
 
@@ -318,7 +319,6 @@ public class DomainLinkToAccountRequestService extends
         domainIds.removeIf(Objects::isNull);
         form.setRequestedDomainIds(domainIds);
 
-        Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
         List<Domain> requestedDomains = domainRepository.findAllByIdIn(form.getRequestedDomainIds());
         //Ensure user exists in the account
         Optional<PocEntry> pocEntryOptional = pocEntryRepository
@@ -350,7 +350,8 @@ public class DomainLinkToAccountRequestService extends
 
     @Override
     protected DomainLinkToAccountRequest combine(DomainLinkToAccountRequest original, DomainLinkToAccountRequest updated, Authentication authentication) throws Exception {
-        return null;
+        original.setStatus(updated.getStatus());
+        return original;
     }
 
     @Override

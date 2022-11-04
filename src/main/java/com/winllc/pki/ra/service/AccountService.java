@@ -30,10 +30,7 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.sql.Timestamp;
@@ -248,18 +245,6 @@ public class AccountService extends DataPagedService<Account, AccountUpdateForm,
         }
     }
 
-    @GetMapping("/all")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional
-    public List<AccountInfo> getAll(@AuthenticationPrincipal UserDetails raUser) {
-        log.info("RAUser: " + raUser.getUsername());
-        List<Account> accounts = accountRepository.findAll();
-
-        return accounts.stream()
-                .map(a -> new AccountInfo(a, false))
-                .collect(Collectors.toList());
-    }
-
     //todo haspermission
     @GetMapping("/findByKeyIdentifier/{kid}")
     @ResponseStatus(HttpStatus.OK)
@@ -428,6 +413,17 @@ public class AccountService extends DataPagedService<Account, AccountUpdateForm,
             return Collections.singletonList(fqdnLike);
         }
         return null;
+    }
+
+    public List<Predicate> buildMyFilter(String email, CriteriaQuery<?> query, CriteriaBuilder cb){
+        List<Predicate> list = new ArrayList<>();
+        query.distinct(true);
+        Root<Account> fromUpdates = query.from(Account.class);
+        Join<Account, PocEntry> associate = fromUpdates.join("pocs");
+
+        list.add(cb.equal(associate.get("email"), email));
+
+        return list;
     }
 
 /*

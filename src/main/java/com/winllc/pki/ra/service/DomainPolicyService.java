@@ -1,10 +1,7 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.beans.form.DomainPolicyForm;
-import com.winllc.acme.common.domain.Account;
-import com.winllc.acme.common.domain.Domain;
-import com.winllc.acme.common.domain.DomainPolicy;
-import com.winllc.acme.common.domain.DomainCertIssuanceRestrictionHolder;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.AccountRepository;
 import com.winllc.acme.common.repository.DomainPolicyRepository;
@@ -207,7 +204,7 @@ public class DomainPolicyService extends AccountDataTableService<DomainPolicy, D
     }
 
     @Override
-    protected DomainPolicy formToEntity(DomainPolicyForm form) {
+    protected DomainPolicy formToEntity(DomainPolicyForm form, Account account) {
         DomainPolicy policy = new DomainPolicy();
         policy.setId(form.getId());
         policy.setAcmeRequireDnsValidation(form.isAcmeRequireDnsValidation());

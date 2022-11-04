@@ -11,13 +11,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.*;
@@ -25,7 +31,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/attributePolicy")
-public class AttributePolicyService {
+public class AttributePolicyService extends DataPagedService<AttributePolicyGroup, AttributePolicyGroupForm, AttributePolicyGroupRepository> {
 
     private static final Logger log = LogManager.getLogger(AttributePolicyService.class);
 
@@ -38,13 +44,17 @@ public class AttributePolicyService {
     private final SecurityPolicyService securityPolicyService;
     private final AttributePolicyGroupValidator attributePolicyGroupValidator;
 
-    @Autowired
-    private LdapObjectUpdater ldapObjectUpdater;
+    private final LdapObjectUpdater ldapObjectUpdater;
 
-    public AttributePolicyService(AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
+    public AttributePolicyService(ApplicationContext context,
+                                  AccountRepository accountRepository, PocEntryRepository pocEntryRepository,
                                   AttributePolicyGroupRepository attributePolicyGroupRepository,
-                                  AttributePolicyRepository attributePolicyRepository, SecurityPolicyService securityPolicyService,
-                                  AttributePolicyGroupValidator attributePolicyGroupValidator, LdapSchemaOverlayRepository ldapSchemaOverlayRepository) {
+                                  AttributePolicyRepository attributePolicyRepository,
+                                  SecurityPolicyService securityPolicyService,
+                                  AttributePolicyGroupValidator attributePolicyGroupValidator,
+                                  LdapSchemaOverlayRepository ldapSchemaOverlayRepository,
+                                  LdapObjectUpdater ldapObjectUpdater) {
+        super(context, AttributePolicyGroup.class, attributePolicyGroupRepository);
         this.accountRepository = accountRepository;
         this.pocEntryRepository = pocEntryRepository;
         this.attributePolicyGroupRepository = attributePolicyGroupRepository;
@@ -52,6 +62,7 @@ public class AttributePolicyService {
         this.securityPolicyService = securityPolicyService;
         this.attributePolicyGroupValidator = attributePolicyGroupValidator;
         this.ldapSchemaOverlayRepository = ldapSchemaOverlayRepository;
+        this.ldapObjectUpdater = ldapObjectUpdater;
     }
 
     @InitBinder("attributePolicyGroupForm")
@@ -170,7 +181,7 @@ public class AttributePolicyService {
     @PostMapping("/group/update")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public AttributePolicyGroupForm updateGroupPolicyGroup(@Valid @RequestBody AttributePolicyGroupForm form) throws RAObjectNotFoundException {
+    public AttributePolicyGroup updateGroupPolicyGroup(@Valid @RequestBody AttributePolicyGroupForm form) throws RAObjectNotFoundException {
         Optional<AttributePolicyGroup> optionalAttributePolicyGroup = attributePolicyGroupRepository.findById(form.getId());
 
         if(optionalAttributePolicyGroup.isPresent()){
@@ -213,7 +224,8 @@ public class AttributePolicyService {
 
             ldapObjectUpdater.update(apg);
 
-            return new AttributePolicyGroupForm(apg);
+            //return new AttributePolicyGroupForm(apg);
+            return apg;
         }else{
             throw new RAObjectNotFoundException(AttributePolicyGroup.class, form.getId());
         }
@@ -226,4 +238,28 @@ public class AttributePolicyService {
     }
 
 
+    @Override
+    protected AttributePolicyGroupForm entityToForm(AttributePolicyGroup entity) {
+        return new AttributePolicyGroupForm(entity);
+    }
+
+    @Override
+    protected AttributePolicyGroup formToEntity(AttributePolicyGroupForm form, Authentication authentication) throws Exception {
+        Account account = accountRepository.findById(form.getAccountId())
+                .orElseThrow(() -> new RAObjectNotFoundException(Account.class, form.getAccountId()));
+
+        AttributePolicyGroup attributePolicyGroup = updateGroupPolicyGroup(form);
+        return attributePolicyGroup;
+    }
+
+    @Override
+    protected AttributePolicyGroup combine(AttributePolicyGroup original, AttributePolicyGroup updated, Authentication authentication) throws Exception {
+        //todo
+        return original;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<AttributePolicyGroup> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        return null;
+    }
 }

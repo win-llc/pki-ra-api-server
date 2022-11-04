@@ -30,8 +30,6 @@ public class PocEntryService extends ServerEntryDataTableService<PocEntry, PocEn
     private final PocEntryRepository pocEntryRepository;
     private final AccountRepository accountRepository;
 
-    private ServerEntryRepository serverEntryRepository;
-
     public PocEntryService(ApplicationContext context,
             PocEntryRepository pocEntryRepository, ServerEntryRepository serverEntryRepository,
                            AccountRepository accountRepository) {

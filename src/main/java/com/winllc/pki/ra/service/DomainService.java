@@ -114,14 +114,6 @@ public class DomainService extends DataPagedService<Domain, DomainForm, DomainRe
         }
     }
 
-    @GetMapping("/all")
-    @ResponseStatus(HttpStatus.OK)
-    public List<Domain> getAllAvailableDomains(){
-        List<Domain> all = domainRepository.findAll();
-
-        return all;
-    }
-
     @GetMapping("/searchByBase/{search}")
     @ResponseStatus(HttpStatus.OK)
     public List<Domain> searchDomainByBaseDomain(@PathVariable String search){

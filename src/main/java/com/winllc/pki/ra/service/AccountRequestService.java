@@ -72,13 +72,6 @@ public class AccountRequestService extends
         binder.setValidator(accountRequestUpdateValidator);
     }
 
-    @GetMapping("/all")
-    @ResponseStatus(HttpStatus.OK)
-    public List<AccountRequest> findAll() {
-        List<AccountRequest> accountRequests = accountRequestRepository.findAll();
-        return accountRequests;
-    }
-
     @GetMapping("/pending")
     @ResponseStatus(HttpStatus.OK)
     public List<AccountRequest> findPending() {

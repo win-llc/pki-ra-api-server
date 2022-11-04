@@ -46,14 +46,6 @@ public class TermsOfServiceManagementService extends
         this.acmeServerManagementService = acmeServerManagementService;
     }
 
-    @GetMapping("/all")
-    @ResponseStatus(HttpStatus.OK)
-    public List<TermsOfService> getAll(){
-
-        List<TermsOfService> termsList = repository.findAll();
-
-        return termsList;
-    }
 
     @GetMapping("/getAllForDirectory/{directory}")
     @ResponseStatus(HttpStatus.OK)

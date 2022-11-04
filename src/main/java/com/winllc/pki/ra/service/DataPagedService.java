@@ -4,6 +4,7 @@ import com.winllc.acme.common.domain.*;
 import com.winllc.acme.common.repository.PagingRepository;
 import com.winllc.pki.ra.beans.form.ValidForm;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import lombok.Getter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationContext;
@@ -21,7 +22,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Transactional
-public abstract class DataPagedService<T extends BaseEntity, F extends ValidForm<T>, R extends PagingRepository<T>> extends AbstractService {
+@Getter
+public abstract class DataPagedService<T extends BaseEntity, F extends ValidForm<T>,
+        R extends PagingRepository<T>> extends AbstractService
+        implements DataService<F> {
 
     private final Class<T> clazz;
     private final R repository;
@@ -32,6 +36,15 @@ public abstract class DataPagedService<T extends BaseEntity, F extends ValidForm
         this.repository = repository;
     }
 
+    @Override
+    @GetMapping("/all")
+    public List<F> getAll(Long id, Authentication authentication) throws RAObjectNotFoundException {
+        return repository.findAll().stream()
+                .map(this::entityToForm)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @GetMapping("/paged")
     public Page<F> getPaged(@RequestParam Integer page,
                             @RequestParam Integer pageSize,
@@ -42,33 +55,38 @@ public abstract class DataPagedService<T extends BaseEntity, F extends ValidForm
         return generatePage(page, pageSize, order, sortBy, allRequestParams, null);
     }
 
+    @Override
     @GetMapping("/my/paged")
     public Page<F> getMyPaged(@RequestParam Integer page,
-                            @RequestParam Integer pageSize,
-                            @RequestParam(defaultValue = "asc") String order,
-                            @RequestParam(required = false) String sortBy,
-                            @RequestParam Map<String, String> allRequestParams,
-                            Authentication authentication) {
+                              @RequestParam Integer pageSize,
+                              @RequestParam(defaultValue = "asc") String order,
+                              @RequestParam(required = false) String sortBy,
+                              @RequestParam Map<String, String> allRequestParams,
+                              Authentication authentication) {
 
         return generatePage(page, pageSize, order, sortBy, allRequestParams, authentication.getName());
     }
 
+    @Override
     @GetMapping("/id/{id}")
     public F findRest(@PathVariable Long id, Authentication authentication) throws Exception {
         T byId = repository.findById(id).orElseThrow(() -> new RAObjectNotFoundException(clazz, id));
         return entityToForm(byId);
     }
 
+    @Override
     @PostMapping("/add")
     public F addRest(@RequestBody F entity, Authentication authentication) throws Exception {
         return add(entity, authentication);
     }
 
+    @Override
     @PostMapping("/update")
     public F updateRest(@RequestBody F entity, Authentication authentication) throws Exception {
         return update(entity, authentication);
     }
 
+    @Override
     @DeleteMapping("/delete/{id}")
     public void deleteRest(@PathVariable Long id, Authentication authentication) throws RAObjectNotFoundException {
         delete(id, authentication);
@@ -98,26 +116,30 @@ public abstract class DataPagedService<T extends BaseEntity, F extends ValidForm
 
 
     public Page<F> generatePage(Integer page, Integer pageSize, String order, String sortBy, Map<String, String> allRequestParams, String forEmail){
-        Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
-        String sort = StringUtils.isNotBlank(sortBy) ? sortBy : "id";
+        try {
+            Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+            String sort = StringUtils.isNotBlank(sortBy) ? sortBy : "id";
 
-        Pageable pageable = PageRequest.of(page, pageSize, direction, sort);
+            Pageable pageable = PageRequest.of(page, pageSize, direction, sort);
 
-        Specification<T> spec = buildSpec(allRequestParams, forEmail);
+            Specification<T> spec = buildSpec(allRequestParams, forEmail);
 
-        Page<T> all;
-        if(spec != null){
-            all = repository.findAll(spec, pageable);
+            Page<T> all;
+            if (spec != null) {
+                all = repository.findAll(spec, pageable);
 
-        }else{
-            all = repository.findAll(pageable);
+            } else {
+                all = repository.findAll(pageable);
+            }
+
+            List<F> forms = all.getContent().stream()
+                    .map((T entity) -> entityToForm(entity))
+                    .collect(Collectors.toList());
+
+            return new PageImpl<>(forms, all.getPageable(), all.getTotalElements());
+        }catch (Exception e){
+            throw new RuntimeException(e);
         }
-
-        List<F> forms = all.getContent().stream()
-                .map((T entity) -> entityToForm(entity))
-                .collect(Collectors.toList());
-
-        return new PageImpl<>(forms, all.getPageable(), all.getTotalElements());
     }
 
 

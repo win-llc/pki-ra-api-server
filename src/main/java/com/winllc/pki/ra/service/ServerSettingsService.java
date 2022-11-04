@@ -5,6 +5,7 @@ import com.winllc.pki.ra.constants.ServerSettingRequired;
 import com.winllc.acme.common.domain.ServerSettings;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.ServerSettingsRepository;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,7 +76,7 @@ public class ServerSettingsService {
 
     public Optional<String> getServerSettingValue(ServerSettingRequired settingRequired){
         Optional<ServerSettings> optionalServerSettings = repository.findDistinctByPropertyEquals(settingRequired.getSettingName());
-        if(optionalServerSettings.isPresent()){
+        if(optionalServerSettings.isPresent() && StringUtils.isNotBlank(optionalServerSettings.get().getValue())){
             return Optional.of(optionalServerSettings.get().getValue());
         }else{
             return Optional.empty();

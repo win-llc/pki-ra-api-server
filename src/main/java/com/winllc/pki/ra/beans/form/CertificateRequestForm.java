@@ -5,6 +5,8 @@ import com.winllc.acme.common.util.CertUtil;
 import com.winllc.acme.common.domain.CertificateRequest;
 import com.winllc.pki.ra.util.FormValidationUtil;
 import com.winllc.ra.integration.ca.SubjectAltName;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.util.CollectionUtils;
 
 import javax.validation.constraints.NotNull;
@@ -12,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+@Getter
+@Setter
 public class CertificateRequestForm extends ValidForm<CertificateRequest> {
 
     private String csr;
@@ -23,62 +27,20 @@ public class CertificateRequestForm extends ValidForm<CertificateRequest> {
     private String primaryDnsHostname;
     private Long primaryDnsDomainId;
 
-    public String getCsr() {
-        return csr;
+    public CertificateRequestForm(CertificateRequest entity) {
+        super(entity);
+        this.csr = entity.getCsr();
+        this.certAuthorityName = entity.getCertAuthorityName();
+        if(entity.getAccount() != null) {
+            this.accountId = entity.getAccount().getId();
+        }
+        //todo
+        //this.requestedDnsNames = entity.getRequestedDnsNames();
     }
 
-    public void setCsr(String csr) {
-        this.csr = csr;
+    public CertificateRequestForm() {
+        super();
     }
-
-    public String getPrimaryDnsHostname() {
-        return primaryDnsHostname;
-    }
-
-    public void setPrimaryDnsHostname(String primaryDnsHostname) {
-        this.primaryDnsHostname = primaryDnsHostname;
-    }
-
-    public Long getPrimaryDnsDomainId() {
-        return primaryDnsDomainId;
-    }
-
-    public void setPrimaryDnsDomainId(Long primaryDnsDomainId) {
-        this.primaryDnsDomainId = primaryDnsDomainId;
-    }
-
-    public List<SubjectAltName> getRequestedDnsNames() {
-        return requestedDnsNames;
-    }
-
-    public void setRequestedDnsNames(List<SubjectAltName> requestedDnsNames) {
-        this.requestedDnsNames = requestedDnsNames;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getCertAuthorityName() {
-        return certAuthorityName;
-    }
-
-    public void setCertAuthorityName(String certAuthorityName) {
-        this.certAuthorityName = certAuthorityName;
-    }
-
-    public Long getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(Long accountId) {
-        this.accountId = accountId;
-    }
-
 
     @JsonIgnore
     @Override

@@ -5,6 +5,7 @@ import com.winllc.acme.common.domain.Account;
 import com.winllc.acme.common.ra.RACertificateIssueRequest;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.CertificateRequestForm;
+import com.winllc.pki.ra.beans.form.ValidForm;
 import com.winllc.pki.ra.beans.info.CertificateRequestInfo;
 import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.pki.ra.beans.validator.CertRequestFormValidator;
@@ -24,22 +25,29 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.naming.InvalidNameException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.security.cert.X509Certificate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Transactional
 @RestController
 @RequestMapping("/api/certificateRequest")
-public class CertificateRequestService extends AbstractService {
+public class CertificateRequestService extends DataPagedService<CertificateRequest, CertificateRequestForm, CertificateRequestRepository> {
 
     private static final Logger log = LogManager.getLogger(CertificateRequestService.class);
 
@@ -49,23 +57,23 @@ public class CertificateRequestService extends AbstractService {
     private final CertRequestFormValidator formValidator;
     private final CertificateRequestValidator certificateRequestValidator;
     private final CertificateRequestDecisionValidator certificateRequestDecisionValidator;
-    private final ServerEntryRepository serverEntryRepository;
+
     private final DomainService domainService;
 
-    public CertificateRequestService(CertificateRequestRepository requestRepository,
+    public CertificateRequestService(ApplicationContext context,
+            CertificateRequestRepository requestRepository,
                                      AccountRepository accountRepository, LoadedCertAuthorityStore certAuthorityStore,
-                                     CertRequestFormValidator formValidator, ApplicationContext context,
+                                     CertRequestFormValidator formValidator,
                                      CertificateRequestValidator certificateRequestValidator,
                                      CertificateRequestDecisionValidator certificateRequestDecisionValidator,
                                      ServerEntryRepository serverEntryRepository, DomainService domainService) {
-        super(context);
+        super(context, CertificateRequest.class, requestRepository);
         this.requestRepository = requestRepository;
         this.accountRepository = accountRepository;
         this.certAuthorityStore = certAuthorityStore;
         this.formValidator = formValidator;
         this.certificateRequestValidator = certificateRequestValidator;
         this.certificateRequestDecisionValidator = certificateRequestDecisionValidator;
-        this.serverEntryRepository = serverEntryRepository;
         this.domainService = domainService;
     }
 
@@ -97,12 +105,6 @@ public class CertificateRequestService extends AbstractService {
         }
 
         return Optional.empty();
-    }
-
-    @GetMapping("/all")
-    @ResponseStatus(HttpStatus.OK)
-    public List<CertificateRequest> getAll() {
-        return requestRepository.findAll();
     }
 
     @GetMapping("/allWithStatus/{status}")
@@ -286,5 +288,35 @@ public class CertificateRequestService extends AbstractService {
         //todo broken for manual when custom SAN with no server entry submitted
         X509Certificate certificate = certIssuanceTransaction.processIssueCertificate(raCertificateIssueRequest, request.getAccount());
     }
+
+    @Override
+    protected CertificateRequestForm entityToForm(CertificateRequest entity) {
+        return new CertificateRequestForm(entity);
+    }
+
+    @Override
+    protected CertificateRequest formToEntity(CertificateRequestForm form, Authentication authentication) throws Exception {
+        Account account = accountRepository.findById(form.getAccountId())
+                .orElseThrow(() -> new RAObjectNotFoundException(Account.class, form.getAccountId()));
+
+        CertificateRequest request = CertificateRequest.build();
+        request.setCsr(form.getCsr());
+        request.setCertAuthorityName(form.getCertAuthorityName());
+        request.setAccount(account);
+        //todo finish
+
+        return request;
+    }
+
+    @Override
+    protected CertificateRequest combine(CertificateRequest original, CertificateRequest updated, Authentication authentication) throws Exception {
+        return original;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map allRequestParams, Root root, CriteriaQuery query, CriteriaBuilder cb) {
+        return null;
+    }
+
 
 }

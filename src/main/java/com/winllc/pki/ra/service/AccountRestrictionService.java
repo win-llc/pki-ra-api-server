@@ -52,26 +52,26 @@ public class AccountRestrictionService extends
     private final AccountRepository accountRepository;
     private final AccountRestrictionRepository accountRestrictionRepository;
     private final AccountRestrictionValidator accountRestrictionValidator;
-    @Autowired
-    private SecurityPolicyService securityPolicyService;
-    @Autowired
-    private ServerSettingsService serverSettingsService;
+    private final SecurityPolicyService securityPolicyService;
+    private final ServerSettingsService serverSettingsService;
     //@Autowired
     //private AccountService accountService;
-    @Autowired
-    private DomainPolicyService domainPolicyService;
-    @Autowired
-    private DomainRepository domainRepository;
+    private final DomainPolicyService domainPolicyService;
+    private final DomainRepository domainRepository;
 
 
     public AccountRestrictionService(AccountRepository accountRepository,
                                      AccountRestrictionRepository accountRestrictionRepository,
                                      AccountRestrictionValidator accountRestrictionValidator,
-                                     ApplicationContext applicationContext) {
+                                     ApplicationContext applicationContext, SecurityPolicyService securityPolicyService, ServerSettingsService serverSettingsService, DomainPolicyService domainPolicyService, DomainRepository domainRepository) {
         super(applicationContext, accountRepository, accountRestrictionRepository);
         this.accountRepository = accountRepository;
         this.accountRestrictionRepository = accountRestrictionRepository;
         this.accountRestrictionValidator = accountRestrictionValidator;
+        this.securityPolicyService = securityPolicyService;
+        this.serverSettingsService = serverSettingsService;
+        this.domainPolicyService = domainPolicyService;
+        this.domainRepository = domainRepository;
     }
 
     @InitBinder("accountRestrictionForm")
@@ -337,9 +337,7 @@ public class AccountRestrictionService extends
     }
 
     @Override
-    protected AccountRestriction formToEntity(AccountRestrictionForm form) throws RAObjectNotFoundException {
-        Account account = accountRepository.findById(form.getAccountId()).orElseThrow(()
-                -> new RAObjectNotFoundException(Account.class, form.getAccountId()));
+    protected AccountRestriction formToEntity(AccountRestrictionForm form, Account account) throws RAObjectNotFoundException {
         AccountRestriction accountRestriction = new AccountRestriction();
         accountRestriction.setType(AccountRestrictionType.valueOf(form.getType()));
         accountRestriction.setAccount(account);
@@ -351,7 +349,10 @@ public class AccountRestrictionService extends
 
     @Override
     protected AccountRestriction combine(AccountRestriction original, AccountRestriction updated) {
-        //todo
-        return null;
+        original.setCompleted(updated.isCompleted());
+        original.setDueBy(updated.getDueBy());
+        original.setAction(updated.getAction());
+        original.setType(updated.getType());
+        return original;
     }
 }

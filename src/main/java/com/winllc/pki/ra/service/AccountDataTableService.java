@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.domain.AccountRestriction;
 import com.winllc.acme.common.domain.BaseAccountEntity;
 import com.winllc.acme.common.repository.AccountRepository;
 import com.winllc.acme.common.repository.BaseAccountRepository;
@@ -73,7 +74,7 @@ public abstract class AccountDataTableService<T extends BaseAccountEntity, F ext
     }
 
     protected F add(Account account, F form, Authentication authentication) throws RAObjectNotFoundException {
-        T entity = formToEntity(form);
+        T entity = formToEntity(form, account);
         entity.setAccount(account);
         entity = entityAccountRepository.save(entity);
         return entityToForm(entity);
@@ -81,7 +82,7 @@ public abstract class AccountDataTableService<T extends BaseAccountEntity, F ext
 
     protected F update(Account account, F form, Authentication authentication) throws RAObjectNotFoundException {
         T entity = entityAccountRepository.findById(form.getId()).orElseThrow(() -> new RAObjectNotFoundException(form));
-        T newEntity = formToEntity(form);
+        T newEntity = formToEntity(form, account);
         newEntity = combine(entity, newEntity);
         entity = entityAccountRepository.save(newEntity);
         return entityToForm(entity);
@@ -92,6 +93,6 @@ public abstract class AccountDataTableService<T extends BaseAccountEntity, F ext
     }
 
     protected abstract F entityToForm(T entity);
-    protected abstract T formToEntity(F form) throws RAObjectNotFoundException;
+    protected abstract T formToEntity(F form, Account account) throws RAObjectNotFoundException;
     protected abstract T combine(T original, T updated);
 }

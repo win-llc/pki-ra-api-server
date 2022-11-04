@@ -8,6 +8,7 @@ import com.winllc.pki.ra.beans.form.AttributePolicyGroupForm;
 import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.*;
+import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -169,7 +170,8 @@ class AttributePolicyServiceTest extends BaseTest {
 
         String attributeName = changePolicy.getAttributeName();
 
-        AttributePolicyGroupForm newForm = attributePolicyService.updateGroupPolicyGroup(form);
+        AttributePolicyGroup newApg = attributePolicyService.updateGroupPolicyGroup(form);
+        AttributePolicyGroupForm newForm = new AttributePolicyGroupForm(newApg);
 
         boolean found = false;
         List<AttributePolicy> policies = newForm.getAttributePolicies();

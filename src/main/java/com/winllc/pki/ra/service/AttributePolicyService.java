@@ -182,53 +182,49 @@ public class AttributePolicyService extends DataPagedService<AttributePolicyGrou
     @ResponseStatus(HttpStatus.OK)
     @Transactional
     public AttributePolicyGroup updateGroupPolicyGroup(@Valid @RequestBody AttributePolicyGroupForm form) throws RAObjectNotFoundException {
-        Optional<AttributePolicyGroup> optionalAttributePolicyGroup = attributePolicyGroupRepository.findById(form.getId());
+        AttributePolicyGroup apg = attributePolicyGroupRepository.findById(form.getId())
+                .orElseThrow(() -> new RAObjectNotFoundException(AttributePolicyGroup.class, form.getId()));
 
-        if(optionalAttributePolicyGroup.isPresent()){
-            //todo generify the process of updating a set of child objects given the existing and updated lists
-            //todo use an Updateable interface on the domain object with the update method
-            AttributePolicyGroup apg = optionalAttributePolicyGroup.get();
-            final Set<AttributePolicy> existing = apg.getAttributePolicies();
-            final Map<Long, AttributePolicy> updated = form.getAttributePolicies().stream()
-                    .filter(ep -> ep.getId() != null)
-                    .collect(Collectors.toMap(ep -> ep.getId(), ep -> ep));
-            List<AttributePolicy> newPolicies = form.getAttributePolicies().stream()
-                    .filter(ep -> ep.getId() == null)
-                    .collect(Collectors.toList());
+        //todo generify the process of updating a set of child objects given the existing and updated lists
+        //todo use an Updateable interface on the domain object with the update method
+        final Set<AttributePolicy> existing = apg.getAttributePolicies();
+        final Map<Long, AttributePolicy> updated = form.getAttributePolicies().stream()
+                .filter(ep -> ep.getId() != null)
+                .collect(Collectors.toMap(ep -> ep.getId(), ep -> ep));
+        List<AttributePolicy> newPolicies = form.getAttributePolicies().stream()
+                .filter(ep -> ep.getId() == null)
+                .collect(Collectors.toList());
 
-            Map<Boolean, List<AttributePolicy>> updateDeleteMap = existing.stream()
-                    .collect(Collectors.groupingBy(e -> updated.containsKey(e.getId())));
+        Map<Boolean, List<AttributePolicy>> updateDeleteMap = existing.stream()
+                .collect(Collectors.groupingBy(e -> updated.containsKey(e.getId())));
 
-            List<AttributePolicy> toUpdate = updateDeleteMap.get(true);
-            List<AttributePolicy> toDelete = updateDeleteMap.get(false);
+        List<AttributePolicy> toUpdate = updateDeleteMap.get(true);
+        List<AttributePolicy> toDelete = updateDeleteMap.get(false);
 
-            Set<AttributePolicy> attributePolicies = new HashSet<>();
+        Set<AttributePolicy> attributePolicies = new HashSet<>();
 
-            if(toDelete != null) toDelete.forEach(ap -> attributePolicyRepository.delete(ap));
-            if(toUpdate != null) {
-                AttributePolicyGroup finalApg = apg;
-                toUpdate.forEach(ap -> {
-                    ap.update(updated.get(ap.getId()));
-                    ap.setAttributePolicyGroup(finalApg);
-                    attributePolicies.add(attributePolicyRepository.save(ap));
-                });
-            }
-            AttributePolicyGroup finalApg1 = apg;
-            newPolicies.forEach(np -> {
-                np.setAttributePolicyGroup(finalApg1);
-                attributePolicies.add(attributePolicyRepository.save(np));;
+        if(toDelete != null) toDelete.forEach(ap -> attributePolicyRepository.delete(ap));
+        if(toUpdate != null) {
+            AttributePolicyGroup finalApg = apg;
+            toUpdate.forEach(ap -> {
+                ap.update(updated.get(ap.getId()));
+                ap.setAttributePolicyGroup(finalApg);
+                attributePolicies.add(attributePolicyRepository.save(ap));
             });
-
-            apg.setAttributePolicies(attributePolicies);
-            apg = attributePolicyGroupRepository.save(apg);
-
-            ldapObjectUpdater.update(apg);
-
-            //return new AttributePolicyGroupForm(apg);
-            return apg;
-        }else{
-            throw new RAObjectNotFoundException(AttributePolicyGroup.class, form.getId());
         }
+        AttributePolicyGroup finalApg1 = apg;
+        newPolicies.forEach(np -> {
+            np.setAttributePolicyGroup(finalApg1);
+            attributePolicies.add(attributePolicyRepository.save(np));;
+        });
+
+        apg.setAttributePolicies(attributePolicies);
+        apg = attributePolicyGroupRepository.save(apg);
+
+        ldapObjectUpdater.update(apg);
+
+        //return new AttributePolicyGroupForm(apg);
+        return apg;
     }
 
     @DeleteMapping("/group/delete/{id}")

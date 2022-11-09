@@ -11,6 +11,7 @@ import com.winllc.acme.common.domain.Account;
 import com.winllc.acme.common.ra.RAAccountValidationResponse;
 import com.winllc.pki.ra.beans.form.CertificateValidationForm;
 import com.winllc.acme.common.domain.*;
+import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.*;
@@ -61,6 +62,7 @@ public class ValidationService {
         if(optionalAuthCredential.isPresent()){
             AuthCredential authCredential = optionalAuthCredential.get();
             //Hibernate.initialize(authCredential.getParentEntity());
+            UniqueEntityLookupForm form = new UniqueEntityLookupForm();
             Optional<AuthCredentialHolderInteface> parentEntityOptional = authCredential.getParentEntity();
             AuthCredentialHolderInteface parentEntity = parentEntityOptional.orElseThrow();
 
@@ -82,6 +84,7 @@ public class ValidationService {
     private List<CertIssuanceValidationRule> getRulesForEntity(AuthCredentialHolderInteface holder) throws RAException {
         List<CertIssuanceValidationRule> rules = new ArrayList<>();
 
+        log.info("Holder class: "+holder.getClass().getName());
         if(holder instanceof Account){
             Account account = (Account) holder;
             Set<DomainPolicy> accountDomainPolicies = account.getAccountDomainPolicies();

@@ -258,4 +258,6 @@ public class AttributePolicyService extends DataPagedService<AttributePolicyGrou
     public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<AttributePolicyGroup> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         return null;
     }
+
+
 }

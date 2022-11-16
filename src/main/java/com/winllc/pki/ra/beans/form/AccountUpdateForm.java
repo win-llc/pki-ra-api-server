@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.util.CollectionUtils;
 
+import javax.validation.constraints.Email;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 @Setter
 public class AccountUpdateForm extends ValidForm<Account> {
 
+    @Email
     private String accountOwnerEmail;
     private List<PocFormEntry> pocEmails;
     private String securityPolicyProjectId;

@@ -51,7 +51,9 @@ class AccountRestrictionServiceTest extends BaseTest {
     void before() throws Exception {
         AccountRequestForm form = new AccountRequestForm();
         form.setProjectName("Test Project 2");
-        accountService.createNewAccount(form);
+        //accountService.createNewAccount(form);
+        Account account = Account.buildNew("Test Project 2");
+        accountRepository.save(account);
     }
 
     @AfterEach

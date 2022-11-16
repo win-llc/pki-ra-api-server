@@ -58,7 +58,7 @@ class AuthCredentialRepositoryTest extends BaseTest {
         AuthCredential saved = authCredentialRepository.save(authCredential);
 
         assertEquals(saved.getMacKey(), authCredential.getMacKey());
-        assertEquals(ServerEntry.class, saved.getParentEntity().getClass());
+        assertEquals(ServerEntry.class, saved.getParentEntity().get().getClass());
     }
 
     @Test

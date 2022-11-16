@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/account")
+@Transactional
 public class AccountService extends DataPagedService<Account, AccountUpdateForm, AccountRepository> {
 
     private static final Logger log = LogManager.getLogger(AccountService.class);
@@ -340,9 +341,7 @@ public class AccountService extends DataPagedService<Account, AccountUpdateForm,
 
             //clean up domain link requests
             List<DomainLinkToAccountRequest> existingDomainLinkRequests = domainLinkToAccountRequestRepository.findAllByAccountId(id);
-            for(DomainLinkToAccountRequest request : existingDomainLinkRequests){
-                domainLinkToAccountRequestRepository.delete(request);
-            }
+            domainLinkToAccountRequestRepository.deleteAll(existingDomainLinkRequests);
         } else {
             log.debug("Did not delete Account, ID not found: " + id);
         }
@@ -351,7 +350,19 @@ public class AccountService extends DataPagedService<Account, AccountUpdateForm,
 
     @Override
     public AccountUpdateForm entityToForm(Account entity) {
-        return new AccountUpdateForm(entity);
+        AccountUpdateForm form = new AccountUpdateForm(entity);
+
+        List<PocEntry> allByAccount = pocEntryRepository.findAllByAccount(entity);
+        if(org.apache.commons.collections.CollectionUtils.isNotEmpty(allByAccount)){
+            List<PocFormEntry> pocs = allByAccount.stream()
+                    .map(PocFormEntry::new)
+                    .toList();
+            form.setPocs(pocs);
+        }else{
+            form.setPocs(new ArrayList<>());
+        }
+
+        return form;
     }
 
     @Override
@@ -362,8 +373,12 @@ public class AccountService extends DataPagedService<Account, AccountUpdateForm,
 
             account = accountRepository.save(account);
 
+            AuthCredential authCredential = AuthCredential.buildNew(account);
+            authCredential = authCredentialRepository.save(authCredential);
 
-            account = (Account) authCredentialService.addNewAuthCredentialToEntry(account);
+            account.getAuthCredentials().add(authCredential);
+                    //broken todo
+            //account = (Account) authCredentialService.addNewAuthCredentialToEntry(account);
 
             if (StringUtils.isNotBlank(form.getSecurityPolicyServerProjectId())) {
                 SecurityPolicyServerProjectDetails projectDetails

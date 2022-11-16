@@ -43,6 +43,8 @@ class AttributePolicyServiceTest extends BaseTest {
     private PocEntryRepository pocEntryRepository;
     @Autowired
     private LdapSchemaOverlayRepository ldapSchemaOverlayRepository;
+    @Autowired
+    private AuthCredentialRepository authCredentialRepository;
 
     @BeforeEach
     void beforeEach() throws Exception {
@@ -90,6 +92,7 @@ class AttributePolicyServiceTest extends BaseTest {
 
     @AfterEach
     void afterEach(){
+        authCredentialRepository.deleteAll();
         attributePolicyGroupRepository.deleteAll();
         accountRepository.deleteAll();
         pocEntryRepository.deleteAll();

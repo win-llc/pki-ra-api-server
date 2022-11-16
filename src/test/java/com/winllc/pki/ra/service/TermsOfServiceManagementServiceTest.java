@@ -4,6 +4,7 @@ import com.winllc.acme.common.DirectoryDataSettings;
 import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.acme.common.domain.*;
+import com.winllc.pki.ra.beans.form.TermsOfServiceForm;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.AccountRepository;
@@ -64,8 +65,8 @@ class TermsOfServiceManagementServiceTest extends BaseTest {
     }
 
     @Test
-    void getAll() {
-        List<TermsOfService> all = termsOfServiceManagementService.getAll();
+    void getAll() throws RAObjectNotFoundException {
+        List<TermsOfServiceForm> all = termsOfServiceManagementService.getAll(null);
         assertEquals(1, all.size());
     }
 
@@ -120,14 +121,14 @@ class TermsOfServiceManagementServiceTest extends BaseTest {
 
     @Test
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
-    void delete() {
+    void delete() throws RAObjectNotFoundException {
         TermsOfService tos = new TermsOfService();
         tos.setText("new text");
         tos.setVersionId("v2");
         TermsOfService save = termsOfServiceRepository.save(tos);
         assertNotNull(save);
 
-        termsOfServiceManagementService.delete(save.getId());
+        termsOfServiceManagementService.delete(save.getId(), null);
 
         assertEquals(1, termsOfServiceRepository.findAll().size());
     }

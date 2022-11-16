@@ -63,7 +63,7 @@ class AccountRequestServiceTest extends BaseTest {
         accountRequest.setState("new");
         accountRequestRepository.save(accountRequest);
 
-        List<AccountRequest> all = accountRequestService.findAll();
+        List<AccountRequestForm> all = accountRequestService.getAll(null);
         assertTrue("Response null check", all.size() == 1);
 
         mockMvc.perform(
@@ -135,13 +135,13 @@ class AccountRequestServiceTest extends BaseTest {
         accountRequest.setState("new");
         accountRequest = accountRequestRepository.save(accountRequest);
 
-        AccountRequestUpdateForm form = new AccountRequestUpdateForm();
-        form.setAccountRequestId(accountRequest.getId());
+        AccountRequestForm form = new AccountRequestForm(accountRequest);
+        //form.setAccountRequestId(accountRequest.getId());
         form.setState("approve");
 
         Authentication authentication = new TestingAuthenticationToken("test@test.com", "");
 
-        accountRequestService.accountRequestUpdate(form, authentication);
+        accountRequestService.update(form, authentication);
 
         accountRequest = accountRequestRepository.findAll().get(0);
         assertTrue("Account update check", accountRequest.getState().contentEquals("approve"));
@@ -180,7 +180,7 @@ class AccountRequestServiceTest extends BaseTest {
         AccountRequest byId = accountRequestService.findById(accountRequest.getId());
         assertNotNull("Not null", byId);
 
-        accountRequestService.delete(accountRequest.getId());
+        accountRequestService.delete(accountRequest.getId(), null);
 
         try{
             accountRequestService.findById(accountRequest.getId());

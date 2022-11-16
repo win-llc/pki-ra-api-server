@@ -10,6 +10,7 @@ import com.winllc.pki.ra.service.DataService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,7 +47,8 @@ public class CertAuthorityPropertiesService extends AcmeServerManagementService<
     }
 
     @GetMapping("/all")
-    public List<CertificateAuthoritySettings> getAll(Long id, Authentication authentication) throws RAObjectNotFoundException, AcmeConnectionException {
+    @Override
+    public List<CertificateAuthoritySettings> getAll(Authentication authentication) throws Exception {
         AcmeServerService acmeServerService = services.get(defaultConnectionName);
         List<CertificateAuthoritySettings> allCertificateAuthoritySettings =
                 acmeServerService.getAllCertificateAuthoritySettings();
@@ -55,6 +57,7 @@ public class CertAuthorityPropertiesService extends AcmeServerManagementService<
         return allCertificateAuthoritySettings;
     }
 
+
     @GetMapping("/id/{id}")
     public CertificateAuthoritySettings findRest(@PathVariable Long id, Authentication authentication) throws Exception{
 
@@ -62,7 +65,9 @@ public class CertAuthorityPropertiesService extends AcmeServerManagementService<
     }
 
     @PostMapping("/add")
-    public CertificateAuthoritySettings addRest(@RequestBody CertificateAuthoritySettings entity, Authentication authentication) throws Exception {
+    public CertificateAuthoritySettings addRest(@RequestBody CertificateAuthoritySettings entity,
+                                                BindingResult bindingResult,
+                                                Authentication authentication) throws Exception {
 
         return null;
     }

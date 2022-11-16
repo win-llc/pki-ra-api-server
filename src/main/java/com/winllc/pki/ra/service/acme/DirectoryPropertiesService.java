@@ -9,6 +9,7 @@ import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,7 +46,7 @@ public class DirectoryPropertiesService extends AcmeServerManagementService<Dire
     }
 
     @GetMapping("/all")
-    public List<DirectoryDataSettings> getAll(Long id, Authentication authentication) throws RAObjectNotFoundException, AcmeConnectionException {
+    public List<DirectoryDataSettings> getAll(Authentication authentication) throws RAObjectNotFoundException, AcmeConnectionException {
         AcmeServerService acmeServerService = services.get(defaultConnectionName);
         List<DirectoryDataSettings> settings =
                 acmeServerService.getAllDirectorySettings();
@@ -60,7 +61,9 @@ public class DirectoryPropertiesService extends AcmeServerManagementService<Dire
     }
 
     @PostMapping("/add")
-    public DirectoryDataSettings addRest(@RequestBody DirectoryDataSettings entity, Authentication authentication) throws Exception {
+    public DirectoryDataSettings addRest(@RequestBody DirectoryDataSettings entity,
+                                         BindingResult bindingResult,
+                                         Authentication authentication) throws Exception {
 
         return null;
     }

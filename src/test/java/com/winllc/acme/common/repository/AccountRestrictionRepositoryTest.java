@@ -44,10 +44,11 @@ class AccountRestrictionRepositoryTest extends BaseTest {
     }
 
     @Test
+    @Transactional
     void findAllByAccount() throws Exception {
         AccountUpdateForm form = new AccountUpdateForm();
         form.setProjectName("Test Project");
-        Long id = accountService.add(form, null).getId();
+        Long id = accountService.addRest(form, null,null).getId();
         Account account = accountRepository.findById(id).get();
 
         AccountRestriction accountRestriction = new AccountRestriction();

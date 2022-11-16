@@ -9,6 +9,7 @@ import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,7 +46,7 @@ public class AccountProviderPropertiesService extends AcmeServerManagementServic
     }
 
     @GetMapping("/all")
-    public List<ExternalAccountProviderSettings> getAll(Long id, Authentication authentication) throws RAObjectNotFoundException, AcmeConnectionException {
+    public List<ExternalAccountProviderSettings> getAll(Authentication authentication) throws RAObjectNotFoundException, AcmeConnectionException {
         AcmeServerService acmeServerService = services.get(defaultConnectionName);
         List<ExternalAccountProviderSettings> settings =
                 acmeServerService.getAllExternalAccountProviderSettings();
@@ -61,7 +62,9 @@ public class AccountProviderPropertiesService extends AcmeServerManagementServic
     }
 
     @PostMapping("/add")
-    public ExternalAccountProviderSettings addRest(@RequestBody ExternalAccountProviderSettings entity, Authentication authentication) throws Exception {
+    public ExternalAccountProviderSettings addRest(@RequestBody ExternalAccountProviderSettings entity,
+                                                   BindingResult bindingResult,
+                                                   Authentication authentication) throws Exception {
 
         return null;
     }

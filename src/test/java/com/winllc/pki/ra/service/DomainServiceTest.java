@@ -55,8 +55,8 @@ class DomainServiceTest extends BaseTest {
     }
 
     @Test
-    void getAllAvailableDomains() {
-        List<Domain> allAvailableDomains = domainService.getAllAvailableDomains();
+    void getAllAvailableDomains() throws RAObjectNotFoundException {
+        List<DomainForm> allAvailableDomains = domainService.getAll(null);
         assertEquals(1, allAvailableDomains.size());
     }
 

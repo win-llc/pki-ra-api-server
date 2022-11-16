@@ -8,6 +8,7 @@ import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,12 +30,12 @@ public interface DataService<F> {
                        Map<String, String> allRequestParams,
                        Authentication authentication);
 
-    List<F> getAll(Long id, Authentication authentication) throws Exception;
+    List<F> getAll(Authentication authentication) throws Exception;
 
     F findRest(Long id, Authentication authentication) throws Exception;
 
 
-    F addRest(F entity, Authentication authentication) throws Exception;
+    F addRest(F entity, BindingResult bindingResult, Authentication authentication) throws Exception;
 
 
     F updateRest(F entity, Authentication authentication) throws Exception;

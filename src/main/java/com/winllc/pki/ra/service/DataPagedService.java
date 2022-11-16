@@ -12,9 +12,12 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.criteria.*;
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +41,7 @@ public abstract class DataPagedService<T extends BaseEntity, F extends ValidForm
 
     @Override
     @GetMapping("/all")
-    public List<F> getAll(Long id, Authentication authentication) throws RAObjectNotFoundException {
+    public List<F> getAll(Authentication authentication) throws RAObjectNotFoundException {
         return repository.findAll().stream()
                 .map(this::entityToForm)
                 .collect(Collectors.toList());
@@ -76,13 +79,13 @@ public abstract class DataPagedService<T extends BaseEntity, F extends ValidForm
 
     @Override
     @PostMapping("/add")
-    public F addRest(@RequestBody F entity, Authentication authentication) throws Exception {
+    public F addRest(@Valid @RequestBody F entity, BindingResult bindingResult, Authentication authentication) throws Exception {
         return add(entity, authentication);
     }
 
     @Override
     @PostMapping("/update")
-    public F updateRest(@RequestBody F entity, Authentication authentication) throws Exception {
+    public F updateRest(@Valid @RequestBody F entity, Authentication authentication) throws Exception {
         return update(entity, authentication);
     }
 

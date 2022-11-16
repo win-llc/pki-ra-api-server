@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -28,6 +29,7 @@ import java.time.temporal.ChronoUnit;
 @ActiveProfiles({"test"})
 @AutoConfigureMockMvc
 @Testcontainers
+@Transactional
 public abstract class BaseTest {
 
     private static final String postgresContainerImage = "bitnami/postgresql:11.14.0";

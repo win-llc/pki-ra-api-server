@@ -190,8 +190,8 @@ public class CertIssuanceTransaction extends CertTransaction {
             form.setAccountId(account.getId());
             form.setFqdn(fqdn);
             form.setAlternateDnsValues(raCertificateIssueRequest.getDnsNameList());
-            Long serverEntryId = serverEntryService.createServerEntry(form, null);
-            serverEntry = serverEntryRepository.findById(serverEntryId).get();
+            form = serverEntryService.add(form, null);
+            serverEntry = serverEntryRepository.findById(form.getId()).get();
         }
 
         //If certificate request does not exist, create one

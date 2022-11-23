@@ -4,6 +4,7 @@ import com.winllc.acme.common.client.ca.LoadedCertAuthorityStore;
 import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.CertificateValidationForm;
 import com.winllc.acme.common.domain.RevocationRequest;
+import com.winllc.pki.ra.beans.form.RevocationRequestForm;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.RevocationRequestRepository;
 import com.winllc.pki.ra.service.transaction.CertRevocationTransaction;
@@ -18,14 +19,20 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.naming.InvalidNameException;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.security.auth.x500.X500Principal;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/revocationRequest")
-public class RevocationRequestService {
+public class RevocationRequestService extends DataPagedService<RevocationRequest,
+        RevocationRequestForm, RevocationRequestRepository> {
 
     private static final Logger log = LogManager.getLogger(RevocationRequestService.class);
 
@@ -34,7 +41,9 @@ public class RevocationRequestService {
     private final ApplicationContext applicationContext;
 
     public RevocationRequestService(RevocationRequestRepository revocationRequestRepository,
-                                    LoadedCertAuthorityStore certAuthorityStore, ApplicationContext applicationContext) {
+                                    LoadedCertAuthorityStore certAuthorityStore,
+                                    ApplicationContext applicationContext) {
+        super(applicationContext, RevocationRequest.class, revocationRequestRepository);
         this.revocationRequestRepository = revocationRequestRepository;
         this.certAuthorityStore = certAuthorityStore;
         this.applicationContext = applicationContext;
@@ -44,11 +53,7 @@ public class RevocationRequestService {
         return revocationRequestRepository.save(request);
     }
 
-    @GetMapping("/all")
-    public List<RevocationRequest> request(){
 
-        return revocationRequestRepository.findAll();
-    }
 
     @GetMapping("/status/{status}")
     public List<RevocationRequest> status(@PathVariable String status){
@@ -143,5 +148,25 @@ public class RevocationRequestService {
         }else{
             throw new RAObjectNotFoundException(CertAuthority.class, request.getIssuerDn());
         }
+    }
+
+    @Override
+    protected RevocationRequestForm entityToForm(RevocationRequest entity) {
+        return new RevocationRequestForm(entity);
+    }
+
+    @Override
+    protected RevocationRequest formToEntity(RevocationRequestForm form, Authentication authentication) throws Exception {
+        return null;
+    }
+
+    @Override
+    protected RevocationRequest combine(RevocationRequest original, RevocationRequest updated, Authentication authentication) throws Exception {
+        return null;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<RevocationRequest> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        return null;
     }
 }

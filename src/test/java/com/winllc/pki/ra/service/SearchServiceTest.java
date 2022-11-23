@@ -26,7 +26,7 @@ class SearchServiceTest extends BaseTest {
         cachedCertificateService.persist(certificates.get(0), "VALID", "ca1");
         Thread.sleep(5 * 1000);
 
-        List<CertificateDetails> found = searchService.searchCertificates("test");
+        List<CachedCertificate> found = searchService.searchCertificates("test");
         assertEquals(1, found.size());
     }
 

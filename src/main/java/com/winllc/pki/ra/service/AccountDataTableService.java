@@ -9,6 +9,7 @@ import com.winllc.pki.ra.beans.form.ValidForm;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 

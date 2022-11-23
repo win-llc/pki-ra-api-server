@@ -56,18 +56,6 @@ public class TermsOfServiceManagementService extends
         return termsList;
     }
 
-    @GetMapping("/getById/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public TermsOfService getById(@PathVariable long id) throws RAObjectNotFoundException {
-
-        Optional<TermsOfService> optionalTermsOfService = repository.findById(id);
-
-        if(optionalTermsOfService.isPresent()){
-            return optionalTermsOfService.get();
-        }else{
-            throw new RAObjectNotFoundException(TermsOfService.class, id);
-        }
-    }
 
     @GetMapping("/version/{versionId}")
     @ResponseStatus(HttpStatus.OK)

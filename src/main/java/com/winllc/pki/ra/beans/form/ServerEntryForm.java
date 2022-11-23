@@ -2,6 +2,8 @@ package com.winllc.pki.ra.beans.form;
 
 import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.pki.ra.util.FormValidationUtil;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.Hibernate;
 import org.springframework.util.CollectionUtils;
 
@@ -9,16 +11,30 @@ import javax.validation.constraints.NotEmpty;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
+@Setter
 public class ServerEntryForm extends ValidForm<ServerEntry> {
 
     private String fqdn;
     private Long accountId;
+    private String projectName;
     private Long domainId;
-    private List<String> alternateDnsValues;
+    private List<String> alternateDnsValues = new ArrayList<>();
     private String openidClientRedirectUrl;
-    private Boolean allowPreAuthz;
+    private Boolean allowPreAuthz = false;
 
     public ServerEntryForm(){}
+
+    public ServerEntryForm(ServerEntry entry){
+        super(entry);
+        this.fqdn = entry.getFqdn();
+        //Hibernate.initialize(entry.getAccount());
+        //this.accountId = entry.getAccount().getId();
+        //todo add domain id
+        this.alternateDnsValues = entry.getAlternateDnsValues();
+        this.openidClientRedirectUrl = entry.getOpenidClientRedirectUrl();
+        this.allowPreAuthz = entry.getAcmeAllowPreAuthz();
+    }
 
     @Override
     protected void processIsValid() {
@@ -36,63 +52,6 @@ public class ServerEntryForm extends ValidForm<ServerEntry> {
         }
     }
 
-    public ServerEntryForm(ServerEntry entry){
-        super(entry);
-        this.fqdn = entry.getFqdn();
-        //Hibernate.initialize(entry.getAccount());
-        //this.accountId = entry.getAccount().getId();
-        //todo add domain id
-        this.alternateDnsValues = entry.getAlternateDnsValues();
-        this.openidClientRedirectUrl = entry.getOpenidClientRedirectUrl();
-        this.allowPreAuthz = entry.getAcmeAllowPreAuthz();
-    }
 
-    public String getFqdn() {
-        return fqdn;
-    }
 
-    public void setFqdn(String fqdn) {
-        this.fqdn = fqdn;
-    }
-
-    public Long getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(Long accountId) {
-        this.accountId = accountId;
-    }
-
-    public Long getDomainId() {
-        return domainId;
-    }
-
-    public void setDomainId(Long domainId) {
-        this.domainId = domainId;
-    }
-
-    public List<String> getAlternateDnsValues() {
-        if(alternateDnsValues == null) alternateDnsValues = new ArrayList<>();
-        return alternateDnsValues;
-    }
-
-    public void setAlternateDnsValues(List<String> alternateDnsValues) {
-        this.alternateDnsValues = alternateDnsValues;
-    }
-
-    public String getOpenidClientRedirectUrl() {
-        return openidClientRedirectUrl;
-    }
-
-    public void setOpenidClientRedirectUrl(String openidClientRedirectUrl) {
-        this.openidClientRedirectUrl = openidClientRedirectUrl;
-    }
-
-    public Boolean getAllowPreAuthz() {
-        return allowPreAuthz;
-    }
-
-    public void setAllowPreAuthz(Boolean allowPreAuthz) {
-        this.allowPreAuthz = allowPreAuthz;
-    }
 }

@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service.external;
 
+import com.winllc.acme.common.repository.AccountRepository;
 import com.winllc.pki.ra.constants.ServerSettingRequired;
 import com.winllc.acme.common.domain.Account;
 import com.winllc.acme.common.domain.AttributePolicyGroup;
@@ -35,6 +36,8 @@ public class EntityDirectoryService {
     private final SecurityPolicyService securityPolicyService;
     private final ServerSettingsService serverSettingsService;
     private final ServerEntryRepository serverEntryRepository;
+    @Autowired
+    private AccountRepository accountRepository;
 
     public EntityDirectoryService(AttributePolicyGroupRepository attributePolicyGroupRepository, SecurityPolicyService securityPolicyService, ServerSettingsService serverSettingsService, ServerEntryRepository serverEntryRepository) {
         this.attributePolicyGroupRepository = attributePolicyGroupRepository;
@@ -112,7 +115,8 @@ public class EntityDirectoryService {
     }
 
     public Map<String, Object> calculateAttributePolicyMapForServerEntry(ServerEntry serverEntry){
-        Account account = serverEntry.getAccount();
+        Optional<Account> optionalAccount = accountRepository.findDistinctByServerEntriesContains(serverEntry);
+        Account account = optionalAccount.orElseThrow();
         List<AttributePolicyGroup> policyGroups = attributePolicyGroupRepository.findAllByAccount(account);
 
         Map<String, Object> attributeMap = new HashMap<>();

@@ -103,7 +103,7 @@ class ServerEntryServiceTest extends BaseTest {
         serverEntryForm.setFqdn("test2.winllc-dev.com");
         serverEntryForm.setAccountId(account.getId());
 
-        serverEntryService.createServerEntry(serverEntryForm, null);
+        serverEntryService.add(serverEntryForm, null);
 
         Optional<ServerEntry> distinctByFqdnEquals = serverEntryRepository.findDistinctByFqdnEquals("test2.winllc-dev.com");
         assertTrue(distinctByFqdnEquals.isPresent());
@@ -125,9 +125,9 @@ class ServerEntryServiceTest extends BaseTest {
         serverEntryForm.setFqdn("test2.winllc-dev.com");
         serverEntryForm.setAccountId(account.getId());
 
-        Long serverId = serverEntryService.createServerEntry(serverEntryForm, null);
+        serverEntryForm = serverEntryService.add(serverEntryForm, null);
 
-        AuthCredential latestAuthCredential = serverEntryService.getLatestAuthCredential(serverId);
+        AuthCredential latestAuthCredential = serverEntryService.getLatestAuthCredential(serverEntryForm.getId());
         assertTrue(latestAuthCredential.getMacKey().length() > 0);
     }
 
@@ -159,10 +159,10 @@ class ServerEntryServiceTest extends BaseTest {
     }
 
     @Test
-    void getServerEntry() throws RAObjectNotFoundException {
+    void getServerEntry() throws Exception {
         ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
-        ServerEntryInfo info = serverEntryService.getServerEntryInfo(serverEntry.getId());
-        assertEquals("test.winllc-dev.com", info.getFqdn());
+        ServerEntryForm form = serverEntryService.findRest(serverEntry.getId(), null);
+        assertEquals("test.winllc-dev.com", form.getFqdn());
     }
 
     @Test

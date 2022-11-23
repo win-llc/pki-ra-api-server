@@ -138,56 +138,6 @@ public class DomainLinkToAccountRequestService extends
         }
     }
 
-    @PostMapping("/linkAccount/create")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Long createDomainRequest(@Valid @RequestBody DomainLinkToAccountRequestForm form,
-                                    Authentication authentication)
-            throws NotAuthorizedException, RAObjectNotFoundException {
-
-        DomainLinkToAccountRequest request = DomainLinkToAccountRequest.buildNew();
-        request.setRequestedBy(authentication.getName());
-        request.setRequestedOn(ZonedDateTime.now());
-
-        List<Long> domainIds = new LinkedList<>(form.getRequestedDomainIds());
-        domainIds.removeIf(Objects::isNull);
-        form.setRequestedDomainIds(domainIds);
-
-        Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
-        List<Domain> requestedDomains = domainRepository.findAllByIdIn(form.getRequestedDomainIds());
-        if (optionalAccount.isPresent()) {
-            Account account = optionalAccount.get();
-
-            //Ensure user exists in the account
-            Optional<PocEntry> pocEntryOptional = pocEntryRepository
-                    .findDistinctByEmailEqualsAndAccount(authentication.getName(), account);
-
-            //List<User> accountUsers = userRepository.findAllByAccountsContains(account);
-            if (pocEntryOptional.isPresent()) {
-                Set<Long> avaialableDomains = requestedDomains.stream()
-                        .map(r -> r.getId())
-                        .collect(Collectors.toSet());
-                request.setRequestedDomainIds(avaialableDomains);
-                request.setAccountId(account.getId());
-
-                request = requestRepository.save(request);
-
-                SystemActionRunner.build(context)
-                        .createNotificationForAccountPocs(Notification.buildNew()
-                                .addMessage("Domain Link to Account Requested"), account)
-                        .createAuditRecord(AuditRecordType.DOMAIN_LINK_TO_ACCOUNT_REQUEST_CREATED)
-                        .execute();
-
-                log.info("Created domain link request: " + request);
-                return request.getId();
-            } else {
-                log.error("Requester not associated with account");
-                throw new NotAuthorizedException(authentication.getName(), "Link Account Create");
-            }
-
-        } else {
-            throw new RAObjectNotFoundException(Account.class, form.getAccountId());
-        }
-    }
 
     @Transactional
     @PostMapping("/linkAccount/update")
@@ -206,11 +156,9 @@ public class DomainLinkToAccountRequestService extends
                 request.setStatusUpdatedOn(ZonedDateTime.now());
 
                 switch (decision.getStatus()) {
-                    case "approve":
+                    case "approve" -> {
                         request.setStatusApproved();
-
                         List<Domain> requestedDomains = domainRepository.findAllByIdIn(new ArrayList<>(request.getRequestedDomainIds()));
-
                         if (!CollectionUtils.isEmpty(requestedDomains)) {
                             Set<DomainPolicy> domainPolicies = requestedDomains.stream()
                                     .map(DomainPolicy::new)
@@ -237,18 +185,15 @@ public class DomainLinkToAccountRequestService extends
                                     .createAuditRecord(AuditRecordType.DOMAIN_LINK_TO_ACCOUNT_REQUEST_APPROVED)
                                     .execute();
                         }
-
-                        break;
-                    case "reject":
+                    }
+                    case "reject" -> {
                         request.setStatusRejected();
-
                         SystemActionRunner.build(context)
                                 .createNotificationForAccountPocs(Notification.buildNew()
                                         .addMessage("Domain Link to Account Approved"), account)
                                 .createAuditRecord(AuditRecordType.DOMAIN_LINK_TO_ACCOUNT_REQUEST_APPROVED)
                                 .execute();
-
-                        break;
+                    }
                 }
             }
 
@@ -334,7 +279,7 @@ public class DomainLinkToAccountRequestService extends
 
             request = requestRepository.save(request);
 
-            SystemActionRunner.build(context)
+            SystemActionRunner.build(context, request)
                     .createNotificationForAccountPocs(Notification.buildNew()
                             .addMessage("Domain Link to Account Requested"), account)
                     .createAuditRecord(AuditRecordType.DOMAIN_LINK_TO_ACCOUNT_REQUEST_CREATED)

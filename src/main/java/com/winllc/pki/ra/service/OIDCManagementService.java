@@ -75,8 +75,8 @@ public class OIDCManagementService implements ApplicationContextAware {
             try {
                 //todo generify
 
-                SystemActionRunner runner = SystemActionRunner.build(this.applicationContext)
-                        .createAuditRecord(AuditRecordType.OPENID_ENABLED, serverEntry);
+                SystemActionRunner runner = SystemActionRunner.build(this.applicationContext, serverEntry)
+                        .createAuditRecord(AuditRecordType.OPENID_ENABLED);
 
                 ServerEntry finalServerEntry = serverEntry;
                 ThrowingSupplier<ServerEntry, Exception> action = () -> oidcProviderConnection.createClient(finalServerEntry);
@@ -110,8 +110,8 @@ public class OIDCManagementService implements ApplicationContextAware {
         if(optionalServerEntry.isPresent()){
             ServerEntry serverEntry = optionalServerEntry.get();
 
-            SystemActionRunner runner = SystemActionRunner.build(this.applicationContext)
-                    .createAuditRecord(AuditRecordType.OPENID_DISABLED, serverEntry);
+            SystemActionRunner runner = SystemActionRunner.build(this.applicationContext, serverEntry)
+                    .createAuditRecord(AuditRecordType.OPENID_DISABLED);
 
             ServerEntry finalServerEntry = serverEntry;
             ThrowingSupplier<ServerEntry, Exception> action = () -> oidcProviderConnection.deleteClient(finalServerEntry);

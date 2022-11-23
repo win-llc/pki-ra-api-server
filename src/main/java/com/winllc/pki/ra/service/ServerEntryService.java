@@ -90,14 +90,6 @@ public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntr
                 .collect(Collectors.toList());
     }
 
-    @PostMapping("/create")
-    @ResponseStatus(HttpStatus.CREATED)
-    @Transactional
-    public Long createServerEntry(@Valid @RequestBody ServerEntryForm form, Authentication authentication)
-            throws Exception {
-        ServerEntryForm add = add(form, authentication);
-        return add.getId();
-    }
 
     @GetMapping("/getSans/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -133,15 +125,6 @@ public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntr
         return getSans(id);
     }
 
-    @GetMapping("/byId/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional
-    public ServerEntryInfo getServerEntryInfo(@PathVariable Long id) throws RAObjectNotFoundException {
-
-        ServerEntry entry = getServerEntry(id);
-
-        return entryToInfo(entry);
-    }
 
     @GetMapping("/latestAuthCredential/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -283,7 +266,7 @@ public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntr
 
 
     @Override
-    protected void delete(Long id, Authentication authentication) throws RAObjectNotFoundException {
+    public void delete(Long id, Authentication authentication) throws RAObjectNotFoundException {
         ServerEntry serverEntry = getServerEntry(id);
 
         //if server entry is deleted, remove the OIDC client if it exists
@@ -297,15 +280,22 @@ public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntr
 
         serverEntryRepository.deleteById(id);
 
-        SystemActionRunner.build(context)
-                .createAuditRecord(AuditRecordType.SERVER_ENTRY_REMOVED, serverEntry)
+        SystemActionRunner.build(context, serverEntry)
+                .createAuditRecord(AuditRecordType.SERVER_ENTRY_REMOVED)
                 .execute();
     }
 
     @Override
     public ServerEntryForm entityToForm(ServerEntry entity) {
         Hibernate.initialize(entity.getAlternateDnsValues());
-        return new ServerEntryForm(entity);
+
+        Optional<Account> account = accountRepository.findDistinctByServerEntriesContains(entity);
+
+        ServerEntryForm form = new ServerEntryForm(entity);
+
+        account.ifPresent(value -> form.setProjectName(value.getProjectName()));
+
+        return form;
     }
 
     @Override
@@ -352,8 +342,8 @@ public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntr
         entry = (ServerEntry) authCredentialService.addNewAuthCredentialToEntry(entry);
         entry = serverEntryRepository.save(entry);
 
-        SystemActionRunner.build(context)
-                .createAuditRecord(AuditRecordType.SERVER_ENTRY_ADDED, entry)
+        SystemActionRunner.build(context,entry)
+                .createAuditRecord(AuditRecordType.SERVER_ENTRY_ADDED)
                 .createNotificationForAccountPocs(Notification.buildNew()
                         .addMessage("Server Entry added: " + entry.getFqdn()), account)
                 .sendNotification()
@@ -362,9 +352,9 @@ public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntr
         //apply attributes to external directory
 
         ServerEntry finalEntry = entry;
-        ThrowingSupplier<Boolean, Exception> action = () -> {
+        ThrowingSupplier<ServerEntry, Exception> action = () -> {
             entityDirectoryService.applyServerEntryToDirectory(finalEntry);
-            return true;
+            return finalEntry;
         };
 
         SystemActionRunner.build(context)
@@ -386,8 +376,8 @@ public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntr
 
         original = serverEntryRepository.save(original);
 
-        SystemActionRunner.build(context)
-                .createAuditRecord(AuditRecordType.SERVER_ENTRY_UPDATED, original)
+        SystemActionRunner.build(context, original)
+                .createAuditRecord(AuditRecordType.SERVER_ENTRY_UPDATED)
                 .createNotificationForAccountPocs(Notification.buildNew()
                         .addMessage("Server Entry updated: " + original.getFqdn()), original.getAccount())
                 .sendNotification()

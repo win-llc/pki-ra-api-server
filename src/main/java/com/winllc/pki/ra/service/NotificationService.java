@@ -26,8 +26,16 @@ public class NotificationService {
 
     @GetMapping("/forCurrentUser")
     public List<Notification> getCurrentNotificationsForUser(Authentication authentication){
-        return notificationRepository.findAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskCompleteOrderByCreationDateDesc(
+        List<Notification> notifications = notificationRepository.findAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskCompleteOrderByCreationDateDesc(
                 authentication.getName(), false, false);
+
+        notifications.forEach(n -> {
+            if(n.getType().getUiBasePath() != null && n.getTaskObjectId() != null) {
+                n.setLink(n.getType().getUiBasePath() + "/" + n.getTaskObjectId());
+            }
+        });
+
+        return notifications;
     }
 
     @GetMapping("/forCurrentUser/tasks")

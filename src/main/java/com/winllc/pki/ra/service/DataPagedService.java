@@ -95,13 +95,13 @@ public abstract class DataPagedService<T extends BaseEntity, F extends ValidForm
         delete(id, authentication);
     }
 
-    protected F add(F form, Authentication authentication) throws Exception {
+    public F add(F form, Authentication authentication) throws Exception {
         T entity = formToEntity(form, authentication);
         entity = repository.save(entity);
         return entityToForm(entity);
     }
 
-    protected F update(F form, Authentication authentication) throws Exception {
+    public F update(F form, Authentication authentication) throws Exception {
         T entity = repository.findById(form.getId()).orElseThrow(() -> new RAObjectNotFoundException(form));
         T newEntity = formToEntity(form, authentication);
         newEntity = combine(entity, newEntity, authentication);
@@ -109,7 +109,7 @@ public abstract class DataPagedService<T extends BaseEntity, F extends ValidForm
         return entityToForm(entity);
     }
 
-    protected void delete(Long id, Authentication authentication) throws RAObjectNotFoundException{
+    public void delete(Long id, Authentication authentication) throws RAObjectNotFoundException{
         repository.deleteById(id);
     }
 
@@ -118,7 +118,8 @@ public abstract class DataPagedService<T extends BaseEntity, F extends ValidForm
     protected abstract T combine(T original, T updated, Authentication authentication) throws Exception;
 
 
-    public Page<F> generatePage(Integer page, Integer pageSize, String order, String sortBy, Map<String, String> allRequestParams, String forEmail){
+    public Page<F> generatePage(Integer page, Integer pageSize, String order,
+                                String sortBy, Map<String, String> allRequestParams, String forEmail){
         try {
             Sort.Direction direction = order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
             String sort = StringUtils.isNotBlank(sortBy) ? sortBy : "id";

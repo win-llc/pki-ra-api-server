@@ -51,7 +51,7 @@ public class CertRevocationTransaction extends CertTransaction {
         if (optionalServerEntry.isPresent()) {
             ServerEntry serverEntry = optionalServerEntry.get();
 
-            runner.createAuditRecord(AuditRecordType.CERTIFICATE_REVOKED, serverEntry);
+            runner.createAuditRecord(AuditRecordType.CERTIFICATE_REVOKED);
 
             Hibernate.initialize(serverEntry.getAccount());
             runner.createNotificationForAccountPocs(

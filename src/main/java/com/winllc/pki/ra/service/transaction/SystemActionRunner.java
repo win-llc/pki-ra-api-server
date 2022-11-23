@@ -43,19 +43,28 @@ public class SystemActionRunner {
         this.notificationEmails = new ArrayList<>();
     }
 
+    private SystemActionRunner(ApplicationContext context, UniqueEntity entity){
+        this(context);
+        this.entity = entity;
+    }
+
     public static SystemActionRunner build(ApplicationContext context){
         return new SystemActionRunner(context);
     }
 
+    public static SystemActionRunner build(ApplicationContext context, UniqueEntity entity){
+        return new SystemActionRunner(context, entity);
+    }
+
     public SystemActionRunner createAuditRecord(AuditRecordType type){
-        this.auditRecord = AuditRecord.buildNew(type);
+        if(entity != null && entity instanceof UniqueEntity){
+            this.auditRecord = AuditRecord.buildNew(type, (UniqueEntity) entity);
+        }else{
+            this.auditRecord = AuditRecord.buildNew(type);
+        }
         return this;
     }
 
-    public SystemActionRunner createAuditRecord(AuditRecordType type, UniqueEntity uniqueEntity){
-        this.auditRecord = AuditRecord.buildNew(type, uniqueEntity);
-        return this;
-    }
 
     public SystemActionRunner createAuditRecord(AuditRecord auditRecord){
         this.auditRecord = auditRecord;
@@ -64,6 +73,11 @@ public class SystemActionRunner {
 
     public SystemActionRunner createNotification(Notification notification){
         this.notification = notification;
+        if(entity instanceof UniqueEntity){
+            UniqueEntity uniqueEntity = (UniqueEntity) entity;
+            notification.setTaskObjectId(uniqueEntity.getId());
+            notification.setTaskObjectClass(uniqueEntity.getClass().getName());
+        }
         return this;
     }
 
@@ -76,7 +90,7 @@ public class SystemActionRunner {
     public SystemActionRunner createNotificationForAccountPocs(Notification notification, Account account){
 
         addAccountPocsForNotification(account);
-        this.notification = notification;
+        createNotification(notification);
         return this;
     }
 
@@ -115,8 +129,7 @@ public class SystemActionRunner {
             }
         }
 
-        if(result instanceof AccountOwnedEntity){
-            AccountOwnedEntity entity = (AccountOwnedEntity) result;
+        if(result instanceof AccountOwnedEntity entity){
             Hibernate.initialize(entity.getOwnerAccount());
             Account account = entity.getOwnerAccount();
             addAccountPocsForNotification(account);

@@ -85,42 +85,6 @@ public class AccountRequestService extends
         return accountRequestRepository.countAllByStateEquals("new");
     }
 
-    @GetMapping("/my")
-    @ResponseStatus(HttpStatus.OK)
-    public List<AccountRequest> myRequests(Authentication authentication) {
-        return accountRequestRepository.findAllByRequestedByEmailEquals(authentication.getName());
-    }
-
-    //@PreAuthorize("hasPermission(#form, 'accountrequest:create')")
-    @PostMapping("/submit")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Long createAccountRequest(@Valid @RequestBody AccountRequestForm form, Authentication authentication) {
-        log.info("Account request: " + form);
-        AccountRequest accountRequest = AccountRequest.createNew();
-        accountRequest.setAccountOwnerEmail(form.getAccountOwnerEmail());
-        accountRequest.setProjectName(form.getProjectName());
-        accountRequest.setSecurityPolicyServerProjectId(form.getSecurityPolicyServerProjectId());
-        accountRequest.setRequestedByEmail(authentication.getName());
-        accountRequest.setCreationDate(Timestamp.from(ZonedDateTime.now().toInstant()));
-
-        accountRequest = accountRequestRepository.save(accountRequest);
-        return accountRequest.getId();
-    }
-
-
-    //@PreAuthorize("hasPermission(#id, 'com.winllc.acme.common.domain.AccountRequest', 'accountrequest:read')")
-    @GetMapping("/findById/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public AccountRequest findById(@PathVariable Long id) throws RAObjectNotFoundException {
-        Optional<AccountRequest> optionalAccountRequest = accountRequestRepository.findById(id);
-
-        if (optionalAccountRequest.isPresent()) {
-            return optionalAccountRequest.get();
-        } else {
-            throw new RAObjectNotFoundException(AccountRequest.class, id);
-        }
-    }
-
 
     @Override
     protected AccountRequestForm entityToForm(AccountRequest entity) {

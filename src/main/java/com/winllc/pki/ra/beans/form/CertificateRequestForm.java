@@ -20,6 +20,9 @@ public class CertificateRequestForm extends ValidForm<CertificateRequest> {
 
     private String csr;
     private String name;
+    private String status;
+
+    private String submittedOn;
     private String certAuthorityName;
     @NotNull
     private Long accountId;
@@ -31,6 +34,8 @@ public class CertificateRequestForm extends ValidForm<CertificateRequest> {
         super(entity);
         this.csr = entity.getCsr();
         this.certAuthorityName = entity.getCertAuthorityName();
+        this.status = entity.getStatus();
+        this.submittedOn = entity.getSubmittedOn().toString();
         if(entity.getAccount() != null) {
             this.accountId = entity.getAccount().getId();
         }

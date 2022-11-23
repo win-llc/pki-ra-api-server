@@ -31,7 +31,8 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/attributePolicy")
-public class AttributePolicyService extends DataPagedService<AttributePolicyGroup, AttributePolicyGroupForm, AttributePolicyGroupRepository> {
+public class AttributePolicyService extends DataPagedService<AttributePolicyGroup,
+        AttributePolicyGroupForm, AttributePolicyGroupRepository> {
 
     private static final Logger log = LogManager.getLogger(AttributePolicyService.class);
 

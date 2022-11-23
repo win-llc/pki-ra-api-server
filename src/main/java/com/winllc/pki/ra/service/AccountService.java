@@ -401,8 +401,8 @@ public class AccountService extends DataPagedService<Account, AccountUpdateForm,
 
             accountRestrictionService.syncPolicyServerBackedAccountRestrictions(account, this);
 
-            SystemActionRunner.build(context)
-                    .createAuditRecord(AuditRecordType.ACCOUNT_ADDED, account)
+            SystemActionRunner.build(context, account)
+                    .createAuditRecord(AuditRecordType.ACCOUNT_ADDED)
                     .execute();
 
             return account;

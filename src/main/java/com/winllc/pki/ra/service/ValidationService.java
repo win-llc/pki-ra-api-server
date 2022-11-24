@@ -38,19 +38,23 @@ public class ValidationService {
     private final ServerEntryRepository serverEntryRepository;
     private final AccountRestrictionService accountRestrictionService;
     private final AuthCredentialRepository authCredentialRepository;
-    @Autowired
-    private CertificateRequestRepository certificateRequestRepository;
-    @Autowired
-    private CertAuthorityConnectionService certAuthorityConnectionService;
-    @Autowired
-    private AuthCredentialService authCredentialService;
+    private final CertificateRequestRepository certificateRequestRepository;
+    private final CertAuthorityConnectionService certAuthorityConnectionService;
+    private final AuthCredentialService authCredentialService;
 
     public ValidationService(AccountRepository accountRepository, ServerEntryRepository serverEntryRepository,
-                             AccountRestrictionService accountRestrictionService, AuthCredentialRepository authCredentialRepository) {
+                             AccountRestrictionService accountRestrictionService,
+                             AuthCredentialRepository authCredentialRepository,
+                             CertificateRequestRepository certificateRequestRepository,
+                             CertAuthorityConnectionService certAuthorityConnectionService,
+                             AuthCredentialService authCredentialService) {
         this.accountRepository = accountRepository;
         this.serverEntryRepository = serverEntryRepository;
         this.accountRestrictionService = accountRestrictionService;
         this.authCredentialRepository = authCredentialRepository;
+        this.certificateRequestRepository = certificateRequestRepository;
+        this.certAuthorityConnectionService = certAuthorityConnectionService;
+        this.authCredentialService = authCredentialService;
     }
 
     @PostMapping("/rules/{kid}")

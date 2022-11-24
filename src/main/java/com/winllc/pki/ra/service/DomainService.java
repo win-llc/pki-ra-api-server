@@ -6,6 +6,7 @@ import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.acme.common.domain.Account;
 import com.winllc.acme.common.domain.Domain;
 import com.winllc.acme.common.domain.DomainPolicy;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.AccountRepository;
 import com.winllc.acme.common.repository.DomainPolicyRepository;
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/domain")
-public class DomainService extends DataPagedService<Domain, DomainForm, DomainRepository> {
+public class DomainService extends UpdatedDataPagedService<Domain, DomainForm, DomainRepository> {
 
     private static final Logger log = LogManager.getLogger(DomainService.class);
 
@@ -140,19 +141,25 @@ public class DomainService extends DataPagedService<Domain, DomainForm, DomainRe
     @Transactional
     public Long createDomain(@Valid @RequestBody DomainForm form, Authentication authentication)
             throws Exception {
-        DomainForm added = add(form, authentication);
+        DomainForm added = add(form, null, authentication);
 
         return added.getId();
     }
 
 
+
     @Override
-    public DomainForm entityToForm(Domain entity) {
+    protected void postSave(Domain entity, DomainForm form) {
+
+    }
+
+    @Override
+    protected DomainForm entityToForm(Domain entity, Authentication authentication) {
         return new DomainForm(entity);
     }
 
     @Override
-    protected Domain formToEntity(DomainForm form, Authentication authentication) throws RAObjectNotFoundException {
+    protected Domain formToEntity(DomainForm form, Map<String, String> params, Authentication authentication) throws Exception {
         Domain domain = new Domain();
         domain.setBase(form.getBase());
 
@@ -187,7 +194,8 @@ public class DomainService extends DataPagedService<Domain, DomainForm, DomainRe
     }
 
     @Override
-    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<Domain> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<Domain> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
+
 }

@@ -2,6 +2,7 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.beans.form.DomainPolicyForm;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.AccountRepository;
 import com.winllc.acme.common.repository.DomainPolicyRepository;
@@ -13,13 +14,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/domainPolicy")
-public class DomainPolicyService extends AccountDataTableService<DomainPolicy, DomainPolicyForm> {
+public class DomainPolicyService extends UpdatedDataPagedService<DomainPolicy,
+        DomainPolicyForm, DomainPolicyRepository> {
 
     private final AccountRepository accountRepository;
     private final DomainRepository domainRepository;
@@ -28,7 +34,7 @@ public class DomainPolicyService extends AccountDataTableService<DomainPolicy, D
     public DomainPolicyService(ApplicationContext context, AccountRepository accountRepository,
                                DomainRepository domainRepository,
                                DomainPolicyRepository restrictionRepository) {
-        super(context, accountRepository, restrictionRepository);
+        super(context, DomainPolicy.class, restrictionRepository);
         this.accountRepository = accountRepository;
         this.domainRepository = domainRepository;
         this.restrictionRepository = restrictionRepository;
@@ -167,27 +173,27 @@ public class DomainPolicyService extends AccountDataTableService<DomainPolicy, D
 
     private DomainCertIssuanceRestrictionHolder getTargetObject(String type, Long targetId) throws Exception {
         DomainCertIssuanceRestrictionHolder holder = null;
-        switch (type){
-            case "account":
+        switch (type) {
+            case "account" -> {
                 Optional<Account> optionalAccount = accountRepository.findById(targetId);
-                if(optionalAccount.isPresent()){
+                if (optionalAccount.isPresent()) {
                     Account account = optionalAccount.get();
                     Hibernate.initialize(account.getAccountDomainPolicies());
                     holder = account;
-                }else{
+                } else {
                     throw new RAObjectNotFoundException(Account.class, targetId);
                 }
-                break;
-            case "domain":
+            }
+            case "domain" -> {
                 Optional<Domain> optionalDomain = domainRepository.findById(targetId);
-                if(optionalDomain.isPresent()){
+                if (optionalDomain.isPresent()) {
                     Domain domain = optionalDomain.get();
                     Hibernate.initialize(domain.getGlobalDomainPolicy());
                     //holder = domain;
-                }else{
+                } else {
                     throw new RAObjectNotFoundException(Domain.class, targetId);
                 }
-                break;
+            }
         }
 
         if(holder != null){
@@ -197,14 +203,21 @@ public class DomainPolicyService extends AccountDataTableService<DomainPolicy, D
         }
     }
 
+
+
     @Override
-    protected DomainPolicyForm entityToForm(DomainPolicy entity) {
+    protected void postSave(DomainPolicy entity, DomainPolicyForm form) {
+
+    }
+
+    @Override
+    protected DomainPolicyForm entityToForm(DomainPolicy entity, Authentication authentication) {
         Hibernate.initialize(entity.getTargetDomain());
         return new DomainPolicyForm(entity);
     }
 
     @Override
-    protected DomainPolicy formToEntity(DomainPolicyForm form, Account account) {
+    protected DomainPolicy formToEntity(DomainPolicyForm form, Map<String, String> params, Authentication authentication) throws Exception {
         DomainPolicy policy = new DomainPolicy();
         policy.setId(form.getId());
         policy.setAcmeRequireDnsValidation(form.isAcmeRequireDnsValidation());
@@ -215,10 +228,15 @@ public class DomainPolicyService extends AccountDataTableService<DomainPolicy, D
     }
 
     @Override
-    protected DomainPolicy combine(DomainPolicy original, DomainPolicy updated) {
+    protected DomainPolicy combine(DomainPolicy original, DomainPolicy updated, Authentication authentication) throws Exception {
         original.setAcmeRequireDnsValidation(updated.isAcmeRequireDnsValidation());
         original.setAcmeRequireHttpValidation(updated.isAcmeRequireHttpValidation());
         original.setAllowIssuance(updated.isAllowIssuance());
         return original;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<DomainPolicy> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
+        return null;
     }
 }

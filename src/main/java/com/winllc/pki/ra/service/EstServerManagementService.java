@@ -3,6 +3,7 @@ package com.winllc.pki.ra.service;
 import com.winllc.acme.common.domain.EstServerProperties;
 import com.winllc.acme.common.repository.EstServerPropertiesRepository;
 import com.winllc.pki.ra.beans.form.EstServerPropertiesForm;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
@@ -20,7 +21,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/estServerManagement")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
-public class EstServerManagementService extends DataPagedService<EstServerProperties, EstServerPropertiesForm, EstServerPropertiesRepository> {
+public class EstServerManagementService extends UpdatedDataPagedService<EstServerProperties,
+        EstServerPropertiesForm, EstServerPropertiesRepository> {
 
     protected EstServerManagementService(ApplicationContext context,
                                          EstServerPropertiesRepository repository) {
@@ -50,13 +52,20 @@ public class EstServerManagementService extends DataPagedService<EstServerProper
         }
     }
 
+
+
     @Override
-    protected EstServerPropertiesForm entityToForm(EstServerProperties entity) {
+    protected void postSave(EstServerProperties entity, EstServerPropertiesForm form) {
+
+    }
+
+    @Override
+    protected EstServerPropertiesForm entityToForm(EstServerProperties entity, Authentication authentication) {
         return new EstServerPropertiesForm(entity);
     }
 
     @Override
-    protected EstServerProperties formToEntity(EstServerPropertiesForm form, Authentication authentication) throws Exception {
+    protected EstServerProperties formToEntity(EstServerPropertiesForm form, Map<String, String> params, Authentication authentication) throws Exception {
         EstServerProperties estServerProperties = new EstServerProperties();
         estServerProperties.setName(form.getName());
         estServerProperties.setCaConnectionName(form.getCaConnectionName());
@@ -71,7 +80,8 @@ public class EstServerManagementService extends DataPagedService<EstServerProper
     }
 
     @Override
-    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<EstServerProperties> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<EstServerProperties> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
+
 }

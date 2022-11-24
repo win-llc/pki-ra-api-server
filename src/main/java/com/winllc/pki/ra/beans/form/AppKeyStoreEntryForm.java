@@ -1,7 +1,10 @@
 package com.winllc.pki.ra.beans.form;
 
+import com.winllc.acme.common.domain.BaseEntity;
 import com.winllc.acme.common.keystore.KeyEntryWrapper;
 import com.winllc.acme.common.util.CertUtil;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang.StringUtils;
 
 import javax.validation.constraints.NotEmpty;
@@ -9,6 +12,8 @@ import java.io.IOException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 
+@Getter
+@Setter
 public class AppKeyStoreEntryForm extends ValidForm {
 
     @NotEmpty
@@ -21,6 +26,14 @@ public class AppKeyStoreEntryForm extends ValidForm {
 
     public AppKeyStoreEntryForm(){}
 
+    public AppKeyStoreEntryForm(KeyEntryWrapper entryWrapper){
+        setAlias(entryWrapper.getAlias());
+        Certificate cert = entryWrapper.getCertificate();
+        if(cert != null){
+            this.currentCertificate = CertUtil.toPEM(cert);
+        }
+    }
+
     @Override
     protected void processIsValid() {
         if(StringUtils.isNotEmpty(uploadCertificate)){
@@ -32,13 +45,6 @@ public class AppKeyStoreEntryForm extends ValidForm {
         }
     }
 
-    public AppKeyStoreEntryForm(KeyEntryWrapper entryWrapper){
-        this.alias = entryWrapper.getAlias();
-        Certificate cert = entryWrapper.getCertificate();
-        if(cert != null){
-            this.currentCertificate = CertUtil.toPEM(cert);
-        }
-    }
 
     public String getAlias() {
         return alias;

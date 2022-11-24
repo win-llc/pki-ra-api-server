@@ -190,7 +190,7 @@ public class CertIssuanceTransaction extends CertTransaction {
             form.setAccountId(account.getId());
             form.setFqdn(fqdn);
             form.setAlternateDnsValues(raCertificateIssueRequest.getDnsNameList());
-            form = serverEntryService.add(form, null);
+            form = serverEntryService.add(form, null, null);
             serverEntry = serverEntryRepository.findById(form.getId()).get();
         }
 

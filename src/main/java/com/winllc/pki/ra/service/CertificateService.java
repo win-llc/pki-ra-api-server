@@ -6,6 +6,9 @@ import com.winllc.acme.common.domain.CertificateRequest;
 import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.acme.common.repository.CertificateRequestRepository;
 import com.winllc.acme.common.repository.ServerEntryRepository;
+import com.winllc.pki.ra.beans.form.CertificateForm;
+import com.winllc.pki.ra.beans.form.SansForm;
+import com.winllc.pki.ra.beans.search.GridModel;
 import com.winllc.ra.integration.ca.CertSearchParam;
 import com.winllc.ra.integration.ca.CertSearchParams;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.criteria.Predicate;
@@ -31,7 +35,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/certificates")
-public class CertificateService {
+public class CertificateService implements UpdatedDataService<CertificateForm> {
 
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("mm/DD/yyyy");
 
@@ -166,50 +170,58 @@ public class CertificateService {
         return new ArrayList<>();
     }
 
-    public static Specification<CachedCertificate> buildSearch(final String text, boolean archived, boolean nonArchived,
-                                                               boolean includeValid, boolean includeExpired, Date notBefore, Date notAfter) {
-
-        return (root, query, builder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            Predicate onlyLatest = builder.equal(root.get("latestForDn"), true);
-            predicates.add(onlyLatest);
-
-            if (notBefore != null) {
-                Predicate notBeforeFilter = builder.greaterThanOrEqualTo(root.get("validTo"), notBefore);
-                predicates.add(notBeforeFilter);
-            }
-
-            if (notAfter != null) {
-                Predicate notAfterFilter = builder.lessThanOrEqualTo(root.get("validTo"), notAfter);
-                predicates.add(notAfterFilter);
-            }
-
-            if (StringUtils.isNotBlank(text)) {
-                String finalText = text;
-                if (!text.contains("%")) {
-                    finalText = "%" + text + "%";
-                }
-
-                predicates.add(builder.like(root.get("dn"), finalText));
-            }
 
 
-            if (!includeValid || !includeExpired) {
-                if (includeValid) {
-                    Predicate validSearch = builder.greaterThanOrEqualTo(root.get("validTo"), Date.valueOf(LocalDate.now()));
-                    predicates.add(validSearch);
-                }
+    @PostMapping("/paged")
+    @Override
+    public Page<CertificateForm> getPaged(@RequestParam Integer page,
+                                   @RequestParam Integer pageSize,
+                                   @RequestParam(defaultValue = "asc") String order,
+                                   @RequestParam(required = false) String sortBy,
+                                   @RequestParam Map<String, String> allRequestParams,
+                                   @RequestBody GridModel gridModel,
+                                   Authentication authentication) {
+        ServerEntry serverEntry = getServerEntry(allRequestParams);
+        List<CachedCertificate> certs = getCertificatesForServer(serverEntry.getId());
 
-                if (includeExpired) {
-                    Predicate expiredSearch = builder.lessThanOrEqualTo(root.get("validTo"), Date.valueOf(LocalDate.now()));
-                    predicates.add(expiredSearch);
-                }
-            }
+        List<CertificateForm> forms = certs.stream()
+                .map(CertificateForm::new)
+                .collect(Collectors.toList());
+        return new PageImpl<>(forms);
+    }
 
-            return builder.and(predicates.toArray(new Predicate[0]));
-        };
+    @Override
+    public Page<CertificateForm> getMyPaged(Integer page, Integer pageSize, String order, String sortBy, Map<String, String> allRequestParams, GridModel gridModel, Authentication authentication) {
+        return null;
+    }
+
+    @Override
+    public List<CertificateForm> getAll(Authentication authentication) throws Exception {
+        return null;
+    }
+
+    @Override
+    public CertificateForm findRest(Long id, Authentication authentication) throws Exception {
+        return null;
+    }
+
+    @Override
+    public CertificateForm addRest(CertificateForm entity, Map<String, String> allRequestParams, Authentication authentication) throws Exception {
+        return null;
+    }
+
+    @Override
+    public CertificateForm updateRest(CertificateForm entity, Map<String, String> allRequestParams, Authentication authentication) throws Exception {
+        return null;
+    }
+
+    @Override
+    public void deleteRest(Long id, CertificateForm form, Authentication authentication) throws Exception {
 
     }
 
+    private ServerEntry getServerEntry(Map<String, String> params){
+        Long serverId = Long.valueOf(params.get("serverId"));
+        return serverEntryRepository.findById(serverId).orElseThrow();
+    }
 }

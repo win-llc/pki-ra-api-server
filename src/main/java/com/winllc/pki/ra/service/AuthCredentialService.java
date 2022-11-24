@@ -5,6 +5,7 @@ import com.winllc.pki.ra.beans.form.AuthCredentialForm;
 import com.winllc.pki.ra.beans.form.AuthCredentialsUpdateForm;
 import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
 import com.winllc.acme.common.domain.*;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.AccountRepository;
 import com.winllc.acme.common.repository.AuthCredentialRepository;
@@ -13,17 +14,24 @@ import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.Hibernate;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/authCredential")
-public class AuthCredentialService extends ServerEntryDataTableService<AuthCredential, AuthCredentialForm> {
+public class AuthCredentialService extends UpdatedDataPagedService<AuthCredential,
+        AuthCredentialForm, AuthCredentialRepository> {
 
     private final AuthCredentialRepository authCredentialRepository;
     private final ServerEntryRepository serverEntryRepository;
@@ -33,7 +41,7 @@ public class AuthCredentialService extends ServerEntryDataTableService<AuthCrede
                                  AuthCredentialRepository authCredentialRepository,
                                  ServerEntryRepository serverEntryRepository,
                                  AccountRepository accountRepository) {
-        super(context, serverEntryRepository, accountRepository, authCredentialRepository);
+        super(context, AuthCredential.class, authCredentialRepository);
         this.authCredentialRepository = authCredentialRepository;
         this.serverEntryRepository = serverEntryRepository;
         this.accountRepository = accountRepository;
@@ -159,20 +167,38 @@ public class AuthCredentialService extends ServerEntryDataTableService<AuthCrede
     }
 
     @Override
-    protected AuthCredentialForm entityToForm(AuthCredential entity) {
+    protected void postSave(AuthCredential entity, AuthCredentialForm form) {
+
+    }
+
+    @Override
+    protected AuthCredentialForm entityToForm(AuthCredential entity, Authentication authentication) {
         return new AuthCredentialForm(entity);
     }
 
     @Override
-    protected AuthCredential formToEntity(AuthCredentialForm form, Object parent) throws RAObjectNotFoundException {
-        AuthCredential authCredential = AuthCredential.buildNew((AuthCredentialHolderInteface) parent);
+    protected AuthCredential formToEntity(AuthCredentialForm form, Map<String, String> params,
+                                          Authentication authentication) throws Exception {
+        Optional<AuthCredentialHolderInteface> parentObject = getParentObject(params);
 
-        return authCredential;
+        if(parentObject.isPresent()) {
+            AuthCredential authCredential = AuthCredential.buildNew(parentObject.get());
+            authCredential.setValid(form.isValid());
+
+            return authCredential;
+        }else{
+            throw new Exception("Could not find parent object");
+        }
     }
 
     @Override
-    protected AuthCredential combine(AuthCredential original, AuthCredential updated) {
+    protected AuthCredential combine(AuthCredential original, AuthCredential updated, Authentication authentication) throws Exception {
         original.setValid(updated.getValid());
         return original;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<AuthCredential> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
+        return null;
     }
 }

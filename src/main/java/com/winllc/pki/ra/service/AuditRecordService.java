@@ -8,6 +8,7 @@ import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
 import com.winllc.acme.common.constants.AuditRecordType;
 import com.winllc.acme.common.domain.AuditRecord;
 import com.winllc.acme.common.repository.AuditRecordRepository;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
@@ -30,7 +31,7 @@ import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/auditRecord")
-public class AuditRecordService extends DataPagedService<AuditRecord, AuditRecordForm, AuditRecordRepository> {
+public class AuditRecordService extends UpdatedDataPagedService<AuditRecord, AuditRecordForm, AuditRecordRepository> {
 
     private final AuditRecordRepository repository;
 
@@ -70,13 +71,20 @@ public class AuditRecordService extends DataPagedService<AuditRecord, AuditRecor
         }
     }
 
+
+
     @Override
-    protected AuditRecordForm entityToForm(AuditRecord entity) {
+    protected void postSave(AuditRecord entity, AuditRecordForm form) {
+
+    }
+
+    @Override
+    protected AuditRecordForm entityToForm(AuditRecord entity, Authentication authentication) {
         return new AuditRecordForm(entity);
     }
 
     @Override
-    protected AuditRecord formToEntity(AuditRecordForm form, Authentication authentication) throws Exception {
+    protected AuditRecord formToEntity(AuditRecordForm form, Map<String, String> params, Authentication authentication) throws Exception {
         return null;
     }
 
@@ -86,8 +94,7 @@ public class AuditRecordService extends DataPagedService<AuditRecord, AuditRecor
     }
 
     @Override
-    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<AuditRecord> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
-
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<AuditRecord> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         String type = allRequestParams.get("type");
         String id = allRequestParams.get("id");
 

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.winllc.pki.ra.beans.info.InfoObject;
 import com.winllc.acme.common.domain.AccountOwnedEntity;
 import com.winllc.acme.common.domain.BaseEntity;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
@@ -13,6 +15,9 @@ public abstract class ValidForm<T extends BaseEntity> extends InfoObject<T>  {
 
     protected Map<String, String> errors = new HashMap<>();
 
+    @Getter
+    @Setter
+    private boolean newRecord = false;
 
     public ValidForm(T entity) {
         super(entity);

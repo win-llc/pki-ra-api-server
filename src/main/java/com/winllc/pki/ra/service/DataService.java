@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-public interface DataService<F> {
+public interface DataService<F, I> {
 
     Page<F> getPaged(Integer page,
                      Integer pageSize,
@@ -32,7 +32,7 @@ public interface DataService<F> {
 
     List<F> getAll(Authentication authentication) throws Exception;
 
-    F findRest(Long id, Authentication authentication) throws Exception;
+    F findRest(I id, Authentication authentication) throws Exception;
 
 
     F addRest(F entity, BindingResult bindingResult, Authentication authentication) throws Exception;
@@ -41,5 +41,5 @@ public interface DataService<F> {
     F updateRest(F entity, Authentication authentication) throws Exception;
 
 
-    void deleteRest(Long id, Authentication authentication) throws Exception;
+    void deleteRest(I id, Authentication authentication) throws Exception;
 }

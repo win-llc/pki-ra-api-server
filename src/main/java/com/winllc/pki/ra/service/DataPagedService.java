@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Getter
 public abstract class DataPagedService<T extends BaseEntity, F extends ValidForm<T>,
         R extends PagingRepository<T>> extends AbstractService
-        implements DataService<F> {
+        implements DataService<F, Long> {
 
     private final Class<T> clazz;
     private final R repository;

@@ -8,6 +8,7 @@ import com.winllc.pki.ra.beans.form.CertificateRequestForm;
 import com.winllc.pki.ra.beans.form.ValidForm;
 import com.winllc.pki.ra.beans.info.CertificateRequestInfo;
 import com.winllc.pki.ra.beans.info.DomainInfo;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.beans.validator.CertRequestFormValidator;
 import com.winllc.pki.ra.beans.validator.ValidationResponse;
 import com.winllc.acme.common.domain.*;
@@ -47,7 +48,8 @@ import java.util.stream.Collectors;
 @Transactional
 @RestController
 @RequestMapping("/api/certificateRequest")
-public class CertificateRequestService extends DataPagedService<CertificateRequest, CertificateRequestForm, CertificateRequestRepository> {
+public class CertificateRequestService extends UpdatedDataPagedService<CertificateRequest,
+        CertificateRequestForm, CertificateRequestRepository> {
 
     private static final Logger log = LogManager.getLogger(CertificateRequestService.class);
 
@@ -289,13 +291,20 @@ public class CertificateRequestService extends DataPagedService<CertificateReque
         X509Certificate certificate = certIssuanceTransaction.processIssueCertificate(raCertificateIssueRequest, request.getAccount());
     }
 
+
+
     @Override
-    protected CertificateRequestForm entityToForm(CertificateRequest entity) {
+    protected void postSave(CertificateRequest entity, CertificateRequestForm form) {
+
+    }
+
+    @Override
+    protected CertificateRequestForm entityToForm(CertificateRequest entity, Authentication authentication) {
         return new CertificateRequestForm(entity);
     }
 
     @Override
-    protected CertificateRequest formToEntity(CertificateRequestForm form, Authentication authentication) throws Exception {
+    protected CertificateRequest formToEntity(CertificateRequestForm form, Map<String, String> params, Authentication authentication) throws Exception {
         Account account = accountRepository.findById(form.getAccountId())
                 .orElseThrow(() -> new RAObjectNotFoundException(Account.class, form.getAccountId()));
 
@@ -314,9 +323,8 @@ public class CertificateRequestService extends DataPagedService<CertificateReque
     }
 
     @Override
-    public List<Predicate> buildFilter(Map allRequestParams, Root root, CriteriaQuery query, CriteriaBuilder cb) {
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<CertificateRequest> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
-
 
 }

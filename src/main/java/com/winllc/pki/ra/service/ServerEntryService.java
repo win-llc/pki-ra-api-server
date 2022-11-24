@@ -6,6 +6,7 @@ import com.winllc.pki.ra.beans.info.PocEntryInfo;
 import com.winllc.pki.ra.beans.info.ServerEntryInfo;
 import com.winllc.acme.common.constants.AuditRecordType;
 import com.winllc.acme.common.domain.*;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.*;
 import com.winllc.pki.ra.service.external.EntityDirectoryService;
@@ -40,7 +41,7 @@ import static com.winllc.pki.ra.constants.ServerSettingRequired.ENTITY_DIRECTORY
 
 @RestController
 @RequestMapping("/api/serverEntry")
-public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntryForm, ServerEntryRepository> {
+public class ServerEntryService extends UpdatedDataPagedService<ServerEntry, ServerEntryForm, ServerEntryRepository> {
 
     private static final Logger log = LogManager.getLogger(ServerEntryService.class);
 
@@ -264,9 +265,8 @@ public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntr
 
 
 
-
     @Override
-    public void delete(Long id, Authentication authentication) throws RAObjectNotFoundException {
+    public void delete(Long id, ServerEntryForm form, Authentication authentication) throws RAObjectNotFoundException {
         ServerEntry serverEntry = getServerEntry(id);
 
         //if server entry is deleted, remove the OIDC client if it exists
@@ -285,8 +285,14 @@ public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntr
                 .execute();
     }
 
+
     @Override
-    public ServerEntryForm entityToForm(ServerEntry entity) {
+    protected void postSave(ServerEntry entity, ServerEntryForm form) {
+
+    }
+
+    @Override
+    protected ServerEntryForm entityToForm(ServerEntry entity, Authentication authentication) {
         Hibernate.initialize(entity.getAlternateDnsValues());
 
         Optional<Account> account = accountRepository.findDistinctByServerEntriesContains(entity);
@@ -299,7 +305,7 @@ public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntr
     }
 
     @Override
-    protected ServerEntry formToEntity(ServerEntryForm form, Authentication authentication) throws RAObjectNotFoundException {
+    protected ServerEntry formToEntity(ServerEntryForm form, Map<String, String> params, Authentication authentication) throws Exception {
         Account account = accountRepository.findById(form.getAccountId()).orElseThrow(() -> new RAObjectNotFoundException(form));
 
         //Don't proceed if FQDN already exists under account
@@ -389,16 +395,7 @@ public class ServerEntryService extends DataPagedService<ServerEntry, ServerEntr
     }
 
     @Override
-    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<ServerEntry> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
-        String search = allRequestParams.get("search");
-        if (StringUtils.isNotBlank(search)) {
-            String finalText = search;
-            if (!search.contains("%")) {
-                finalText = "%" + search + "%";
-            }
-            Predicate fqdnLike = cb.like(root.get("fqdn"), finalText);
-            return Collections.singletonList(fqdnLike);
-        }
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<ServerEntry> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
 

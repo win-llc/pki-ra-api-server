@@ -6,11 +6,16 @@ import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.AppKeyStoreEntryForm;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.service.validators.AppKeyStoreEntryValidator;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +28,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/applicationKeystore")
-public class ApplicationKeystoreManagerService {
+public class ApplicationKeystoreManagerService implements DataService<AppKeyStoreEntryForm, String> {
     //todo allow key creation, csr generation
 
     private static final Logger log = LogManager.getLogger(ApplicationKeystoreManagerService.class);
@@ -54,11 +59,11 @@ public class ApplicationKeystoreManagerService {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/all")
-    @ResponseStatus(HttpStatus.OK)
-    public List<KeyEntryWrapper> allEntries() throws KeyStoreException {
-        return new ArrayList<>(getAll());
-    }
+    //@GetMapping("/all")
+    //@ResponseStatus(HttpStatus.OK)
+    //public List<KeyEntryWrapper> allEntries() throws KeyStoreException {
+    //    return new ArrayList<>(getAll());
+    //}
 
     @GetMapping("/getEntryByAlias/{alias}")
     @ResponseStatus(HttpStatus.OK)
@@ -198,4 +203,79 @@ public class ApplicationKeystoreManagerService {
         return entries;
     }
 
+    @Override
+    @GetMapping("/paged")
+    public Page<AppKeyStoreEntryForm> getPaged(Integer page, Integer pageSize,
+                                               String order, String sortBy,
+                                               Map<String, String> allRequestParams) {
+
+        Page<AppKeyStoreEntryForm> paged = Page.empty();
+        try {
+            List<KeyEntryWrapper> all = getAll();
+
+            if(CollectionUtils.isNotEmpty(all)){
+                List<AppKeyStoreEntryForm> forms = all.stream()
+                        .map(AppKeyStoreEntryForm::new)
+                        .toList();
+
+                paged = new PageImpl<>(forms);
+            }
+        } catch (KeyStoreException e) {
+            throw new RuntimeException(e);
+        }
+        return paged;
+    }
+
+    @Override
+    @GetMapping("/my/paged")
+    public Page<AppKeyStoreEntryForm> getMyPaged(Integer page, Integer pageSize, String order, String sortBy, Map<String, String> allRequestParams, Authentication authentication) {
+        return getPaged(page, pageSize, order, sortBy, allRequestParams);
+    }
+
+    @GetMapping("/all")
+    @Override
+    public List<AppKeyStoreEntryForm> getAll(Authentication authentication) throws Exception {
+        try {
+            List<KeyEntryWrapper> all = getAll();
+
+            if(CollectionUtils.isNotEmpty(all)){
+
+                return all.stream()
+                        .map(AppKeyStoreEntryForm::new)
+                        .toList();
+            }else{
+                return new ArrayList<>();
+            }
+        } catch (KeyStoreException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    @GetMapping("/id/{id}")
+    public AppKeyStoreEntryForm findRest(@PathVariable String id,
+                                         Authentication authentication) throws Exception {
+
+        return getEntry(id);
+    }
+
+    @Override
+    @PostMapping("/add")
+    public AppKeyStoreEntryForm addRest(AppKeyStoreEntryForm entity, BindingResult bindingResult, Authentication authentication) throws Exception {
+        //todo
+        return null;
+    }
+
+    @Override
+    @PostMapping("/update")
+    public AppKeyStoreEntryForm updateRest(AppKeyStoreEntryForm entity, Authentication authentication) throws Exception {
+        //todo
+        return null;
+    }
+
+    @Override
+    @DeleteMapping("/delete/{id}")
+    public void deleteRest(@PathVariable String id, Authentication authentication) throws Exception {
+        //todo
+    }
 }

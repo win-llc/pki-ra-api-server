@@ -6,6 +6,7 @@ import com.winllc.pki.ra.beans.form.AccountRestrictionForm;
 import com.winllc.pki.ra.beans.form.DomainPolicyForm;
 import com.winllc.acme.common.constants.AccountRestrictionAction;
 import com.winllc.acme.common.constants.AccountRestrictionType;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.constants.ServerSettingRequired;
 import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
@@ -24,9 +25,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.*;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.sql.Timestamp;
@@ -39,11 +42,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/accountRestriction")
 public class AccountRestrictionService extends
-        AccountDataTableService<AccountRestriction, AccountRestrictionForm> {
+        UpdatedDataPagedService<AccountRestriction, AccountRestrictionForm, AccountRestrictionRepository> {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
 
@@ -64,7 +68,7 @@ public class AccountRestrictionService extends
                                      AccountRestrictionRepository accountRestrictionRepository,
                                      AccountRestrictionValidator accountRestrictionValidator,
                                      ApplicationContext applicationContext, SecurityPolicyService securityPolicyService, ServerSettingsService serverSettingsService, DomainPolicyService domainPolicyService, DomainRepository domainRepository) {
-        super(applicationContext, accountRepository, accountRestrictionRepository);
+        super(applicationContext, AccountRestriction.class, accountRestrictionRepository);
         this.accountRepository = accountRepository;
         this.accountRestrictionRepository = accountRestrictionRepository;
         this.accountRestrictionValidator = accountRestrictionValidator;
@@ -250,13 +254,26 @@ public class AccountRestrictionService extends
         }
     }
 
+
+
     @Override
-    protected AccountRestrictionForm entityToForm(AccountRestriction entity) {
+    protected void postSave(AccountRestriction entity, AccountRestrictionForm form) {
+
+    }
+
+    @Override
+    protected AccountRestrictionForm entityToForm(AccountRestriction entity, Authentication authentication) {
         return new AccountRestrictionForm(entity);
     }
 
     @Override
-    protected AccountRestriction formToEntity(AccountRestrictionForm form, Account account) throws RAObjectNotFoundException {
+    protected AccountRestriction formToEntity(AccountRestrictionForm form,
+                                              Map<String, String> params, Authentication authentication)
+            throws Exception {
+
+        Long parentEntityId = Long.valueOf(params.get("parentEntityId"));
+        Account account = accountRepository.findById(parentEntityId).orElseThrow();
+
         AccountRestriction accountRestriction = new AccountRestriction();
         accountRestriction.setType(AccountRestrictionType.valueOf(form.getType()));
         accountRestriction.setAccount(account);
@@ -267,11 +284,20 @@ public class AccountRestrictionService extends
     }
 
     @Override
-    protected AccountRestriction combine(AccountRestriction original, AccountRestriction updated) {
+    protected AccountRestriction combine(AccountRestriction original, AccountRestriction updated,
+                                         Authentication authentication) throws Exception {
         original.setCompleted(updated.isCompleted());
         original.setDueBy(updated.getDueBy());
         original.setAction(updated.getAction());
         original.setType(updated.getType());
         return original;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams,
+                                       GridFilterModel filterModel, Root<AccountRestriction> root,
+                                       CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
+
+        return null;
     }
 }

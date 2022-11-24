@@ -9,6 +9,7 @@ import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.pki.ra.beans.info.DomainLinkToAccountRequestInfo;
 import com.winllc.acme.common.constants.AuditRecordType;
 import com.winllc.acme.common.domain.*;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.NotAuthorizedException;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
@@ -40,7 +41,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/domain/request")
 public class DomainLinkToAccountRequestService extends
-        DataPagedService<DomainLinkToAccountRequest, DomainLinkToAccountRequestForm,
+        UpdatedDataPagedService<DomainLinkToAccountRequest, DomainLinkToAccountRequestForm,
                 DomainLinkToAccountRequestRepository> {
 
     private static final Logger log = LogManager.getLogger(DomainLinkToAccountRequestService.class);
@@ -233,8 +234,14 @@ public class DomainLinkToAccountRequestService extends
         return info;
     }
 
+
     @Override
-    protected DomainLinkToAccountRequestForm entityToForm(DomainLinkToAccountRequest entity) {
+    protected void postSave(DomainLinkToAccountRequest entity, DomainLinkToAccountRequestForm form) {
+
+    }
+
+    @Override
+    protected DomainLinkToAccountRequestForm entityToForm(DomainLinkToAccountRequest entity, Authentication authentication) {
         Account account = accountRepository.findById(entity.getAccountId())
                 .orElse(null);
         List<Domain> domains = domainRepository.findAllByIdIn(entity.getRequestedDomainIds());
@@ -252,7 +259,7 @@ public class DomainLinkToAccountRequestService extends
     }
 
     @Override
-    protected DomainLinkToAccountRequest formToEntity(DomainLinkToAccountRequestForm form, Authentication authentication) throws Exception {
+    protected DomainLinkToAccountRequest formToEntity(DomainLinkToAccountRequestForm form, Map<String, String> params, Authentication authentication) throws Exception {
         Account account = accountRepository.findById(form.getAccountId())
                 .orElseThrow(() -> new RAObjectNotFoundException(Account.class, form.getAccountId()));
         DomainLinkToAccountRequest request = DomainLinkToAccountRequest.buildNew();
@@ -300,7 +307,8 @@ public class DomainLinkToAccountRequestService extends
     }
 
     @Override
-    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<DomainLinkToAccountRequest> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<DomainLinkToAccountRequest> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
+
 }

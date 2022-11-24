@@ -103,7 +103,7 @@ class ServerEntryServiceTest extends BaseTest {
         serverEntryForm.setFqdn("test2.winllc-dev.com");
         serverEntryForm.setAccountId(account.getId());
 
-        serverEntryService.add(serverEntryForm, null);
+        serverEntryService.add(serverEntryForm, null,null);
 
         Optional<ServerEntry> distinctByFqdnEquals = serverEntryRepository.findDistinctByFqdnEquals("test2.winllc-dev.com");
         assertTrue(distinctByFqdnEquals.isPresent());
@@ -125,7 +125,7 @@ class ServerEntryServiceTest extends BaseTest {
         serverEntryForm.setFqdn("test2.winllc-dev.com");
         serverEntryForm.setAccountId(account.getId());
 
-        serverEntryForm = serverEntryService.add(serverEntryForm, null);
+        serverEntryForm = serverEntryService.add(serverEntryForm, null, null);
 
         AuthCredential latestAuthCredential = serverEntryService.getLatestAuthCredential(serverEntryForm.getId());
         assertTrue(latestAuthCredential.getMacKey().length() > 0);
@@ -144,7 +144,7 @@ class ServerEntryServiceTest extends BaseTest {
 
         form.setAlternateDnsValues(Collections.singletonList("bad dns"));
 
-        serverEntryService.update(form, null);
+        serverEntryService.update(form, null, null);
 
         serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
         assertEquals(1, serverEntry.getAlternateDnsValues().size());
@@ -186,7 +186,7 @@ class ServerEntryServiceTest extends BaseTest {
         ServerEntry serverEntry = serverEntryRepository.findDistinctByFqdnEquals("test.winllc-dev.com").get();
         assertNotNull(serverEntry);
 
-        serverEntryService.delete(serverEntry.getId(), null);
+        serverEntryService.delete(serverEntry.getId(), null,null);
 
         assertEquals(0, serverEntryRepository.findAll().size());
     }

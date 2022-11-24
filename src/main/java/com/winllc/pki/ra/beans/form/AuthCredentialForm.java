@@ -13,7 +13,7 @@ public class AuthCredentialForm extends ValidForm<AuthCredential> {
 
     private String keyIdentifier;
     private String macKeyBase64;
-    private Boolean credValid;
+    private boolean valid = false;
     private String pocAssignedTo;
     private String createdOn;
     private String expiresOn;
@@ -22,7 +22,7 @@ public class AuthCredentialForm extends ValidForm<AuthCredential> {
         super(entity);
         setKeyIdentifier(entity.getKeyIdentifier());
         setMacKeyBase64(entity.getMacKeyBase64());
-        setCredValid(entity.getValid());
+        setValid(entity.getValid() != null ? entity.getValid() : false);
         setPocAssignedTo(entity.getPocAssignedTo());
         if(entity.getCreatedOn() != null) setCreatedOn(entity.getCreatedOn().toString());
         if(entity.getExpiresOn() != null) setExpiresOn(entity.getExpiresOn().toString());

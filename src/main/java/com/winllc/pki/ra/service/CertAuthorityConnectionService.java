@@ -11,6 +11,7 @@ import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.info.CertAuthorityInfo;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.RAException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.*;
@@ -51,7 +52,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/ca")
 @Transactional
 public class CertAuthorityConnectionService extends
-        DataPagedService<CertAuthorityConnectionInfo, CertAuthorityConnectionInfoForm,
+        UpdatedDataPagedService<CertAuthorityConnectionInfo, CertAuthorityConnectionInfoForm,
                 CertAuthorityConnectionInfoRepository> {
 
     private static final Logger log = LogManager.getLogger(CertAuthorityConnectionService.class);
@@ -478,16 +479,20 @@ public class CertAuthorityConnectionService extends
         }
     }
 
+
     @Override
-    protected CertAuthorityConnectionInfoForm entityToForm(CertAuthorityConnectionInfo entity) {
+    protected void postSave(CertAuthorityConnectionInfo entity, CertAuthorityConnectionInfoForm form) {
+
+    }
+
+    @Override
+    protected CertAuthorityConnectionInfoForm entityToForm(CertAuthorityConnectionInfo entity, Authentication authentication) {
         CertAuthority loadedCertAuthority = certAuthorityStore.getLoadedCertAuthority(entity.getName());
         return new CertAuthorityConnectionInfoForm(entity, loadedCertAuthority);
     }
 
     @Override
-    protected CertAuthorityConnectionInfo formToEntity(CertAuthorityConnectionInfoForm connectionInfo,
-                                                       Authentication authentication)
-            throws Exception {
+    protected CertAuthorityConnectionInfo formToEntity(CertAuthorityConnectionInfoForm connectionInfo, Map<String, String> params, Authentication authentication) throws Exception {
         CertAuthorityConnectionInfo caConnection = new CertAuthorityConnectionInfo();
         caConnection.setName(connectionInfo.getName());
         caConnection.setCertAuthorityClassName(connectionInfo.getType());
@@ -550,7 +555,10 @@ public class CertAuthorityConnectionService extends
     }
 
     @Override
-    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<CertAuthorityConnectionInfo> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams,
+                                       GridFilterModel filterModel, Root<CertAuthorityConnectionInfo> root,
+                                       CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
+
 }

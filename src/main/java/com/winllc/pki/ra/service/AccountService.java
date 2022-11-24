@@ -8,6 +8,7 @@ import com.winllc.pki.ra.beans.info.AccountInfo;
 import com.winllc.pki.ra.beans.info.DomainInfo;
 import com.winllc.acme.common.constants.AuditRecordType;
 import com.winllc.acme.common.domain.*;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.*;
@@ -42,7 +43,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/account")
 @Transactional
-public class AccountService extends DataPagedService<Account, AccountUpdateForm, AccountRepository> {
+public class AccountService extends UpdatedDataPagedService<Account, AccountUpdateForm, AccountRepository> {
 
     private static final Logger log = LogManager.getLogger(AccountService.class);
 
@@ -309,10 +310,10 @@ public class AccountService extends DataPagedService<Account, AccountUpdateForm,
         AccountUpdateForm accountUpdateForm = new AccountUpdateForm();
         accountUpdateForm.setAccountOwnerEmail(form.getAccountOwnerEmail());
         accountUpdateForm.setProjectName(form.getProjectName());
-        return add(accountUpdateForm, null).getId();
+        return add(accountUpdateForm, null,null).getId();
     }
 
-    @Override
+
     public AccountUpdateForm update(AccountUpdateForm entity, Authentication authentication) throws RAObjectNotFoundException {
         Optional<Account> optionalAccount = accountRepository.findById(entity.getId());
         if (optionalAccount.isPresent()) {
@@ -322,7 +323,7 @@ public class AccountService extends DataPagedService<Account, AccountUpdateForm,
             account = accountRepository.save(account);
 
             //return buildAccountInfo(account, authentication);
-            return entityToForm(account);
+            return entityToForm(account, authentication);
         } else {
             throw new RAObjectNotFoundException(Account.class, entity.getId());
         }
@@ -348,8 +349,15 @@ public class AccountService extends DataPagedService<Account, AccountUpdateForm,
     }
 
 
+
+
     @Override
-    public AccountUpdateForm entityToForm(Account entity) {
+    protected void postSave(Account entity, AccountUpdateForm form) {
+
+    }
+
+    @Override
+    protected AccountUpdateForm entityToForm(Account entity, Authentication authentication) {
         AccountUpdateForm form = new AccountUpdateForm(entity);
 
         List<PocEntry> allByAccount = pocEntryRepository.findAllByAccount(entity);
@@ -366,7 +374,7 @@ public class AccountService extends DataPagedService<Account, AccountUpdateForm,
     }
 
     @Override
-    protected Account formToEntity(AccountUpdateForm form, Authentication authentication) throws RAObjectNotFoundException {
+    protected Account formToEntity(AccountUpdateForm form, Map<String, String> params, Authentication authentication) throws Exception {
         Optional<Account> optionalAccount = accountRepository.findDistinctByProjectName(form.getProjectName());
         if(optionalAccount.isEmpty()) {
             Account account = Account.buildNew(form.getProjectName());
@@ -377,7 +385,7 @@ public class AccountService extends DataPagedService<Account, AccountUpdateForm,
             authCredential = authCredentialRepository.save(authCredential);
 
             account.getAuthCredentials().add(authCredential);
-                    //broken todo
+            //broken todo
             //account = (Account) authCredentialService.addNewAuthCredentialToEntry(account);
 
             if (StringUtils.isNotBlank(form.getSecurityPolicyServerProjectId())) {
@@ -413,23 +421,17 @@ public class AccountService extends DataPagedService<Account, AccountUpdateForm,
 
     @Override
     protected Account combine(Account original, Account updated, Authentication authentication) {
-        return null;
+        return original;
     }
 
     @Override
-    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<Account> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
-        String search = allRequestParams.get("search");
-        if (StringUtils.isNotBlank(search)) {
-            String finalText = search;
-            if (!search.contains("%")) {
-                finalText = "%" + search + "%";
-            }
-            Predicate fqdnLike = cb.like(root.get("projectName"), finalText);
-            return Collections.singletonList(fqdnLike);
-        }
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<Account> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
 
+
+
+    @Override
     public List<Predicate> buildMyFilter(String email, CriteriaQuery<?> query, CriteriaBuilder cb){
         List<Predicate> list = new ArrayList<>();
         query.distinct(true);

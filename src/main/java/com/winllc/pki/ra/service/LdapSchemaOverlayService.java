@@ -3,6 +3,7 @@ package com.winllc.pki.ra.service;
 import com.winllc.acme.common.domain.LdapSchemaOverlay;
 import com.winllc.acme.common.domain.LdapSchemaOverlayAttribute;
 import com.winllc.pki.ra.beans.form.LdapSchemaOverlayForm;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.LdapSchemaOverlayAttributeRepository;
 import com.winllc.acme.common.repository.LdapSchemaOverlayRepository;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/ldapSchemaOverlay")
 public class LdapSchemaOverlayService extends
-        DataPagedService<LdapSchemaOverlay, LdapSchemaOverlayForm, LdapSchemaOverlayRepository> {
+        UpdatedDataPagedService<LdapSchemaOverlay, LdapSchemaOverlayForm, LdapSchemaOverlayRepository> {
 
     private final LdapSchemaOverlayRepository repository;
     private final LdapSchemaOverlayAttributeRepository attributeRepository;
@@ -131,13 +132,19 @@ public class LdapSchemaOverlayService extends
         repository.save(saved);
     }
 
+
     @Override
-    protected LdapSchemaOverlayForm entityToForm(LdapSchemaOverlay entity) {
+    protected void postSave(LdapSchemaOverlay entity, LdapSchemaOverlayForm form) {
+
+    }
+
+    @Override
+    protected LdapSchemaOverlayForm entityToForm(LdapSchemaOverlay entity, Authentication authentication) {
         return new LdapSchemaOverlayForm(entity);
     }
 
     @Override
-    protected LdapSchemaOverlay formToEntity(LdapSchemaOverlayForm form, Authentication authentication) throws Exception {
+    protected LdapSchemaOverlay formToEntity(LdapSchemaOverlayForm form, Map<String, String> params, Authentication authentication) throws Exception {
         LdapSchemaOverlay overlay = new LdapSchemaOverlay();
         overlay.setLdapObjectType(form.getLdapObjectType());
         overlay.setAttributeMap(form.getAttributeMap());
@@ -153,7 +160,8 @@ public class LdapSchemaOverlayService extends
     }
 
     @Override
-    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<LdapSchemaOverlay> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<LdapSchemaOverlay> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
+
 }

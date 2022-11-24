@@ -5,6 +5,7 @@ import com.winllc.pki.ra.beans.form.CertificateRequestDecisionForm;
 import com.winllc.pki.ra.beans.form.CertificateValidationForm;
 import com.winllc.acme.common.domain.RevocationRequest;
 import com.winllc.pki.ra.beans.form.RevocationRequestForm;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.RevocationRequestRepository;
 import com.winllc.pki.ra.service.transaction.CertRevocationTransaction;
@@ -31,7 +32,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/revocationRequest")
-public class RevocationRequestService extends DataPagedService<RevocationRequest,
+public class RevocationRequestService extends UpdatedDataPagedService<RevocationRequest,
         RevocationRequestForm, RevocationRequestRepository> {
 
     private static final Logger log = LogManager.getLogger(RevocationRequestService.class);
@@ -150,13 +151,19 @@ public class RevocationRequestService extends DataPagedService<RevocationRequest
         }
     }
 
+
     @Override
-    protected RevocationRequestForm entityToForm(RevocationRequest entity) {
+    protected void postSave(RevocationRequest entity, RevocationRequestForm form) {
+
+    }
+
+    @Override
+    protected RevocationRequestForm entityToForm(RevocationRequest entity, Authentication authentication) {
         return new RevocationRequestForm(entity);
     }
 
     @Override
-    protected RevocationRequest formToEntity(RevocationRequestForm form, Authentication authentication) throws Exception {
+    protected RevocationRequest formToEntity(RevocationRequestForm form, Map<String, String> params, Authentication authentication) throws Exception {
         return null;
     }
 
@@ -166,7 +173,8 @@ public class RevocationRequestService extends DataPagedService<RevocationRequest
     }
 
     @Override
-    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<RevocationRequest> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<RevocationRequest> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
+
 }

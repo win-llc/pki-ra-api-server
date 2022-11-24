@@ -10,6 +10,7 @@ import com.winllc.acme.common.repository.ServerEntryRepository;
 import com.winllc.pki.ra.beans.PocFormEntry;
 import com.winllc.pki.ra.beans.form.PocEntryForm;
 import com.winllc.pki.ra.beans.info.AccountInfo;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -17,25 +18,31 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.persistence.criteria.*;
 import javax.transaction.Transactional;
 import javax.ws.rs.PathParam;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/poc")
-public class PocEntryService extends ServerEntryDataTableService<PocEntry, PocEntryForm> {
+public class PocEntryService extends UpdatedDataPagedService<PocEntry, PocEntryForm, PocEntryRepository> {
 
     private final PocEntryRepository pocEntryRepository;
     private final AccountRepository accountRepository;
 
+    private final ServerEntryRepository serverEntryRepository;
+
     public PocEntryService(ApplicationContext context,
             PocEntryRepository pocEntryRepository, ServerEntryRepository serverEntryRepository,
                            AccountRepository accountRepository) {
-        super(context, serverEntryRepository, accountRepository, pocEntryRepository);
+        super(context, PocEntry.class, pocEntryRepository);
         this.pocEntryRepository = pocEntryRepository;
         this.accountRepository = accountRepository;
+        this.serverEntryRepository = serverEntryRepository;
     }
 
     @GetMapping("/account/{id}/all")
@@ -111,25 +118,50 @@ public class PocEntryService extends ServerEntryDataTableService<PocEntry, PocEn
         }
     }
 
+
+
     @Override
-    protected PocEntryForm entityToForm(PocEntry entity) {
+    protected void postSave(PocEntry entity, PocEntryForm form) {
+
+    }
+
+    @Override
+    protected PocEntryForm entityToForm(PocEntry entity, Authentication authentication) {
         return new PocEntryForm(entity);
     }
 
     @Override
-    protected PocEntry formToEntity(PocEntryForm form, Object parent) throws RAObjectNotFoundException {
+    protected PocEntry formToEntity(PocEntryForm form, Map<String, String> params,
+                                    Authentication authentication) throws Exception {
+        //parentEntityType: 'account', parentEntityId: accountId
+        String parentEntityType = params.get("parentEntityType");
+        Long parentEntityId = Long.valueOf(params.get("parentEntityId"));
+
         PocEntry pocEntry = new PocEntry();
         pocEntry.setEmail(form.getEmail());
-        if(parent instanceof ServerEntry){
-            pocEntry.setServerEntry((ServerEntry) parent);
-        }else if(parent instanceof Account){
-            pocEntry.setAccount((Account) parent);
+        pocEntry.setOwner(form.isOwner());
+        pocEntry.setCanManageAllServers(form.isCanManageAllServers());
+        if(parentEntityType.equalsIgnoreCase("server")){
+            Optional<ServerEntry> byId = serverEntryRepository.findById(parentEntityId);
+            byId.ifPresent(pocEntry::setServerEntry);
+        }else if(parentEntityType.equalsIgnoreCase("account")){
+            Optional<Account> byId = accountRepository.findById(parentEntityId);
+            byId.ifPresent(pocEntry::setAccount);
         }
         return pocEntry;
     }
 
     @Override
-    protected PocEntry combine(PocEntry original, PocEntry updated) {
+    protected PocEntry combine(PocEntry original, PocEntry updated, Authentication authentication) throws Exception {
+        original.setOwner(updated.isOwner());
+        original.setCanManageAllServers(updated.isCanManageAllServers());
+        return original;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams,
+                                       GridFilterModel filterModel, Root<PocEntry> root, CriteriaQuery<?> query,
+                                       CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
 }

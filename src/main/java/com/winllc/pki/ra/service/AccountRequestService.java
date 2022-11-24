@@ -7,6 +7,7 @@ import com.winllc.pki.ra.beans.form.AccountRequestUpdateForm;
 import com.winllc.acme.common.domain.AccountRequest;
 import com.winllc.pki.ra.beans.form.AccountUpdateForm;
 import com.winllc.pki.ra.beans.form.TermsOfServiceForm;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.AccountRequestRepository;
 import com.winllc.pki.ra.service.validators.AccountRequestUpdateValidator;
@@ -40,7 +41,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/account/request")
 public class AccountRequestService extends
-        DataPagedService<AccountRequest, AccountRequestForm,
+        UpdatedDataPagedService<AccountRequest, AccountRequestForm,
                 AccountRequestRepository> {
 
     private static final Logger log = LogManager.getLogger(AccountRequestService.class);
@@ -86,13 +87,19 @@ public class AccountRequestService extends
     }
 
 
+
     @Override
-    protected AccountRequestForm entityToForm(AccountRequest entity) {
+    protected void postSave(AccountRequest entity, AccountRequestForm form) {
+
+    }
+
+    @Override
+    protected AccountRequestForm entityToForm(AccountRequest entity, Authentication authentication) {
         return new AccountRequestForm(entity);
     }
 
     @Override
-    protected AccountRequest formToEntity(AccountRequestForm form, Authentication authentication) throws Exception {
+    protected AccountRequest formToEntity(AccountRequestForm form, Map<String, String> params, Authentication authentication) throws Exception {
         AccountRequest accountRequest = AccountRequest.createNew();
         accountRequest.setAccountOwnerEmail(form.getAccountOwnerEmail());
         accountRequest.setProjectName(form.getProjectName());
@@ -115,7 +122,7 @@ public class AccountRequestService extends
             requestForm.setAccountOwnerEmail(original.getAccountOwnerEmail());
             requestForm.setSecurityPolicyServerProjectId(original.getSecurityPolicyServerProjectId());
 
-            accountService.add(requestForm, authentication);
+            accountService.add(requestForm, null, authentication);
         } else if (updated.getState().contentEquals("reject")) {
             original.reject();
         }
@@ -124,7 +131,8 @@ public class AccountRequestService extends
     }
 
     @Override
-    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<AccountRequest> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<AccountRequest> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
+
 }

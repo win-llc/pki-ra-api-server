@@ -34,15 +34,19 @@ public class RolePermissionsService {
     private final PermissionProperties permissionProperties;
     private final RolePermissionRepository rolePermissionRepository;
     private final KeycloakOIDCProviderConnection oidcProviderConnection;
-    @Autowired
-    private AppRoleRepository appRoleRepository;
-    @Autowired
-    private EntityPermissionRepository entityPermissionRepository;
+    private final AppRoleRepository appRoleRepository;
+    private final EntityPermissionRepository entityPermissionRepository;
 
-    public RolePermissionsService(PermissionProperties permissionProperties, RolePermissionRepository rolePermissionRepository, KeycloakOIDCProviderConnection oidcProviderConnection) {
+    public RolePermissionsService(PermissionProperties permissionProperties,
+                                  RolePermissionRepository rolePermissionRepository,
+                                  KeycloakOIDCProviderConnection oidcProviderConnection,
+                                  AppRoleRepository appRoleRepository,
+                                  EntityPermissionRepository entityPermissionRepository) {
         this.permissionProperties = permissionProperties;
         this.rolePermissionRepository = rolePermissionRepository;
         this.oidcProviderConnection = oidcProviderConnection;
+        this.appRoleRepository = appRoleRepository;
+        this.entityPermissionRepository = entityPermissionRepository;
     }
 
 

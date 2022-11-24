@@ -147,7 +147,7 @@ class AccountServiceTest extends BaseTest {
     }
 
     @Test
-    void getAll() throws RAObjectNotFoundException {
+    void getAll() throws Exception {
         UserDetails userDetails = new org.springframework.security.core.userdetails.User("test@test.com", "", Collections.emptyList());
         List<AccountUpdateForm> all = accountService.getAll(null);
         assertEquals(1, all.size());

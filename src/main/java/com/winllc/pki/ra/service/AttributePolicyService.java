@@ -2,6 +2,7 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.domain.Account;
 import com.winllc.pki.ra.beans.form.AttributePolicyGroupForm;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.cron.LdapObjectUpdater;
 import com.winllc.acme.common.domain.*;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/attributePolicy")
-public class AttributePolicyService extends DataPagedService<AttributePolicyGroup,
+public class AttributePolicyService extends UpdatedDataPagedService<AttributePolicyGroup,
         AttributePolicyGroupForm, AttributePolicyGroupRepository> {
 
     private static final Logger log = LogManager.getLogger(AttributePolicyService.class);
@@ -235,13 +236,20 @@ public class AttributePolicyService extends DataPagedService<AttributePolicyGrou
     }
 
 
+
+
     @Override
-    protected AttributePolicyGroupForm entityToForm(AttributePolicyGroup entity) {
+    protected void postSave(AttributePolicyGroup entity, AttributePolicyGroupForm form) {
+
+    }
+
+    @Override
+    protected AttributePolicyGroupForm entityToForm(AttributePolicyGroup entity, Authentication authentication) {
         return new AttributePolicyGroupForm(entity);
     }
 
     @Override
-    protected AttributePolicyGroup formToEntity(AttributePolicyGroupForm form, Authentication authentication) throws Exception {
+    protected AttributePolicyGroup formToEntity(AttributePolicyGroupForm form, Map<String, String> params, Authentication authentication) throws Exception {
         Account account = accountRepository.findById(form.getAccountId())
                 .orElseThrow(() -> new RAObjectNotFoundException(Account.class, form.getAccountId()));
 
@@ -256,7 +264,7 @@ public class AttributePolicyService extends DataPagedService<AttributePolicyGrou
     }
 
     @Override
-    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<AttributePolicyGroup> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<AttributePolicyGroup> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
 

@@ -6,6 +6,7 @@ import com.winllc.acme.common.domain.TermsOfService;
 import com.winllc.acme.common.repository.CertAuthorityConnectionInfoRepository;
 import com.winllc.pki.ra.beans.form.CertAuthorityConnectionInfoForm;
 import com.winllc.pki.ra.beans.form.TermsOfServiceForm;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.acme.common.repository.TermsOfServiceRepository;
@@ -30,7 +31,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/tos")
 public class TermsOfServiceManagementService extends
-        DataPagedService<TermsOfService, TermsOfServiceForm,
+        UpdatedDataPagedService<TermsOfService, TermsOfServiceForm,
                 TermsOfServiceRepository> {
 
     private final TermsOfServiceRepository repository;
@@ -127,13 +128,19 @@ public class TermsOfServiceManagementService extends
         return newTos;
     }
 
+
     @Override
-    protected TermsOfServiceForm entityToForm(TermsOfService entity) {
+    protected void postSave(TermsOfService entity, TermsOfServiceForm form) {
+
+    }
+
+    @Override
+    protected TermsOfServiceForm entityToForm(TermsOfService entity, Authentication authentication) {
         return new TermsOfServiceForm(entity);
     }
 
     @Override
-    protected TermsOfService formToEntity(TermsOfServiceForm form, Authentication authentication) throws Exception {
+    protected TermsOfService formToEntity(TermsOfServiceForm form, Map<String, String> params, Authentication authentication) throws Exception {
         return null;
     }
 
@@ -144,7 +151,8 @@ public class TermsOfServiceManagementService extends
     }
 
     @Override
-    public List<Predicate> buildFilter(Map<String, String> allRequestParams, Root<TermsOfService> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<TermsOfService> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
         return null;
     }
+
 }

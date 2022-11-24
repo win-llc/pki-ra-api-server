@@ -2,13 +2,17 @@ package com.winllc.pki.ra.service;
 
 import com.winllc.acme.common.domain.Notification;
 import com.winllc.acme.common.repository.NotificationRepository;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/notification")
@@ -35,7 +39,9 @@ public class NotificationService {
             }
         });
 
-        return notifications;
+        return notifications.stream()
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/forCurrentUser/tasks")
@@ -48,11 +54,6 @@ public class NotificationService {
     public Integer getCurrentNotificationsCountForUser(Authentication authentication){
         return notificationRepository.countAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskComplete(
                 authentication.getName(), false, false);
-    }
-
-    @GetMapping("/byId/{id}")
-    public Notification getById(@PathVariable Long id, Authentication authentication){
-        return notificationRepository.findById(id).get();
     }
 
     public Notification save(Notification notification){
@@ -78,6 +79,21 @@ public class NotificationService {
 
         }else{
             log.debug("Could not find notification: "+id);
+        }
+    }
+
+    @PostMapping("/markAllRead")
+    public void markAllRead(Authentication authentication){
+        List<Notification> allUnread = notificationRepository.
+                findAllByForUserEqualsIgnoreCaseAndNotificationReadAndTaskCompleteOrderByCreationDateDesc(
+                        authentication.getName(), false, false
+                );
+
+        if(CollectionUtils.isNotEmpty(allUnread)){
+            for(Notification notification : allUnread){
+                notification.setNotificationRead(true);
+                notificationRepository.save(notification);
+            }
         }
     }
 

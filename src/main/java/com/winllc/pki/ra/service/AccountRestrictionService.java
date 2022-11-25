@@ -271,16 +271,22 @@ public class AccountRestrictionService extends
                                               Map<String, String> params, Authentication authentication)
             throws Exception {
 
-        Long parentEntityId = Long.valueOf(params.get("parentEntityId"));
-        Account account = accountRepository.findById(parentEntityId).orElseThrow();
+        if(params != null && params.containsKey("parentEntityId")) {
+            Long parentEntityId = Long.valueOf(params.get("parentEntityId"));
+            Account account = accountRepository.findById(parentEntityId).orElseThrow();
 
-        AccountRestriction accountRestriction = new AccountRestriction();
-        accountRestriction.setType(AccountRestrictionType.valueOf(form.getType()));
-        accountRestriction.setAccount(account);
-        accountRestriction.setAction(AccountRestrictionAction.valueOf(form.getAction()));
-        accountRestriction.setDueBy(ZonedDateTime.from(AccountRestrictionForm.formatter.parse(form.getDueBy())));
-        accountRestriction.setCompleted(form.isCompleted());
-        return accountRestriction;
+            AccountRestriction accountRestriction = new AccountRestriction();
+            accountRestriction.setType(AccountRestrictionType.valueOf(form.getType()));
+            accountRestriction.setAccount(account);
+            accountRestriction.setAction(AccountRestrictionAction.valueOf(form.getAction()));
+            if(form.getDueBy() != null) {
+                accountRestriction.setDueBy(ZonedDateTime.from(AccountRestrictionForm.formatter.parse(form.getDueBy())));
+            }
+            accountRestriction.setCompleted(form.isCompleted());
+            return accountRestriction;
+        }else{
+            return new AccountRestriction();
+        }
     }
 
     @Override

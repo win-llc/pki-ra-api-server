@@ -24,7 +24,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -77,7 +79,7 @@ class AccountRestrictionServiceTest extends BaseTest {
 
     @Test
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
-    void getById() throws RAObjectNotFoundException {
+    void getById() throws Exception {
         Account account = accountRepository.findDistinctByProjectName("Test Project 2").get();
 
         AccountRestriction accountRestriction = new AccountRestriction();
@@ -88,7 +90,7 @@ class AccountRestrictionServiceTest extends BaseTest {
         accountRestriction.setDueBy(ZonedDateTime.now());
         accountRestriction = accountRestrictionRepository.save(accountRestriction);
 
-        AccountRestrictionForm byId = accountRestrictionService.getById(accountRestriction.getId());
+        AccountRestrictionForm byId = accountRestrictionService.findRest(accountRestriction.getId(), null);
         assertNotNull(byId);
     }
 
@@ -101,13 +103,13 @@ class AccountRestrictionServiceTest extends BaseTest {
         accountRestrictionForm.setAccountId(account.getId());
         accountRestrictionForm.setAction(AccountRestrictionAction.DISABLE_ACCOUNT.toString());
         accountRestrictionForm.setDueBy(formatter.format(LocalDateTime.now().plusDays(3)));
-        Long id = accountRestrictionService.create(accountRestrictionForm);
-        assertNotNull(id);
+        accountRestrictionForm = accountRestrictionService.add(accountRestrictionForm, null, null);
+        assertNotNull(accountRestrictionForm);
 
         accountRestrictionForm.setAction("badaction");
         String badJson = new ObjectMapper().writeValueAsString(accountRestrictionForm);
         mockMvc.perform(
-                post("/api/accountRestriction/create")
+                post("/api/accountRestriction/add")
                         .contentType("application/json")
                         .content(badJson))
                 .andExpect(status().is(400));
@@ -121,14 +123,17 @@ class AccountRestrictionServiceTest extends BaseTest {
         AccountRestrictionForm accountRestrictionForm = new AccountRestrictionForm();
         accountRestrictionForm.setAccountId(account.getId());
         accountRestrictionForm.setAction(AccountRestrictionAction.DISABLE_ACCOUNT.toString());
-        accountRestrictionForm.setDueBy(formatter.format(LocalDateTime.now().plusDays(3)));
-        Long id = accountRestrictionService.create(accountRestrictionForm);
+        accountRestrictionForm.setDueBy(formatter.format(ZonedDateTime.now().plusDays(3)));
+        AccountRestrictionForm form = accountRestrictionService.add(accountRestrictionForm, null, null);
 
-        accountRestrictionForm.setId(id);
+        accountRestrictionForm.setId(form.getId());
         accountRestrictionForm.setAction(AccountRestrictionAction.ENABLE_ACCOUNT.toString());
+        accountRestrictionForm.setType(AccountRestrictionType.ACCOUNT_VALID_TO.name());
 
-        AccountRestriction accountRestriction = accountRestrictionService.update(accountRestrictionForm);
-        assertEquals(accountRestriction.getAction(), AccountRestrictionAction.ENABLE_ACCOUNT);
+        Map<String, String> params = new HashMap<>();
+        params.put("parentEntityId", account.getId().toString());
+        AccountRestrictionForm accountRestriction = accountRestrictionService.update(accountRestrictionForm, params, null);
+        assertEquals(AccountRestrictionAction.ENABLE_ACCOUNT.toString(), accountRestriction.getAction());
 
         accountRestrictionForm.setAction("bad");
         String badJson = new ObjectMapper().writeValueAsString(accountRestrictionForm);
@@ -141,7 +146,7 @@ class AccountRestrictionServiceTest extends BaseTest {
 
     @Test
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
-    void delete() {
+    void delete() throws Exception {
         Account account = accountRepository.findDistinctByProjectName("Test Project 2").get();
 
         AccountRestriction accountRestriction = new AccountRestriction();
@@ -153,7 +158,7 @@ class AccountRestrictionServiceTest extends BaseTest {
 
         assertNotNull(accountRestriction);
 
-        accountRestrictionService.delete(accountRestriction.getId());
+        accountRestrictionService.delete(accountRestriction.getId(), null, null);
 
         Optional<AccountRestriction> byId = accountRestrictionRepository.findById(accountRestriction.getId());
         assertFalse(byId.isPresent());

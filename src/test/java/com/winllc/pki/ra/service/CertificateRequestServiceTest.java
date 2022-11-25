@@ -146,7 +146,7 @@ class CertificateRequestServiceTest extends BaseTest {
 
     @Test
     @Transactional
-    void getAll() throws RAObjectNotFoundException {
+    void getAll() throws Exception {
         List<CertificateRequestForm> all = certificateRequestService.getAll(null);
         assertEquals(1, all.size());
     }

@@ -55,7 +55,7 @@ class DomainServiceTest extends BaseTest {
     }
 
     @Test
-    void getAllAvailableDomains() throws RAObjectNotFoundException {
+    void getAllAvailableDomains() throws Exception {
         List<DomainForm> allAvailableDomains = domainService.getAll(null);
         assertEquals(1, allAvailableDomains.size());
     }
@@ -127,7 +127,7 @@ class DomainServiceTest extends BaseTest {
     void updateDomain() throws Exception {
         Domain domain = domainRepository.findAll().get(0);
         DomainForm form = new DomainForm(domain);
-        DomainForm domain1 = domainService.update(form, null);
+        DomainForm domain1 = domainService.update(form, null, null);
         assertNotNull(domain1);
 
         form.setParentDomainId(0L);
@@ -141,11 +141,11 @@ class DomainServiceTest extends BaseTest {
 
     @Test
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
-    void deleteDomain() throws RAObjectNotFoundException {
+    void deleteDomain() throws Exception {
         Domain domain = domainRepository.findAll().get(0);
         assertNotNull(domain);
 
-        domainService.delete(domain.getId(), null);
+        domainService.delete(domain.getId(), null, null);
 
         assertEquals(0, domainRepository.findAll().size());
     }

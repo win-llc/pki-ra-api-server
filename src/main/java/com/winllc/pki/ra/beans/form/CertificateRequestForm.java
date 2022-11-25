@@ -35,7 +35,9 @@ public class CertificateRequestForm extends ValidForm<CertificateRequest> {
         this.csr = entity.getCsr();
         this.certAuthorityName = entity.getCertAuthorityName();
         this.status = entity.getStatus();
-        this.submittedOn = entity.getSubmittedOn().toString();
+        if(entity.getSubmittedOn() != null) {
+            this.submittedOn = entity.getSubmittedOn().toString();
+        }
         if(entity.getAccount() != null) {
             this.accountId = entity.getAccount().getId();
         }

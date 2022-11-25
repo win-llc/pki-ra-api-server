@@ -36,14 +36,14 @@ public class EntityDirectoryService {
     private final SecurityPolicyService securityPolicyService;
     private final ServerSettingsService serverSettingsService;
     private final ServerEntryRepository serverEntryRepository;
-    @Autowired
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
 
-    public EntityDirectoryService(AttributePolicyGroupRepository attributePolicyGroupRepository, SecurityPolicyService securityPolicyService, ServerSettingsService serverSettingsService, ServerEntryRepository serverEntryRepository) {
+    public EntityDirectoryService(AttributePolicyGroupRepository attributePolicyGroupRepository, SecurityPolicyService securityPolicyService, ServerSettingsService serverSettingsService, ServerEntryRepository serverEntryRepository, AccountRepository accountRepository) {
         this.attributePolicyGroupRepository = attributePolicyGroupRepository;
         this.securityPolicyService = securityPolicyService;
         this.serverSettingsService = serverSettingsService;
         this.serverEntryRepository = serverEntryRepository;
+        this.accountRepository = accountRepository;
     }
 
     //return the applied attribute map
@@ -114,6 +114,7 @@ public class EntityDirectoryService {
         return true;
     }
 
+    @Transactional
     public Map<String, Object> calculateAttributePolicyMapForServerEntry(ServerEntry serverEntry){
         Optional<Account> optionalAccount = accountRepository.findDistinctByServerEntriesContains(serverEntry);
         Account account = optionalAccount.orElseThrow();

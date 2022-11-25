@@ -3,10 +3,14 @@ package com.winllc.pki.ra.beans.form;
 import com.winllc.acme.common.constants.AccountRestrictionAction;
 import com.winllc.acme.common.constants.AccountRestrictionType;
 import com.winllc.acme.common.domain.AccountRestriction;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+@Getter
+@Setter
 public class AccountRestrictionForm extends ValidForm<AccountRestriction> {
 
     public static final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
@@ -42,51 +46,20 @@ public class AccountRestrictionForm extends ValidForm<AccountRestriction> {
 
     public AccountRestrictionForm(AccountRestriction restriction){
         super(restriction);
-        this.accountId = restriction.getAccount().getId();
-        this.type = restriction.getType().name();
-        this.action = restriction.getAction().name();
-        this.dueBy = restriction.getDueBy().toString();
+        if(restriction.getAccount() != null) {
+            this.accountId = restriction.getAccount().getId();
+        }
+        if(restriction.getType() != null) {
+            this.type = restriction.getType().name();
+        }
+        if(restriction.getAction() != null) {
+            this.action = restriction.getAction().name();
+        }
+        if(restriction.getDueBy() != null) {
+            this.dueBy = restriction.getDueBy().toString();
+        }
         this.completed = restriction.isCompleted();
     }
 
-    public Long getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(Long accountId) {
-        this.accountId = accountId;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getAction() {
-        return action;
-    }
-
-    public void setAction(String action) {
-        this.action = action;
-    }
-
-    public String getDueBy() {
-        return dueBy;
-    }
-
-    public void setDueBy(String dueBy) {
-        this.dueBy = dueBy;
-    }
-
-    public boolean isCompleted() {
-        return completed;
-    }
-
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
-    }
 
 }

@@ -39,12 +39,17 @@ public class SansService implements UpdatedDataService<SansForm> {
                                    @RequestBody GridModel gridModel,
                                    Authentication authentication) {
 
-        ServerEntry serverEntry = getServerEntry(allRequestParams);
-        Hibernate.initialize(serverEntry.getAlternateDnsValues());
-        List<SansForm> forms = serverEntry.getAlternateDnsValues().stream()
-                .map(s -> new SansForm(s, serverEntry.getId()))
-                .collect(Collectors.toList());
-        return new PageImpl<>(forms);
+        Optional<ServerEntry> optionalEntry = getServerEntry(allRequestParams);
+        if(optionalEntry.isPresent()) {
+            ServerEntry serverEntry = optionalEntry.get();
+            Hibernate.initialize(serverEntry.getAlternateDnsValues());
+            List<SansForm> forms = serverEntry.getAlternateDnsValues().stream()
+                    .map(s -> new SansForm(s, serverEntry.getId()))
+                    .collect(Collectors.toList());
+            return new PageImpl<>(forms);
+        }else{
+            return Page.empty();
+        }
     }
 
     @Override
@@ -72,12 +77,16 @@ public class SansService implements UpdatedDataService<SansForm> {
     public SansForm updateRest(@Valid @RequestBody SansForm entity, @RequestParam Map<String, String> allRequestParams,
                         Authentication authentication) throws Exception {
 
-        ServerEntry serverEntry = getServerEntry(allRequestParams);
+        Optional<ServerEntry> entryOptional = getServerEntry(allRequestParams);
 
-        serverEntry.getAlternateDnsValues()
-                .add(entity.buildFqdn());
+        if(entryOptional.isPresent()) {
+            ServerEntry serverEntry = entryOptional.get();
+            serverEntry.getAlternateDnsValues()
+                    .add(entity.buildFqdn());
 
-        serverEntryRepository.save(serverEntry);
+            serverEntryRepository.save(serverEntry);
+        }
+
         return entity;
     }
 
@@ -93,8 +102,12 @@ public class SansService implements UpdatedDataService<SansForm> {
         serverEntryRepository.save(serverEntry);
     }
 
-    private ServerEntry getServerEntry(Map<String, String> params){
-        Long serverId = Long.valueOf(params.get("serverId"));
-        return serverEntryRepository.findById(serverId).orElseThrow();
+    private Optional<ServerEntry> getServerEntry(Map<String, String> params){
+        if(params.containsKey("serverId")){
+            Long serverId = Long.valueOf(params.get("serverId"));
+            return serverEntryRepository.findById(serverId);
+        }else{
+            return Optional.empty();
+        }
     }
 }

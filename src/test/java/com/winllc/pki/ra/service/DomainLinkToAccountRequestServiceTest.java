@@ -81,7 +81,7 @@ class DomainLinkToAccountRequestServiceTest extends BaseTest {
     }
 
     @Test
-    void getAllRequests() throws RAObjectNotFoundException {
+    void getAllRequests() throws Exception {
         List<DomainLinkToAccountRequestForm> allRequests = linkToAccountRequestService.getAll(null);
         assertEquals(1, allRequests.size());
     }
@@ -113,8 +113,8 @@ class DomainLinkToAccountRequestServiceTest extends BaseTest {
         UserDetails userDetails =
                 new org.springframework.security.core.userdetails.User("test@test.com", "", new ArrayList<>());
 
-        Long domainRequest = linkToAccountRequestService.createDomainRequest(form, authentication);
-        assertTrue(domainRequest > 0);
+        DomainLinkToAccountRequestForm domainRequest = linkToAccountRequestService.add(form, null, authentication);
+        assertTrue(domainRequest.getId() > 0);
 
         form.setAccountId(0L);
         form.setRequestedDomainIds(Collections.singletonList(0L));

@@ -65,7 +65,7 @@ class TermsOfServiceManagementServiceTest extends BaseTest {
     }
 
     @Test
-    void getAll() throws RAObjectNotFoundException {
+    void getAll() throws Exception {
         List<TermsOfServiceForm> all = termsOfServiceManagementService.getAll(null);
         assertEquals(1, all.size());
     }
@@ -77,9 +77,9 @@ class TermsOfServiceManagementServiceTest extends BaseTest {
     }
 
     @Test
-    void getById() throws RAObjectNotFoundException {
+    void getById() throws Exception {
         TermsOfService tos = termsOfServiceRepository.findAll().get(0);
-        TermsOfService byId = termsOfServiceManagementService.getById(tos.getId());
+        TermsOfServiceForm byId = termsOfServiceManagementService.findRest(tos.getId(), null);
         assertNotNull(byId);
     }
 
@@ -121,14 +121,14 @@ class TermsOfServiceManagementServiceTest extends BaseTest {
 
     @Test
     @WithMockUser(value = "test@test.com", authorities = {"super_admin"})
-    void delete() throws RAObjectNotFoundException {
+    void delete() throws Exception {
         TermsOfService tos = new TermsOfService();
         tos.setText("new text");
         tos.setVersionId("v2");
         TermsOfService save = termsOfServiceRepository.save(tos);
         assertNotNull(save);
 
-        termsOfServiceManagementService.delete(save.getId(), null);
+        termsOfServiceManagementService.delete(save.getId(), null, null);
 
         assertEquals(1, termsOfServiceRepository.findAll().size());
     }

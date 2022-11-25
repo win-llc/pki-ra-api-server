@@ -111,7 +111,7 @@ class ServerEntryServiceTest extends BaseTest {
         serverEntryForm.setFqdn("inva lid");
         String badJson = new ObjectMapper().writeValueAsString(serverEntryForm);
         mockMvc.perform(
-                post("/api/serverEntry/create")
+                post("/api/serverEntry/add")
                         .contentType("application/json")
                         .content(badJson))
                 .andExpect(status().is(400));

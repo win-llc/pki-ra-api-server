@@ -1,12 +1,9 @@
 package com.winllc.pki.ra.service.external;
 
 import com.winllc.acme.common.domain.Account;
+import com.winllc.acme.common.repository.*;
 import com.winllc.pki.ra.BaseTest;
 import com.winllc.acme.common.domain.*;
-import com.winllc.acme.common.repository.AccountRepository;
-import com.winllc.acme.common.repository.AttributePolicyGroupRepository;
-import com.winllc.acme.common.repository.AttributePolicyRepository;
-import com.winllc.acme.common.repository.LdapSchemaOverlayRepository;
 import com.winllc.pki.ra.service.SecurityPolicyService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +26,8 @@ class EntityDirectoryServiceTest extends BaseTest {
     private SecurityPolicyService securityPolicyService;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private ServerEntryRepository serverEntryRepository;
     @Autowired
     private AttributePolicyRepository attributePolicyRepository;
     @Autowired
@@ -125,6 +124,7 @@ class EntityDirectoryServiceTest extends BaseTest {
         account = accountRepository.save(account);
 
         serverEntry.setAccount(account);
+        serverEntry = serverEntryRepository.save(serverEntry);
 
         Map<String, Object> appliedAttributeMap = entityDirectoryService.calculateAttributePolicyMapForServerEntry(serverEntry);
 

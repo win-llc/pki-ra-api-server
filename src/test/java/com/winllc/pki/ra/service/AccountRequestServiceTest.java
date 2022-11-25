@@ -85,10 +85,10 @@ class AccountRequestServiceTest extends BaseTest {
         form.setAccountOwnerEmail("test@test.com");
         form.setProjectName("project1");
         Authentication authentication = new TestingAuthenticationToken("test@test.com", "");
-        accountRequestService.createAccountRequest(form, authentication);
+        accountRequestService.add(form, null, authentication);
 
         List<AccountRequest> all = accountRequestService.findPending();
-        assertTrue("Response null check", all.size() == 2);
+        assertEquals("Response null check", 1, all.size());
 
         mockMvc.perform(
                 get("/api/account/request/pending"))
@@ -103,24 +103,24 @@ class AccountRequestServiceTest extends BaseTest {
         form.setAccountOwnerEmail("test@test.com");
         form.setProjectName("project1");
         Authentication authentication = new TestingAuthenticationToken("test@test.com", "");
-        Long id = accountRequestService.createAccountRequest(form, authentication);
+        AccountRequestForm add = accountRequestService.add(form, null, authentication);
 
-        AccountRequest accountRequest = accountRequestService.findById(id);
+        AccountRequestForm accountRequest = accountRequestService.findRest(add.getId(), null);
         assertNotNull("Account Request null check", accountRequest);
 
         String json = new ObjectMapper().writeValueAsString(form);
 
         mockMvc.perform(
-                post("/api/account/request/submit")
+                post("/api/account/request/add")
                         .contentType("application/json")
                         .content(json))
-                .andExpect(status().is(201));
+                .andExpect(status().is(200));
 
         form.setAccountOwnerEmail("bademail");
         String badJson = new ObjectMapper().writeValueAsString(form);
 
         mockMvc.perform(
-                post("/api/account/request/submit")
+                post("/api/account/request/add")
                         .contentType("application/json")
                         .content(badJson))
                 .andExpect(status().is(400));
@@ -141,7 +141,7 @@ class AccountRequestServiceTest extends BaseTest {
 
         Authentication authentication = new TestingAuthenticationToken("test@test.com", "");
 
-        accountRequestService.update(form, authentication);
+        accountRequestService.update(form, null, authentication);
 
         accountRequest = accountRequestRepository.findAll().get(0);
         assertTrue("Account update check", accountRequest.getState().contentEquals("approve"));
@@ -157,35 +157,35 @@ class AccountRequestServiceTest extends BaseTest {
 
     @Test
     @WithMockUser(authorities = {"super_admin"})
-    void findById() throws RAObjectNotFoundException {
+    void findById() throws Exception {
         AccountRequest accountRequest = new AccountRequest();
         accountRequest.setAccountOwnerEmail("test@test.com");
         accountRequest.setProjectName("New Project");
         accountRequest.setState("new");
         accountRequest = accountRequestRepository.save(accountRequest);
 
-        AccountRequest byId = accountRequestService.findById(accountRequest.getId());
+        AccountRequestForm byId = accountRequestService.findRest(accountRequest.getId(), null);
         assertNotNull("Not null", byId);
     }
 
     @WithMockUser(authorities = {"super_admin"})
     @Test
-    void delete() throws RAObjectNotFoundException {
+    void delete() throws Exception {
         AccountRequest accountRequest = new AccountRequest();
         accountRequest.setAccountOwnerEmail("test@test.com");
         accountRequest.setProjectName("New Project");
         accountRequest.setState("new");
         accountRequest = accountRequestRepository.save(accountRequest);
 
-        AccountRequest byId = accountRequestService.findById(accountRequest.getId());
+        AccountRequestForm byId = accountRequestService.findRest(accountRequest.getId(), null);
         assertNotNull("Not null", byId);
 
-        accountRequestService.delete(accountRequest.getId(), null);
+        accountRequestService.delete(accountRequest.getId(), null, null);
 
         try{
-            accountRequestService.findById(accountRequest.getId());
+            accountRequestService.findRest(accountRequest.getId(), null);
             fail("Should have thrown error");
-        }catch (RAObjectNotFoundException e){
+        }catch (Exception e){
         }
     }
 }

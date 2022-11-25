@@ -72,7 +72,7 @@ class OIDCManagementServiceTest extends BaseTest {
         form.setAccountId(account.getId());
         form.setFqdn("test2.winllc-dev.com");
 
-        form = serverEntryService.add(form, null);
+        form = serverEntryService.add(form, null, null);
         ServerEntry serverEntry = serverEntryRepository.findById(form.getId()).get();
 
         account.getServerEntries().add(serverEntry);

@@ -12,7 +12,11 @@ import org.keycloak.admin.client.Keycloak;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
@@ -30,6 +34,7 @@ import java.time.temporal.ChronoUnit;
 @AutoConfigureMockMvc
 @Testcontainers
 @Transactional
+@ContextConfiguration(initializers = {BaseTest.Initializer.class})
 public abstract class BaseTest {
 
     private static final String postgresContainerImage = "bitnami/postgresql:11.14.0";
@@ -60,9 +65,8 @@ public abstract class BaseTest {
                 .withEnv("REPMGR_NODE_NAME", "pg-0")
                 .withEnv("REPMGR_PARTNER_NODES", "pg-0")
                  */
-                .withCreateContainerCmdModifier(cmd -> cmd.withHostConfig(
-                        new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(5432), new ExposedPort(5432)))
-                ));
+
+            ;
 
     public static GenericContainer elasticsearchContainer = new GenericContainer<>(elasticSearchContainerImage)
             .withEnv("discovery.type", "single-node")
@@ -72,14 +76,22 @@ public abstract class BaseTest {
             //        new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(9200), new ExposedPort(9200)))
             //))
             .waitingFor(Wait.forLogMessage(".*(\"message\":\\s?\"started[\\s?|\"].*|] started\n$)", 1))
-            .withCreateContainerCmdModifier(cmd -> cmd.withHostConfig(
-                    new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(9200), new ExposedPort(9200)))
-            ));
 
-    @BeforeAll
-    static void beforeAll(){
-        postgreSQLContainer.start();
-        elasticsearchContainer.start();
+            ;
+
+    static class Initializer
+            implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+            postgreSQLContainer.start();
+            elasticsearchContainer.start();
+
+            TestPropertyValues.of(
+                    "spring.datasource.url=" +"jdbc:postgresql://localhost:"+postgreSQLContainer.getFirstMappedPort()+"/apiserver",
+                    "spring.datasource.username=" + "sa",
+                    "spring.datasource.password=" + "sa",
+                    "spring.elasticsearch.uris=" +"http://localhost:"+elasticsearchContainer.getFirstMappedPort()
+            ).applyTo(configurableApplicationContext.getEnvironment());
+        }
     }
 
 

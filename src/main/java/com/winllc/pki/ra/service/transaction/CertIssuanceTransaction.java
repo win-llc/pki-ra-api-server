@@ -222,7 +222,7 @@ public class CertIssuanceTransaction extends CertTransaction {
 
         Hibernate.initialize(serverEntry.getCertificateRequests());
 
-        serverEntry.setDistinguishedName(certificate.getSubjectDN().getName());
+        serverEntry.setDistinguishedName(certificate.getSubjectX500Principal().getName());
         serverEntry.getCertificateRequests().add(certificateRequest);
         serverEntry = serverEntryRepository.save(serverEntry);
 

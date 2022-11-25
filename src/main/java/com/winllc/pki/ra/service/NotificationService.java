@@ -34,7 +34,7 @@ public class NotificationService {
                 authentication.getName(), false, false);
 
         notifications.forEach(n -> {
-            if(n.getType().getUiBasePath() != null && n.getTaskObjectId() != null) {
+            if(n.getType() != null && n.getType().getUiBasePath() != null && n.getTaskObjectId() != null) {
                 n.setLink(n.getType().getUiBasePath() + "/" + n.getTaskObjectId());
             }
         });

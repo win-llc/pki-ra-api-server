@@ -34,7 +34,7 @@ spring:
     allow-circular-references: true
   datasource:
     #url: jdbc:postgresql://localhost/winpkira-dev
-    url: jdbc:postgresql://winra.winllc-dev.com/winpkira
+    url: jdbc:postgresql://192.168.1.170/winpkira
     driver-class-name: org.postgresql.Driver
     username: admin
     password: password

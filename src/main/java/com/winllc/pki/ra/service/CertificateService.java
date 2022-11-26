@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/certificates")
-public class CertificateService implements UpdatedDataService<CertificateForm> {
+public class CertificateService implements UpdatedDataService<CertificateForm, Long> {
 
     private static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("mm/DD/yyyy");
 

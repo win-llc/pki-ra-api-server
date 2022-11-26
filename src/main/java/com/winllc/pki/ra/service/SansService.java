@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/sans")
 @Transactional
-public class SansService implements UpdatedDataService<SansForm> {
+public class SansService implements UpdatedDataService<SansForm, Long> {
 
     private final ServerEntryRepository serverEntryRepository;
 

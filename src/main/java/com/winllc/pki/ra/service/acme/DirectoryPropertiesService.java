@@ -1,13 +1,16 @@
 package com.winllc.pki.ra.service.acme;
 
+import com.winllc.acme.common.CertificateAuthoritySettings;
 import com.winllc.acme.common.DirectoryDataSettings;
 import com.winllc.acme.common.DirectoryDataSettings;
 import com.winllc.acme.common.repository.AcmeServerConnectionInfoRepository;
+import com.winllc.pki.ra.beans.search.GridModel;
 import com.winllc.pki.ra.endpoint.acme.AcmeServerService;
 import com.winllc.pki.ra.exception.AcmeConnectionException;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -25,23 +28,29 @@ public class DirectoryPropertiesService extends AcmeServerManagementService<Dire
         super(winraAcmeServerUrl, winraAcmeServerName, connectionInfoRepository);
     }
 
-    @GetMapping("/paged")
-    public Page<DirectoryDataSettings> getPaged(@RequestParam Integer page,
-                     @RequestParam Integer pageSize,
-                     @RequestParam(defaultValue = "asc") String order,
-                     @RequestParam(required = false) String sortBy,
-                     @RequestParam Map<String, String> allRequestParams){
 
-        return null;
+    @Override
+    @PostMapping("/paged")
+    public Page<DirectoryDataSettings> getPaged(@RequestParam Integer page,
+                                                       @RequestParam Integer pageSize,
+                                                       @RequestParam(defaultValue = "asc") String order,
+                                                       @RequestParam(required = false) String sortBy,
+                                                       @RequestParam Map<String, String> allRequestParams,
+                                                       @RequestBody GridModel gridModel,
+                                                       Authentication authentication) {
+
+        AcmeServerService acmeServerService = services.get(defaultConnectionName);
+        try {
+            List<DirectoryDataSettings> settings =
+                    acmeServerService.getAllDirectorySettings();
+            return new PageImpl<>(settings);
+        } catch (AcmeConnectionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    @GetMapping("/my/paged")
-    public Page<DirectoryDataSettings> getMyPaged(@RequestParam Integer page,
-                       @RequestParam Integer pageSize,
-                       @RequestParam(defaultValue = "asc") String order,
-                       @RequestParam(required = false) String sortBy,
-                       @RequestParam Map<String, String> allRequestParams,
-                       Authentication authentication){
+    @Override
+    public Page<DirectoryDataSettings> getMyPaged(Integer page, Integer pageSize, String order, String sortBy, Map<String, String> allRequestParams, GridModel gridModel, Authentication authentication) {
         return null;
     }
 
@@ -54,29 +63,24 @@ public class DirectoryPropertiesService extends AcmeServerManagementService<Dire
         return settings;
     }
 
-    @GetMapping("/id/{id}")
-    public DirectoryDataSettings findRest(@PathVariable Long id, Authentication authentication) throws Exception{
-
+    @Override
+    public DirectoryDataSettings findRest(String id, Authentication authentication) throws Exception {
         return null;
     }
 
-    @PostMapping("/add")
-    public DirectoryDataSettings addRest(@RequestBody DirectoryDataSettings entity,
-                                         BindingResult bindingResult,
-                                         Authentication authentication) throws Exception {
-
+    @Override
+    public DirectoryDataSettings addRest(DirectoryDataSettings entity, Map<String, String> allRequestParams, Authentication authentication) throws Exception {
         return null;
     }
 
-    @PostMapping("/update")
-    public DirectoryDataSettings updateRest(@RequestBody DirectoryDataSettings entity, Authentication authentication)
-            throws Exception {
-
+    @Override
+    public DirectoryDataSettings updateRest(DirectoryDataSettings entity, Map<String, String> allRequestParams, Authentication authentication) throws Exception {
         return null;
     }
 
-    @DeleteMapping("/delete/{id}")
-    public void deleteRest(@PathVariable Long id, Authentication authentication) throws RAObjectNotFoundException {
+    @Override
+    public void deleteRest(String id, DirectoryDataSettings form, Authentication authentication) throws Exception {
 
     }
+
 }

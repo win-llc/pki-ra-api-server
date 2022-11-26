@@ -7,7 +7,7 @@ import org.springframework.security.core.Authentication;
 import java.util.List;
 import java.util.Map;
 
-public interface UpdatedDataService<F> {
+public interface UpdatedDataService<F, I> {
 
     Page<F> getPaged(Integer page,
                      Integer pageSize,
@@ -28,7 +28,7 @@ public interface UpdatedDataService<F> {
 
     List<F> getAll(Authentication authentication) throws Exception;
 
-    F findRest(Long id, Authentication authentication) throws Exception;
+    F findRest(I id, Authentication authentication) throws Exception;
 
 
     F addRest(F entity, Map<String, String> allRequestParams, Authentication authentication) throws Exception;
@@ -37,5 +37,5 @@ public interface UpdatedDataService<F> {
     F updateRest(F entity, Map<String, String> allRequestParams, Authentication authentication) throws Exception;
 
 
-    void deleteRest(Long id, F form, Authentication authentication) throws Exception;
+    void deleteRest(I id, F form, Authentication authentication) throws Exception;
 }

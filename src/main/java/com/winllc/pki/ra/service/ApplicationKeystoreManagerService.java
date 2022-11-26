@@ -1,9 +1,11 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.ExternalAccountProviderSettings;
 import com.winllc.acme.common.keystore.ApplicationKeystore;
 import com.winllc.acme.common.keystore.KeyEntryWrapper;
 import com.winllc.acme.common.util.CertUtil;
 import com.winllc.pki.ra.beans.form.AppKeyStoreEntryForm;
+import com.winllc.pki.ra.beans.search.GridModel;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.service.validators.AppKeyStoreEntryValidator;
 import org.apache.commons.collections4.CollectionUtils;
@@ -28,7 +30,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/applicationKeystore")
-public class ApplicationKeystoreManagerService implements DataService<AppKeyStoreEntryForm, String> {
+public class ApplicationKeystoreManagerService implements UpdatedDataService<AppKeyStoreEntryForm, String> {
     //todo allow key creation, csr generation
 
     private static final Logger log = LogManager.getLogger(ApplicationKeystoreManagerService.class);
@@ -203,12 +205,16 @@ public class ApplicationKeystoreManagerService implements DataService<AppKeyStor
         return entries;
     }
 
-    @Override
-    @GetMapping("/paged")
-    public Page<AppKeyStoreEntryForm> getPaged(Integer page, Integer pageSize,
-                                               String order, String sortBy,
-                                               Map<String, String> allRequestParams) {
 
+    @Override
+    @PostMapping("/paged")
+    public Page<AppKeyStoreEntryForm> getPaged(@RequestParam Integer page,
+                                                          @RequestParam Integer pageSize,
+                                                          @RequestParam(defaultValue = "asc") String order,
+                                                          @RequestParam(required = false) String sortBy,
+                                                          @RequestParam Map<String, String> allRequestParams,
+                                                          @RequestBody GridModel gridModel,
+                                                          Authentication authentication) {
         Page<AppKeyStoreEntryForm> paged = Page.empty();
         try {
             List<KeyEntryWrapper> all = getAll();
@@ -227,9 +233,8 @@ public class ApplicationKeystoreManagerService implements DataService<AppKeyStor
     }
 
     @Override
-    @GetMapping("/my/paged")
-    public Page<AppKeyStoreEntryForm> getMyPaged(Integer page, Integer pageSize, String order, String sortBy, Map<String, String> allRequestParams, Authentication authentication) {
-        return getPaged(page, pageSize, order, sortBy, allRequestParams);
+    public Page<AppKeyStoreEntryForm> getMyPaged(Integer page, Integer pageSize, String order, String sortBy, Map<String, String> allRequestParams, GridModel gridModel, Authentication authentication) {
+        return null;
     }
 
     @GetMapping("/all")
@@ -260,22 +265,19 @@ public class ApplicationKeystoreManagerService implements DataService<AppKeyStor
     }
 
     @Override
-    @PostMapping("/add")
-    public AppKeyStoreEntryForm addRest(AppKeyStoreEntryForm entity, BindingResult bindingResult, Authentication authentication) throws Exception {
-        //todo
+    public AppKeyStoreEntryForm addRest(AppKeyStoreEntryForm entity, Map<String, String> allRequestParams, Authentication authentication) throws Exception {
         return null;
     }
 
     @Override
-    @PostMapping("/update")
-    public AppKeyStoreEntryForm updateRest(AppKeyStoreEntryForm entity, Authentication authentication) throws Exception {
-        //todo
+    public AppKeyStoreEntryForm updateRest(AppKeyStoreEntryForm entity, Map<String, String> allRequestParams, Authentication authentication) throws Exception {
         return null;
     }
 
     @Override
-    @DeleteMapping("/delete/{id}")
-    public void deleteRest(@PathVariable String id, Authentication authentication) throws Exception {
-        //todo
+    public void deleteRest(String id, AppKeyStoreEntryForm form, Authentication authentication) throws Exception {
+
     }
+
+
 }

@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 @Getter
 public abstract class UpdatedDataPagedService<T extends BaseEntity, F extends ValidForm<T>,
         R extends PagingRepository<T>> extends AbstractService
-        implements UpdatedDataService<F> {
+        implements UpdatedDataService<F, Long> {
 
     private final Class<T> clazz;
     private final R repository;

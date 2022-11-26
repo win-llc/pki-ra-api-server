@@ -6,6 +6,7 @@ import com.winllc.pki.ra.endpoint.acme.AcmeServerConnection;
 import com.winllc.pki.ra.endpoint.acme.AcmeServerService;
 import com.winllc.pki.ra.endpoint.acme.AcmeServerServiceImpl;
 import com.winllc.pki.ra.service.DataService;
+import com.winllc.pki.ra.service.UpdatedDataService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -15,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class  AcmeServerManagementService<F> implements DataService<F, Long> {
+public abstract class  AcmeServerManagementService<F> implements UpdatedDataService<F, String> {
 
     protected final String defaultConnectionName = "winllc";
     private final String winraAcmeServerUrl;

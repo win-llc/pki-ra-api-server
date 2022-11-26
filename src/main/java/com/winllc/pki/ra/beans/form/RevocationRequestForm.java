@@ -14,6 +14,8 @@ public class RevocationRequestForm extends ValidForm<RevocationRequest> {
     private String issuerDn;
     private String serial;
     private Integer reason;
+    private String requestBy;
+    private String requestedOn;
 
     public RevocationRequestForm(RevocationRequest entity) {
         super(entity);
@@ -22,6 +24,10 @@ public class RevocationRequestForm extends ValidForm<RevocationRequest> {
         setIssuerDn(entity.getIssuerDn());
         setSerial(entity.getSerial());
         setReason(entity.getReason());
+        setRequestBy(entity.getRequestedBy());
+        if(entity.getRequestedOn() != null) {
+            setRequestedOn(entity.getRequestedOn().toString());
+        }
     }
 
     public RevocationRequestForm() {

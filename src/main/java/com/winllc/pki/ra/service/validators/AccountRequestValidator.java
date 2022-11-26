@@ -21,11 +21,11 @@ public class AccountRequestValidator implements Validator {
     private static final Logger log = LogManager.getLogger(AccountRequestValidator.class);
 
     private final SecurityPolicyService securityPolicyService;
-    @Autowired
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
 
-    public AccountRequestValidator(SecurityPolicyService securityPolicyService) {
+    public AccountRequestValidator(SecurityPolicyService securityPolicyService, AccountRepository accountRepository) {
         this.securityPolicyService = securityPolicyService;
+        this.accountRepository = accountRepository;
     }
 
     @Override

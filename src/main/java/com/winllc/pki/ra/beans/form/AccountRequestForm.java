@@ -13,12 +13,12 @@ import javax.validation.constraints.NotNull;
 public class AccountRequestForm extends ValidForm<AccountRequest> {
 
 
-    @NotEmpty(message = "State must not be empty")
+    //@NotEmpty(message = "State must not be empty")
     private String state;
-    @NotEmpty
-    @Email(message = "Email not valid")
+    //@NotEmpty
+    //@Email(message = "Email not valid")
     private String accountOwnerEmail;
-    @NotEmpty(message = "Project Name must not be empty")
+    //@NotEmpty(message = "Project Name must not be empty")
     private String projectName;
     private String securityPolicyServerProjectId;
 

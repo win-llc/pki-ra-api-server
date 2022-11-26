@@ -10,6 +10,7 @@ import com.winllc.acme.common.domain.CertificateRequest;
 import com.winllc.acme.common.domain.Notification;
 import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.acme.common.repository.CertificateRequestRepository;
+import com.winllc.acme.common.repository.ServerEntryRepository;
 import com.winllc.ra.integration.ca.CertAuthority;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,13 +28,15 @@ public class CertRevocationTransaction extends CertTransaction {
 
     private final CertificateRequestRepository certificateRequestRepository;
     private final CachedCertificateService cachedCertificateService;
-    private RevocationRequestRepository revocationRequestRepository;
+    private final RevocationRequestRepository revocationRequestRepository;
+    private final ServerEntryRepository serverEntryRepository;
 
     public CertRevocationTransaction(CertAuthority certAuthority, ApplicationContext context) {
         super(certAuthority, context);
         this.cachedCertificateService = context.getBean(CachedCertificateService.class);
         this.certificateRequestRepository = context.getBean(CertificateRequestRepository.class);
         this.revocationRequestRepository = context.getBean(RevocationRequestRepository.class);
+        this.serverEntryRepository = context.getBean(ServerEntryRepository.class);
     }
 
     public boolean processRevokeCertificate(RevocationRequest revokeRequest) throws Exception {
@@ -123,9 +126,8 @@ public class CertRevocationTransaction extends CertTransaction {
 
         if (optionalRequest.isPresent()) {
             CertificateRequest request = optionalRequest.get();
-            Hibernate.initialize(request.getServerEntry());
-            ServerEntry serverEntry = request.getServerEntry();
-            return Optional.of(serverEntry);
+
+            return serverEntryRepository.findFirstByCertificateRequestsContains(request);
         }
 
         return Optional.empty();

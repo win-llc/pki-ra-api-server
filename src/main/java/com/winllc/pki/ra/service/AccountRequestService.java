@@ -63,7 +63,7 @@ public class AccountRequestService extends
         this.accountService = accountService;
     }
 
-    @InitBinder("accountRequestForm")
+    //@InitBinder("accountRequestForm")
     public void initAccountRequestBinder(WebDataBinder binder) {
         binder.setValidator(accountRequestValidator);
     }

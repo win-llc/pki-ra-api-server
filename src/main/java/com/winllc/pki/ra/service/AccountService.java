@@ -372,11 +372,16 @@ public class AccountService extends UpdatedDataPagedService<Account, AccountUpda
 
     @Override
     protected Account formToEntity(AccountUpdateForm form, Map<String, String> params, Authentication authentication) throws Exception {
-        Optional<Account> optionalAccount = accountRepository.findById(form.getId());
-        Account account;
-        if (optionalAccount.isPresent()) {
-            account = optionalAccount.get();
-        } else {
+
+        Account account = null;
+        if (form.getId() != null) {
+            Optional<Account> optionalAccount = accountRepository.findById(form.getId());
+            if(optionalAccount.isPresent()) {
+                account = optionalAccount.get();
+            }
+        }
+
+        if(account == null){
             account = Account.buildNew(form.getProjectName());
         }
 

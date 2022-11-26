@@ -149,7 +149,6 @@ public class AccountService extends UpdatedDataPagedService<Account, AccountUpda
     }
 
 
-
     @GetMapping("/getAccountPocs/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
@@ -193,7 +192,7 @@ public class AccountService extends UpdatedDataPagedService<Account, AccountUpda
         }
     }
 
-    public Account pocUpdater(Account account, List<PocFormEntry> pocs){
+    public Account pocUpdater(Account account, List<PocFormEntry> pocs) {
         Map<String, PocEntry> existingPocMap = pocEntryRepository.findAllByAccount(account).stream()
                 .collect(Collectors.toMap(p -> p.getEmail(), p -> p));
 
@@ -208,7 +207,7 @@ public class AccountService extends UpdatedDataPagedService<Account, AccountUpda
         accountRepository.save(account);
 
         //add new or update
-        if(!CollectionUtils.isEmpty(pocs)) {
+        if (!CollectionUtils.isEmpty(pocs)) {
             for (PocFormEntry email : pocs) {
 
                 //Only create entry if POC email does not exist
@@ -227,10 +226,10 @@ public class AccountService extends UpdatedDataPagedService<Account, AccountUpda
         return accountRepository.save(account);
     }
 
-    public Account addPocToAccount(Account account, PocFormEntry poc){
+    public Account addPocToAccount(Account account, PocFormEntry poc) {
         Optional<PocEntry> optionalPoc = pocEntryRepository.findDistinctByEmailEqualsAndAccount(poc.getEmail(), account);
 
-        if(optionalPoc.isEmpty()) {
+        if (optionalPoc.isEmpty()) {
             PocEntry pocEntry = new PocEntry();
             pocEntry.setEnabled(true);
             pocEntry.setEmail(poc.getEmail());
@@ -242,7 +241,7 @@ public class AccountService extends UpdatedDataPagedService<Account, AccountUpda
 
             account.getPocs().add(pocEntry);
             return accountRepository.save(account);
-        }else{
+        } else {
             return account;
         }
     }
@@ -310,7 +309,7 @@ public class AccountService extends UpdatedDataPagedService<Account, AccountUpda
         AccountUpdateForm accountUpdateForm = new AccountUpdateForm();
         accountUpdateForm.setAccountOwnerEmail(form.getAccountOwnerEmail());
         accountUpdateForm.setProjectName(form.getProjectName());
-        return add(accountUpdateForm, null,null).getId();
+        return add(accountUpdateForm, null, null).getId();
     }
 
 
@@ -349,8 +348,6 @@ public class AccountService extends UpdatedDataPagedService<Account, AccountUpda
     }
 
 
-
-
     @Override
     protected void postSave(Account entity, AccountUpdateForm form) {
 
@@ -361,12 +358,12 @@ public class AccountService extends UpdatedDataPagedService<Account, AccountUpda
         AccountUpdateForm form = new AccountUpdateForm(entity);
 
         List<PocEntry> allByAccount = pocEntryRepository.findAllByAccount(entity);
-        if(org.apache.commons.collections.CollectionUtils.isNotEmpty(allByAccount)){
+        if (org.apache.commons.collections.CollectionUtils.isNotEmpty(allByAccount)) {
             List<PocFormEntry> pocs = allByAccount.stream()
                     .map(PocFormEntry::new)
                     .toList();
             form.setPocs(pocs);
-        }else{
+        } else {
             form.setPocs(new ArrayList<>());
         }
 
@@ -375,48 +372,52 @@ public class AccountService extends UpdatedDataPagedService<Account, AccountUpda
 
     @Override
     protected Account formToEntity(AccountUpdateForm form, Map<String, String> params, Authentication authentication) throws Exception {
-        Optional<Account> optionalAccount = accountRepository.findDistinctByProjectName(form.getProjectName());
-        if(optionalAccount.isEmpty()) {
-            Account account = Account.buildNew(form.getProjectName());
-
-            account = accountRepository.save(account);
-
-            AuthCredential authCredential = AuthCredential.buildNew(account);
-            authCredential = authCredentialRepository.save(authCredential);
-
-            account.getAuthCredentials().add(authCredential);
-            //broken todo
-            //account = (Account) authCredentialService.addNewAuthCredentialToEntry(account);
-
-            if (StringUtils.isNotBlank(form.getSecurityPolicyServerProjectId())) {
-                SecurityPolicyServerProjectDetails projectDetails
-                        = securityPolicyService.getProjectDetails(form.getSecurityPolicyServerProjectId());
-
-                if (projectDetails != null) {
-                    account.setSecurityPolicyServerProjectId(projectDetails.getProjectId());
-                }
-            }
-
-            account = accountRepository.save(account);
-
-            //add admin user to pocs
-            if (StringUtils.isNotBlank(form.getAccountOwnerEmail())) {
-                PocFormEntry adminPoc = new PocFormEntry(form.getAccountOwnerEmail());
-                adminPoc.setOwner(true);
-
-                pocUpdater(account, Collections.singletonList(adminPoc));
-            }
-
-            accountRestrictionService.syncPolicyServerBackedAccountRestrictions(account, this);
-
-            SystemActionRunner.build(context, account)
-                    .createAuditRecord(AuditRecordType.ACCOUNT_ADDED)
-                    .execute();
-
-            return account;
-        }else{
-            return optionalAccount.get();
+        Optional<Account> optionalAccount = accountRepository.findById(form.getId());
+        Account account;
+        if (optionalAccount.isPresent()) {
+            account = optionalAccount.get();
+        } else {
+            account = Account.buildNew(form.getProjectName());
         }
+
+        account.setSecurityPolicyServerProjectId(form.getSecurityPolicyProjectId());
+
+        account = accountRepository.save(account);
+
+        AuthCredential authCredential = AuthCredential.buildNew(account);
+        authCredential = authCredentialRepository.save(authCredential);
+
+        account.getAuthCredentials().add(authCredential);
+        //broken todo
+        //account = (Account) authCredentialService.addNewAuthCredentialToEntry(account);
+
+        if (StringUtils.isNotBlank(form.getSecurityPolicyServerProjectId())) {
+            SecurityPolicyServerProjectDetails projectDetails
+                    = securityPolicyService.getProjectDetails(form.getSecurityPolicyServerProjectId());
+
+            if (projectDetails != null) {
+                account.setSecurityPolicyServerProjectId(projectDetails.getProjectId());
+            }
+        }
+
+        account = accountRepository.save(account);
+
+        //add admin user to pocs
+        if (StringUtils.isNotBlank(form.getAccountOwnerEmail())) {
+            PocFormEntry adminPoc = new PocFormEntry(form.getAccountOwnerEmail());
+            adminPoc.setOwner(true);
+
+            pocUpdater(account, Collections.singletonList(adminPoc));
+        }
+
+        accountRestrictionService.syncPolicyServerBackedAccountRestrictions(account, this);
+
+        SystemActionRunner.build(context, account)
+                .createAuditRecord(AuditRecordType.ACCOUNT_ADDED)
+                .execute();
+
+        return account;
+
     }
 
     @Override
@@ -430,9 +431,8 @@ public class AccountService extends UpdatedDataPagedService<Account, AccountUpda
     }
 
 
-
     @Override
-    public List<Predicate> buildMyFilter(String email, CriteriaQuery<?> query, CriteriaBuilder cb){
+    public List<Predicate> buildMyFilter(String email, CriteriaQuery<?> query, CriteriaBuilder cb) {
         List<Predicate> list = new ArrayList<>();
         query.distinct(true);
         Root<Account> fromUpdates = query.from(Account.class);
@@ -489,19 +489,18 @@ public class AccountService extends UpdatedDataPagedService<Account, AccountUpda
         userSet.addAll(userInfoFromPocs);
 
 
-
         AccountInfo accountInfo = new AccountInfo(account, true);
         accountInfo.setCanIssueDomains(domainInfoList);
         accountInfo.setPocs(new ArrayList<>(userSet));
 
-        if(org.apache.commons.collections.CollectionUtils.isNotEmpty(pocEntries)){
+        if (org.apache.commons.collections.CollectionUtils.isNotEmpty(pocEntries)) {
             Optional<PocEntry> pocOptional = pocEntries.stream()
                     .filter(e -> e.getEmail().equalsIgnoreCase(authentication.getName()))
                     .findFirst();
 
-            if(pocOptional.isPresent()){
+            if (pocOptional.isPresent()) {
                 PocEntry pocEntry = pocOptional.get();
-                if(pocEntry.isOwner()) accountInfo.setUserIsOwner(true);
+                if (pocEntry.isOwner()) accountInfo.setUserIsOwner(true);
             }
         }
 

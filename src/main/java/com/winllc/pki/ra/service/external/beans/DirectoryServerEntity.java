@@ -160,7 +160,7 @@ public class DirectoryServerEntity {
         Attributes attrs = new BasicAttributes();
         BasicAttribute ocAttr = new BasicAttribute("objectclass");
         ocAttr.add("top");
-        ocAttr.add("untypedObject");
+        ocAttr.add("device");
         attrs.put(ocAttr);
         attrs.put(new BasicAttribute("cn", fqdn));
         return attrs;

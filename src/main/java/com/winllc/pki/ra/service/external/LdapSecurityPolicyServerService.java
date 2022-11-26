@@ -58,11 +58,19 @@ public class LdapSecurityPolicyServerService implements SecurityPolicyConnection
         Optional<LdapTemplate> ldapTemplate = buildLdapTemplate();
 
         if(ldapTemplate.isPresent()) {
-            SecurityPolicyServerProjectDetails details = ldapTemplate.get().lookup("cn=" + projectId + ",ou=policy-server-projects", new ProjectDetailsMapper());
+            Optional<String> optionalProjectOu = serverSettingsService
+                    .getServerSettingValue(ServerSettingRequired.POLICY_SERVER_LDAP_PROJECTSBASEDN);
 
-            if (details != null) {
-                return Optional.of(details);
-            } else {
+            if(optionalProjectOu.isPresent()) {
+                SecurityPolicyServerProjectDetails details = ldapTemplate.get()
+                        .lookup("cn=" + projectId + ","+optionalProjectOu.get(), new ProjectDetailsMapper());
+
+                if (details != null) {
+                    return Optional.of(details);
+                } else {
+                    return Optional.empty();
+                }
+            }else{
                 return Optional.empty();
             }
         }else{

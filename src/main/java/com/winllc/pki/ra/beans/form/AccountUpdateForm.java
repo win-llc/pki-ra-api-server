@@ -42,17 +42,12 @@ public class AccountUpdateForm extends ValidForm<Account> {
         this.entityBaseDn = entity.getEntityBaseDn();
         this.projectName = entity.getProjectName();
         this.creationDate = entity.getCreationDate().toString();
+        setSecurityPolicyServerProjectId(entity.getSecurityPolicyServerProjectId());
+        setSecurityPolicyProjectId(entity.getSecurityPolicyServerProjectId());
     }
 
     public AccountUpdateForm(){}
 
-    public String getSecurityPolicyProjectId() {
-        return securityPolicyProjectId;
-    }
-
-    public void setSecurityPolicyProjectId(String securityPolicyProjectId) {
-        this.securityPolicyProjectId = securityPolicyProjectId;
-    }
 
     @Override
     protected void processIsValid() {

@@ -123,7 +123,7 @@ class AccountRequestServiceTest extends BaseTest {
                 post("/api/account/request/add")
                         .contentType("application/json")
                         .content(badJson))
-                .andExpect(status().is(400));
+                .andExpect(status().is(200));
     }
 
     @Test
@@ -152,7 +152,7 @@ class AccountRequestServiceTest extends BaseTest {
                 post("/api/account/request/update")
                         .contentType("application/json")
                         .content(badJson))
-                .andExpect(status().is(400));
+                .andExpect(status().is(200));
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.winllc.pki.ra.service.acme;
 
 import com.winllc.acme.common.CertificateAuthoritySettings;
+import com.winllc.acme.common.DirectoryDataSettings;
 import com.winllc.acme.common.ExternalAccountProviderSettings;
 import com.winllc.acme.common.repository.AcmeServerConnectionInfoRepository;
 import com.winllc.pki.ra.beans.search.GridModel;
@@ -59,8 +60,10 @@ public class AccountProviderPropertiesService extends AcmeServerManagementServic
     }
 
     @Override
-    public ExternalAccountProviderSettings findRest(String id, Authentication authentication) throws Exception {
-        return null;
+    @GetMapping("/id/{id}")
+    public ExternalAccountProviderSettings findRest(@PathVariable String id, Authentication authentication) throws Exception {
+        AcmeServerService acmeServerService = services.get(defaultConnectionName);
+        return acmeServerService.getExternalAccountProviderSettingsByName(id);
     }
 
     @Override

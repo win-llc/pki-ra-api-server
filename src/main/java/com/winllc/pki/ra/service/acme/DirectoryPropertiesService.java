@@ -64,8 +64,10 @@ public class DirectoryPropertiesService extends AcmeServerManagementService<Dire
     }
 
     @Override
-    public DirectoryDataSettings findRest(String id, Authentication authentication) throws Exception {
-        return null;
+    @GetMapping("/id/{id}")
+    public DirectoryDataSettings findRest(@PathVariable String id, Authentication authentication) throws Exception {
+        AcmeServerService acmeServerService = services.get(defaultConnectionName);
+        return acmeServerService.getDirectorySettingsByName(id);
     }
 
     @Override

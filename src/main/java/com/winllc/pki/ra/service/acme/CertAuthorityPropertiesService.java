@@ -67,8 +67,10 @@ public class CertAuthorityPropertiesService extends AcmeServerManagementService<
     }
 
     @Override
-    public CertificateAuthoritySettings findRest(String id, Authentication authentication) throws Exception {
-        return null;
+    @GetMapping("/id/{id}")
+    public CertificateAuthoritySettings findRest(@PathVariable String id, Authentication authentication) throws Exception {
+        AcmeServerService acmeServerService = services.get(defaultConnectionName);
+        return acmeServerService.getCertificateAuthoritySettingsByName(id);
     }
 
     @Override

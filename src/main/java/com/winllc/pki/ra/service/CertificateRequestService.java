@@ -168,9 +168,7 @@ public class CertificateRequestService extends UpdatedDataPagedService<Certifica
             certificateRequest.setCsr(form.getCsr());
             certificateRequest.setCertAuthorityName(form.getCertAuthorityName());
             certificateRequest.setPrimaryDnsName(fqdn);
-            certificateRequest.setRequestedDnsNames(form.getRequestedDnsNames().stream()
-                    .map(d -> d.getValue())
-                    .collect(Collectors.joining(",")));
+            certificateRequest.setRequestedDnsNames(String.join(",", form.getRequestedDnsNames()));
 
             Optional<Account> optionalAccount = accountRepository.findById(form.getAccountId());
 

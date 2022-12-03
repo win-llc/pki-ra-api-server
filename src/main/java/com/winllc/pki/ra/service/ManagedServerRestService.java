@@ -1,20 +1,25 @@
 package com.winllc.pki.ra.service;
 
 
+import com.winllc.acme.common.domain.Account;
 import com.winllc.acme.common.domain.ManagedServer;
+import com.winllc.acme.common.domain.PocEntry;
 import com.winllc.acme.common.repository.ManagedServerRepository;
+import com.winllc.pki.ra.beans.form.ManagedServerForm;
+import com.winllc.pki.ra.beans.search.GridFilterModel;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
 import com.winllc.pki.ra.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.*;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -24,12 +29,15 @@ import java.util.stream.Collectors;
 @Transactional
 @RestController
 @RequestMapping("/api/managedServer")
-public class ManagedServerRestService {
+public class ManagedServerRestService extends UpdatedDataPagedService<ManagedServer,
+        ManagedServerForm, ManagedServerRepository> {
     private static final Logger log = LogManager.getLogger(ManagedServerRestService.class);
     private final ManagedServerRepository managedServerRepository;
 
 
-    public ManagedServerRestService(ManagedServerRepository managedServerRepository) {
+    public ManagedServerRestService(ApplicationContext context,
+                                    ManagedServerRepository managedServerRepository) {
+        super(context, ManagedServer.class, managedServerRepository);
         this.managedServerRepository = managedServerRepository;
     }
 
@@ -167,4 +175,41 @@ public class ManagedServerRestService {
 
     }
 
+    @Override
+    protected void postSave(ManagedServer entity, ManagedServerForm form) {
+
+    }
+
+    @Override
+    protected ManagedServerForm entityToForm(ManagedServer entity, Authentication authentication) {
+        return new ManagedServerForm(entity);
+    }
+
+    @Override
+    protected ManagedServer formToEntity(ManagedServerForm form, Map<String, String> params, Authentication authentication) throws Exception {
+        return null;
+    }
+
+    @Override
+    protected ManagedServer combine(ManagedServer original, ManagedServer updated, Authentication authentication) throws Exception {
+        return null;
+    }
+
+    @Override
+    public List<Predicate> buildFilter(Map<String, String> allRequestParams, GridFilterModel filterModel, Root<ManagedServer> root, CriteriaQuery<?> query, CriteriaBuilder cb, Authentication authentication) {
+        return null;
+    }
+
+    @Override
+    public List<Predicate> buildMyFilter(String email, CriteriaQuery<?> query, CriteriaBuilder cb){
+        List<Predicate> list = new ArrayList<>();
+        query.distinct(true);
+        Root<ManagedServer> fromUpdates = query.from(ManagedServer.class);
+        Join<ManagedServer, Account> details = fromUpdates.join("account");
+        Join<Account, PocEntry> associate = details.join("pocs");
+
+        list.add(cb.equal(associate.get("email"), email));
+
+        return list;
+    }
 }

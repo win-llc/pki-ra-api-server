@@ -1,5 +1,6 @@
 package com.winllc.pki.ra.service;
 
+import com.winllc.acme.common.constants.AccountRestrictionAction;
 import com.winllc.pki.ra.beans.form.AccountUpdateForm;
 import com.winllc.pki.ra.beans.form.DomainForm;
 import com.winllc.pki.ra.beans.info.DomainInfo;
@@ -28,10 +29,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -46,7 +44,8 @@ public class DomainService extends UpdatedDataPagedService<Domain, DomainForm, D
     private final DomainPolicyRepository domainPolicyRepository;
 
     public DomainService(ApplicationContext applicationContext,
-                         DomainRepository domainRepository, DomainValidator domainValidator, AccountRepository accountRepository, DomainPolicyRepository domainPolicyRepository) {
+                         DomainRepository domainRepository, DomainValidator domainValidator,
+                         AccountRepository accountRepository, DomainPolicyRepository domainPolicyRepository) {
         super(applicationContext, Domain.class, domainRepository);
         this.domainRepository = domainRepository;
         this.domainValidator = domainValidator;
@@ -69,10 +68,20 @@ public class DomainService extends UpdatedDataPagedService<Domain, DomainForm, D
     @GetMapping("/options/forAccount/{accountId}/map")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public Map<Long, String> optionsForAccountMap(@PathVariable Long accountId, Authentication authentication) throws RAObjectNotFoundException {
+    public Map<Long, String> optionsForAccountMap(@PathVariable Long accountId, Authentication authentication)
+            throws RAObjectNotFoundException {
         List<DomainInfo> pocs = optionsForAccount(accountId);
         return pocs.stream()
                 .collect(Collectors.toMap(d -> d.getId(), d -> d.getFullDomainName()));
+    }
+
+    @GetMapping("/forAccount/{accountId}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<String> getDomainsForAccount(@PathVariable Long accountId) throws RAObjectNotFoundException {
+        List<DomainInfo> domains = optionsForAccount(accountId);
+        return domains.stream()
+                .map(d -> d.getFullDomainName())
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/options/availableForAccount/{accountId}")

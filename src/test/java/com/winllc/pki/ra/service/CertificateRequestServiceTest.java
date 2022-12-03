@@ -189,7 +189,7 @@ class CertificateRequestServiceTest extends BaseTest {
         form.setCertAuthorityName("mockca");
         form.setCsr(testCsr2);
         form.setAccountId(account.getId());
-        form.setRequestedDnsNames(Collections.singletonList(san));
+        form.setRequestedDnsNames(Collections.singletonList("test.winllc-dev.com"));
         Long aLong = certificateRequestService.submitRequest(form, userDetails);
         assertTrue(aLong > 0);
 

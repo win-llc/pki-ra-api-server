@@ -111,7 +111,7 @@ public class KeycloakOIDCProviderConnection implements OIDCProviderConnection {
 
         ClientRepresentation client = new ClientRepresentation();
         client.setId(UUID.randomUUID().toString());
-        client.setClientId(serverEntry.getHostname());
+        client.setClientId(serverEntry.getFqdn());
         client.setRootUrl(url);
         client.setAdminUrl(url);
         client.setSurrogateAuthRequired(false);

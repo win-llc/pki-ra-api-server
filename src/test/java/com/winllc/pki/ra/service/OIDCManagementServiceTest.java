@@ -98,7 +98,7 @@ class OIDCManagementServiceTest extends BaseTest {
 
         ServerEntryForm form = new ServerEntryForm();
         form.setId(serverEntry.getId());
-        ServerEntryInfo serverEntryInfo = oidcManagementService.enableForOIDConnect(form);
+        ServerEntryInfo serverEntryInfo = oidcManagementService.enableForOIDConnect(serverEntry.getId());
         assertNotNull(serverEntryInfo);
     }
 
@@ -110,7 +110,7 @@ class OIDCManagementServiceTest extends BaseTest {
 
         ServerEntryForm form = new ServerEntryForm();
         form.setId(serverEntry.getId());
-        ServerEntryInfo serverEntryInfo = oidcManagementService.disableForOIDConnect(form);
+        ServerEntryInfo serverEntryInfo = oidcManagementService.disableForOIDConnect(serverEntry.getId());
         assertNotNull(serverEntryInfo);
     }
 

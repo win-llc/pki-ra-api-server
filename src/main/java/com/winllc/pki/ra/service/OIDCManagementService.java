@@ -51,82 +51,70 @@ public class OIDCManagementService implements ApplicationContextAware {
     @Transactional
     public OIDCClientDetails getDetailsForServer(@PathVariable Long serverId) throws RAObjectNotFoundException {
         Optional<ServerEntry> optionalServer = serverEntryRepository.findById(serverId);
-        if(optionalServer.isPresent()){
+        if (optionalServer.isPresent()) {
             ServerEntry serverEntry = optionalServer.get();
             OIDCClientDetails oidcClientDetails = oidcProviderConnection.getClient(serverEntry);
 
             return oidcClientDetails;
-        }else{
+        } else {
             throw new RAObjectNotFoundException(ServerEntry.class, serverId);
         }
 
     }
 
-    @PostMapping("/enableForOIDConnect")
+    @PostMapping("/enableForOIDConnect/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Transactional
-    public ServerEntryInfo enableForOIDConnect(@RequestBody ServerEntryForm form) throws RAException {
-        //todo
+    public ServerEntryInfo enableForOIDConnect(@PathVariable Long id) throws RAException {
+        ServerEntry serverEntry = serverEntryRepository.findById(id)
+                .orElseThrow(() -> new RAObjectNotFoundException(ServerEntry.class, id));
 
-        Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(form.getId());
-        if(serverEntryOptional.isPresent()){
-            ServerEntry serverEntry = serverEntryOptional.get();
-
-            try {
-                //todo generify
-
-                SystemActionRunner runner = SystemActionRunner.build(this.applicationContext, serverEntry)
-                        .createAuditRecord(AuditRecordType.OPENID_ENABLED);
-
-                ServerEntry finalServerEntry = serverEntry;
-                ThrowingSupplier<ServerEntry, Exception> action = () -> oidcProviderConnection.createClient(finalServerEntry);
-
-                serverEntry = runner.execute(action);
-
-                if(serverEntry != null){
-                    serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
-                    Hibernate.initialize(serverEntry.getAlternateDnsValues());
-                    serverEntry = serverEntryRepository.save(serverEntry);
-
-                    return entryToInfo(serverEntry);
-                }else{
-                    throw new RAException("Could not create OIDC client");
-                }
-            } catch (Exception e) {
-                throw new RAException(e.getMessage());
-            }
-        }else{
-            throw new RAObjectNotFoundException(form);
-        }
-    }
-
-    @PostMapping("/disableForOIDConnect")
-    @ResponseStatus(HttpStatus.OK)
-    @Transactional
-    public ServerEntryInfo disableForOIDConnect(@RequestBody ServerEntryForm form) throws Exception {
-
-        Optional<ServerEntry> optionalServerEntry = serverEntryRepository.findById(form.getId());
-
-        if(optionalServerEntry.isPresent()){
-            ServerEntry serverEntry = optionalServerEntry.get();
+        try {
+            //todo generify
 
             SystemActionRunner runner = SystemActionRunner.build(this.applicationContext, serverEntry)
-                    .createAuditRecord(AuditRecordType.OPENID_DISABLED);
+                    .createAuditRecord(AuditRecordType.OPENID_ENABLED);
 
             ServerEntry finalServerEntry = serverEntry;
-            ThrowingSupplier<ServerEntry, Exception> action = () -> oidcProviderConnection.deleteClient(finalServerEntry);
+            ThrowingSupplier<ServerEntry, Exception> action = () -> oidcProviderConnection.createClient(finalServerEntry);
 
             serverEntry = runner.execute(action);
 
-            if(serverEntry != null){
+            if (serverEntry != null) {
+                //serverEntry.setOpenidClientRedirectUrl(form.getOpenidClientRedirectUrl());
+                Hibernate.initialize(serverEntry.getAlternateDnsValues());
+                serverEntry = serverEntryRepository.save(serverEntry);
+
                 return entryToInfo(serverEntry);
-            }else {
-                throw new RAException("Did not delete the OIDC client");
+            } else {
+                throw new RAException("Could not create OIDC client");
             }
-        }else{
-            throw new RAObjectNotFoundException(form);
+        } catch (Exception e) {
+            throw new RAException(e.getMessage());
         }
 
+    }
+
+    @PostMapping("/disableForOIDConnect/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Transactional
+    public ServerEntryInfo disableForOIDConnect(@PathVariable Long id) throws Exception {
+        ServerEntry serverEntry = serverEntryRepository.findById(id)
+                .orElseThrow(() -> new RAObjectNotFoundException(ServerEntry.class, id));
+
+        SystemActionRunner runner = SystemActionRunner.build(this.applicationContext, serverEntry)
+                .createAuditRecord(AuditRecordType.OPENID_DISABLED);
+
+        ServerEntry finalServerEntry = serverEntry;
+        ThrowingSupplier<ServerEntry, Exception> action = () -> oidcProviderConnection.deleteClient(finalServerEntry);
+
+        serverEntry = runner.execute(action);
+
+        if (serverEntry != null) {
+            return entryToInfo(serverEntry);
+        } else {
+            throw new RAException("Did not delete the OIDC client");
+        }
     }
 
     @PostMapping("/buildDeploymentPackage")
@@ -134,16 +122,16 @@ public class OIDCManagementService implements ApplicationContextAware {
     public List<String> buildDeploymentPackage(@RequestBody ServerEntryForm form) throws RAObjectNotFoundException {
 
         Optional<ServerEntry> serverEntryOptional = serverEntryRepository.findById(form.getId());
-        if(serverEntryOptional.isPresent()) {
+        if (serverEntryOptional.isPresent()) {
             ServerEntry serverEntry = serverEntryOptional.get();
             Optional<Account> optionalAccount = accountRepository.findById(serverEntry.getAccount().getId());
-            if(optionalAccount.isPresent()){
+            if (optionalAccount.isPresent()) {
                 ServerEntryDockerDeploymentFile deploymentFile = buildDeploymentFile(serverEntry);
                 return deploymentFile.buildContent();
-            }else{
+            } else {
                 throw new RAObjectNotFoundException(Account.class, serverEntry.getAccount().getId());
             }
-        }else{
+        } else {
             throw new RAObjectNotFoundException(form);
         }
     }
@@ -151,7 +139,7 @@ public class OIDCManagementService implements ApplicationContextAware {
     private ServerEntryDockerDeploymentFile buildDeploymentFile(ServerEntry serverEntry) throws RAObjectNotFoundException {
         Optional<AuthCredential> optionalAuthCredential = serverEntry.getLatestAuthCredential();
 
-        if(optionalAuthCredential.isPresent()) {
+        if (optionalAuthCredential.isPresent()) {
             AuthCredential authCredential = optionalAuthCredential.get();
 
             AcmeClientDetails acmeClientDetails = new AcmeClientDetails();
@@ -170,12 +158,12 @@ public class OIDCManagementService implements ApplicationContextAware {
             dockerDeploymentFile.setProxyAddressValue(serverEntry.getOpenidClientRedirectUrl());
             dockerDeploymentFile.setServerNameValue(serverEntry.getFqdn());
             return dockerDeploymentFile;
-        }else{
-            throw new RAObjectNotFoundException(AuthCredential.class, "For Server Entry: "+serverEntry.getId());
+        } else {
+            throw new RAObjectNotFoundException(AuthCredential.class, "For Server Entry: " + serverEntry.getId());
         }
     }
 
-    private ServerEntryInfo entryToInfo(ServerEntry entry){
+    private ServerEntryInfo entryToInfo(ServerEntry entry) {
         Hibernate.initialize(entry.getAlternateDnsValues());
         return new ServerEntryInfo(entry);
     }

@@ -20,6 +20,7 @@ public class ServerEntryForm extends ValidForm<ServerEntry> {
     private String projectName;
     private Long domainId;
     private List<String> alternateDnsValues = new ArrayList<>();
+    private String openidClientId;
     private String openidClientRedirectUrl;
     private Boolean allowPreAuthz = false;
 
@@ -33,6 +34,7 @@ public class ServerEntryForm extends ValidForm<ServerEntry> {
         //todo add domain id
         this.alternateDnsValues = entry.getAlternateDnsValues();
         this.openidClientRedirectUrl = entry.getOpenidClientRedirectUrl();
+        this.openidClientId = entry.getOpenidClientId();
         this.allowPreAuthz = entry.getAcmeAllowPreAuthz();
     }
 

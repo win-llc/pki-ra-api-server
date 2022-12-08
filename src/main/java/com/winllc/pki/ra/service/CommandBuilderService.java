@@ -1,12 +1,17 @@
 package com.winllc.pki.ra.service;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.winllc.pki.ra.beans.form.AcmeExternalAccountProviderSettingsForm;
 import com.winllc.pki.ra.beans.form.UniqueEntityLookupForm;
 import com.winllc.acme.common.domain.AuthCredential;
 import com.winllc.acme.common.domain.ServerEntry;
 import com.winllc.pki.ra.exception.RAObjectNotFoundException;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +22,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +45,8 @@ public class CommandBuilderService {
     }
 
     @GetMapping("/{command}/server/{id}/{applicationName}")
-    public List<String> buildCertbotCommand(@PathVariable String command, @PathVariable Long id, @PathVariable String applicationName,
+    public List<String> buildCertbotCommand(@PathVariable String command, @PathVariable Long id,
+                                            @PathVariable String applicationName,
                                             Authentication authentication)
             throws Exception {
         ServerEntry serverEntry = serverEntryService.getServerEntry(id);
@@ -47,22 +54,20 @@ public class CommandBuilderService {
         List<String> commands = new LinkedList<>();
 
         switch (command) {
-            case "certbot":
+            case "certbot" -> {
                 String registerCommand = buildCertbotRegisterCommand(serverEntry, authentication.getName());
                 String certCommand = buildCertbotCertCommand(serverEntry, applicationName, authentication.getName());
                 commands.add(registerCommand);
                 commands.add(certCommand);
                 commands.add(buildCertbotRenewalCron());
-                break;
-            case "win-acme":
-                commands.add(buildWinAcmeRequiredInputs(serverEntry, applicationName));
-                break;
-            case "est":
-                commands.addAll(buildEstRequiredInputs(serverEntry));
-                break;
-            case "k8s":
-                commands.add(buildCertManagerYamlConfig());
-                break;
+            }
+            case "win-acme" -> commands.add(buildWinAcmeRequiredInputs(serverEntry, applicationName));
+            case "est" -> commands.addAll(buildEstRequiredInputs(serverEntry));
+            case "k8s" -> {
+                AuthCredential authCredential = getAuthCredential(serverEntry).orElseThrow();
+                commands.add(buildCertManagerEabSecret(authCredential));
+                commands.add(buildCertManagerYamlConfig(authCredential));
+            }
         }
 
         return commands;
@@ -185,157 +190,142 @@ public class CommandBuilderService {
         }
     }
 
-    private String buildCertManagerYamlConfig() throws JsonProcessingException {
+    private String buildCertManagerEabSecret(AuthCredential authCredential){
+        return "kubectl create secret generic eab-secret --namespace cert-manager --from-literal secret="+authCredential.getMacKeyBase64();
+    }
+
+    private String buildCertManagerYamlConfig(AuthCredential authCredential) throws JsonProcessingException {
         CertManagerClusterIssuerSpecAcme acme = new CertManagerClusterIssuerSpecAcme();
-        acme.setServer("https://winra.winllc-dev.com/acme/directory");
+        acme.setServer(acmeBaseUrl+"/acme/directory");
         acme.setEmail("teste@test.com");
-        acme.setSkipTLSVerify("true");
+        acme.setSkipTLSVerify(true);
 
         CertManagerClusterIssuerMetadata metadata = new CertManagerClusterIssuerMetadata();
         metadata.setName("winllc-acme-server");
+
+        CertManagerClusterIssuerSpecAcmeEabKeySecretRef secretRef = new CertManagerClusterIssuerSpecAcmeEabKeySecretRef();
+        secretRef.setName("eab-secret");
+        secretRef.setKey("secret");
+
+        CertManagerClusterIssuerSpecAcmeEab eab = new CertManagerClusterIssuerSpecAcmeEab();
+        eab.setKeyID(authCredential.getKeyIdentifier());
+        eab.setKeySecretRef(secretRef);
+        acme.setExternalAccountBinding(eab);
+
         CertManagerClusterIssuerSpec spec = new CertManagerClusterIssuerSpec();
         spec.setAcme(acme);
 
         CertManagerClusterIssuer issuer = new CertManagerClusterIssuer();
+        issuer.setApiVersion("cert-manager.io/v1");
+        issuer.setKind("ClusterIssuer");
         issuer.setMetadata(metadata);
         issuer.setSpec(spec);
+
+        CertManagerClusterIssuerSolverIngress ingress = new CertManagerClusterIssuerSolverIngress();
+        ingress.setIngressClass("public");
+
+        CertManagerClusterIssuerSolver httpSolver = new CertManagerClusterIssuerSolver();
+        httpSolver.setIngress(ingress);
+
+        CertManagerClusterIssuerSolvers solvers = new CertManagerClusterIssuerSolvers();
+        solvers.setHttp01(httpSolver);
+
+        acme.getSolvers().add(solvers);
+
+        CertManagerPrivateKeySecretRef keySecretRef = new CertManagerPrivateKeySecretRef();
+        keySecretRef.setName("winra-account-key");
+        acme.setPrivateKeySecretRef(keySecretRef);
 
         ObjectMapper om = new ObjectMapper(new YAMLFactory());
         return om.writeValueAsString(issuer);
     }
 
+    @Getter
+    @Setter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private static class CertManagerClusterIssuer {
+        private String apiVersion;
+        private String kind;
         private CertManagerClusterIssuerMetadata metadata;
         private CertManagerClusterIssuerSpec spec;
-
-        public CertManagerClusterIssuerMetadata getMetadata() {
-            return metadata;
-        }
-
-        public void setMetadata(CertManagerClusterIssuerMetadata metadata) {
-            this.metadata = metadata;
-        }
-
-        public CertManagerClusterIssuerSpec getSpec() {
-            return spec;
-        }
-
-        public void setSpec(CertManagerClusterIssuerSpec spec) {
-            this.spec = spec;
-        }
     }
 
+    @Getter
+    @Setter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private static class CertManagerClusterIssuerMetadata {
         private String name;
 
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
     }
 
+    @Getter
+    @Setter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private static class CertManagerClusterIssuerSpec {
         private CertManagerClusterIssuerSpecAcme acme;
 
-        public CertManagerClusterIssuerSpecAcme getAcme() {
-            return acme;
-        }
-
-        public void setAcme(CertManagerClusterIssuerSpecAcme acme) {
-            this.acme = acme;
-        }
     }
 
+    @Getter
+    @Setter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private static class CertManagerClusterIssuerSpecAcme {
-        private String skipTLSVerify;
+        private boolean skipTLSVerify = false;
         private String email;
         private String server;
         private CertManagerClusterIssuerSpecAcmeEab externalAccountBinding;
+        private CertManagerPrivateKeySecretRef privateKeySecretRef;
+        private List<CertManagerClusterIssuerSolvers> solvers = new ArrayList<>();
 
-        public String getSkipTLSVerify() {
-            return skipTLSVerify;
-        }
-
-        public void setSkipTLSVerify(String skipTLSVerify) {
-            this.skipTLSVerify = skipTLSVerify;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getServer() {
-            return server;
-        }
-
-        public void setServer(String server) {
-            this.server = server;
-        }
-
-        public CertManagerClusterIssuerSpecAcmeEab getExternalAccountBinding() {
-            return externalAccountBinding;
-        }
-
-        public void setExternalAccountBinding(CertManagerClusterIssuerSpecAcmeEab externalAccountBinding) {
-            this.externalAccountBinding = externalAccountBinding;
-        }
     }
 
+    @Getter
+    @Setter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private static class CertManagerPrivateKeySecretRef {
+        private String name;
+    }
+
+
+    @Getter
+    @Setter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private static class CertManagerClusterIssuerSpecAcmeEab {
         private String keyID;
         private CertManagerClusterIssuerSpecAcmeEabKeySecretRef keySecretRef;
         private String keyAlgorithm;
-
-        public String getKeyID() {
-            return keyID;
-        }
-
-        public void setKeyID(String keyID) {
-            this.keyID = keyID;
-        }
-
-        public CertManagerClusterIssuerSpecAcmeEabKeySecretRef getKeySecretRef() {
-            return keySecretRef;
-        }
-
-        public void setKeySecretRef(CertManagerClusterIssuerSpecAcmeEabKeySecretRef keySecretRef) {
-            this.keySecretRef = keySecretRef;
-        }
-
-        public String getKeyAlgorithm() {
-            return keyAlgorithm;
-        }
-
-        public void setKeyAlgorithm(String keyAlgorithm) {
-            this.keyAlgorithm = keyAlgorithm;
-        }
     }
 
+    @Getter
+    @Setter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private static class CertManagerClusterIssuerSpecAcmeEabKeySecretRef {
         private String name;
         private String key;
+    }
 
-        public String getName() {
-            return name;
-        }
+    @Getter
+    @Setter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private static class CertManagerClusterIssuerSolvers {
 
-        public void setName(String name) {
-            this.name = name;
-        }
+        private CertManagerClusterIssuerSolver http01;
 
-        public String getKey() {
-            return key;
-        }
+    }
 
-        public void setKey(String key) {
-            this.key = key;
-        }
+    @Getter
+    @Setter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private static class CertManagerClusterIssuerSolver {
+
+        private CertManagerClusterIssuerSolverIngress ingress;
+    }
+
+    @Getter
+    @Setter
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private static class CertManagerClusterIssuerSolverIngress {
+        @JsonProperty("class")
+        private String ingressClass;
     }
 }
